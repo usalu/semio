@@ -6,11 +6,12 @@ mod identity;
 #[path = "📇️index/🦀️.rs"]
 mod index;
 #[path = "🧾️record/🦀️.rs"]
-mod record;
+pub mod record;
 
 use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, VerifiedMemberHistoryInput, diagnostic};
-use crate::os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification, record::RetainedSprRecordObservation};
-use crate::os_spr::history::identity::id::{HistoryIdDiagnostic, RetainedHistoryIdV1};
+use semio_framework_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
+use semio_framework_os_spr::format::retained::record::RetainedSprRecordObservation;
+use semio_framework_os_spr::history::identity::id::{HistoryIdDiagnostic, RetainedHistoryIdV1};
 use identity::SemanticRecord;
 use index::{DictionaryIndexError, DictionaryRange, RetainedDictionaryIndex};
 use record::{DictionaryDeltaError, DictionaryDeltaEvent, RetainedDictionaryDelta};
@@ -20,7 +21,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use std::mem::ManuallyDrop;
 
 #[derive(Clone, Copy)]
-pub(crate) struct MemberHistoryDictionaryLimits {
+pub struct MemberHistoryDictionaryLimits {
     pub dictionary_entries: usize,
     pub dictionary_bytes: u64,
     pub records: u64,
@@ -32,7 +33,7 @@ impl Default for MemberHistoryDictionaryLimits {
     }
 }
 
-pub(crate) enum MemberHistoryDictionaryStep {
+pub enum MemberHistoryDictionaryStep {
     Pending(MemberOpenProgress),
     Ready,
     Rejected(MemberOpenDiagnostic),
@@ -43,36 +44,36 @@ pub(crate) struct MemberHistoryDictionaryAdmissionError {
 }
 
 struct DictionaryOwners {
-    input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
-    index: ManuallyDrop<Option<RetainedDictionaryIndex>>,
+    pub input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
+    pub index: ManuallyDrop<Option<RetainedDictionaryIndex>>,
 }
 
 impl DictionaryOwners {
-    fn request(&self) -> Result<&MemberOpenRequest, MemberOpenDiagnostic> {
+    pub fn request(&self) -> Result<&MemberOpenRequest, MemberOpenDiagnostic> {
         let input = self.input.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
         if let Some(error) = input.diagnostic {
             return Err(error);
         }
         input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)
     }
-    fn check(&self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn check(&self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         self.request()?.check_step_authority(cx)
     }
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.input.is_none() && self.index.is_none()
     }
-    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        if self.index.is_some() { return crate::os_store::snapshot_read::retirement_owner_demands(&self.index, body); }
-        crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body)
+    pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.index.is_some() { return semio_framework_os_store_read::retirement_owner_demands(&self.index, body); }
+        semio_framework_os_store_read::retirement_owner_demands(&self.input, body)
     }
 }
 impl ErasedSnapshotRetirement for DictionaryOwners {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.index.is_some() {
-            let step = crate::os_store::snapshot_read::retirement_owner_close(&mut self.index, grant)?;
+            let step = semio_framework_os_store_read::retirement_owner_close(&mut self.index, grant)?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        crate::os_store::snapshot_read::retirement_owner_close(&mut self.input, grant)
+        semio_framework_os_store_read::retirement_owner_close(&mut self.input, grant)
     }
     fn terminal_is_empty(&self) -> bool { DictionaryOwners::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
@@ -88,27 +89,27 @@ impl Drop for DictionaryOwners {
 }
 
 struct PendingByte {
-    offset: u64,
-    value: u8,
+    pub offset: u64,
+    pub value: u8,
     framed: bool,
 }
 struct DictionaryLookup {
-    range: DictionaryRange,
-    copied: u64,
+    pub range: DictionaryRange,
+    pub copied: u64,
 }
 
-pub(crate) struct MemberHistoryDictionaryOwner {
-    owners: ManuallyDrop<Option<DictionaryOwners>>,
-    scanner: Option<RetainedSprVerification>,
-    record: Option<RetainedSprRecordObservation>,
-    delta: Option<RetainedDictionaryDelta>,
-    semantic: Option<SemanticRecord>,
-    id: Option<RetainedHistoryIdV1>,
-    lookup: Option<DictionaryLookup>,
-    lookup_byte: Option<u8>,
-    pending: Option<PendingByte>,
-    schema: &'static str,
-    end: u64,
+pub struct MemberHistoryDictionaryOwner {
+    pub owners: ManuallyDrop<Option<DictionaryOwners>>,
+    pub scanner: Option<RetainedSprVerification>,
+    pub record: Option<RetainedSprRecordObservation>,
+    pub delta: Option<RetainedDictionaryDelta>,
+    pub semantic: Option<SemanticRecord>,
+    pub id: Option<RetainedHistoryIdV1>,
+    pub lookup: Option<DictionaryLookup>,
+    pub lookup_byte: Option<u8>,
+    pub pending: Option<PendingByte>,
+    pub schema: &'static str,
+    pub end: u64,
     document_seen: bool,
     document_matches: bool,
     composition_matches: bool,
@@ -117,14 +118,14 @@ pub(crate) struct MemberHistoryDictionaryOwner {
     payload_done: bool,
     record_matches: bool,
     id_retiring: bool,
-    ready: bool,
-    closing: bool,
-    error: Option<MemberOpenDiagnostic>,
-    transition: &'static str,
+    pub ready: bool,
+    pub closing: bool,
+    pub error: Option<MemberOpenDiagnostic>,
+    pub transition: &'static str,
 }
 
 impl MemberHistoryDictionaryOwner {
-    pub(super) fn begin(input: VerifiedMemberHistoryInput, schema: &'static str, limits: MemberHistoryDictionaryLimits, cx: &StepContext<'_>) -> Result<Self, MemberHistoryDictionaryAdmissionError> {
+    pub fn begin(input: VerifiedMemberHistoryInput, schema: &'static str, limits: MemberHistoryDictionaryLimits, cx: &StepContext<'_>) -> Result<Self, MemberHistoryDictionaryAdmissionError> {
         let valid_limits = limits.dictionary_entries <= 8192 && limits.dictionary_bytes <= 1048576 && limits.records > 0 && limits.records <= 8192;
         let admitted = input.diagnostic.map_or(Ok(()), Err).and_then(|_| input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx));
         let error = admitted.err().or_else(|| (!valid_limits).then_some(MemberOpenDiagnostic::Capacity)).or_else(|| (schema.is_empty() || schema.len() > 256 || schema.chars().any(char::is_control)).then_some(MemberOpenDiagnostic::Identity));
@@ -167,13 +168,13 @@ impl MemberHistoryDictionaryOwner {
         })
     }
 
-    fn reject(&mut self, error: MemberOpenDiagnostic) -> MemberOpenDiagnostic {
+    pub fn reject(&mut self, error: MemberOpenDiagnostic) -> MemberOpenDiagnostic {
         if let Some(index) = self.owners.as_mut().and_then(|owners| owners.index.as_mut()) {
             index.reject_record();
         }
         *self.error.get_or_insert(error)
     }
-    fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         if self.closing {
             return Err(MemberOpenDiagnostic::Cancelled);
         }
@@ -183,11 +184,11 @@ impl MemberHistoryDictionaryOwner {
         let result = self.owners.as_ref().ok_or(MemberOpenDiagnostic::Stale).and_then(|owners| owners.check(cx));
         result.map_err(|error| self.reject(error))
     }
-    fn progress(&self) -> MemberHistoryDictionaryStep {
+    pub fn progress(&self) -> MemberHistoryDictionaryStep {
         MemberHistoryDictionaryStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::History, completed: self.scanner.as_ref().map_or(self.end, RetainedSprVerification::consumed), total: self.end })
     }
 
-    pub(crate) fn step(&mut self, cx: &mut StepContext<'_>) -> MemberHistoryDictionaryStep {
+    pub fn step(&mut self, cx: &mut StepContext<'_>) -> MemberHistoryDictionaryStep {
         if let Err(error) = self.check(cx) {
             return MemberHistoryDictionaryStep::Rejected(error);
         }
@@ -212,7 +213,7 @@ impl MemberHistoryDictionaryOwner {
         self.progress()
     }
 
-    fn unit(&mut self, cx: &mut StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn unit(&mut self, cx: &mut StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         let owners = self.owners.as_mut().ok_or(MemberOpenDiagnostic::Stale)?;
         if self.delta.as_ref().is_some_and(RetainedDictionaryDelta::has_event) {
             cx.consume_fuel(1);
@@ -296,7 +297,7 @@ impl MemberHistoryDictionaryOwner {
                     cx.consume_fuel(1);
                     self.transition = "record";
                     self.pending = None;
-                    if (matches!(record.kind(), crate::os_spr::REC_DOC | crate::os_spr::REC_STR_DICT | crate::os_spr::REC_TRANSITION) && record.flags() != 2) || (record.kind() == crate::os_spr::REC_COMPOSITION && record.flags() != 0) {
+                    if (matches!(record.kind(), semio_framework_os_spr::REC_DOC | semio_framework_os_spr::REC_STR_DICT | semio_framework_os_spr::REC_TRANSITION) && record.flags() != 2) || (record.kind() == semio_framework_os_spr::REC_COMPOSITION && record.flags() != 0) {
                         return Err(MemberOpenDiagnostic::Malformed);
                     }
                     if record.kind() == 1 && self.document_seen {
@@ -305,7 +306,7 @@ impl MemberHistoryDictionaryOwner {
                     if record.kind() == 3 {
                         self.delta = Some(RetainedDictionaryDelta::new(record.payload_start(), record.payload_end()).map_err(delta_error)?);
                     }
-                    self.initial_history_exact &= matches!(record.kind(), 1 | 3 | 65 | crate::os_spr::REC_COMMIT);
+                    self.initial_history_exact &= matches!(record.kind(), 1 | 3 | 65 | semio_framework_os_spr::REC_COMMIT);
                     self.initial_history_exact &= record.kind() != 65 || !self.composition_seen;
                     if matches!(record.kind(), 1 | 65) {
                         self.semantic = Some(SemanticRecord::new(record.kind()));
@@ -412,7 +413,7 @@ impl MemberHistoryDictionaryOwner {
         Ok(())
     }
 
-    pub(crate) fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<VerifiedMemberHistoryDictionary>, MemberOpenDiagnostic> {
+    pub fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<VerifiedMemberHistoryDictionary>, MemberOpenDiagnostic> {
         self.check(cx)?;
         if !self.ready || cx.should_yield() {
             return Ok(None);
@@ -430,10 +431,10 @@ impl MemberHistoryDictionaryOwner {
 }
 
 impl MemberHistoryDictionaryOwner {
-    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.pending.is_some() || self.lookup_byte.is_some() || self.delta.is_some() || self.id.is_some() { return Ok(RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() }); }
         if self.scanner.is_some() || self.record.is_some() || self.semantic.is_some() || self.lookup.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, body)
+        semio_framework_os_store_read::retirement_owner_demands(&self.owners, body)
     }
 }
 impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
@@ -467,7 +468,7 @@ impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
             self.ready = false;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
-        crate::os_store::snapshot_read::retirement_owner_close(&mut self.owners, grant)
+        semio_framework_os_store_read::retirement_owner_close(&mut self.owners, grant)
     }
     fn terminal_is_empty(&self) -> bool { self.owners.is_none() && self.pending.is_none() && self.lookup_byte.is_none() && self.delta.is_none() && self.id.is_none() && self.scanner.is_none() && self.record.is_none() && self.semantic.is_none() && self.lookup.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
@@ -482,22 +483,22 @@ impl Drop for MemberHistoryDictionaryOwner {
     }
 }
 
-pub(crate) struct VerifiedMemberHistoryDictionary {
-    owners: ManuallyDrop<Option<DictionaryOwners>>,
-    schema: &'static str,
+pub struct VerifiedMemberHistoryDictionary {
+    pub owners: ManuallyDrop<Option<DictionaryOwners>>,
+    pub schema: &'static str,
     initial_history_exact: bool,
-    closing: bool,
-    diagnostic: Option<MemberOpenDiagnostic>,
+    pub closing: bool,
+    pub diagnostic: Option<MemberOpenDiagnostic>,
 }
 
 impl VerifiedMemberHistoryDictionary {
-    pub(super) fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.owners.as_ref().and_then(|owners|owners.input.as_ref()).ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)
     }
-    pub(super) fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.check_step_authority(cx)?;self.owners.as_ref().and_then(|owners|owners.input.as_ref()).ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)
     }
-    pub(super) fn check_step_authority(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn check_step_authority(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         if let Some(error) = self.diagnostic {
             return Err(error);
         }
@@ -515,16 +516,16 @@ impl VerifiedMemberHistoryDictionary {
         self.initial_history_exact
     }
 
-    pub(super) fn verified_end(&self) -> u64 {
+    pub fn verified_end(&self) -> u64 {
         self.owners.as_ref().and_then(|owners| owners.input.as_ref()).map_or(0, VerifiedMemberHistoryInput::verified_end)
     }
 
-    pub(super) fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
+    pub fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
         self.check_step_authority(cx)?;
         self.owners.as_mut().and_then(|owners| owners.input.as_mut()).ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
     }
 
-    pub(super) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str, crate::os_spr::ActorId), MemberOpenDiagnostic> {
+    pub fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<semio_framework_os_store_envelope::owner::OwnerRef>, &'static str, semio_framework_os_spr::ActorId), MemberOpenDiagnostic> {
         self.check_step_authority(cx)?;
         let request = self.owners.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.request()?;
         Ok((request.admitted_expected()?.clone(), request.owner().cloned(), self.schema, request.actor().clone()))
@@ -534,13 +535,13 @@ impl VerifiedMemberHistoryDictionary {
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
-        crate::os_store::snapshot_read::retirement_owner_close(&mut self.owners, grant)
+        semio_framework_os_store_read::retirement_owner_close(&mut self.owners, grant)
     }
     fn terminal_is_empty(&self) -> bool { self.owners.is_none() }
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, 0)?.copy_bytes) }
-    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, body)?.capacity_bytes) }
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, 0)?.release_bytes) }
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, 0)?.depth) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(semio_framework_os_store_read::retirement_owner_demands(&self.owners, 0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(semio_framework_os_store_read::retirement_owner_demands(&self.owners, body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(semio_framework_os_store_read::retirement_owner_demands(&self.owners, 0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(semio_framework_os_store_read::retirement_owner_demands(&self.owners, 0)?.depth) }
 }
 
 impl Drop for VerifiedMemberHistoryDictionary {
@@ -574,6 +575,4 @@ fn id_error(error: HistoryIdDiagnostic) -> MemberOpenDiagnostic {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🗂️dictionary/🦀️.rs"]
-mod tests;
+

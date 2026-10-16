@@ -17,13 +17,13 @@ pub type ShellTurn<'a, R> = std::pin::Pin<Box<dyn std::future::Future<Output = R
 
 /// 📦️ Moves one turn's body to the heap as a [`ShellTurn`]; `R` comes from the turn's declared output, so `?` inside infers.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn shell_turn<'a, R>(turn: impl std::future::Future<Output = R> + Send + 'a) -> ShellTurn<'a, R> {
+pub fn shell_turn<'a, R>(turn: impl std::future::Future<Output = R> + Send + 'a) -> ShellTurn<'a, R> {
     Box::pin(turn)
 }
 
 /// 📦️ See the native [`shell_turn`].
 #[cfg(target_arch = "wasm32")]
-pub(crate) fn shell_turn<'a, R>(turn: impl std::future::Future<Output = R> + 'a) -> ShellTurn<'a, R> {
+pub fn shell_turn<'a, R>(turn: impl std::future::Future<Output = R> + 'a) -> ShellTurn<'a, R> {
     Box::pin(turn)
 }
 
@@ -31,7 +31,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     //#region 🔖️NativeBackboneSync
     /// ✂️ Retires the guest's exact generation before stopping the actor. A refusal still
     /// closes the local owner and is returned to the caller; it is never retried or hidden.
-    pub(super) async fn detach_sync_backbone_internal(&mut self) -> Result<(), String> {
+    pub async fn detach_sync_backbone_internal(&mut self) -> Result<(), String> {
         #[cfg(not(target_arch="wasm32"))]
         self.directory.cancel_inference_port();
         self.opening.document_execution_target_lease=None;
@@ -85,7 +85,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// backbone (it opens a second actor for the `s.space` index document). The browser build
     /// links no such host, so the checkpoint still lands and the projection still folds — only
     /// the index touch is skipped, and skipping it is visible in this one place.
-    pub(crate) fn observe_invocation_history<'a>(&'a mut self, history_patch: Option<&'a semio_framework::kernel::HistoryPatch>) -> ShellTurn<'a, ()> {
+    pub fn observe_invocation_history<'a>(&'a mut self, history_patch: Option<&'a semio_framework::kernel::HistoryPatch>) -> ShellTurn<'a, ()> {
         shell_turn(async move {
             let Some(patch) = history_patch else { return };
             if patch.cursor >= self.history.history_cursor {
@@ -125,7 +125,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 📌️ ticket §C5 item 2 — the per-frame auto check-in poll, called from `pump_sync_events` (see
     /// that method's own doc: "folded into the same every-frame pump"). Viewer sessions never arm
     /// (`can_check_in`, item 5's guard) — the SAME predicate the `#s-checkin` affordance itself checks.
-    pub(super) async fn poll_auto_checkin(&mut self) {
+    pub async fn poll_auto_checkin(&mut self) {
         let Some(session) = self.docs.session.as_ref() else { return };
         if !can_check_in(session.app.role) {
             return;
@@ -149,14 +149,14 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// `📓️w3-a-report.md`'s own `sharedFileRequest` — sent anyway so this is ready the moment that
     /// lands). Viewer-guarded (item 5) so a stray call from `checkpoint_before_detach`/`poll_auto_checkin`
     /// can never reach a viewer session even if their own callers' guards were ever relaxed.
-    pub(super) async fn dispatch_checkpoint(&mut self, message: &str) {
+    pub async fn dispatch_checkpoint(&mut self, message: &str) {
         let Some(session) = self.docs.session.clone() else { return };
         if !can_check_in(session.app.role) {
             return;
         }
         self.sync.checkpoint_dispatched = true;
         let authors: Vec<semio_framework::DslValue> = self.directory.identity.as_ref().map(|identity| vec![semio_framework::dsl_value!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();
-        let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: crate::action_args_json!({ "message": message, "authors": authors }) };
+        let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "message": message, "authors": authors }) };
         if let Err(error) = self.dispatch_action(action).await {
             debug_log(&format!("[TRACE] wgpu shell check-in checkpoint dispatch failed: {error}"));
             self.sync.checkpoint_dispatched = false;
@@ -170,7 +170,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// success-detection effect" note) — `dispatch_checkpoint`/`observe_invocation_history` still run
     /// the normal detection+`TouchArtifact` path; this call site just doesn't await or fail the caller
     /// on their outcome, since a failed close-time checkpoint must never block navigating away.
-    pub(super) async fn checkpoint_before_detach(&mut self) {
+    pub async fn checkpoint_before_detach(&mut self) {
         let Some(session) = self.docs.session.as_ref() else { return };
         let count = uncommitted_edit_count(&self.history.history_entries);
         if !should_checkpoint_before_detach(session.app.role, self.sync.sync_channel.is_some(), count) {
@@ -204,7 +204,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// showing "index" for a DIFFERENT space would silently sever that live session's own backbone
     /// (`ArtifactHost::open`'s own "idempotent per id" contract). Skip rather than risk it.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) async fn touch_space_index_artifact(&mut self, space_id: &str, artifact_id: &str) {
+    pub async fn touch_space_index_artifact(&mut self, space_id: &str, artifact_id: &str) {
         let now_ms = chrome_now_ms();
         let actor = self.directory.identity.as_ref().map(|identity| identity.user_id.clone()).unwrap_or_else(|| self.directory.shell_session_id.clone());
         let arguments: BTreeMap<String, DslValue> = BTreeMap::from([("id".to_string(), semio_framework_value::DslValue::String(artifact_id.to_string())), ("nowMs".to_string(), semio_framework_value::DslValue::float(now_ms)), ("actor".to_string(), semio_framework_value::DslValue::String(actor.clone()))]);
@@ -300,7 +300,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// the dialog, `cancel` closes it without dispatching, `submit` dispatches with the typed message
     /// (falling back to `"check-in"` for an empty/whitespace-only draft, matching the React shell's own
     /// `submitCheckin`).
-    pub(super) fn handle_checkin_action<'a>(&'a mut self, action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>> {
+    pub fn handle_checkin_action<'a>(&'a mut self, action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>> {
         shell_turn(async move {
             match action.action.as_str() {
                 "open" => {
@@ -337,7 +337,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// document's (`local.backbone-scope-mismatch`), React's `openSyncTarget`. A program holding no document is told so.
     /// A folder attach is remembered for this device (`os.config.local-folders`) and, natively, the folder's archive is
     /// restored into the program like a fresh load.
-    pub(crate) async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
+    pub async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
         let session = self.docs.session.clone().ok_or("session missing")?;
         let (document_id, bindings, surface) = match parse_remote_backbone_uri(&uri) {
             Some(remote) => {
@@ -389,7 +389,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// mutation it authors names the document it opened and its first Hello asks the hub only for what followed the
     /// pair (ticket 26/09/23: slice WG8 gate run 12 measured the identity-less guest; slice WG10 made the pair the
     /// one seed of every shell).
-    pub(crate) async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>, backbone_uri: Option<String>) -> Result<(), String> {
+    pub async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>, backbone_uri: Option<String>) -> Result<(), String> {
         let prepared = self.prepare_document_open(document_id, schema, bindings, surface, backbone_uri, None).await?;
         let pair = seed_hub_document(prepared.plugin.clone(), prepared.session.instance_id, prepared.seed.clone()).await.map_err(|refusal| self.prefs.note_refused_open(refusal, &mut self.chrome))?;
         self.sync.install_document_seed(&prepared, pair)?;
@@ -404,7 +404,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// `detach_sync_backbone_internal`'s note.
     /// 📌️ ticket §C5 item 4 — checkpoint-on-close, same "switch away IS close" posture as
     /// `attach_sync_backbone` above (this shell keeps exactly one document mounted at a time).
-    pub(crate) async fn prepare_document_open(
+    pub async fn prepare_document_open(
         &mut self,
         document_id: String,
         schema: String,
@@ -428,7 +428,7 @@ impl<'ctx> ActionsCtx<'ctx> {
 
     /// 🔗️ Binds the prepared document once the guest holds it: the document actor opens, the guest's
     /// backbone binds to it and the history projection re-seeds. The caller owes the refresh.
-    pub(crate) async fn finish_document_open(&mut self, prepared: ShellPreparedDocumentOpen) -> Result<(), String> {
+    pub async fn finish_document_open(&mut self, prepared: ShellPreparedDocumentOpen) -> Result<(), String> {
         let ShellPreparedDocumentOpen { document_id, schema, bindings, backbone_uri, plugin, session, .. } = prepared;
         let actor_uri = format!("actor://{document_id}");
         let actor = self.directory.current_shell_actor(session.instance_id);
@@ -475,7 +475,7 @@ impl<'ctx> ActionsCtx<'ctx> {
 
     /// 📌️ ticket §C5 item 4 — the one EXPLICIT close (a user-initiated "Detach"), same
     /// checkpoint-before-detach guard as the two switch-triggered closes above.
-    pub(crate) fn handle_sync_action<'a>(&'a mut self, action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>> {
+    pub fn handle_sync_action<'a>(&'a mut self, action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>> {
 
         shell_turn(async move {
             match action.action.as_str() {
@@ -737,7 +737,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).and_then(window_pane_owner).map(str::to_string) {
                 scope_action_to_window(&mut action, &owner);
             }
-            crate::interpreter::note_dispatched_action(&action, self.chrome.dispatch_origin);
+            semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_dispatched_action(&action, self.chrome.dispatch_origin);
             if action.action == semio_framework::onboarding::START_TUTORIAL_ACTION_ID {
                 if let Some(tutorial_id) = action.args.as_ref().and_then(|args| args.get("tutorialId")).and_then(|v| v.as_str()) {
                     self.as_window_actions().tutorial_start(tutorial_id);
@@ -834,7 +834,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                         if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                             let changed = self.prefs.locale_id != value;
                             self.prefs.locale_id = value.to_string();
-                            crate::interpreter::install_ui_engine_locale(self.prefs.active_locale());
+                            semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(self.prefs.active_locale());
                             if let Some(status) = self.prefs.plugin_fault_status(&self.plugins) {
                                 self.chrome.error = Some(status);
                             }
@@ -1236,7 +1236,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                         self.settle.submit_shell_io_future(async move {
                             let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false).await;
                             ShellIoCompletion::Actions(
-                                opened.into_iter().take(1).map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: crate::action_args_json!({ "value": file.contents }) }).collect(),
+                                opened.into_iter().take(1).map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": file.contents }) }).collect(),
                             )
                         });
                         return Ok(());

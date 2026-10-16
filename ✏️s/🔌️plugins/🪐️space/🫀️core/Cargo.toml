@@ -38,9 +38,6 @@ path = "../../../../🧰️framework/🔨️modules/🗿️artifact-reference/�
 [workspace.dependencies.semio-framework-artifact-space-collection]
 path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-artifact-space-space]
-path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-framework-async-macros]
 path = "../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
 

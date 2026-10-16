@@ -22,7 +22,7 @@ impl PrefsState {
     //#endregion 🏷️LabelResolution
     //#region 🏠️🧳️PluginHostConfig
     /// 🧭️ A shell surface alias resolves to its owner's concrete guest window address.
-    pub(crate) fn session_action_invocation(&self, session: &ActiveSession, action: &ActionDescriptor, view: &ViewModel) -> Result<semio_framework::manifest::ActionInvocation, String> {
+    pub fn session_action_invocation(&self, session: &ActiveSession, action: &ActionDescriptor, view: &ViewModel) -> Result<semio_framework::manifest::ActionInvocation, String> {
         let supplied_window = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str);
         let requested_window = if supplied_window == Some("spawned") { session.view_state.window_id.as_deref() } else { supplied_window };
         let panel_leaves: Vec<&str> = flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().map(|tab| tab.id()).collect();
@@ -64,7 +64,7 @@ impl PrefsState {
 
     /// 🧯 Records one plugin's boot activation fault and refreshes the shell's status line. The shell
     /// stays alive: a trapped guest is that plugin's failure, not the renderer's.
-    pub(super) fn record_plugin_fault(&mut self, plugin_id: &str, app_id: &str, detail: String, chrome: &mut ChromeState, plugins: &mut PluginState) {
+    pub fn record_plugin_fault(&mut self, plugin_id: &str, app_id: &str, detail: String, chrome: &mut ChromeState, plugins: &mut PluginState) {
         debug_log(&format!("[TRACE] wgpu shell boot: plugin {plugin_id} app {app_id} faulted: {detail}"));
         plugins.plugin_faults.push(ShellPluginFault { plugin_id: plugin_id.to_string(), app_id: app_id.to_string(), detail,#[cfg(not(target_arch="wasm32"))] frame:None,#[cfg(not(target_arch="wasm32"))] kernel:None,#[cfg(not(target_arch="wasm32"))] actor_call:None });
         chrome.error = self.fault_status(plugins);
@@ -77,7 +77,7 @@ impl PrefsState {
     /// left no trace at all, which is why a blank body read as "nothing happened". `debug_log` is
     /// this type's ONE trace sink for exactly that reason; no diagnostic in this file may use
     /// `eprintln!` except `debug_log`'s own native arm.
-    pub(crate) fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, refusal: crate::program_bridge::ProgramFault, chrome: &mut ChromeState, plugins: &mut PluginState) {
+    pub fn record_surface_fault(&mut self, surface_id: &str, body_key: &str, refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, chrome: &mut ChromeState, plugins: &mut PluginState) {
         #[cfg(not(target_arch = "wasm32"))]
         let (frame,kernel,actor_call)=(refusal.frame,refusal.kernel,refusal.actor_call);
         #[cfg(not(target_arch = "wasm32"))]
@@ -126,7 +126,7 @@ impl PrefsState {
 
     /// 🚪️ Opens one plugin's app for the boot session, isolating an activation fault as a per-plugin
     /// status. Returns `None` when the plugin is not loaded or its actor refused to open.
-    pub(super) async fn open_boot_instance(&mut self, plugin_id: &str, app_id: &str, chrome: &mut ChromeState, plugins: &mut PluginState) -> Option<u32> {
+    pub async fn open_boot_instance(&mut self, plugin_id: &str, app_id: &str, chrome: &mut ChromeState, plugins: &mut PluginState) -> Option<u32> {
         let Some(program) = plugins.plugins.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
             self.record_plugin_fault(plugin_id, app_id, "plugin is not loaded".to_string(), chrome, plugins);
             return None;
@@ -149,7 +149,7 @@ impl PrefsState {
     /// ⚠️ `visited`, not `clear()`: a scoped pass re-renders only what its `UiDirtyScope` named, and
     /// clearing the whole set would silently dismiss the fault card of every surface it never looked
     /// at — a broken body that repairs itself the moment an unrelated window settles.
-    pub(crate) fn settle_surface_faults(&mut self, faults: Vec<(String, String, crate::program_bridge::ProgramFault)>, visited: &[String], chrome: &mut ChromeState, plugins: &mut PluginState) {
+    pub fn settle_surface_faults(&mut self, faults: Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>, visited: &[String], chrome: &mut ChromeState, plugins: &mut PluginState) {
         plugins.surface_faults.retain(|fault| !visited.contains(&fault.surface_id));
         for (surface_id, body_key, detail) in faults {
             self.record_surface_fault(&surface_id, &body_key, detail, chrome, plugins);

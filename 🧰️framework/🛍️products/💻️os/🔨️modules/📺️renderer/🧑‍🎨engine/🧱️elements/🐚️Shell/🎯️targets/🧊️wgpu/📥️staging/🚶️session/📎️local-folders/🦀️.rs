@@ -3,14 +3,13 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::local_folders::*;
 
 impl<'ctx> SessionCtx<'ctx> {
     /// 🔁️ Keeps a host-route document's archive current: once the history moved past the cursor last written, the
     /// archive is written again unless it is byte-identical — never while a history edit is open, whose preview is not
     /// the document. A refused write is told once and retried at the next change. `true` when it wrote or was refused.
-    #[cfg(any(target_arch = "wasm32", test))]
-    pub(crate) async fn flush_host_route_folder(&mut self) -> bool {
+    #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+    pub async fn flush_host_route_folder(&mut self) -> bool {
         if self.history.history_time_travel.is_some() || !self.history.host_route_folder.as_ref().is_some_and(|folder| folder.written_cursor != self.history.history_cursor) {
             return false;
         }
@@ -32,8 +31,8 @@ impl<'ctx> SessionCtx<'ctx> {
 
     /// ✂️ Detaches a host-route document: its last change is written, the binding dropped and a folder forgotten.
     /// `false` when no document was bound through the host route.
-    #[cfg(any(target_arch = "wasm32", test))]
-    pub(crate) async fn detach_host_route_folder(&mut self) -> bool {
+    #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+    pub async fn detach_host_route_folder(&mut self) -> bool {
         self.flush_host_route_folder().await;
         let Some(folder) = self.history.host_route_folder.take() else { return false };
         self.sync.sync_backbone_uri = None;

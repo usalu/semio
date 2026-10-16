@@ -12,13 +12,13 @@ use super::*;
 /// plain `fn`. `drain_deferred_actions` owns `&mut self`, so it can await the pick AND dispatch the
 /// import chunks it produces through the normal action path, folding each one's own effects back in.
 #[cfg(target_arch = "wasm32")]
-pub(crate) struct PendingFileOpen {
-    pub(crate) controller_id: String,
-    pub(crate) accept: String,
-    pub(crate) read_as: Option<String>,
-    pub(crate) import_action: String,
-    pub(crate) args: Option<semio_framework::DslValue>,
-    pub(crate) multiple: bool,
+pub struct PendingFileOpen {
+    pub controller_id: String,
+    pub accept: String,
+    pub read_as: Option<String>,
+    pub import_action: String,
+    pub args: Option<semio_framework::DslValue>,
+    pub multiple: bool,
 }
 
 //#endregion ShellTypes

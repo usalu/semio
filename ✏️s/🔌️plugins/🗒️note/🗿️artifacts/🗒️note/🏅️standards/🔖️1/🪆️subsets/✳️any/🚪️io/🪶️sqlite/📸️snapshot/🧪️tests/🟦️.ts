@@ -2,8 +2,8 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { noteSnapshotToSqliteDatabase, noteSnapshotFromSqliteDatabase, NOTE_SQLITE_SCHEMA } from "../🟦️.ts";
-import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import { type NoteSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
 import {parseNoteSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";

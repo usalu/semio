@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
 import type{AluminiumMaterial,PlateElement,AluminiumSection,MemberAction,AluminiumMember,BoltGroup,WeldGroup,AluminiumConnection,FireScenario,FatigueDetail,ColdFormedSheet,AluminiumShell}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 export type En1999SqlitePlate=Omit<PlateElement,"width"|"thickness"|"weldPosition">&{width:Binary64;thickness:Binary64;weldPosition:Binary64};
 export type En1999SqliteSection=Omit<AluminiumSection,"height"|"width"|"flangeThickness"|"webThickness"|"outerDiameter"|"elements">&{height:Binary64;width:Binary64;flangeThickness:Binary64;webThickness:Binary64;outerDiameter:Binary64;elements:En1999SqlitePlate[]};
 export type En1999SqliteAction=Omit<MemberAction,"gKLine"|"qKLine"|"nK"|"vYK"|"vZK"|"mYK"|"mZK">&{gKLine:Binary64;qKLine:Binary64;nK:Binary64;vYK:Binary64;vZK:Binary64;mYK:Binary64;mZK:Binary64};

@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellTypes
 //#region 🔖️ChromeThreadBoundary
-pub(crate) const SHELL_CHROME_IO_FIELD_BYTES: usize = 4 * 1024;
+pub const SHELL_CHROME_IO_FIELD_BYTES: usize = 4 * 1024;
 
 //#endregion 🔖️ChromeThreadBoundary
 //#endregion ShellTypes

@@ -3,7 +3,8 @@
 //! native host that links no Rust codec for that kind — a wgpu shell that mounted the component —
 //! identifies and validates the kind's documents the way the hub's trusted catalog does.
 
-use super::{CompiledHandle, GuestRuntimes, OwnedCompiledGuest};
+use super::{CompiledHandle, GuestRuntimes};
+use semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest;
 use semio_framework_os_kernel::os_store::{text_format::ArtifactTextFiles, codec_registry::ComponentDocumentCodec, codec_registry::ComponentDocumentCodecFuture, VcsError};
 use std::sync::{Arc, OnceLock};
 
@@ -25,18 +26,18 @@ pub struct OwnedComponentDocumentCodec {
 impl OwnedComponentDocumentCodec {
     /// 🧬️ Binds `compiled` to the `schema` it owns; refused unless `runtime` is the owned
     /// interpreter, the only runtime whose codec calls run outside a live actor.
-    pub fn try_new(runtime: Arc<GuestRuntimes>, compiled: CompiledHandle, schema: String) -> Result<Self, super::PluginHostError> {
+    pub fn try_new(runtime: Arc<GuestRuntimes>, compiled: CompiledHandle, schema: String) -> Result<Self, semio_framework_plugin_guest_contract::PluginHostError> {
         if !matches!(runtime.as_ref(), GuestRuntimes::Owned(_)) {
-            return Err(super::PluginHostError::Plugin(format!("component codec for {schema:?} needs the owned interpreter")));
+            return Err(semio_framework_plugin_guest_contract::PluginHostError::Plugin(format!("component codec for {schema:?} needs the owned interpreter")));
         }
         if schema.is_empty() {
-            return Err(super::PluginHostError::Plugin("component codec needs a document schema".into()));
+            return Err(semio_framework_plugin_guest_contract::PluginHostError::Plugin("component codec needs a document schema".into()));
         }
         let compiled = super::owned_compiled(&compiled)?.clone();
         Ok(Self { runtime, compiled, schema, pack_schema_hash: OnceLock::new() })
     }
 
-    fn owned(&self) -> &super::OwnedRuntime {
+    fn owned(&self) -> &semio_framework_plugin_interpreter_runtime::OwnedRuntime {
         match self.runtime.as_ref() {
             GuestRuntimes::Owned(runtime) => runtime,
             _ => unreachable!("try_new admits only the owned interpreter"),

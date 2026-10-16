@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Schema-erased, typed snapshot editing shared by every stdio artifact editor"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

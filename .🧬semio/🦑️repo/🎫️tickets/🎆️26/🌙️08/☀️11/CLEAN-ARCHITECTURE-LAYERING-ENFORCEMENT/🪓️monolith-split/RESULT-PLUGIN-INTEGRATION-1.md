@@ -1,0 +1,22 @@
+# 🧩️ Result PLUGIN-INTEGRATION-1: flip of the WP3, WP4 and WP5 plugin crates
+
+Executor: Sonnet 5.5, foreground, no sub-agents, no ticket tool, no git-modifying command. Plan: `PLAN-PLUGIN-CRATES.md` (Appendices H to K), `RESULT-PLUGIN-WP3.md` (section 8), `-WP4.md` (section 10), `-WP5.md` (sections 6 and 7), method of `RESULT-RENDERER-INTEGRATION-1.md`. Tools: `pi1-tools/`. Logs: `🗑️generated/pi1-*`. Pre-edit copies of every touched file: `🗑️generated/pi1-orig/`, list in `pi1-tools/touched.json`. `PLUG` = `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin`.
+
+## 0. Verdict
+
+IN PROGRESS (rewritten after each milestone). At 06:50: the flip tool chain exists and group G1 (`child`, `composition-emission`, `composition-publication`, `publication-mounted`) is generated and verified in the crates-only union oracle (lib: 0 new signal rows, test: 0 new except the sandbox-only missing store fixture); the full-monolith differential of G1 is running; nothing is applied to the repository yet.
+
+## 1. Found state (start, 2026-10-16 05:00)
+
+* WP1 (9 crates) and WP2 (7 crates) are real crates; the WP3, WP4 and WP5 crates are staged inside the monolith (class B roots are old module files, class A roots are stubs, hub units mount the old files).
+* Launcher: `bun repo cargo ... check -p semio-framework-plugin-identity --lib` reached cargo at 05:05 and stopped in `cargo fetch --locked` (stale root `Cargo.lock`; `ri2` was running `update --workspace --offline`). `RESULT-INFRA-UNBLOCK-2.md` (05:04) then reports the next blocker, an orphan old-format queue claim in the capacity-lease directory (`Original queue claim path identity required`). No compiler ran for any crate of this pass; the compiler-ingress boundary would also refuse every plugin crate because the oversized `semio-framework-os-kernel` is a dependency of all of them. All evidence below is static.
+* Earlier `pi1-*` logs in `🗑️generated/` (03:09 to 04:39: `pi1-b1-*`, `pi1-fb-b1`, `pi1-lock-1`, `pi1-uo2-*`) belong to an earlier run with the same prefix; its tools folder does not exist and the repository carried none of its edits (checked against the hubs and the crate roots), so nothing was recovered or rolled back.
+
+## 2. Method (tools in `pi1-tools/`)
+
+* `modnode.py`, `rsparse.py`: structural Rust scanner (brace-aware statements; textual `include!` merged into the including module; `#[path]` relative to the declaring file plus inline module names, verified against rustc on a toy; attributes before `include!`).
+* `world.py`: name resolution over the monolith tree (the real lib root `📦️packages/🦀️rust/🦀️.rs` with its `pub mod component` and `pub use component::*`) plus the module trees of the crates that already own their sources. It follows `use` chains and globs and returns definition sites. `public_lookup` models what other crates may name (exactly `pub`, shadowing by private imports).
+* `layout.py`: new-world coordinates of every part of the monolith (owner crate by the Appendix G directory map, crate roots, promoted modules: a foreign `include!` or mount becomes a module of the owning crate, a dissolved wrapper module keeps its name).
+* `flipcore.py`: the planner. For a group of crates it rewrites every file of the group: `use` statements are regenerated with explicit crate paths, glob scopes (`use super::*`, inherited host scopes of foreign includes) become explicit imports (cfg attributes of the original binding kept, trait imports kept), unused imports are pruned, imports of higher crates are dropped and reported (`UP-use`), foreign includes and mounts are removed from their host, crate roots are assembled (class A: mount lines, extern aliases; class B: the old module file), cfg(test) units that name higher layers or facade fixtures are moved verbatim into a facade test host module with explicit old-scope imports, and facade-resident files that lose their parent module are re-pointed (`rehome`).
+* `groupdrv.py`: spec-driven driver (overlay of new texts, name-keyed visibility widening against all files outside the crate, manifests, repository apply through `ed.py`). `g1spec.py` is the first spec.
+* `uo.py`: union oracle (rustc `--emit=metadata -o /dev/null` over one sandbox crate, sandbox patches of `📓️RESOLUTION-ORACLE.md`), crates-only mode (signal rows against a stored baseline) and full-monolith mode (A against B). `verify.py`, `orphans.py`, `edges.py`: static gates (path literals, single owner, regions, rustfmt parse, TOML, dependency idents, orphan rule, crate-to-crate reference edges by real resolution).

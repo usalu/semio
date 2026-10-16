@@ -12,7 +12,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     /// React's footer renders as `No one else is here`, not a reason to omit the pill.
     ///
     /// ⏪️ A peer editing the history wears its time-travel activity (`time_travel::time_travel_peer_presence`).
-    pub(crate) fn footer_presence_rows(&self) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
+    pub fn footer_presence_rows(&self) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
         let Some(surface) = self.directory.presence_surface.as_deref() else { return Vec::new() };
         let mut rows = presence_peer_rows_for_surface(&self.directory.presence_peers, Some(surface), surface);
         let mut activities = self.directory.peer_time_travel_presence(&self.chrome, &self.history, &self.prefs).activities;

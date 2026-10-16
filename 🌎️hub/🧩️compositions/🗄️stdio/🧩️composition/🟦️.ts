@@ -4,7 +4,7 @@ import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCa
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, relative, resolve, sep } from "node:path";
-import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1 } from "../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
+import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1 } from "./📋️contract/🟦️.ts";
 
 type OwnerV1 = { id: string; root: string; enum: string; label: string; main: boolean };
 type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; observed: Map<string, string>; nativeReceipts: CompositionNativeReceiptV1[] };
@@ -143,7 +143,7 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
 
 /** 📦️ Refreshes only this composition's authored output regions and source projections. */
 export function prepareStdioComposition(repoRoot: string, hubRoot: string): { contributions: number; apps: number; receipts: number } {
-  observeCargoPreparationSourceV1(fileURLToPath(import.meta.url),fileURLToPath(new URL("../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts",import.meta.url)));
+  observeCargoPreparationSourceV1(fileURLToPath(import.meta.url),fileURLToPath(new URL("./📋️contract/🟦️.ts",import.meta.url)));
   const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full").map(row => ({ ...row, nativeReceipts: inputs.find(input => input.contribution.package === row.package)!.nativeReceipts }));
   const ownerSource = read(hubRoot, "🧩️composition/🔣️.json"), config = owners(JSON.parse(ownerSource)), ids = new Set(config.map((owner) => owner.id));
   if (rows.some((row) => row.apps.some((app) => !ids.has(app.owner)) || row.playgrounds.some((entry) => !ids.has(entry.owner)))) throw new Error("Artifact app contribution targets an undeclared composition owner");

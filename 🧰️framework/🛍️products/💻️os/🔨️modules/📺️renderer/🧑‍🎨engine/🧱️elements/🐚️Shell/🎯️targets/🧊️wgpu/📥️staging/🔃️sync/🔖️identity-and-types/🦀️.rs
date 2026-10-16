@@ -6,32 +6,32 @@ use super::*;
 
 //#region 🔖️IdentityPure
 /// 🛟️ One rebootstrap reseed: the control the actor raised, the pair fetch in flight, and when to ask again after a failure.
-pub(crate) struct ShellSyncReseed {
-    pub(crate) control: semio_framework_os_kernel::os_directory::RebootstrapRequired,
-    pub(crate) pending: Option<ShellDetached<Result<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1, String>>>,
-    pub(crate) retry_at_ms: f64,
+pub struct ShellSyncReseed {
+    pub control: semio_framework_os_kernel::os_directory::RebootstrapRequired,
+    pub pending: Option<ShellDetached<Result<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1, String>>>,
+    pub retry_at_ms: f64,
 }
 
 /// 🪢️ What a hub document's seed step asks: the document's canonical checkpoint pair, admitted only as the
 /// checkpoint its execution-target lease authorizes, over the shell's signed-in directory client.
 #[derive(Clone)]
-pub(crate) struct ShellHubDocumentSeed {
-    pub(crate) client: std::sync::Arc<ShellDirectoryClient>,
-    pub(crate) ctx: OperationContext,
-    pub(crate) scope: semio_framework_os_kernel::os_directory::DocumentScope,
-    pub(crate) checkpoint: semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1,
+pub struct ShellHubDocumentSeed {
+    pub client: std::sync::Arc<ShellDirectoryClient>,
+    pub ctx: OperationContext,
+    pub scope: semio_framework_os_kernel::os_directory::DocumentScope,
+    pub checkpoint: semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1,
 }
 
 /// 🧷️ An open whose host half is prepared — the prior document retired, the socket surface and
 /// execution target bound — waiting for the guest to hold the document before its actor binds.
-pub(crate) struct ShellPreparedDocumentOpen {
-    pub(crate) document_id: String,
-    pub(crate) schema: String,
-    pub(crate) bindings: Vec<PersistenceBinding>,
-    pub(crate) backbone_uri: Option<String>,
-    pub(crate) seed: Option<ShellHubDocumentSeed>,
-    pub(crate) plugin: ProgramBridgeEntry,
-    pub(crate) session: ActiveSession,
+pub struct ShellPreparedDocumentOpen {
+    pub document_id: String,
+    pub schema: String,
+    pub bindings: Vec<PersistenceBinding>,
+    pub backbone_uri: Option<String>,
+    pub seed: Option<ShellHubDocumentSeed>,
+    pub plugin: ProgramBridgeEntry,
+    pub session: ActiveSession,
 }
 
 //#endregion 🔖️IdentityPure
@@ -54,15 +54,15 @@ pub struct ShellSyncChannel {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ShellSyncOwner {
-    pub(crate) plugin_id: String,
-    pub(crate) instance_id: u32,
-    pub(crate) binding_generation: u64,
-    pub(crate) actor_uri: String,
-    pub(crate) document_key: String,
+pub struct ShellSyncOwner {
+    pub plugin_id: String,
+    pub instance_id: u32,
+    pub binding_generation: u64,
+    pub actor_uri: String,
+    pub document_key: String,
 }
 
-pub(crate) fn shell_sync_channel_owner(channel: &ShellSyncChannel) -> ShellSyncOwner {
+pub fn shell_sync_channel_owner(channel: &ShellSyncChannel) -> ShellSyncOwner {
     ShellSyncOwner { plugin_id: channel.plugin_id.clone(), instance_id: channel.instance_id, binding_generation: channel.binding_generation, actor_uri: channel.actor_uri.clone(), document_key: shell_hub_document_key(&channel.document_key) }
 }
 

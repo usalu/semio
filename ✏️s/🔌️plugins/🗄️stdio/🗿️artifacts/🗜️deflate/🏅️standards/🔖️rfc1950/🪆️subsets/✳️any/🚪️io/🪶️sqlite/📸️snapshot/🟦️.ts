@@ -1,7 +1,7 @@
 /** 🗜️ Individually authored RFC1950 header and decompressed byte relations. */
 import type { DeflateSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase, SqliteRow } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase, SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 🏛️ Literal copy of this snapshot's adjacent handcrafted SQL asset. */
 export const DEFLATE_SQLITE_SCHEMA = "CREATE TABLE deflate_document (\n  id INTEGER PRIMARY KEY CHECK (id = 1),\n  schema TEXT NOT NULL,\n  compression_method INTEGER NOT NULL CHECK (compression_method BETWEEN 0 AND 15),\n  window_bits INTEGER NOT NULL CHECK (window_bits BETWEEN 0 AND 15),\n  compression_level_hint INTEGER NOT NULL CHECK (compression_level_hint BETWEEN 0 AND 3),\n  dictionary_adler32 INTEGER CHECK (dictionary_adler32 BETWEEN 0 AND 4294967295)\n);\nCREATE TABLE deflate_payload_byte (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES deflate_document(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),\n  value INTEGER NOT NULL CHECK (value BETWEEN 0 AND 255)\n);\n";

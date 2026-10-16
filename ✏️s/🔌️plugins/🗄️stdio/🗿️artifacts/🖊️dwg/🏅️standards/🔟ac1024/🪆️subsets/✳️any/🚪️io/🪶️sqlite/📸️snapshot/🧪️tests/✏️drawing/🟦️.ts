@@ -6,7 +6,7 @@ import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectDrawing,dwgReconstructDrawing } from "../../✏️drawing/🟦️.ts";
 import { dwgProjectDictionary,dwgReconstructDictionary,dwgProjectControl,dwgReconstructControl,dwgProjectXRecord,dwgReconstructXRecord } from "../../🗃️tables/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 import { dwgDrawingBodies as bodies,dwgDrawingFixture as drawing } from "../🧰️support/✏️drawing/🟦️.ts";
 const max=18446744073709551615n;

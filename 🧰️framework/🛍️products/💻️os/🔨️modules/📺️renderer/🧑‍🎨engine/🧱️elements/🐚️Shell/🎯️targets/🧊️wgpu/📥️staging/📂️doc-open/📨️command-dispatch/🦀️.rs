@@ -26,7 +26,7 @@ impl OpeningState {
     /// door's, a Space index row's) resolves exactly like one that does. Answers `false` for a relay that names
     /// no hub document, which opens as before.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn begin_document_resolution(&mut self, target: &OpenArtifactRelayTarget, plugins: &PluginState, prefs: &PrefsState, directory: &DirectoryState) -> bool {
+    pub fn begin_document_resolution(&mut self, target: &OpenArtifactRelayTarget, plugins: &PluginState, prefs: &PrefsState, directory: &DirectoryState) -> bool {
         let (Some(document_id), Some(schema), Some(space_id), Some(client)) = (target.document_id.clone(), target.schema.clone(), self.open_space_id.clone(), directory.directory_client.clone()) else {
             return false;
         };
@@ -52,7 +52,7 @@ impl OpeningState {
             let lease = client.document_execution_target_lease(&ctx, &intent).await.map_err(|error| format!("document execution target: {error}"))?;
             let plugin_id = lease.package.plugin_id.clone();
             if expected_plugin.as_ref().is_some_and(|expected| *expected != plugin_id) {
-                return Err(crate::program_bridge::ProgramFault::from(format!("the hub opens this document with {plugin_id}, not {}", expected_plugin.unwrap_or_default())));
+                return Err(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault::from(format!("the hub opens this document with {plugin_id}, not {}", expected_plugin.unwrap_or_default())));
             }
             let local_sha = local_shas.into_iter().find(|(local, _)| *local == plugin_id).and_then(|(_, sha)| sha);
             let resolved = client
@@ -61,10 +61,10 @@ impl OpeningState {
                 .map_err(|error| format!("document execution target: {error}"))?;
             let app_id = resolved.lease.surface.app_id.clone();
             let program = match resolved.files {
-                Some(files) => Some(crate::program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.package.component_receipt).await?),
+                Some(files) => Some(semio_framework_os_renderer_wgpu_program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.package.component_receipt).await?),
                 None => None,
             };
-            Ok::<ShellDocumentOpenAnswer, crate::program_bridge::ProgramFault>(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint: resolved.lease.checkpoint.clone() })
+            Ok::<ShellDocumentOpenAnswer, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint: resolved.lease.checkpoint.clone() })
         });
         let mut opening = ShellDocumentOpening::new(
             label,
@@ -81,7 +81,7 @@ impl OpeningState {
     }
 
     /// 🧯️ Settles the open as failed, out loud: its band keeps the reason and the notice names it.
-    pub(super) fn fail_document_opening(&mut self, error: String, chrome: &mut ChromeState, prefs: &PrefsState) {
+    pub fn fail_document_opening(&mut self, error: String, chrome: &mut ChromeState, prefs: &PrefsState) {
         debug_log(&format!("[TRACE] wgpu shell os.open-artifact relay failed: {error}"));
         let is_de = prefs.locale_id == "de";
         chrome.show_transient_notice(shell_chrome_string("open-artifact.document-failed", is_de), semio_framework::Severity::Warning, Some("open-artifact.document-failed"));

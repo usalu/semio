@@ -3,7 +3,7 @@ import {PaintedPathPrepareJob,PaintedRegionsCloseJob,type PaintedPathRegions} fr
 import {ScenePlanCloseJob} from "../../🧹️retire/🟦️.ts";
 import type {DocumentScenePlan} from "../../📋️prepare/🟦️.ts";
 import {segmentBounds} from "../../../🧮️geometry/🟦️.ts";
-import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
 type Point=readonly[number,number];type Bounds=[number,number,number,number];
 export type PaintedSceneLimits={maxNodes:number;maxSegments:number;maxPoints:number;maxContours:number;maxWork:number};
 export type PreparedSceneCounts={nodes:number;segments:number;points:number;contours:number};

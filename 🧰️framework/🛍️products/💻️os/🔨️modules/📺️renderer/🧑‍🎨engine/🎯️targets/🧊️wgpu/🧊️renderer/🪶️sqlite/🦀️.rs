@@ -5,8 +5,8 @@ use store::{os_store::{serialization::ArtifactSqliteSnapshotHost,ArtifactNativeS
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind as Kind};
 use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
-pub(super) const SCHEMA:&str="native.socket-grant.probe/v1";
-pub(super) const DIALECT:Dialect=Dialect{artifact_kind:"native.socket-grant.probe",standard:StandardId("1"),subset:SubsetId("*")};
+pub const SCHEMA:&str="native.socket-grant.probe/v1";
+pub const DIALECT:Dialect=Dialect{artifact_kind:"native.socket-grant.probe",standard:StandardId("1"),subset:SubsetId("*")};
 
 fn semantics(length:usize,phase:Phase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  control.checkpoint(phase,0,1)?;control.check_rows(1)?;control.check_value_bytes(length.checked_add(8).ok_or_else(||ValueError::new(Kind::OwnershipLimit,"Socket semantic bytes overflow"))?)

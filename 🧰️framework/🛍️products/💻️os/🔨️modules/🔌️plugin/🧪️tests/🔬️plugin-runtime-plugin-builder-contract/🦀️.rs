@@ -3278,7 +3278,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(app.ingest.envelope_field_decoder_retirements.is_empty());
         assert!(app.ingest.envelope_field_decoders.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(app.drive_envelope_field_decoder_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close hierarchy observes exact terminal state"), PluginLifecycleStep::Complete(Default::default()));
+        assert_eq!(app.ladder_ctx().drive_envelope_field_decoder_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close hierarchy observes exact terminal state"), PluginLifecycleStep::Complete(Default::default()));
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -3387,7 +3387,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(app.ingest.envelope_completed_record_retirements.is_empty());
         assert!(app.ingest.envelope_completed_records.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(app.drive_envelope_completed_record_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close observes exact completed terminal state"), PluginLifecycleStep::Complete(Default::default()));
+        assert_eq!(app.ladder_ctx().drive_envelope_completed_record_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close observes exact completed terminal state"), PluginLifecycleStep::Complete(Default::default()));
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -3452,24 +3452,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
         let mut app = contract_app_raw(crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-        let _ = app.test_history().await;
+        let _ = app.render_ctx().test_history().await;
         let mut turns = 0;
         for _ in 0..4_096 {
-            if app.retained_fields_own_terminal_is_empty() {
+            if app.ladder_ref().retained_fields_own_terminal_is_empty() {
                 break;
             }
-            let demand = app.retained_fields_close_demand(page).expect("quoted retained field demand");
+            let demand = app.ladder_ref().retained_fields_close_demand(page).expect("quoted retained field demand");
             let grant = fixture_close_grant(demand);
             let starved = store::RetainedCloneGrant { maximum_items: 0, ..grant };
-            assert_eq!(app.retained_fields_close_step(starved).expect("unfunded retained field turn yields").progress(), store::RetainedCloneProgress::default());
-            let progress = app.retained_fields_close_step(grant).expect("retained field turn").progress();
+            assert_eq!(app.ladder_ctx().retained_fields_close_step(starved).expect("unfunded retained field turn yields").progress(), store::RetainedCloneProgress::default());
+            let progress = app.ladder_ctx().retained_fields_close_step(grant).expect("retained field turn").progress();
             assert!(progress.fits(grant), "retained field receipt {progress:?} exceeds its exact grant {grant:?}");
             assert_ne!(progress, store::RetainedCloneProgress::default(), "a funded retained field turn must move one owner");
             turns += 1;
         }
         assert!(turns != 0, "the warmed projection cache and history view are retained fields the rung must release");
-        assert!(app.retained_fields_own_terminal_is_empty());
-        assert!(matches!(app.retained_fields_close_step(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close).expect("repeated terminal turn"), store::RetainedCloneStep::Complete(progress) if progress == store::RetainedCloneProgress::default()));
+        assert!(app.ladder_ref().retained_fields_own_terminal_is_empty());
+        assert!(matches!(app.ladder_ctx().retained_fields_close_step(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close).expect("repeated terminal turn"), store::RetainedCloneStep::Complete(progress) if progress == store::RetainedCloneProgress::default()));
         artifact_app_laws::close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -4753,7 +4753,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
         assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000,cx).await.fault.is_none());
-        let (captured, typed_captured) = app.test_capture_presence_roots(&TestCommand::Increment, &meta()).await.expect("actual shared typed capture helper");
+        let (captured, typed_captured) = app.dispatch_ctx().test_capture_presence_roots(&TestCommand::Increment, &meta()).await.expect("actual shared typed capture helper");
         assert!(std::sync::Arc::ptr_eq(&captured, &app.roster.peer_presence), "operation capture clones one peer root Arc");
 
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000,cx).await.fault.is_none());
@@ -5279,7 +5279,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let TestMembers::Child(child_store) = &mut entry.member;
         assert_eq!(child_store.snapshot().expect("child snapshot").count, 7);
 
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         let composite_rows: Vec<_> = history.commands.iter().filter(|entry| entry.action_id == "compositeEdit").collect();
         let carrying: Vec<_> = composite_rows.iter().filter(|row| !row.child_edit_ids.is_empty()).collect();
         assert_eq!(carrying.len(), 1, "exactly one composite row names the child's own edit id: {:?}", composite_rows.iter().map(|row| (row.edit_id.clone(), row.child_edit_ids.clone())).collect::<Vec<_>>());
@@ -6174,7 +6174,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity,cx).await.expect("select");
         assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "the select wrote the config lane");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.iter().map(|entry| entry.action_id.as_str()).collect::<Vec<_>>(), vec!["increment"], "only the document row is listed");
         reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.count, 0, "undo retracts the document edit, never the config one");
@@ -6205,14 +6205,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta(), &mut identity,cx).await.expect("select b");
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment again");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 2, "two document rows and no config row");
         let first = history.commands.iter().min_by_key(|entry| entry.seq).expect("the first increment row");
         assert!(first.revertible, "a document row is revertible");
         reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first.seq }))), &mut identity).await;
         assert_eq!(app.stores.test_snapshot().await.count, 1, "reverting to the first increment undoes the second");
         assert_eq!(app.stores.test_config().await.selected, Some("b".to_string()), "the config lane is never walked");
-        let after = app.test_history().await;
+        let after = app.render_ctx().test_history().await;
         assert_eq!(after.commands.len(), 3, "the revert appends one History-kind row");
         assert_eq!(after.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
     
@@ -6239,7 +6239,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &mut identity).await;
 
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         let entry = history.commands.first().expect("one logged shell row");
         assert_eq!(entry.kind, ActionKind::Shell);
         assert!(entry.revertible, "a Shell row with a stored inverse must be revertible");
@@ -6248,7 +6248,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &mut identity).await;
 
         assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework::dsl_value!({ "themeId": "light" })) }]);
-        assert_eq!(app.test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
+        assert_eq!(app.render_ctx().test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -6701,7 +6701,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }))),
          &mut identity)
         .await;
-        let before = app.test_history().await;
+        let before = app.render_ctx().test_history().await;
         assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
         assert!(before.can_undo);
         assert!(!before.can_redo);
@@ -6724,7 +6724,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(!patch.upserts.is_empty(), "patch must carry upserts the host chrome applies");
         assert!(patch.can_undo, "Set Active Example must remain reachable");
         assert!(patch.can_redo);
-        let after_resize = app.test_history().await;
+        let after_resize = app.render_ctx().test_history().await;
         let resize = after_resize.commands.iter().find(|entry| entry.action_id == "os.resizeWindow").expect("resize stays in the append-only log");
         assert!(!resize.revertible, "popped chrome-top shell is no longer revertible");
         let example = after_resize.commands.iter().find(|entry| entry.action_id == "setActiveExample").expect("example");
@@ -6744,14 +6744,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let redo_patch = redo_example.history_patch.expect("redo publishes history_patch");
         assert!(redo_patch.can_undo);
         assert!(redo_patch.can_redo);
-        assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == "setActiveExample").is_some_and(|entry| entry.revertible));
+        assert!(app.render_ctx().test_history().await.commands.iter().find(|entry| entry.action_id == "setActiveExample").is_some_and(|entry| entry.revertible));
 
         let redo_resize = reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(redo_resize.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: None }]);
         let redo_resize_patch = redo_resize.history_patch.expect("second redo publishes history_patch");
         assert!(redo_resize_patch.can_undo);
         assert!(!redo_resize_patch.can_redo);
-        assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == "os.resizeWindow").is_some_and(|entry| entry.revertible));
+        assert!(app.render_ctx().test_history().await.commands.iter().find(|entry| entry.action_id == "os.resizeWindow").is_some_and(|entry| entry.revertible));
         close_reserved_app(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -6829,7 +6829,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("document example");
-        let _ = app.test_history().await;
+        let _ = app.render_ctx().test_history().await;
         reserved_action(
             &mut app,
             NOTE_SHELL_COMMAND_ACTION_ID,
@@ -6842,7 +6842,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
          &mut identity)
         .await;
         assert_eq!(app.stores.test_snapshot().await.count, 1);
-        let before = app.test_history().await;
+        let before = app.render_ctx().test_history().await;
         assert!(before.commands.iter().any(|entry| label_in(&entry.label, Locale::En).contains("Set Active Example")));
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Resize Window"));
 
@@ -6950,7 +6950,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for entry in fixture["stack"].as_array().expect("stack") {
             reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone())), &mut identity).await;
         }
-        let before = app.test_history().await;
+        let before = app.render_ctx().test_history().await;
         assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Activate Window", "Resize Window", "Set Active Example"]);
         for skipped in fixture["undo"]["skippedActionIds"].as_array().expect("skippedActionIds") {
             let action_id = skipped.as_str().expect("skipped action id");
@@ -6975,12 +6975,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(patch.can_undo, fixture["undo"]["canUndo"].as_bool().expect("canUndo"));
         assert_eq!(patch.can_redo, fixture["undo"]["canRedo"].as_bool().expect("canRedo"));
         assert!(!patch.upserts.is_empty());
-        let after = app.test_history().await;
+        let after = app.render_ctx().test_history().await;
         assert!(after.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| !entry.revertible), "popped chrome-top shell is no longer revertible");
         let redo = reserved_action(&mut app, "redo", None, &mut identity).await;
         assert_eq!(redo.requested_effects, vec![Effect::ReplayShellCommand { action_id: fixture["redo"]["replayActionId"].as_str().expect("redo replayActionId").into(), args: None }]);
         assert!(redo.history_patch.is_some_and(|patch| patch.can_undo && !patch.can_redo));
-        assert!(app.test_history().await.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| entry.revertible));
+        assert!(app.render_ctx().test_history().await.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| entry.revertible));
         close_reserved_app(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -7008,14 +7008,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("document edit");
-        let _ = app.test_history().await;
+        let _ = app.render_ctx().test_history().await;
         reserved_action(
             &mut app,
             NOTE_SHELL_COMMAND_ACTION_ID,
             Some(&dv(json!({ "commandId": "shell.windowActivate", "label": "Activate Window", "detail": { "windowId": "trinity-jack-graph" } }))),
          &mut identity)
         .await;
-        let before = app.test_history().await;
+        let before = app.render_ctx().test_history().await;
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Activate Window"), "the window activation is the newest row");
         assert!(before.commands.iter().find(|entry| entry.action_id == "shell.windowActivate").is_some_and(|entry| !entry.revertible), "a note that declared no inverse is not an undo target");
         assert_eq!(app.stores.test_snapshot().await.count, 1);
@@ -7025,7 +7025,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             "undo must not replay a window activation into the guest"
         );
         assert_eq!(app.stores.test_snapshot().await.count, 0, "undo must pop the document edit, not the window activation");
-        let after = app.test_history().await;
+        let after = app.render_ctx().test_history().await;
         assert!(after.commands.iter().any(|entry| entry.action_id == "shell.windowActivate"), "the chrome row stays in the append-only log");
         close_reserved_app(&mut app, mounted_policy,cx);
     
@@ -7072,7 +7072,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
         assert_eq!(entry.action_id, "increment");
@@ -7105,7 +7105,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
             app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta(), &mut identity,cx).await.expect("streamLabel");
         }
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         let stream_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "streamLabel").collect();
         assert_eq!(stream_entries.len(), 1, "a streamed gesture must grow one entry's op_lines, not append new entries");
     
@@ -7135,9 +7135,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for key in 0..64u8 {
             value.push(char::from(b'a' + key % 26));
             app.dispatch_typed(TestCommand::StreamLabel { value: value.clone(), commit: key == 63 }, &meta(), &mut identity,cx).await.expect("streamLabel");
-            let _ = app.test_history().await;
+            let _ = app.render_ctx().test_history().await;
         }
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         let row = history.commands.iter().find(|entry| entry.action_id == "streamLabel").expect("the gesture's row");
         assert_eq!(row.op_count, 64, "the row counts every operation of its edit");
         assert_eq!(row.op_lines.len(), HISTORY_ROW_OPERATION_PREVIEW, "the row previews a bounded tail of its operations");
@@ -7166,13 +7166,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
-        assert_eq!(app.test_history().await.commands.len(), 1);
+        assert_eq!(app.render_ctx().test_history().await.commands.len(), 1);
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        let after_undo = app.test_history().await;
+        let after_undo = app.render_ctx().test_history().await;
         assert_eq!(after_undo.commands.len(), 2, "undo appends, it does not remove the increment entry");
         assert!(after_undo.commands.iter().any(|entry| entry.action_id == "increment"));
         reserved_action(&mut app, "redo", None, &mut identity).await;
-        let after_redo = app.test_history().await;
+        let after_redo = app.render_ctx().test_history().await;
         assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
         assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
     
@@ -7201,13 +7201,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("inc1");
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("inc2");
         assert_eq!(app.stores.test_snapshot().await.count, 2);
-        let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
-        let before_len = app.test_history().await.commands.len();
+        let first_increment_seq = app.render_ctx().test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
+        let before_len = app.render_ctx().test_history().await.commands.len();
 
         let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &mut identity).await;
         assert!(result.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.stores.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
         assert_eq!(history.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
     
@@ -7245,7 +7245,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut receiver = contract_app(mounted_policy, &mut identity).await;
         receiver.ingest_operations(&operations, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("ingest");
-        let history = receiver.test_history().await;
+        let history = receiver.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 1);
         assert!(history.commands[0].edit_id.is_some());
         assert!(!history.commands[0].op_lines.is_empty());
@@ -7273,7 +7273,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
         assert!(result.mutations.is_empty());
-        assert_eq!(app.test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
+        assert_eq!(app.render_ctx().test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -7566,7 +7566,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity,cx).await.expect("select");
-        assert!(app.test_history().await.commands.is_empty(), "a config-only View is never a row (design §20.13, L4)");
+        assert!(app.render_ctx().test_history().await.commands.is_empty(), "a config-only View is never a row (design §20.13, L4)");
         assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "while the config lane holds its edit");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -7591,7 +7591,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for id in ["node-1", "node-2", "node-3"] {
             app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta(), &mut identity,cx).await.expect("select");
         }
-        assert!(app.test_history().await.commands.is_empty(), "three config-only Views add no row");
+        assert!(app.render_ctx().test_history().await.commands.is_empty(), "three config-only Views add no row");
         assert_eq!(app.stores.test_config().await.selected, Some("node-3".to_string()));
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -7617,7 +7617,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta(), &mut identity,cx).await.expect("select b");
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta(), &mut identity,cx).await.expect("select c");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.count)).collect::<Vec<_>>(), vec![("increment", 1)]);
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -7642,7 +7642,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let args = dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" }));
         reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
         assert_eq!(entry.action_id, "os.setThemeId");
@@ -7651,7 +7651,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty());
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 2);
         assert!(history.commands.iter().all(|entry| entry.count == 1));
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
@@ -7678,7 +7678,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity).await;
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         let label = &history.commands[0].label;
         for terminology in Terminology::ALL {
             for locale in Locale::ALL {
@@ -7769,7 +7769,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(dv(json!({ "windowId": "main-2", "kind": kind }))), &under, &mut identity).await.unwrap_or_else(|fault| panic!("{kind}: {fault:?}"));
             assert_eq!(take_test_host_events(), vec![event], "{kind}");
         }
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert!(history.commands.is_empty(), "the answer to a blur is never a history row: {:?}", history.commands.iter().map(|entry| &entry.action_id).collect::<Vec<_>>());
         let refused = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(dv(json!({ "windowId": "main-1", "kind": "wobble" }))), &under, &mut identity).await;
         assert_eq!(refused.err().map(|fault| fault.code), Some(FaultCode::new("hostEvent.invalid")));
@@ -7797,7 +7797,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.dispatch_typed(TestCommand::ViewNoScope, &meta(), &mut identity,cx).await.expect("viewNoScope");
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
         app.dispatch_typed(TestCommand::ViewPartialScope, &meta(), &mut identity,cx).await.expect("viewPartialScope");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         let rows: Vec<&str> = history.commands.iter().map(|entry| entry.action_id.as_str()).collect();
         assert_eq!(rows, vec!["increment"], "pure view verbs never become rows");
     
@@ -7882,10 +7882,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let before_len = app.test_history().await.commands.len();
+        let before_len = app.render_ctx().test_history().await.commands.len();
         let result = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
-        assert_eq!(app.test_history().await.commands.len(), before_len);
+        assert_eq!(app.render_ctx().test_history().await.commands.len(), before_len);
         close_reserved_app(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -7905,9 +7905,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let before_len = app.test_history().await.commands.len();
+        let before_len = app.render_ctx().test_history().await.commands.len();
         reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
-        assert_eq!(app.test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
+        assert_eq!(app.render_ctx().test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -7953,7 +7953,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::NoopMutation, &meta(), &mut identity,cx).await.expect("noopMutation");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
         assert_eq!(entry.action_id, "noopMutation");
@@ -8675,7 +8675,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let result = handle_intent_settled(&mut app, &intent, &meta(), &mut identity,cx).await.expect("an Activate intent on a Mutation-kind action must dispatch");
         assert_eq!(app.stores.test_snapshot().await.count, 1, "the mutation must have applied");
         assert_eq!(result.mutations.len(), 1, "the returned invocation carries the one mutation the intent caused");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert!(history.commands.iter().any(|entry| entry.action_id == "incrementViaCommand"), "a command-log entry must have been recorded for the intent");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -9268,7 +9268,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
         reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None, &mut identity).await;
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         let kinds: Vec<(&str, ActionKind)> = history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.kind)).collect();
         assert_eq!(kinds, vec![("setLabel", ActionKind::Mutation)], "only the seeding edit is a row");
     
@@ -9770,7 +9770,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let view = result.output.get("interactionView").expect("the leftover InteractionView rides the carrier's output");
         let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
         close_reserved_app(&mut app, mounted_policy,cx);
     
@@ -9904,7 +9904,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let view = result.output.get("interactionView").expect("the leftover InteractionView rides the carrier's output");
         let ids = view.get("selectedIds").and_then(semio_framework_value::DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
-        let history = app.test_history().await;
+        let history = app.render_ctx().test_history().await;
         assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
         close_reserved_app(&mut app, mounted_policy,cx);
     
@@ -10056,7 +10056,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if !ids.iter().any(|id| id.as_str() == Some("item-1")) {
                 return Err(format!("leftover selected ids {ids:?}"));
             }
-            let history = app.test_history().await;
+            let history = app.render_ctx().test_history().await;
             if history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction) {
                 return Err("the folded verb is never a history row".into());
             }

@@ -1,48 +1,44 @@
 //! 🧾️ Frame build: app handles, runtime and interaction state structs, frame packets, build cursors and the frame transaction.
 use super::*;
 
-#[path = "🧮️frame-transaction/🦀️.rs"]
-mod frame_transaction;
-pub(crate) use frame_transaction::*;
-
 #[path = "📋️frame-preparation/🦀️.rs"]
 mod frame_preparation;
-pub(crate) use frame_preparation::*;
+pub use frame_preparation::*;
 
 //#region 📮️RuntimeMailbox
 //#region 🎮️AppInteractionState
 /// 🪪️ Submits owned work without holding the original runtime or a mutex guard across suspension.
-pub(crate) type AppHandle = RuntimeHandle<AppRuntime>;
+pub type AppHandle = RuntimeHandle<AppRuntime>;
 
 /// 📮️ The runtime mailbox of the application runtime.
-pub(crate) type AppMailbox = RuntimeMailbox<AppRuntime>;
+pub type AppMailbox = RuntimeMailbox<AppRuntime>;
 
-pub(crate) struct AppRuntime {
-    pub(crate) atlas: FontAtlas,
-    pub(crate) icons: IconAtlas,
-    pub(crate) icon_rebuild: Option<crate::icon_atlas::IconAtlasRebuild>,
-    pub(crate) icon_raster_scale: f32,
-    pub(crate) interaction: Option<AppInteractionState>,
-    pub(crate) checkout: runtime_mailbox_core::InteractionCheckoutLedger,
-    pub(crate) draw: DrawList,
-    pub(crate) overlay: DrawList,
-    pub(crate) pending_frame_deferred: Option<FrameDeferredCursor>,
-    pub(crate) frame_actions: FrameActionOwners,
+pub struct AppRuntime {
+    pub atlas: FontAtlas,
+    pub icons: IconAtlas,
+    pub icon_rebuild: Option<semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuild>,
+    pub icon_raster_scale: f32,
+    pub interaction: Option<AppInteractionState>,
+    pub checkout: runtime_mailbox_core::InteractionCheckoutLedger,
+    pub draw: DrawList,
+    pub overlay: DrawList,
+    pub pending_frame_deferred: Option<FrameDeferredCursor>,
+    pub frame_actions: FrameActionOwners,
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) pending_frame_maintenance_refusal: Option<FrameMaintenanceRefusal>,
+    pub pending_frame_maintenance_refusal: Option<FrameMaintenanceRefusal>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) plugin_modules_root: std::path::PathBuf,
+    pub plugin_modules_root: std::path::PathBuf,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_plugin_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
+    pub native_plugin_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_hot_swap_scan: Option<RendererIoHandle>,
+    pub native_hot_swap_scan: Option<RendererIoHandle>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_hot_swap_modified: Option<semio_framework_os_services::NativeModifiedSet>,
+    pub native_hot_swap_modified: Option<semio_framework_os_services::NativeModifiedSet>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_hot_swap_cursor: usize,
+    pub native_hot_swap_cursor: usize,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_reload_pending: bool,
+    pub native_reload_pending: bool,
 }
 
 impl std::ops::Deref for AppRuntime {
@@ -60,7 +56,7 @@ impl std::ops::DerefMut for AppRuntime {
 }
 
 impl AppRuntime {
-    pub(crate) fn interaction_available(&self) -> bool {
+    pub fn interaction_available(&self) -> bool {
         self.interaction.is_some()
     }
 
@@ -70,7 +66,7 @@ impl AppRuntime {
     /// unchanged, so an ordinary window drag never drops a single cached glyph; a display change
     /// does, and the atlas re-rasterises crisp at the new density on the next frame.
     /// Shadows the `Deref` route into [`AppInteractionState::resize`] deliberately.
-    pub(crate) fn resize(&mut self, logical_width: f32, logical_height: f32, scale_factor: f32) {
+    pub fn resize(&mut self, logical_width: f32, logical_height: f32, scale_factor: f32) {
         self.atlas.set_raster_scale(scale_factor);
         self.begin_icon_raster(scale_factor);
         if let Some(interaction) = self.interaction.as_mut() {
@@ -87,8 +83,8 @@ impl AppRuntime {
         if !scale_factor.is_finite() || scale_factor <= 0.0 {
             return;
         }
-        let pending = crate::icon_atlas::IconAtlasRebuild::new(scale_factor);
-        if pending.cell_size() == crate::icon_atlas::IconAtlasRebuild::new(self.icon_raster_scale).cell_size() {
+        let pending = semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuild::new(scale_factor);
+        if pending.cell_size() == semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuild::new(self.icon_raster_scale).cell_size() {
             return;
         }
         self.icon_rebuild = Some(pending);
@@ -96,11 +92,11 @@ impl AppRuntime {
 
     /// 🔁️ Spends one bounded slice on the in-flight icon rebuild. Answers the finished atlas exactly
     /// once, on the step that completes it, so the caller installs and re-uploads it.
-    pub(crate) fn drive_icon_raster_step(&mut self) -> Option<IconAtlas> {
+    pub fn drive_icon_raster_step(&mut self) -> Option<IconAtlas> {
         let rebuild = self.icon_rebuild.as_mut()?;
-        match rebuild.step(crate::icon_atlas::ICON_RASTER_STEP_BUDGET) {
-            crate::icon_atlas::IconAtlasRebuildStep::Rasterized(_) => None,
-            crate::icon_atlas::IconAtlasRebuildStep::Complete(atlas) => {
+        match rebuild.step(semio_framework_os_renderer_wgpu_icon_host::ICON_RASTER_STEP_BUDGET) {
+            semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuildStep::Rasterized(_) => None,
+            semio_framework_os_renderer_wgpu_icon_host::IconAtlasRebuildStep::Complete(atlas) => {
                 let scale = rebuild.scale_factor();
                 self.icon_rebuild = None;
                 self.icon_raster_scale = scale;
@@ -113,7 +109,7 @@ impl AppRuntime {
     ///
     /// ⚖️ `site` is the bounded step the state is lent to; it must come home through
     /// [`Self::return_interaction`] on every path, faults and supersession included.
-    pub(crate) fn check_out_interaction(&mut self, site: &'static str) -> Option<AppInteractionState> {
+    pub fn check_out_interaction(&mut self, site: &'static str) -> Option<AppInteractionState> {
         let interaction = self.interaction.take()?;
         if !self.checkout.check_out(site) {
             self.interaction = Some(interaction);
@@ -123,7 +119,7 @@ impl AppRuntime {
     }
 
     /// 🎟️ The ONE way the interaction state comes home.
-    pub(crate) fn return_interaction(&mut self, interaction: AppInteractionState) {
+    pub fn return_interaction(&mut self, interaction: AppInteractionState) {
         self.checkout.check_in();
         self.interaction = Some(interaction);
     }
@@ -134,14 +130,14 @@ impl AppRuntime {
 //#endregion 📮️RuntimeMailbox
 
 //#region 📮️RuntimeMailbox
-pub(crate) const FRAME_ENGINE_PACKET_CAPACITY: usize = 256;
-pub(crate) const FRAME_ENGINE_PACKET_PAGE_SLOTS: usize = 16;
-pub(crate) const FRAME_ENGINE_PACKET_PAGES: usize = FRAME_ENGINE_PACKET_CAPACITY / FRAME_ENGINE_PACKET_PAGE_SLOTS;
-type FrameEnginePacketPage = [Option<engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_PAGE_SLOTS];
+pub const FRAME_ENGINE_PACKET_CAPACITY: usize = 256;
+pub const FRAME_ENGINE_PACKET_PAGE_SLOTS: usize = 16;
+pub const FRAME_ENGINE_PACKET_PAGES: usize = FRAME_ENGINE_PACKET_CAPACITY / FRAME_ENGINE_PACKET_PAGE_SLOTS;
+type FrameEnginePacketPage = [Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_PAGE_SLOTS];
 
-pub(crate) struct FrameEnginePackets {
-    pub(crate) slots: [Option<Box<FrameEnginePacketPage>>; FRAME_ENGINE_PACKET_PAGES],
-    pub(crate) len: usize,
+pub struct FrameEnginePackets {
+    pub slots: [Option<Box<FrameEnginePacketPage>>; FRAME_ENGINE_PACKET_PAGES],
+    pub len: usize,
 }
 
 impl Default for FrameEnginePackets {
@@ -150,7 +146,7 @@ impl Default for FrameEnginePackets {
 
 impl FrameEnginePackets {
     /// 🧱️ Admits one original page under the same caller before any retained packet can enter it.
-    pub(crate) fn prepare_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub fn prepare_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let Some(index) = self.slots.iter().position(Option::is_none) else { return Ok(true) };
         let grant = cx.retained_grant();
         let bytes = std::mem::size_of::<FrameEnginePacketPage>();
@@ -162,7 +158,7 @@ impl FrameEnginePackets {
         Ok(index + 1 == FRAME_ENGINE_PACKET_PAGES)
     }
 
-    pub(crate) fn try_push(&mut self, packet: engine_canvas::EngineCanvasPacket) -> Result<(), engine_canvas::EngineCanvasPacket> {
+    pub fn try_push(&mut self, packet: semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket) -> Result<(), semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         if self.len == FRAME_ENGINE_PACKET_CAPACITY { return Err(packet); }
         let Some(page) = self.slots[self.len / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut() else { return Err(packet) };
         page[self.len % FRAME_ENGINE_PACKET_PAGE_SLOTS] = Some(packet);
@@ -170,34 +166,34 @@ impl FrameEnginePackets {
         Ok(())
     }
 
-    pub(crate) fn pop(&mut self) -> Option<engine_canvas::EngineCanvasPacket> {
+    pub fn pop(&mut self) -> Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         let index = self.len.checked_sub(1)?;
         let packet = self.slots[index / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut()?[index % FRAME_ENGINE_PACKET_PAGE_SLOTS].take();
         if packet.is_some() { self.len = index; }
         packet
     }
 
-    fn last_mut(&mut self) -> Option<&mut engine_canvas::EngineCanvasPacket> {
+    fn last_mut(&mut self) -> Option<&mut semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         let index = self.len.checked_sub(1)?;
         self.slots[index / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut()?[index % FRAME_ENGINE_PACKET_PAGE_SLOTS].as_mut()
     }
 
-    pub(crate) fn get(&self, index: usize) -> Option<&engine_canvas::EngineCanvasPacket> {
+    pub fn get(&self, index: usize) -> Option<&semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket> {
         if index >= self.len { return None; }
         self.slots[index / FRAME_ENGINE_PACKET_PAGE_SLOTS].as_ref()?[index % FRAME_ENGINE_PACKET_PAGE_SLOTS].as_ref()
     }
 
-    pub(crate) fn is_empty(&self) -> bool { self.len == 0 && self.slots.iter().flatten().all(|page| page.iter().all(Option::is_none)) }
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.len == 0 && self.slots.iter().all(Option::is_none) }
+    pub fn is_empty(&self) -> bool { self.len == 0 && self.slots.iter().flatten().all(|page| page.iter().all(Option::is_none)) }
+    pub fn terminal_is_empty(&self) -> bool { self.len == 0 && self.slots.iter().all(Option::is_none) }
 
     /// 📏️ Quotes one original allocated page independently of its logical packet count.
-    pub(crate) fn backing_retirement_demands(&self) -> semio_framework_value::RetirementDemand {
+    pub fn backing_retirement_demands(&self) -> semio_framework_value::RetirementDemand {
         if self.terminal_is_empty() || self.len != 0 { return Default::default(); }
         semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Box<FrameEnginePacketPage>>(), release_bytes: std::mem::size_of::<FrameEnginePacketPage>(), depth: 1, ..Default::default() }
     }
 
     /// 🎟️ Releases only one actual empty original page under the unchanged caller grant.
-    pub(crate) fn close_backing_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_value::ValueError> {
+    pub fn close_backing_step(&mut self, grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_value::ValueError> {
         use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneProgress};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: empty }); }
@@ -212,63 +208,63 @@ impl FrameEnginePackets {
     }
 }
 
-pub(crate) struct AppFrameBuild {
-    pub(crate) retained: semio_framework_job::RetainedCloneGrant,
-    pub(crate) input: ui_wgpu::wgpu::PreparedRenderInput,
-    pub(crate) input_candidate: Option<shell::PresentedInputCandidateWitness>,
-    pub(crate) engine_packets: FrameEnginePackets,
-    pub(crate) generation: semio_framework_trace::Generation,
-    pub(crate) cursor: SemioCursor,
-    pub(crate) theme_dark: bool,
-    pub(crate) fullscreen: Option<bool>,
-    pub(crate) cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+pub struct AppFrameBuild {
+    pub retained: semio_framework_job::RetainedCloneGrant,
+    pub input: ui_wgpu::wgpu::PreparedRenderInput,
+    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub engine_packets: FrameEnginePackets,
+    pub generation: semio_framework_trace::Generation,
+    pub cursor: SemioCursor,
+    pub theme_dark: bool,
+    pub fullscreen: Option<bool>,
+    pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
+    pub job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
 }
 
-pub(crate) struct AppFrameAfterChrome {
-    pub(crate) retained: semio_framework_job::RetainedCloneGrant,
-    pub(crate) resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
-    pub(crate) input_candidate: Option<shell::PresentedInputCandidateWitness>,
-    pub(crate) upload_rejected: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
-    pub(crate) draw_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
-    pub(crate) engine_packets: Option<FrameEnginePackets>,
-    pub(crate) fullscreen: Option<bool>,
-    pub(crate) cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+pub struct AppFrameAfterChrome {
+    pub retained: semio_framework_job::RetainedCloneGrant,
+    pub resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub upload_rejected: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
+    pub draw_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
+    pub engine_packets: Option<FrameEnginePackets>,
+    pub fullscreen: Option<bool>,
+    pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
-    pub(crate) retirement: Option<AppFramePreparation>,
+    pub job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
+    pub retirement: Option<AppFramePreparation>,
 }
 
-pub(crate) struct FrameBuildCursor {
-    pub(crate) retained: semio_framework_job::RetainedCloneGrant,
-    pub(crate) phase: FrameBuildPhase,
-    pub(crate) retained_clock_index: usize,
-    pub(crate) retained_clock_deadline: Option<f64>,
-    pub(crate) presentation_witness: RuntimePresentationWitness,
-    pub(crate) input_candidate: Option<shell::PresentedInputCandidateWitness>,
-    pub(crate) fullscreen: Option<bool>,
-    pub(crate) previous_draw: Option<DrawList>,
-    pub(crate) previous_overlay: Option<DrawList>,
-    pub(crate) icon_checked: bool,
-    pub(crate) icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
-    pub(crate) icon_upload: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
-    pub(crate) engine_resources: Option<engine_canvas::EngineCanvasBuildContext>,
-    pub(crate) world_resources: Option<infinite_world::world::World3dBuildContext>,
-    pub(crate) resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
-    pub(crate) input_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
-    pub(crate) engine_packets: FrameEnginePackets,
-    pub(crate) engine_rejected: Option<engine_canvas::EngineCanvasPacket>,
-    pub(crate) world_rejected: Option<infinite_world::world::World3dBuildRejected>,
-    pub(crate) retirement: Option<AppFramePreparation>,
-    pub(crate) chrome: shell::ShellChromeFrameCursor,
-    pub(crate) cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+pub struct FrameBuildCursor {
+    pub retained: semio_framework_job::RetainedCloneGrant,
+    pub phase: FrameBuildPhase,
+    pub retained_clock_index: usize,
+    pub retained_clock_deadline: Option<f64>,
+    pub presentation_witness: RuntimePresentationWitness,
+    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub fullscreen: Option<bool>,
+    pub previous_draw: Option<DrawList>,
+    pub previous_overlay: Option<DrawList>,
+    pub icon_checked: bool,
+    pub icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
+    pub icon_upload: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
+    pub engine_resources: Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasBuildContext>,
+    pub world_resources: Option<infinite_world::world::World3dBuildContext>,
+    pub resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    pub input_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
+    pub engine_packets: FrameEnginePackets,
+    pub engine_rejected: Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>,
+    pub world_rejected: Option<infinite_world::world::World3dBuildRejected>,
+    pub retirement: Option<AppFramePreparation>,
+    pub chrome: semio_framework_os_renderer_wgpu_shell_view_panels::ShellChromeFrameCursor,
+    pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
+    pub job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum FrameBuildPhase {
+pub enum FrameBuildPhase {
     Deferred,
     PreparedGpuAbandonment,
     PreparedInputAbandonment,
@@ -307,7 +303,7 @@ pub(crate) enum FrameBuildPhase {
 }
 
 impl FrameBuildCursor {
-    pub(crate) fn new(presentation_witness: RuntimePresentationWitness, retained: semio_framework_job::RetainedCloneGrant) -> Self {
+    pub fn new(presentation_witness: RuntimePresentationWitness, retained: semio_framework_job::RetainedCloneGrant) -> Self {
         Self {
             retained,
             phase: FrameBuildPhase::Deferred,
@@ -329,14 +325,14 @@ impl FrameBuildCursor {
             engine_rejected: None,
             world_rejected: None,
             retirement: None,
-            chrome: shell::ShellChromeFrameCursor::default(),
+            chrome: semio_framework_os_renderer_wgpu_shell_view_panels::ShellChromeFrameCursor::default(),
             cursor_wake: None,
             #[cfg(not(target_arch = "wasm32"))]
             job_progress: None,
         }
     }
 
-    pub(crate) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
         let policy=self.retained;
         cx.with_retained_loan(policy,|cx|self.close_original_step(cx))
     }
@@ -383,7 +379,7 @@ impl FrameBuildCursor {
         frame_receive_close(frame_unpriced_child(),cx)
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.previous_draw.is_none()
             && self.previous_overlay.is_none()
             && self.engine_rejected.is_none()
@@ -401,20 +397,20 @@ impl FrameBuildCursor {
     }
 }
 
-pub(crate) struct FrameFinishCursor {
-    pub(crate) phase: FrameFinishPhase,
-    pub(crate) cursor: SemioCursor,
-    pub(crate) pump_sync: bool,
-    pub(crate) flush_tutorial: bool,
-    pub(crate) shell_maintenance: bool,
-    pub(crate) settle: bool,
-    pub(crate) glyph_started: bool,
-    pub(crate) glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
-    pub(crate) icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
+pub struct FrameFinishCursor {
+    pub phase: FrameFinishPhase,
+    pub cursor: SemioCursor,
+    pub pump_sync: bool,
+    pub flush_tutorial: bool,
+    pub shell_maintenance: bool,
+    pub settle: bool,
+    pub glyph_started: bool,
+    pub glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
+    pub icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum FrameFinishPhase {
+pub enum FrameFinishPhase {
     Inputs,
     Deferred,
     /// 🔁️ Drives `AppRuntime::drive_icon_raster_step` after a density change — one bounded slice per
@@ -434,7 +430,7 @@ impl Default for FrameFinishCursor {
 }
 
 impl FrameFinishCursor {
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
         for pages in [&mut self.icon_pages, &mut self.glyph_pages] {
             if let Some(owner) = pages.as_mut() {
                 if !owner.terminal_is_empty() { return frame_child_step(owner.close_original_step(grant), grant, owner.terminal_is_empty()); }
@@ -447,10 +443,10 @@ impl FrameFinishCursor {
         Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.glyph_pages.is_none() && self.icon_pages.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.glyph_pages.is_none() && self.icon_pages.is_none() }
 }
 
-pub(crate) enum FrameBuildBoundaryStep {
+pub enum FrameBuildBoundaryStep {
     Pending,
     Complete(AppFrameAfterChrome),
     Fault(&'static str),
@@ -458,19 +454,19 @@ pub(crate) enum FrameBuildBoundaryStep {
 }
 
 /// 🧾️ Validates the original recovered frame owner's full close receipt before advancing.
-pub(crate) fn frame_prepared_abandonment_complete(grant:RetainedCloneGrant,step:Result<InteractiveJobCloseStep,semio_framework_value::ValueError>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+pub fn frame_prepared_abandonment_complete(grant:RetainedCloneGrant,step:Result<InteractiveJobCloseStep,semio_framework_value::ValueError>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     let step=step.and_then(|step|step.admit(grant,matches!(step,InteractiveJobCloseStep::Complete{..})));
     Ok(matches!(frame_receive_close(step,cx)?,InteractiveJobCloseStep::Complete{..}))
 }
 
-pub(crate) enum FrameFinishBoundaryStep {
+pub enum FrameFinishBoundaryStep {
     Pending,
     Complete(AppFrameBuild),
     Fault(&'static str),
 }
 
 impl AppFrameAfterChrome {
-    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         let policy=self.retained;
         cx.with_retained_loan(policy,|cx|self.close_original_step(cx))
     }
@@ -503,12 +499,12 @@ impl AppFrameAfterChrome {
         frame_receive_close(frame_unpriced_child(),cx)
     }
 
-    pub(crate) fn terminal_is_empty(&self)->bool{self.resource_input.is_none()&&self.input_candidate.is_none()&&self.upload_rejected.is_none()&&self.draw_rejected.is_none()&&self.engine_packets.is_none()&&self.cursor_wake.is_none()&&self.retirement.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.resource_input.is_none()&&self.input_candidate.is_none()&&self.upload_rejected.is_none()&&self.draw_rejected.is_none()&&self.engine_packets.is_none()&&self.cursor_wake.is_none()&&self.retirement.is_none()}
 
 }
 
 /// 🚧️ Keeps an original child that has no declared physical retirement authority.
-pub(crate) fn frame_unpriced_child() -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
+pub fn frame_unpriced_child() -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original frame child retirement authority is undeclared"))
 }
 
@@ -521,7 +517,7 @@ fn frame_original_primitive_close(cx:&mut semio_framework_job::StepContext<'_>,q
 }
 
 /// 🧾️ Carries the real child receipt without publishing the parent as empty.
-pub(crate) fn frame_child_step(step: Result<InteractiveJobCloseStep,semio_framework_value::ValueError>, grant: RetainedCloneGrant, terminal: bool) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
+pub fn frame_child_step(step: Result<InteractiveJobCloseStep,semio_framework_value::ValueError>, grant: RetainedCloneGrant, terminal: bool) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
     Ok(match step?.admit(grant, terminal)? {
         InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
         step => step,
@@ -529,19 +525,19 @@ pub(crate) fn frame_child_step(step: Result<InteractiveJobCloseStep,semio_framew
 }
 
 /// 🪙️ Quotes the original inline owner header after its physical children are empty.
-pub(crate) fn frame_inline_gate(grant: RetainedCloneGrant, _bytes: usize) -> Result<Option<InteractiveJobCloseStep>,semio_framework_value::ValueError> {
+pub fn frame_inline_gate(grant: RetainedCloneGrant, _bytes: usize) -> Result<Option<InteractiveJobCloseStep>,semio_framework_value::ValueError> {
     if grant.maximum_items == 0 { return Ok(Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() })); }
     if grant.maximum_depth == 0 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original frame inline retirement requires depth")); }
     Ok(None)
 }
 
 /// ♻️ Returns the actual paid inline header receipt independently of heap release.
-pub(crate) fn frame_inline_progress(_bytes: usize) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
+pub fn frame_inline_progress(_bytes: usize) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
     Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: 0, ..RetainedCloneProgress::default() } })
 }
 
 /// 🧵️ Preserves all currencies and refusal progress from the original worker owner.
-pub(crate) fn frame_worker_child_step(step: semio_framework_job_worker_authority::WorkerJobCloseStep, grant: RetainedCloneGrant, terminal: bool) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
+pub fn frame_worker_child_step(step: semio_framework_job_worker_authority::WorkerJobCloseStep, grant: RetainedCloneGrant, terminal: bool) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
     use semio_framework_job_worker_authority::{WorkerJobCloseStep};
     let step = match step {
         WorkerJobCloseStep::Pending { progress } => InteractiveJobCloseStep::Pending { progress },
@@ -551,33 +547,33 @@ pub(crate) fn frame_worker_child_step(step: semio_framework_job_worker_authority
     frame_child_step(Ok(step), grant, terminal)
 }
 
-pub(crate) fn frame_receive_close(step:Result<InteractiveJobCloseStep,semio_framework_value::ValueError>,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+pub fn frame_receive_close(step:Result<InteractiveJobCloseStep,semio_framework_value::ValueError>,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
     let step=step.map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
     cx.consume_retained(step.progress()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
     if step.progress().copied_items!=0{cx.consume_fuel(1)}
     Ok(step)
 }
 
-pub(crate) fn frame_received_child(step:Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>,grant:RetainedCloneGrant,terminal:bool)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+pub fn frame_received_child(step:Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>,grant:RetainedCloneGrant,terminal:bool)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
     let step=step?.admit(grant,terminal).map_err(semio_framework_job::OriginalTurnFailure::from)?;
     Ok(match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})
 }
 
-pub(crate) struct AppFramePresentation {
-    pub(crate) retained: semio_framework_job::RetainedCloneGrant,
-    pub(crate) packet: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
-    pub(crate) input_candidate: Option<shell::PresentedInputCandidateWitness>,
-    pub(crate) engine_packets: FrameEnginePackets,
-    pub(crate) generation: semio_framework_trace::Generation,
-    pub(crate) cursor: SemioCursor,
-    pub(crate) theme_dark: bool,
-    pub(crate) fullscreen: Option<bool>,
-    pub(crate) cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+pub struct AppFramePresentation {
+    pub retained: semio_framework_job::RetainedCloneGrant,
+    pub packet: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
+    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub engine_packets: FrameEnginePackets,
+    pub generation: semio_framework_trace::Generation,
+    pub cursor: SemioCursor,
+    pub theme_dark: bool,
+    pub fullscreen: Option<bool>,
+    pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
+    pub job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
 }
 
-pub(crate) fn discard_frame_input_candidate(runtime: &AppMailbox, candidate: &mut Option<shell::PresentedInputCandidateWitness>) -> bool {
+pub fn discard_frame_input_candidate(runtime: &AppMailbox, candidate: &mut Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>) -> bool {
     let Some(witness) = *candidate else { return true };
     let Ok(mut runtime) = runtime.try_lock() else { return false };
     let Some(interaction) = runtime.interaction.as_mut() else { return false };
@@ -589,7 +585,7 @@ pub(crate) fn discard_frame_input_candidate(runtime: &AppMailbox, candidate: &mu
 }
 
 impl AppFrameBuild {
-    pub(crate) fn into_preparation(self) -> AppFramePreparation {
+    pub fn into_preparation(self) -> AppFramePreparation {
         let AppFrameBuild {
             retained,
             input,

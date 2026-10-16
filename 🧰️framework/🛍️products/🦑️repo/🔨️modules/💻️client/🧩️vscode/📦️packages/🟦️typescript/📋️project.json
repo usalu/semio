@@ -23,7 +23,8 @@
           "projects": [
             "@semio-tech/framework-schema"
           ]
-        }
+        },
+        "generate-graphql-types"
       ],
       "cache": false,
       "continuous": true
@@ -34,7 +35,10 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "generate-graphql-types"
+      ]
     },
     "build": {
       "executor": "repo:script",
@@ -57,7 +61,8 @@
           "projects": [
             "@semio-tech/framework-schema"
           ]
-        }
+        },
+        "generate-graphql-types"
       ]
     },
     "lint": {
@@ -99,7 +104,8 @@
           "projects": [
             "@semio-tech/framework-schema"
           ]
-        }
+        },
+        "generate-graphql-types"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
@@ -142,7 +148,8 @@
           "projects": [
             "@semio-tech/framework-schema"
           ]
-        }
+        },
+        "generate-graphql-types"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
@@ -174,6 +181,56 @@
           }
         }
       }
+    },
+    "generate-graphql-types": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts generate-graphql-types"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🤖️generated/🔗️graphql-types/🟦️.ts"
+      ]
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts preview-generated"
+      },
+      "cache": false,
+      "outputs": []
+    },
+    "check-graphql-types": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts check-graphql-types"
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "generate-graphql-types"
+      ]
+    },
+    "test-graphql-types": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-graphql-types"
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "generate-graphql-types"
+      ]
     }
   },
   "implicitDependencies": [

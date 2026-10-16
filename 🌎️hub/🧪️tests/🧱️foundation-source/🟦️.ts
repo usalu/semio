@@ -376,7 +376,7 @@ test("source definition boundaries match TypeScript AST and reject stale credent
   expect(manualClass).toHaveLength(fixture.sourceBoundary.typescript.expectedBodies);
   expect(manualRun).toHaveLength(fixture.sourceBoundary.typescript.expectedBodies);
   expect(manualRun[0]!.trim()).toBe(method.body!.getText(parsed).slice(1, -1).trim());
-  const typescriptCalls: readonly string[] = [...manualRun[0]!.matchAll(/\b(?:await\s+)?([a-z][A-Za-z0-9]*)\(\)/gu)].map((match) => match[1]).filter((name) => name !== "if");
+  const typescriptCalls: readonly string[] = [...manualRun[0]!.matchAll(/\b(?:await\s+)?([a-z][A-Za-z0-9]*)\(\)/gu)].map((match) => { const name=match[1]; if(name===undefined)throw Error("TypeScript call capture missing"); return name; }).filter((name) => name !== "if");
   expect(typescriptCalls).toEqual(fixture.sourceBoundary.typescript.expectedCalls);
   expect(sourceDefinitionBodies(hostileSource, /\bfunction\s+declaration\s*\([^)]*\)\s*(?::[^\{;]+)?/gu)).toEqual([]);
   const rustBodies = sourceDefinitionBodies(fixture.sourceBoundary.rust.source, /\bfn\s+main\s*\([^)]*\)\s*/gu);

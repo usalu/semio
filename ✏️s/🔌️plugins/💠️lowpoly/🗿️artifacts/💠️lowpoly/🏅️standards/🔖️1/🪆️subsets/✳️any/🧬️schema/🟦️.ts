@@ -1,7 +1,7 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { type Binary32 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary32 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary32 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary32 } from "@semio-tech/framework/value/ieee754";
 import {parseLowpolyMeshState,type LowpolyMeshState}from"./🕸️mesh/🟦️.ts";
 export *from"./🕸️mesh/🟦️.ts";
 

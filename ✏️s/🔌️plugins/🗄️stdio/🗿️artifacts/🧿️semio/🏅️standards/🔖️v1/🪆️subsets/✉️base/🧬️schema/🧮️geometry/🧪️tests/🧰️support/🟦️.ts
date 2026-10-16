@@ -1,5 +1,5 @@
 /** 🧫️ Explicit owned words constructed from the neutral native numeric wire corpus. */
-import {binary64,binary32} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary32} from "@semio-tech/framework/value/ieee754";
 function word64(value:unknown):unknown{return typeof value==="number"?binary64(value):value;}
 function word32(value:unknown):unknown{return typeof value==="number"?binary32(value):value;}
 export function point3Fixture(value:any):any{return value!==null&&typeof value==="object"?{...value,x:word64(value.x),y:word64(value.y),z:word64(value.z)}:value;}

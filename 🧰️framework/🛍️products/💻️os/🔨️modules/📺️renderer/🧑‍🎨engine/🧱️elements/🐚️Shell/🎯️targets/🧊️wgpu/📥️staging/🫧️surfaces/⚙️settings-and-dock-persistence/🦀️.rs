@@ -11,7 +11,7 @@ impl SurfaceState {
     /// `cancel(CaptureLost)` (zero trace, as React's unmount does), takes the surface off the pointer's way (empty bounds) and
     /// waits for the frame's world authority to drive the cancel; it retires once its queue drained, or after
     /// [`WORLD3D_CLOSE_CANCEL_SIGHTINGS`] sightings. A cancel the full queue refuses retires at once.
-    pub(super) fn world3d_close_cancel_settled(&mut self, host_id: &str) -> bool {
+    pub fn world3d_close_cancel_settled(&mut self, host_id: &str) -> bool {
         let Some(state) = self.world3d_states.get_mut(host_id) else { return true };
         let Some(sightings) = self.world3d_close_cancels.get_mut(host_id) else {
             if !infinite_world::world::world3d_cancel_owed(&state.selection, &state.authority) {

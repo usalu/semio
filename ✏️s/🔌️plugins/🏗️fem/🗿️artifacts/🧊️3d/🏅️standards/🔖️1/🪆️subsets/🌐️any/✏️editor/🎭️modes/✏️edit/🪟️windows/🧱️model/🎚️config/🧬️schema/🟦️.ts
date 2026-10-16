@@ -1,4 +1,4 @@
-import { parseViewport3dOrbit, type Viewport3dOrbit } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
+import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framework/ui/viewport/3d/schema";
 /** 🧭️ Which handles the transform gumball of one exact FEM 3D model window draws. */
 export interface Fem3dGumballConfig {
   moveAxes: boolean;

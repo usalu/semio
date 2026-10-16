@@ -35,8 +35,7 @@ test("independent Rust grammar admits actual CAD owners and rejects malformed ow
   } finally { parser.delete(); }
 });
 test("actual literal compile inputs exist before the owning compiler baseline", async () => {
-  const framework = resolve(root, "../../../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts");
-  const { inspectRustCompileReferences } = await import(framework);
+  const { inspectRustCompileReferences } = await import("@semio-tech/framework/compiler/syntax/rust");
   let references = 0;
   for (const file of corpus.files) {
     const owner = resolve(root, file);

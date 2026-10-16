@@ -1,6 +1,6 @@
 /** 📦️ Declared buffers, views, typed accessors and sparse components. */
 import type {GltfDocument,GltfAccessor,GltfComponentType,GltfAccessorType,GltfSparseAccessor} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 import {type Write,type Read,word,optionalWord,ordinal,optionalText,columns} from "../🧩️control/🟦️.ts";
 const VALUE=columns(3);
 const component=(value:bigint):GltfComponentType=>{if(![5120n,5121n,5122n,5123n,5125n,5126n].includes(value))throw Error("GLTF component type differs");return Number(value)as GltfComponentType};

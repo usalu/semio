@@ -1,4 +1,4 @@
-import { interactivityPuzzleFillTraceFailures } from "../../../../../📜️script.ts";
+import { interactivityPuzzleFillTraceFailures } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 import { PUZZLE_FILL_TOOL_RUN_FIXTURE, puzzleFillToolRunFixtureWith } from "../🔬️interactivity-puzzle-fill-run-job/🟦️.ts";
 
 const CASES: readonly (readonly [name: string, expect: "report" | "silent", edits: Parameters<typeof puzzleFillToolRunFixtureWith>[1]])[] = [

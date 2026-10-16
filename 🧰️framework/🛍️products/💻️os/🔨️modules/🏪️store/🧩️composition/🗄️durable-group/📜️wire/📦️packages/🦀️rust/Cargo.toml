@@ -21,13 +21,18 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+durable-group-testing = []
+
 [dependencies]
+semio-framework-os-dsl = { path = "../../../../../../🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-os-semio = { path = "../../../../../../🧬️semio/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-batch = { path = "../../../../../📬️one-item-owners/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-publication = { path = "../../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../../../../🔗️read/📦️packages/🦀️rust" }
-semio-framework-os-store-replay = { path = "../../../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
@@ -36,7 +41,13 @@ semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
+semio-framework-os-pack = { path = "../../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-store-envelope = { path = "../../../../../✉️envelope/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]

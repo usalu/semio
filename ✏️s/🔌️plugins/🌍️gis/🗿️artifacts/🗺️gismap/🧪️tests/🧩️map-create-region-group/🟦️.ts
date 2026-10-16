@@ -1,17 +1,18 @@
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { compileGisScopeExport } from "../🧰️schema/🟦️.ts";
+import { BundleScript } from "@semio-tech/framework/process/routing";
+import { compileSchemaScopeExport } from "@semio-tech/framework/schema/oracles/validator";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 const GIS_MAP_ARTIFACT_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
 const GIS_MAP_CONTROL_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧬️schema/🧩️map-create-region-group/🔣️.json";
 const GIS_MAP_SCHEMA_DEPENDENCIES = [
-  "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
-  "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
-  "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
+  frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json"),
+  frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🔣️.json"),
+  frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"),
+  frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"),
   "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📍️feature/🔣️.json",
 ] as const;
 
@@ -19,7 +20,7 @@ const GIS_MAP_SCHEMA_DEPENDENCIES = [
 export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧫️fixtures/🧩️map-create-region-group");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validateArtifact = await compileGisScopeExport(repoRoot, GIS_MAP_ARTIFACT_SCHEMA_MODULE, null, GIS_MAP_SCHEMA_DEPENDENCIES);
+  const validateArtifact = compileSchemaScopeExport(repoRoot, GIS_MAP_ARTIFACT_SCHEMA_MODULE, null, GIS_MAP_SCHEMA_DEPENDENCIES);
   const target = { artifactId: "artifact-11111111111111111111111111111111", dialect: { artifactKind: "s.stdio.semio", standard: "1", subset: "*" } };
   const artifact = { positions: fixture.base.positions, routes: fixture.base.routes, regions: fixture.base.regions, drawing: { childId: fixture.base.drawingChildId, target }, image: null, value: { childId: fixture.base.valueChildId, target } };
   if (!validateArtifact(artifact)) throw new Error(`invalid GIS Map artifact projection: ${JSON.stringify(validateArtifact.errors)}`);
@@ -33,7 +34,7 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
   const id = `inference-${fixture.jobId}`;
   const ring = [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)], [Math.min(...xs), Math.max(...ys)], [Math.min(...xs), Math.min(...ys)]];
   const region = { id, data: { id, kind: "inference-bounds", ring } };
-  const validateMembership = await compileGisScopeExport(repoRoot, GIS_MAP_CONTROL_SCHEMA_MODULE, "GisMapCreateRegionGroupMembership");
+  const validateMembership = compileSchemaScopeExport(repoRoot, GIS_MAP_CONTROL_SCHEMA_MODULE, "GisMapCreateRegionGroupMembership");
   const admitted = (candidate: any): boolean => validateMembership({ drawingChildId: candidate.base.drawingChildId, valueChildId: candidate.base.valueChildId, imageChildId: null })
     && Number.isSafeInteger(candidate.expected.maximumBytes) && candidate.expected.maximumBytes >= 0 && candidate.expected.maximumBytes <= 65_536
     && candidate.expected.region.id === `inference-${candidate.jobId}`

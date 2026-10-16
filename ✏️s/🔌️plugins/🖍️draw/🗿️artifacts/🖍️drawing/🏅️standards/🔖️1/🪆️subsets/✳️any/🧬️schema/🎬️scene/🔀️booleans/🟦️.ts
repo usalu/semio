@@ -1,9 +1,9 @@
 import {validateSceneSourceAddress} from "../📋️prepare/🟦️.ts";
 /** 🔀️ Complete prepared documents resolve referenced filled geometry under grants. */
 import type {DocumentScenePlan,DocumentSceneNode} from "../📋️prepare/🟦️.ts";
-import {PathBooleanJob,type PathBooleanOperand,type PathBooleanProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts";
-import type {PathSegment,Vec2} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
-import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {PathBooleanJob,type PathBooleanOperand,type PathBooleanProgress} from "@semio-tech/framework/2d/booleans/paths";
+import type {PathSegment,Vec2} from "@semio-tech/framework/2d";
+import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
 import {ScenePlanCloseJob} from "../🧹️retire/🟦️.ts";
 import {SceneNodeCopyJob} from "../📋️prepare/📋️copy/🟦️.ts";
 export type DocumentBooleanRetirement=WorkRetirement;

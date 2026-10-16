@@ -556,34 +556,25 @@
   },
   "wasmProfiles": [
     {
-      "profile": "dev",
+      "profile": "prototype",
       "pack": [
-        "--dev"
+        "--profile",
+        "prototype"
       ],
       "cargo": [
         "--profile",
-        "dev"
+        "prototype"
       ]
     },
     {
       "profile": "release",
       "pack": [
-        "--release"
+        "--profile",
+        "release"
       ],
       "cargo": [
         "--profile",
         "release"
-      ]
-    },
-    {
-      "profile": "wasm-release",
-      "pack": [
-        "--profile",
-        "wasm-release"
-      ],
-      "cargo": [
-        "--profile",
-        "wasm-release"
       ]
     }
   ],

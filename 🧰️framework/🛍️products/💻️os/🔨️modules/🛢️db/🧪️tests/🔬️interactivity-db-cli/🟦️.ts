@@ -1,4 +1,4 @@
-import { interactivityDbCliFailures } from "../../../../../../../📜️script.ts";
+import { interactivityDbCliFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** ⌨️ Executes the DB CLI process-entry wait census assertions: 18 production waits plus one test-only `seed_document` wait
  * pass; a 19th production wait, a production `seed_document`, and a test-only `seed_document` without its wait are refused. */

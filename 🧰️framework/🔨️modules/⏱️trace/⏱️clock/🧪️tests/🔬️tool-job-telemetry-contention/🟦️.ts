@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { WORKSPACE_ROOT } from "../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
 
 /** 🧪️ Executes tool job telemetry contention policy assertions. */
 export function toolJobTelemetryContentionSelfTests(): number {

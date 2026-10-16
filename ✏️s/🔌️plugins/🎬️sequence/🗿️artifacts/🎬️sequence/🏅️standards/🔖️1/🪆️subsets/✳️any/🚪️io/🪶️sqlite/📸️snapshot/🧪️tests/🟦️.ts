@@ -5,13 +5,13 @@ import fixture from "./🧫️fixtures/🔣️.json";
 
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import childSchema from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
-import ioSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
-import references from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🧫️fixtures/🔣️.json";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
+import { artifactReferenceBindingFixture as references } from "@semio-tech/framework/io/text/artifact-reference/binding/testing";
 import * as sqliteOwner from "../🟦️.ts";
-import referenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as referenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
+import type {ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 const own=sqliteOwner as unknown as {SEQUENCE_SQLITE_SCHEMA:string;sequenceSnapshotToSqliteDatabase:(snapshot:owner.SequenceSnapshot,options?:ArtifactSqliteOptions)=>Promise<SqliteDatabase>;sequenceSnapshotFromSqliteDatabase:(database:SqliteDatabase,options?:ArtifactSqliteOptions)=>Promise<owner.SequenceSnapshot>};
 const snapshot=():owner.SequenceSnapshot=>structuredClone(fixture.snapshot);
 test("Sequence neutral persisted-reference laws agree with independent JSON schema",()=>{

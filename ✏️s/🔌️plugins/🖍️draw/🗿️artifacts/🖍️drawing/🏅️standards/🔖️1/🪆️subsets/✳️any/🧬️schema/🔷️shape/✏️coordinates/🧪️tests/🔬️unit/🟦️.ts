@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {produce} from "immer";
-import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value,type Binary64} from "@semio-tech/framework/value/ieee754";
 import type {DrawingLayerNode} from "../../../../🟦️.ts";
 import {SHAPE_COORDINATE_FIELDS,shapeCoordinate,setShapeCoordinate,type ShapeCoordinateField} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";

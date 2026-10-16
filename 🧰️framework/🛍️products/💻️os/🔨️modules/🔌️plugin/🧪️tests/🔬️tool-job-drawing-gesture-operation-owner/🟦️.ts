@@ -1,4 +1,4 @@
-import { toolJobDrawingGestureOperationOwnerExact } from "../../../../../../../📜️script.ts";
+import { toolJobDrawingGestureOperationOwnerExact } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/⚙️fixed-operation/🟦️.ts";
 
 /** 🧪️ Executes tool job drawing gesture operation owner policy assertions. */
 export function toolJobDrawingGestureOperationOwnerSelfTests(): number {

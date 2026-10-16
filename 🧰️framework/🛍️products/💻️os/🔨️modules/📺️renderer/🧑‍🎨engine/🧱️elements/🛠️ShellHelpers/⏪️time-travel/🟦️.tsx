@@ -8,7 +8,7 @@
  * `timeTravel.stale` instead of acting on a session that moved on. Every text it shows is a row of the one `labels` table
  * of the shared band corpus (`🧫️time-travel-band`), to which the i18n catalogue is pinned and which the wgpu shell embeds;
  * the person reads "History editing" everywhere — the guest's section, the band, the indicator, the peer notes.
- * @see ../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts
+ * @see ../../../../../../../../../🔨️modules/🎠️kernel/🕰️history/🟦️.ts
  * @see ../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts */
 // #endregion 🧲️Header
 
@@ -19,7 +19,7 @@ import { ariaKeyshortcutsText, DisabledReasonHint, findPanelTabInDock, findPanel
 import { useEffect, useId, useRef, type ReactElement } from "react";
 import type { ShellAction } from "../../🐚️Shell/🟦️.tsx";
 import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1, shellLabel } from "../🟦️.tsx";
-import type { UiPresenceOverlayEntry, UiPresenceOverlayValue } from "../../🗣️Interpreter/🟦️.tsx";
+import type { UiPresenceOverlayEntry, UiPresenceOverlayValue } from "../../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region ⏪️TimeTravelChrome

@@ -1,4 +1,4 @@
-import { interactivityDatabaseCapabilityOpenFailures } from "../../../../../../../../📜️script.ts";
+import { interactivityDatabaseCapabilityOpenFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity database capability open policy assertions. */
 export function interactivityDatabaseCapabilityOpenSelfTests(): void {

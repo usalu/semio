@@ -33,15 +33,13 @@ import {
   UiKeybindingsProvider
 } from "@semio-tech/ui-react";
 import { readUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
-import {
-  PluginSurfaceActionsContext,
-  RowActionRefusalsContext,
-  UiPresenceOverlayContext
-} from "../🗣️Interpreter/🟦️.tsx";
+import { PluginSurfaceActionsContext } from "../🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
+import { RowActionRefusalsContext, UiPresenceOverlayContext } from "../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
 import { SpaceAdministrationPane } from "../🛂️SpaceAdministration/🟦️.tsx";
 import { HubWorkspace } from "../🔗️HubConnection/🏛️workspace/🟦️.tsx";
 import { BoardSessionFactoryContext } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { isEphemeralShellBrand, ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
+import { registerElementHostsV1 } from "../🪢️ElementHosts/🟦️.ts";
 import {
   pluginInstallBandTextV1,
   pluginInstallCancelTextV1,
@@ -178,6 +176,9 @@ export {
 } from "./🧱️built-node-stores/🟦️.ts";
 
 export type { DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1 } from "@semio-tech/framework-os";
+
+/** 🪢️ The shell mounts windows through the Interpreter, so it is a composition root of the element hosts. */
+registerElementHostsV1();
 
 //#region FrameworkOsShell
 //#region 🐚️ShellMount

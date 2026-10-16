@@ -1,7 +1,7 @@
 /** 🖼️ Hand-authored palette, problem parameters and pinned pixel relationships. */
 import type {BitmapSnapshot,BitmapColor,BitmapPinnedPixel} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const WFC_BITMAP_SQLITE_SCHEMA=`CREATE TABLE wfc_bitmap_document (id INTEGER PRIMARY KEY, schema_id TEXT NOT NULL, seed TEXT NOT NULL);
 CREATE TABLE wfc_bitmap_input (id INTEGER PRIMARY KEY REFERENCES wfc_bitmap_document(id), width INTEGER NOT NULL CHECK(width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4294967295), palette_indices BLOB NOT NULL);
 CREATE TABLE wfc_bitmap_palette (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc_bitmap_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), red INTEGER NOT NULL CHECK(red BETWEEN 0 AND 4294967295), green INTEGER NOT NULL CHECK(green BETWEEN 0 AND 4294967295), blue INTEGER NOT NULL CHECK(blue BETWEEN 0 AND 4294967295), alpha INTEGER NOT NULL CHECK(alpha BETWEEN 0 AND 4294967295));

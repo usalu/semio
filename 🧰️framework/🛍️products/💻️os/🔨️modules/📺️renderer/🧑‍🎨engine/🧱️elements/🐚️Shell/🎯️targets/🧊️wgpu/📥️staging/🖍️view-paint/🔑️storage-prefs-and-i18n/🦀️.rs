@@ -4,7 +4,7 @@ use super::*;
 
 //#region ShellChrome
 //#region 🗣️ChromeI18n
-pub(crate) fn scene_chrome_labels(is_de: bool) -> SceneChromeLabels {
+pub fn scene_chrome_labels(is_de: bool) -> SceneChromeLabels {
     SceneChromeLabels {
         german: is_de,
         virtual_file_system: VirtualFileSystemChromeLabels {
@@ -14,7 +14,7 @@ pub(crate) fn scene_chrome_labels(is_de: bool) -> SceneChromeLabels {
             collapse: shell_chrome_string("common.collapse", is_de),
         },
         block_list: BlockListChromeLabels { steps: shell_chrome_string("blockList.steps", is_de), add_step: shell_chrome_string("blockList.addStep", is_de), delete: shell_chrome_string("common.delete", is_de) },
-        icon_render: crate::scenes::IconRenderChromeLabels { empty_scene: shell_chrome_string("host.emptyScene", is_de), rendering: shell_chrome_string("host.rendering", is_de), failed: shell_chrome_string("host.iconRenderFailed", is_de) },
+        icon_render: semio_framework_os_renderer_wgpu_scene_state::IconRenderChromeLabels { empty_scene: shell_chrome_string("host.emptyScene", is_de), rendering: shell_chrome_string("host.rendering", is_de), failed: shell_chrome_string("host.iconRenderFailed", is_de) },
     }
 }
 //#endregion 🗣️ChromeI18n

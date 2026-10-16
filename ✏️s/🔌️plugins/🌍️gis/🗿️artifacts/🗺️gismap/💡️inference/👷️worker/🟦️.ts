@@ -1,7 +1,7 @@
 import {gisMapInferenceRequestToJson} from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️hub/🟦️.ts";
 import { GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, gisMapInferenceCodeFromStatusV1, gisMapInferencePortTerminalV1, idleGisMapInferencePortStatusV1, parseGisMapInferenceApprovalReceiptV1, parseGisMapApprovalUndoReceiptV1, parseGisMapInferenceEventPageV1, parseGisMapInferenceJobReceiptV1, reduceGisMapInferencePortV1, sealGisMapApprovalUndoRequestV1, sealGisMapInferenceApprovalRequestV1, sealGisMapInferenceJobRequestV1, type GisMapApprovalHistoryStatusV1, type GisMapApprovalUndoReceiptV1, type GisMapInferenceApprovalReceiptV1, type GisMapInferenceJobRequestV1, type GisMapInferencePortCodeV1, type GisMapInferencePortEventV1, type GisMapInferencePortStatusV1 } from "../🧬️schema/🟦️.ts";
 import { parseInferenceReconcilePayloadV1 } from "../🔎️reconcile/🟦️.ts";
-import { JOB_RECONCILE_REQUEST_SCHEMA_V1, parseJobReconcileRequestV1, parseJobReconcileResultV1 } from "../../../../../../../🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🟦️.ts";
+import { JOB_RECONCILE_REQUEST_SCHEMA_V1, parseJobReconcileRequestV1, parseJobReconcileResultV1 } from "@semio-tech/framework/job/reconcile/schema";
 import { DirectoryHttpError, type DocumentScope, type BackboneWorkerResponse, type DocumentExecutionTargetLeaseFieldsV1 } from "@semio-tech/framework-os";
 import type { FetchTimeoutResponse } from "@semio-tech/framework";
 import type { DocumentServiceWorkerHostV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts";

@@ -7,16 +7,9 @@ use super::*;
 //#region ShellChrome
 //#region 🔖️ChromeOverlaysAndTour
 //#region 🧯️TransientNoticeAndAgentOverlays
-/// ⏱️ `setTimeout(…, 4000)` in `showTransientNotice` — the auto-dismiss deadline.
-pub(crate) const TRANSIENT_NOTICE_AUTO_DISMISS_MS: f64 = 4000.0;
 
 /// 🆔️ The transient notice's own polite status node — the wgpu twin of React's `[data-semio-transient-notice]`.
-pub(crate) const TRANSIENT_NOTICE_STATUS_ID: &str = "shell.notice";
-
-/// ⏱️ Pure deadline check, factored out so the 4 s rule is testable without a frame clock.
-pub(crate) fn transient_notice_expired(notice: &ShellTransientNotice, now_ms: f64) -> bool {
-    now_ms - notice.shown_at_ms >= TRANSIENT_NOTICE_AUTO_DISMISS_MS
-}
+pub const TRANSIENT_NOTICE_STATUS_ID: &str = "shell.notice";
 
 //#endregion 🧯️TransientNoticeAndAgentOverlays
 //#endregion 🔖️ChromeOverlaysAndTour

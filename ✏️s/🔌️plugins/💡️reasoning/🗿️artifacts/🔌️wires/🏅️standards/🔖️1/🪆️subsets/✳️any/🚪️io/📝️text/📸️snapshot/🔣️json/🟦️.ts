@@ -1,8 +1,8 @@
 /** 🔣️ Wires JSON wire input has explicit finite JSON semantics. */
-import {parseDslValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseDslValue} from "@semio-tech/framework/value/schema";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import {parseArtifactChild} from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import {parseSchemaRecord} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
 import type{WiresValue}from"../../../../🧬️schema/🌱️value/🟦️.ts";
 import type{WiresSnapshot}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 /** 📥️ Decode the actual JSON representation without widening its permitted syntax. */

@@ -8,7 +8,7 @@ async fn env(to: semio_framework_actor::ActorId, lane: Lane, seq: u64) -> Envelo
 
 async fn ok_turn() -> TurnResult {
     TurnResult {
-        retained_receipt: crate::test_native_authority::idle_receipt(),
+        retained_receipt: semio_framework_plugin_host_operation::test_native_authority::idle_receipt(),
         ui_patches: vec![],
         effects: vec![],
         lifecycle_receipt: None,
@@ -27,7 +27,7 @@ async fn ok_turn() -> TurnResult {
 #[semio_framework_async_macros::async_test]
 async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
     let mut kernel = Kernel::new(ShardKind::Native, 1, 0, 4).await;
-    let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, crate::test_native_authority::original_retained_turn()).await;
+    let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, semio_framework_plugin_host_operation::test_native_authority::original_retained_turn()).await;
     kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
     kernel.tick(0).await;
     kernel.complete(actor, &ok_turn().await, 0).await.unwrap();
@@ -51,11 +51,11 @@ async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
 //#region 🔖️ScaleFixture
 /// 🧫️ The 50×50 scale fixture registry (M2's own data source: 50 plugins × 50 extensions each,
 /// 2550 records, 7 `scaleFixture.profile` behaviour profiles) — see this module's own doc comment
-/// for why `include_str!` (not `std::fs`) is how a `#[cfg(test)]` block reads it without tripping
-/// the crate-purity grep this repo's acceptance criteria runs unconditionally over `component.rs`
-/// files (this one is the HOST, not the pure `🎭️actor` crate, but the same discipline is followed
-/// here since the file is right next to it and easy to mistake for one).
-const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../../../🧪️testing/⚖️scale/🤖️generated/📇️registry/🔣️.json");
+/// for why the registry is read when the law runs and not embedded: its 1.7 MB would count against the crate's source boundary.
+fn scale_fixture_registry_json() -> String {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧪️testing/⚖️scale/🤖️generated/📇️registry/🔣️.json");
+    std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("scale fixture registry {} is not readable: {error}", path.display()))
+}
 
 #[derive(serde::Deserialize)]
 struct ScaleFixtureRegistry {
@@ -107,7 +107,7 @@ async fn lane_for_profile(profile: &str) -> Lane {
 /// first plugin gets a clean turn, the first "crash" profile actor gets a `Faulted` turn.
 #[semio_framework_async_macros::async_test]
 async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_registry() {
-    let registry: ScaleFixtureRegistry = serde_json::from_str(SCALE_FIXTURE_REGISTRY_JSON).expect("scale fixture registry must be valid JSON matching the documented shape");
+    let registry: ScaleFixtureRegistry = serde_json::from_str(&scale_fixture_registry_json()).expect("scale fixture registry must be valid JSON matching the documented shape");
     assert_eq!(registry.record_count as usize, registry.records.len(), "recordCount header must match the actual records array length");
     assert_eq!(registry.record_count, 2550, "the documented 50 plugins x (1 + 50 extensions) fixture shape");
 
@@ -124,7 +124,7 @@ async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_regist
         } else {
             (PackageId(plugin_id.to_string()), ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: record.id.clone() })
         };
-        let actor = kernel.activate(package, ordinal.await, kind, lane.await, None, ActivationEvent::Manual, crate::test_native_authority::original_retained_turn()).await;
+        let actor = kernel.activate(package, ordinal.await, kind, lane.await, None, ActivationEvent::Manual, semio_framework_plugin_host_operation::test_native_authority::original_retained_turn()).await;
         if record.scale_fixture.profile == "crash" && crash_profile_actor.is_none() {
             crash_profile_actor = Some(actor);
         }
@@ -142,7 +142,7 @@ async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_regist
     kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
     kernel.tick(1).await;
     let faulted = TurnResult {
-        retained_receipt: crate::test_native_authority::idle_receipt(),
+        retained_receipt: semio_framework_plugin_host_operation::test_native_authority::idle_receipt(),
         ui_patches: vec![],
         effects: vec![],
         lifecycle_receipt: None,

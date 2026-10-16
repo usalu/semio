@@ -10,8 +10,8 @@ import {Buffer} from "node:buffer";
 import controls from "./🧫️fixtures/🎛️control.json";
 import words from "./🧫️fixtures/🔢️binary64.json";
 import { DIN18599_SQLITE_SCHEMA, din18599SnapshotToSqliteDatabase, din18599SnapshotFromSqliteDatabase, type Din18599SqliteSnapshot } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 test("DIN18599 owned exact wire parser refuses every unknown native choice",()=>{for(const field of ["buildingCategory","attachment","useClass","method","automationClass"] as const)expect(()=>snapshot.parseDin18599Snapshot({...fixture,[field]:"unknown"})).toThrow();expect(()=>snapshot.parseDin18599Snapshot({...fixture,zones:[{...fixture.zones[0],usageProfile:"unknown"}]})).toThrow();for(const field of ["kind","adjacency"])expect(()=>snapshot.parseDin18599Snapshot({...fixture,elements:[{...fixture.elements[0],[field]:"unknown"}]})).toThrow()});
 test("DIN18599 owned exact wire parser refuses every unsigned32 occupant counterexample",()=>{for(const occupants of choices.invalidUnsigned32)expect(()=>snapshot.parseDin18599Snapshot({...fixture,zones:[{...fixture.zones[0],occupants}]})).toThrow()});
 test("DIN18599 complete neutral snapshot agrees with independent JSON schema",()=>{expect(new Ajv({strict:false}).validate(schema,fixture)).toBe(true)});
@@ -41,8 +41,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {din18599SnapshotToSqliteDatabase as normSemanticProject,din18599SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("DIN18599 complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(normSemanticContract["schemaBytes"]).toEqual(6819);expect(normSemanticContract["tableWidths"]).toEqual({"din18599_climate_child":7,"din18599_climate_month":8,"din18599_cooling":2,"din18599_cooling_plant":6,"din18599_dhw":12,"din18599_document":18,"din18599_element":27,"din18599_heating":15,"din18599_lighting":5,"din18599_renewables":11,"din18599_ventilation":11,"din18599_zone":26});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":25,"valueBytes":2213},{"id":"emptyCollections","rows":21,"valueBytes":1405}]);
  for(const item of normSemanticContract.cases){const source=ownedFixture();if(item.id==="emptyCollections"){source.zones=[];source.elements=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:12,maxColumns:27};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);

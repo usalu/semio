@@ -12,7 +12,7 @@ import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../.
 import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {open,lstat} from "node:fs/promises";
-import{withArtifactDescriptorV1,artifactReadFlagsV1}from"../../../📦️artifacts/👓️reading/📥️inspection/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,artifactReadFlagsV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{withCurrentBunWorkspaceOwnershipV1}from"../../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import installSchema from"./🧬️schema/📥️install.json"with{type:"json"};
 import bindingsSchema from "./🧬️schema/📥️bindings.json" with {type:"json"};

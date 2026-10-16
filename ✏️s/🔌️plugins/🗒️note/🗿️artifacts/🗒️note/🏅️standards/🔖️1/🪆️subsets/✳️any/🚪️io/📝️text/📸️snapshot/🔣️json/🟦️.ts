@@ -1,5 +1,5 @@
 /** 🔣️ Note native JSON scalar binding before intrinsic admission. */
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import {parseNoteArtifact,type NoteArtifact} from "../../../../🧬️schema/🟦️.ts";
 import {parseNoteDiff,type NoteDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
 import {parseNoteSnapshot,type NoteSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";

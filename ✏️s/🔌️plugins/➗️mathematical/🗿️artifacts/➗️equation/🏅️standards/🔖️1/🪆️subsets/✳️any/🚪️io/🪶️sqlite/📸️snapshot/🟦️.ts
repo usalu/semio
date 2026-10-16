@@ -1,8 +1,8 @@
 /** ➗️ Handcrafted Equation entities preserve labeled syntax, the parent-owned graph and point cloud, and the derived child identities. */
 import type {EquationSnapshot,EquationNode,EquationNodeKind,EquationGraph,EquationGeometry} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteReal as real,artifactSqliteBoolean as boolean,artifactSqliteTextBytes,artifactSqliteValueBudget,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteReal as real,artifactSqliteBoolean as boolean,artifactSqliteTextBytes,artifactSqliteValueBudget,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 /** 🏛️ Eighteen explicit tables mirror the adjacent SQL schema. */
 export const EQUATION_SQLITE_SCHEMA=String.raw`CREATE TABLE equation_document (id INTEGER PRIMARY KEY);
 CREATE TABLE equation_notation_child (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES equation_document(id), child_id TEXT NOT NULL, target_artifact_id TEXT NOT NULL, target_artifact_kind TEXT NOT NULL, target_standard TEXT NOT NULL, target_subset TEXT NOT NULL);

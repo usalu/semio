@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {generation3dSnapshotToSqliteDatabase,generation3dSnapshotFromSqliteDatabase,GENERATION3D_SQLITE_SCHEMA} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import corpus from"./🧫️fixtures/🔣️.json";
 import{proceduralSnapshotFixture}from"../../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🧪️tests/🧰️support/🟦️.ts";
 

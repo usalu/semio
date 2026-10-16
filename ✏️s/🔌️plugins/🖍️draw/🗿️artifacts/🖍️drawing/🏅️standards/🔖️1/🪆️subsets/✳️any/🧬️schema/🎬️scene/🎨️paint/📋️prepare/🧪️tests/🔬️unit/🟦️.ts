@@ -4,7 +4,7 @@ import {test,expect,spyOn} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import {readFileSync} from "node:fs";
-import {builtinFontLocations} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";
+import {builtinFontLocations} from "@semio-tech/framework/2d/text/font/catalog";
 import rows from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import textRows from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/📝️text/🔣️.json";
@@ -14,11 +14,11 @@ import {DocumentVectorJob,type DocumentScenePlan} from "../../../../📋️prepa
 import type {DrawingArtifact} from "../../../../../🟦️.ts";
 import {PreparedRegionQueryJob} from "../../../🟦️.ts";
 import {ScenePaintJob,PreparedSceneCloseJob,type PaintedSceneLimits} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import vectorSchema from "../../../../📋️prepare/🧬️schema/🔣️.json";
 import rasterSchema from "../../../../📷️raster/🧬️schema/🔣️.json";
 import pathSchema from "../../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
-import imageSchema from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🧬️schema/🔣️.json";
+import { imageDecodeSchema as imageSchema } from "@semio-tech/framework/pixels/image/decode/schema";
 const ajv=new Ajv({strict:true}).addMetaSchema(draft7);for(const s of [pathSchema,imageSchema,rasterSchema,vectorSchema])ajv.addSchema(s);const outputValid=ajv.compile(schema.$defs.output),progressValid=ajv.compile(schema.$defs.progress),limits:PaintedSceneLimits={maxNodes:1024,maxSegments:65536,maxPoints:262144,maxContours:65536,maxWork:1000000000};
 const lift=(v:any):any=>typeof v==="number"?binary64(v):Array.isArray(v)?v.map(lift):v&&typeof v==="object"?Object.fromEntries(Object.entries(v).map(([k,v])=>[k,lift(v)])):v;
 function plan(source:string):DocumentScenePlan{const row=vectorRows.find(row=>row.name===source)!,doc={...row.document,layers:lift(row.document.layers)}as DrawingArtifact,producer=new DocumentVectorJob(doc,row.limits,row.algorithms);while(!producer.advance(4096).done){if(producer.needsFontSources())producer.admitFontSources(builtinFontLocations().map(source=>({family:source.family,id:source.id,bytes:new Uint8Array(readFileSync(source.url))})));}const moved=producer.intoRetirement();while(!moved.job.advance(4096).done){}return moved.output!;}

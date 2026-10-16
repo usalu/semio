@@ -1,7 +1,7 @@
 /** 🧊️ Complete Block3d persisted fields and literal independent child identity. */
 import * as shared from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 import * as p from "../../../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 import {parseArtifactChild,type ArtifactChild} from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export * from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 export interface Block3dVortexKindExtra{id:string;name:string;label:string;color:string;defaultCableKind:string}
@@ -29,7 +29,7 @@ function catalog(v:unknown):ArtifactChild{const child=parseArtifactChild(v);p.te
 export function parseBlock3dSnapshot(v:unknown):Block3dSnapshot{const r=p.row(v);return{schema:p.text(r.schema),objectKind:shared.parseBlockKindIdentity(r.objectKind),representations:p.list(r.representations,shared.parseBlockRepresentation),catalog:catalog(r.catalog),vortexKindExtra:p.list(r.vortexKindExtra,parseBlock3dVortexKindExtra),vortices:p.list(r.vortices,parseBlock3dVortexTemplate),compatibility:p.list(r.compatibility,shared.parseBlockCompatibilityRule),attributes:p.list(r.attributes,shared.parseBlockAttribute),authors:p.list(r.authors,shared.parseBlockAuthor),camera3d:shared.parseBlockCamera3d(r.camera3d),meta:shared.parseBlockMeta(r.meta)}}
 
 
-import {requireArtifactDialect,type ArtifactDialect} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import {requireArtifactDialect,type ArtifactDialect} from "@semio-tech/framework/schema/artifact-reference";
 const catalogDialects:readonly ArtifactDialect[]=[{artifactKind:"s.stdio.semio",standard:"v1",subset:"kit"},{artifactKind:"s.stdio.semio",standard:"v1",subset:"*"}];
 /** 🪆️ Admit the genuine typed catalog owner before any domain publication. */
 export function validateBlock3dCatalogDialect(dialect:ArtifactDialect):void{requireArtifactDialect(dialect,catalogDialects,"Block3d catalog")}

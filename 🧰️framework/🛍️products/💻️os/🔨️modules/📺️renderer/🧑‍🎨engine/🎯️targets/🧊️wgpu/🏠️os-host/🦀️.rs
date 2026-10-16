@@ -1,9 +1,10 @@
 //! 🏠️ Composition and retirement of the renderer runtime, presenter, scheduler and deadline sources.
 //! AppMailbox owns worker dispatch; the host presents completed frames and schedules wakeups.
 
-use crate::deadlines::HotSwapPoll;
-use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
-use crate::{AppMailbox, AppPresenter};
+use semio_framework_os_renderer_wgpu_host_plumbing::deadlines::HotSwapPoll;
+use semio_framework_os_renderer_wgpu_host_plumbing::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
+use semio_framework_os_renderer_wgpu_app_runtime::AppMailbox;
+use semio_framework_os_renderer_wgpu_frame_presentation::AppPresenter;
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, AtomicUsize, Ordering};
 use ui_render::{CursorRequest, FrameScheduler};
 
@@ -71,9 +72,9 @@ fn performance_now_ms() -> f64 {
 /// 🏠️ Owns presentation, scheduling and host lifecycle around the worker-owned runtime.
 pub struct OsHost {
     retained: semio_framework_job::RetainedCloneGrant,
-    pub(crate) animation_clock: crate::deadlines::AcceptedAnimationClock,
-    pub(crate) runtime: AppMailbox,
-    pub(crate) presenter: AppPresenter,
+    pub animation_clock: semio_framework_os_renderer_wgpu_host_plumbing::deadlines::AcceptedAnimationClock,
+    pub runtime: AppMailbox,
+    pub presenter: AppPresenter,
     pub scheduler: FrameScheduler,
     pub clock: OsClock,
     pub hot_swap: HotSwapPoll,
@@ -83,9 +84,9 @@ pub struct OsHost {
     /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
     pub frame_generation: u64,
     pub frame_ready: bool,
-    pub(crate) cursor_wake_requested: Option<infinite_world::world::WorldCursorWakeToken>,
-    pub(crate) platform_fullscreen: Option<bool>,
-    pub(crate) present_fault: Option<String>,
+    pub cursor_wake_requested: Option<infinite_world::world::WorldCursorWakeToken>,
+    pub platform_fullscreen: Option<bool>,
+    pub present_fault: Option<String>,
     /// 📬️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the fixed-capacity enqueue-only
     /// sink `WindowDelegate::handle_event`/`handle_metrics` write into instead of immediately spawning
     /// a heap-allocated future per event. `redraw()` drains it once per frame and dispatches the whole
@@ -100,18 +101,18 @@ pub struct OsHost {
     /// artifact. Worker-built prepared packets and UI-only presentation share its generation and
     /// revision vocabulary; the retained dispatch-tree field remains an explicit follow-up.
     pub snapshot_sink: RenderSnapshotSink,
-    pub(crate) original_snapshot: Option<RenderSnapshot>,
+    pub original_snapshot: Option<RenderSnapshot>,
     /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the non-blocking poll/resubmit
     /// handle for the deadline-scan job plus worker-owned `AppRuntime::frame` transaction.
-    pub(crate) frame_build: crate::frame_job::FrameBuildHandle,
-    pub(crate) surface_resize: crate::surface_lane::SurfaceResizeAuthority,
+    pub frame_build: semio_framework_os_renderer_wgpu_frame_job::frame_job::FrameBuildHandle,
+    pub surface_resize: semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::SurfaceResizeAuthority,
     component_surface_close: Option<ComponentSurfaceCloseOwner>,
 }
 
 #[cfg(target_arch = "wasm32")]
-pub(crate) struct BrowserRedrawOutcome {
+pub struct BrowserRedrawOutcome {
     pub cursor_css: &'static str,
-    pub media_slots:crate::render_snapshot::RenderSnapshotOutputLoan,
+    pub media_slots:semio_framework_os_renderer_wgpu_host_plumbing::render_snapshot::RenderSnapshotOutputLoan,
 }
 
 struct OsHostRetirementState {
@@ -127,16 +128,16 @@ struct OsHostRetirementState {
     snapshot_sink: Option<RenderSnapshotSink>,
     original_snapshot:Option<RenderSnapshot>,
     original_snapshot_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<RenderSnapshot>>,
-    frame_build: Option<crate::frame_job::FrameBuildHandle>,
-    surface_resize: Option<crate::surface_lane::SurfaceResizeAuthority>,
+    frame_build: Option<semio_framework_os_renderer_wgpu_frame_job::frame_job::FrameBuildHandle>,
+    surface_resize: Option<semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::SurfaceResizeAuthority>,
     engine_surfaces: PairedEngineSurfaceClose,
-    raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose>,
+    raster_uploads: Option<semio_framework_os_renderer_wgpu_scene_state::PendingRasterAuthorityClose>,
     cursor_wake_requested: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
-    kernel_progress_close: Option<crate::kernel_runtime::KernelCloseHandle>,
+    kernel_progress_close: Option<semio_framework_os_renderer_wgpu_kernel_runtime::KernelCloseHandle>,
 }
 
-pub(crate) struct OsHostRetirement {
+pub struct OsHostRetirement {
     state: Option<Box<OsHostRetirementState>>,
     abandonment: Option<OsHostRetirementAbandonment>,
 }
@@ -225,7 +226,7 @@ enum PairedEngineSurfaceClosePhase {
     Terminal,
 }
 
-pub(crate) use semio_framework_os_renderer_wgpu_scene_state::{
+pub use semio_framework_os_renderer_wgpu_scene_state::{
     acknowledge_component_surface_close, component_surface_close_occupied, component_surface_close_pending, component_surface_close_terminal, publish_component_surface_close_terminal, request_component_surface_close, take_component_surface_close_request, ComponentSurfaceCloseRequest,
     ComponentSurfaceCloseToken,
 };
@@ -304,7 +305,7 @@ impl ComponentSurfaceCloseOwner {
         match self.phase {
             ComponentSurfaceClosePhase::Asset | ComponentSurfaceClosePhase::World => {}
             ComponentSurfaceClosePhase::Inspect => {
-                let cpu = crate::engine_canvas::engine_surface_token_at(usize::from(engine_token.slot)).ok().flatten();
+                let cpu = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token_at(usize::from(engine_token.slot)).ok().flatten();
                 let gpu = presenter.engine_surface_token_at(usize::from(engine_token.slot));
                 if cpu.is_some_and(|token| token != engine_token) || gpu.is_some_and(|token| token != engine_token) {
                     self.faulted = true;
@@ -392,7 +393,7 @@ struct PairedEngineSurfaceClose {
     operation: semio_framework_trace::OperationId,
     sequence: u64,
     scan: usize,
-    token: Option<crate::engine_canvas::EngineSurfaceToken>,
+    token: Option<semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken>,
     cpu_present: bool,
     gpu_present: bool,
     phase: PairedEngineSurfaceClosePhase,
@@ -410,11 +411,11 @@ impl PairedEngineSurfaceClose {
         }
         match self.phase {
             PairedEngineSurfaceClosePhase::Scan => {
-                if self.scan == crate::engine_canvas::ENGINE_SURFACE_CAPACITY {
+                if self.scan == semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::ENGINE_SURFACE_CAPACITY {
                     self.phase = PairedEngineSurfaceClosePhase::Terminal;
                     return false;
                 }
-                let Ok(cpu) = crate::engine_canvas::engine_surface_token_at(self.scan) else {
+                let Ok(cpu) = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token_at(self.scan) else {
                     return false;
                 };
                 let gpu = presenter.engine_surface_token_at(self.scan);
@@ -526,11 +527,11 @@ impl PairedEngineSurfaceClose {
 
 impl OsHost {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub(crate) fn new(runtime: AppMailbox, presenter: AppPresenter, retained: semio_framework_job::RetainedCloneGrant) -> Self {
-        crate::scenes::install_scene_camera_authority(retained).expect("host retains the same camera bootstrap authority");
+    pub fn new(runtime: AppMailbox, presenter: AppPresenter, retained: semio_framework_job::RetainedCloneGrant) -> Self {
+        semio_framework_os_renderer_wgpu_scene_state::install_scene_camera_authority(retained).expect("host retains the same camera bootstrap authority");
         Self {
             retained,
-            animation_clock: crate::deadlines::AcceptedAnimationClock::default(),
+            animation_clock: semio_framework_os_renderer_wgpu_host_plumbing::deadlines::AcceptedAnimationClock::default(),
             runtime,
             presenter,
             scheduler: FrameScheduler::new(),
@@ -545,8 +546,8 @@ impl OsHost {
             ui_token: ui_host::UiThreadToken::mint_for_host(),
             original_snapshot:None,
             snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, ui_wgpu::wgpu::SemioCursor::Default, false, None)),
-            frame_build: crate::frame_job::FrameBuildHandle::new(retained),
-            surface_resize: crate::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
+            frame_build: semio_framework_os_renderer_wgpu_frame_job::frame_job::FrameBuildHandle::new(retained),
+            surface_resize: semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
             component_surface_close: None,
         }
     }
@@ -558,7 +559,7 @@ impl OsHost {
     }
 
     /// 🎒️ Transfers the original host only after its caller funds retirement storage.
-    pub(crate) fn try_into_retirement(owner:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<OsHostRetirement>,semio_framework_job::OriginalTurnFailure> {
+    pub fn try_into_retirement(owner:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<OsHostRetirement>,semio_framework_job::OriginalTurnFailure> {
         let Some(host)=owner.as_ref()else{return Ok(None)};
         let grant=cx.retained_grant();let capacity=std::mem::size_of::<OsHostRetirementState>();
         if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity||host.component_surface_close.is_some()||component_surface_close_occupied(){
@@ -609,25 +610,25 @@ impl OsHost {
             frame_build: Some(frame_build),
             surface_resize: Some(surface_resize),
             engine_surfaces: PairedEngineSurfaceClose::new(),
-            raster_uploads: Some(crate::scenes::begin_pending_raster_authority_close()),
+            raster_uploads: Some(semio_framework_os_renderer_wgpu_scene_state::begin_pending_raster_authority_close()),
             cursor_wake_requested,
             #[cfg(not(target_arch = "wasm32"))]
-            kernel_progress_close: crate::kernel_runtime::KernelClient::get().begin_close_realm().ok(),
+            kernel_progress_close: semio_framework_os_renderer_wgpu_kernel_runtime::KernelClient::get().begin_close_realm().ok(),
         };
         Ok(Some(OsHostRetirement { state: Some(Box::new(state)), abandonment: Some(abandonment) }))
     }
 
-    pub(crate) fn retain_cursor_wake_directive(&mut self, token: infinite_world::world::WorldCursorWakeToken) {
+    pub fn retain_cursor_wake_directive(&mut self, token: infinite_world::world::WorldCursorWakeToken) {
         if self.cursor_wake_requested.as_ref().is_none_or(|pending| token.generation() > pending.generation()) {
             self.cursor_wake_requested = Some(token);
         }
     }
 
-    pub(crate) fn take_cursor_wake_directive(&mut self) -> Option<infinite_world::world::WorldCursorWakeToken> {
+    pub fn take_cursor_wake_directive(&mut self) -> Option<infinite_world::world::WorldCursorWakeToken> {
         self.cursor_wake_requested.take()
     }
 
-    pub(crate) fn advance_component_surface_close(&mut self) -> bool {
+    pub fn advance_component_surface_close(&mut self) -> bool {
         if self.component_surface_close.is_none() {
             if self.presenter.has_pending_presentation() {
                 return false;
@@ -659,7 +660,7 @@ impl OsHostRetirementState {
         if let Some(owner)=self.original_snapshot_close.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.original_snapshot_close=None;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
         if self.original_snapshot.is_some(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let source=self.original_snapshot.take().unwrap();match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>self.original_snapshot_close=Some(owner),Err((original,source))=>{self.original_snapshot=Some(source);return Err(original.into())}}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
         if let Some(presenter)=self.presenter.as_mut(){if !presenter.close_original_media_step(cx)?{return Ok(false)}}
-        if !crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step() {
+        if !semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::MountedSurfaceResizeLane::close_abandoned_step() {
             return Ok(false);
         }
         if let Some(surface_resize) = self.surface_resize.as_mut() {
@@ -685,9 +686,9 @@ impl OsHostRetirementState {
             self.frame_build = None;
             return Ok(false);
         }
-        if !crate::scenes::scene_camera_storage_is_empty() {
+        if !semio_framework_os_renderer_wgpu_scene_state::scene_camera_storage_is_empty() {
             let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-            let step = crate::scenes::close_scene_camera_storage(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+            let step = semio_framework_os_renderer_wgpu_scene_state::close_scene_camera_storage(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
             let receipt = step.progress();
             assert!(receipt.fits(grant));cx.consume_fuel(receipt.copied_items as u64);cx.consume_retained(receipt)?;
             self.camera_progress.copied_items = self.camera_progress.copied_items.checked_add(receipt.copied_items).expect("host camera item receipt overflow");
@@ -757,12 +758,12 @@ impl OsHostRetirementState {
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(close) = self.kernel_progress_close.as_ref() {
             match close.poll() {
-                crate::kernel_runtime::KernelCloseStatus::Complete => {
+                semio_framework_os_renderer_wgpu_kernel_runtime::KernelCloseStatus::Complete => {
                     self.kernel_progress_close = None;
                     return Ok(false);
                 }
-                crate::kernel_runtime::KernelCloseStatus::Pending | crate::kernel_runtime::KernelCloseStatus::AdmissionBlocked => return Ok(false),
-                crate::kernel_runtime::KernelCloseStatus::Fault => return Ok(false),
+                semio_framework_os_renderer_wgpu_kernel_runtime::KernelCloseStatus::Pending | semio_framework_os_renderer_wgpu_kernel_runtime::KernelCloseStatus::AdmissionBlocked => return Ok(false),
+                semio_framework_os_renderer_wgpu_kernel_runtime::KernelCloseStatus::Fault => return Ok(false),
             }
         }
         for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.clock, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
@@ -787,7 +788,7 @@ impl OsHostRetirementState {
             && self.frame_build.is_none()
             && self.surface_resize.is_none()
             && self.raster_uploads.is_none()
-            && crate::scenes::scene_camera_storage_is_empty()
+            && semio_framework_os_renderer_wgpu_scene_state::scene_camera_storage_is_empty()
             && self.engine_surfaces.terminal_is_empty()
             && self.cursor_wake_requested.is_none()
             && {
@@ -810,12 +811,12 @@ impl Drop for OsHostRetirementState {
 }
 
 impl OsHostRetirement {
-    pub(crate) fn close_abandoned_step(_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_abandoned_step(_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.load(Ordering::Acquire)==0{return Ok(true)}
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"abandoned host requires its original supplied lifecycle context").into())
     }
 
-    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         if let Some(state)=self.state.as_mut(){
             if !state.close_step(cx)?||!state.terminal_is_empty(){return Ok(false)}
@@ -827,7 +828,7 @@ impl OsHostRetirement {
         self.abandonment=None;cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.state.is_none() && self.abandonment.is_none()
     }
 }
@@ -863,8 +864,6 @@ impl<T> RetirementOwner for Option<T> {
     }
 }
 
-#[cfg(test)]
-include!("../../../🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs");
 
 //#endregion 🏠️OsHost
 

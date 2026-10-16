@@ -9,7 +9,7 @@ use super::*;
 //#region 🧯️TransientNoticeAndAgentOverlays
 impl SurfaceState {
     /// ⏰️ Translates the next epoch-based Shell chrome deadline onto the process monotonic clock.
-    pub(crate) fn next_chrome_deadline(&self, monotonic_now_seconds: f64, wall_now_ms: f64, chrome_state: &ChromeState, tutorial_state: &TutorialState) -> Option<f64> {
+    pub fn next_chrome_deadline(&self, monotonic_now_seconds: f64, wall_now_ms: f64, chrome_state: &ChromeState, tutorial_state: &TutorialState) -> Option<f64> {
         if !monotonic_now_seconds.is_finite() || !wall_now_ms.is_finite() {
             return None;
         }

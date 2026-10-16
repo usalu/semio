@@ -1,7 +1,7 @@
 /** 📍️ Handwritten destinations, complete fit scalars and file specifications. */
 import type { PdfDestination,PdfDestinationFit,PdfFileSpecification } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,type PdfCell } from "../../🧩️entity/🟦️.ts";
-import { artifactSqliteText } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 /** 📍️ Project exactly the fields declared by each native destination fit variant. */
 export async function writePdfDestination(out:PdfProjection,value:PdfDestination):Promise<bigint>{

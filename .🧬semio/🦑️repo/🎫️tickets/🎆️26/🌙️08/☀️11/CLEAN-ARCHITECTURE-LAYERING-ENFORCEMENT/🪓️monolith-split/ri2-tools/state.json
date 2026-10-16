@@ -1,0 +1,3868 @@
+{
+ "flipped": [
+  "shell-async",
+  "shell-chrome-state",
+  "shell-surfaces",
+  "shell-plugins",
+  "shell-history",
+  "shell-prefs",
+  "shell-directory",
+  "shell-sync",
+  "shell-docs",
+  "shell-doc-open",
+  "shell-windows",
+  "shell-dock",
+  "shell-input",
+  "shell-commands",
+  "shell-state",
+  "shell-session",
+  "shell-window-actions",
+  "shell-actions",
+  "shell-pointer",
+  "shell-view-paint",
+  "shell-view-chrome",
+  "shell-view-overlays",
+  "shell-view-panels"
+ ],
+ "modules": {
+  "shell-async": [
+   {
+    "name": "staged_async__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_async__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_async__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_async__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   },
+   {
+    "name": "staged_async__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   },
+   {
+    "name": "staged_async__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-chrome-state": [
+   {
+    "name": "staged_chrome_state__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_chrome_state__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_chrome_state__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__chrome_dialog_and_tooltips",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/💬️chrome-dialog-and-tooltips/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "💬️chrome-dialog-and-tooltips",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_chrome_state__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_chrome_state__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_chrome_state__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-surfaces": [
+   {
+    "name": "staged_surfaces__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_surfaces__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_surfaces__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_surfaces__tutorial_runtime",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🎓️tutorial-runtime/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎓️tutorial-runtime",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_surfaces__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_surfaces__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_surfaces__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_surfaces__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_surfaces__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_surfaces__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_surfaces__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_surfaces__navbar_footer_and_overlays",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🧭️navbar-footer-and-overlays/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧭️navbar-footer-and-overlays",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_surfaces__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_surfaces__shell_async_runners",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🧵️shell-async-runners/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧵️shell-async-runners",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-plugins": [
+   {
+    "name": "staged_plugins__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_plugins__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_plugins__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_plugins__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_plugins__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_plugins__shell_parent",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/🐚️shell-parent/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🐚️shell-parent",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_plugins__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_plugins__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🧲️plugins/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-history": [
+   {
+    "name": "staged_history__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏪️history/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_history__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏪️history/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_history__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏪️history/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_history__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏪️history/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_history__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏪️history/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-prefs": [
+   {
+    "name": "staged_prefs__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_prefs__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_prefs__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_prefs__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_prefs__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_prefs__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-directory": [
+   {
+    "name": "staged_directory__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_directory__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_directory__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_directory__chrome_dialog_and_tooltips",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/💬️chrome-dialog-and-tooltips/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "💬️chrome-dialog-and-tooltips",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_directory__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_directory__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__navbar_footer_and_overlays",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧭️navbar-footer-and-overlays/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧭️navbar-footer-and-overlays",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_directory__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_directory__shell_async_runners",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧵️shell-async-runners/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧵️shell-async-runners",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_directory__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-sync": [
+   {
+    "name": "staged_sync__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_sync__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_sync__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_sync__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_sync__icon_export",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/📤️icon-export/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📤️icon-export",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_sync__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_sync__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_sync__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_sync__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-docs": [
+   {
+    "name": "staged_docs__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__chrome_dialog_and_tooltips",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/💬️chrome-dialog-and-tooltips/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "💬️chrome-dialog-and-tooltips",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_docs__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_docs__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_docs__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_docs__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_docs__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__shell_async_runners",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧵️shell-async-runners/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧵️shell-async-runners",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_docs__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-doc-open": [
+   {
+    "name": "staged_doc_open__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_doc_open__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_doc_open__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_doc_open__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_doc_open__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_doc_open__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_doc_open__icon_export",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/📤️icon-export/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📤️icon-export",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_doc_open__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_doc_open__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_doc_open__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_doc_open__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_doc_open__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_doc_open__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-windows": [
+   {
+    "name": "staged_windows__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_windows__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_windows__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_windows__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_windows__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_windows__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_windows__shell_parent",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🐚️shell-parent/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🐚️shell-parent",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_windows__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_windows__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_windows__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_windows__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔲️windows/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "section_fixtures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧰️section-fixtures/🦀️.rs",
+    "cfg": [
+     "#[cfg(any(test, feature = \"testkit\"))]"
+    ],
+    "glob": false,
+    "slug": "🧰️section-fixtures",
+    "vis": "pub",
+    "reexport": [],
+    "reexport_cfg": [],
+    "pub": true,
+    "new": true
+   }
+  ],
+  "shell-dock": [
+   {
+    "name": "staged_dock__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__tutorial_runtime",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🎓️tutorial-runtime/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎓️tutorial-runtime",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_dock__chrome_dialog_and_tooltips",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/💬️chrome-dialog-and-tooltips/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "💬️chrome-dialog-and-tooltips",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_dock__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_dock__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_dock__shell_parent",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🐚️shell-parent/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🐚️shell-parent",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_dock__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_dock__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_dock__tree_windows",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🪟️tree-windows/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🪟️tree-windows",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-input": [
+   {
+    "name": "staged_input__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_input__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_input__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__chrome_dialog_and_tooltips",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/💬️chrome-dialog-and-tooltips/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "💬️chrome-dialog-and-tooltips",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_input__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_input__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_input__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-commands": [
+   {
+    "name": "staged_commands__component",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎹️commands/🧬️component/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️component",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_commands__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎹️commands/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_commands__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎹️commands/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_commands__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎹️commands/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub(crate)"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-state": [
+   {
+    "name": "staged_state__composer",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/🧬️composer/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️composer",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   },
+   {
+    "name": "staged_state__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_state__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_state__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_state__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-session": [
+   {
+    "name": "staged_session__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_session__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_session__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__shell_parent",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🐚️shell-parent/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🐚️shell-parent",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__chrome_dialog_and_tooltips",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/💬️chrome-dialog-and-tooltips/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "💬️chrome-dialog-and-tooltips",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_session__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_session__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_session__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_session__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_session__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__bundle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🧺️bundle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧺️bundle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_session__tree_windows",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🪟️tree-windows/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🪟️tree-windows",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   }
+  ],
+  "shell-window-actions": [
+   {
+    "name": "staged_window_actions__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__settings_and_dock_persistence",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/⚙️settings-and-dock-persistence/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚙️settings-and-dock-persistence",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_window_actions__tutorial_runtime",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🎓️tutorial-runtime/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎓️tutorial-runtime",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_window_actions__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_window_actions__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__shell_async_runners",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🧵️shell-async-runners/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧵️shell-async-runners",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__bundle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🧺️bundle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧺️bundle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_window_actions__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-actions": [
+   {
+    "name": "staged_actions__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_actions__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_actions__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_actions__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_actions__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__bundle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🧺️bundle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧺️bundle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_actions__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-pointer": [
+   {
+    "name": "staged_pointer__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__tutorial_runtime",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🎓️tutorial-runtime/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎓️tutorial-runtime",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_pointer__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_pointer__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_pointer__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__command_dispatch",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/📨️command-dispatch/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📨️command-dispatch",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_pointer__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__session_and_topology",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🧩️session-and-topology/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧩️session-and-topology",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_pointer__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__shell_async_runners",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🧵️shell-async-runners/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧵️shell-async-runners",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__bundle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🧺️bundle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧺️bundle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_pointer__icon_export",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/📤️icon-export/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📤️icon-export",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-view-paint": [
+   {
+    "name": "staged_view_paint__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__tutorial_runtime",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🎓️tutorial-runtime/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎓️tutorial-runtime",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_paint__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-view-chrome": [
+   {
+    "name": "staged_view_chrome__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_chrome__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_chrome__space_admin_and_settle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🏛️space-admin-and-settle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🏛️space-admin-and-settle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_chrome__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_chrome__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_chrome__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_chrome__navbar_footer_and_overlays",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🧭️navbar-footer-and-overlays/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧭️navbar-footer-and-overlays",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_chrome__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_chrome__bundle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🧺️bundle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧺️bundle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_chrome__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-view-overlays": [
+   {
+    "name": "staged_view_overlays__time_travel",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/⏪️time-travel/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⏪️time-travel",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_overlays__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_overlays__chrome_dialog_and_tooltips",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/💬️chrome-dialog-and-tooltips/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "💬️chrome-dialog-and-tooltips",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_overlays__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_overlays__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_overlays__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_overlays__navbar_footer_and_overlays",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/🧭️navbar-footer-and-overlays/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧭️navbar-footer-and-overlays",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_overlays__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_overlays__bundle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/🧺️bundle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧺️bundle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ],
+  "shell-view-panels": [
+   {
+    "name": "staged_view_panels__keyboard_and_palette",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/⌨️keyboard-and-palette/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "⌨️keyboard-and-palette",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_panels__theme_file_import_and_accessibility",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🎨️theme-file-import-and-accessibility/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🎨️theme-file-import-and-accessibility",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_panels__shell_actions",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🎬️shell-actions/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🎬️shell-actions",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_panels__icon_export",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/📤️icon-export/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "📤️icon-export",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_panels__identity_and_types",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🔖️identity-and-types/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔖️identity-and-types",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_panels__pointer_input",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🖱️pointer-input/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🖱️pointer-input",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_panels__chrome_frame_and_main_window",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🖼️chrome-frame-and-main-window/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🖼️chrome-frame-and-main-window",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_panels__chrome_overlays_and_tour",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🗨️chrome-overlays-and-tour/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🗨️chrome-overlays-and-tour",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_panels__navbar_footer_and_overlays",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🧭️navbar-footer-and-overlays/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧭️navbar-footer-and-overlays",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_panels__window_actions_and_commands",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🧰️window-actions-and-commands/🦀️.rs",
+    "cfg": [],
+    "glob": false,
+    "slug": "🧰️window-actions-and-commands",
+    "vis": "",
+    "reexport": [],
+    "reexport_cfg": []
+   },
+   {
+    "name": "staged_view_panels__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   },
+   {
+    "name": "staged_view_panels__bundle",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/🧺️bundle/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧺️bundle",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ]
+   }
+  ]
+ },
+ "pulled": {
+  "shell-chrome-state": [
+   {
+    "name": "staged_chrome_state__panel_records",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🧾️panel-records/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧾️panel-records",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-surfaces": [],
+  "shell-plugins": [],
+  "shell-history": [],
+  "shell-prefs": [],
+  "shell-directory": [],
+  "shell-sync": [],
+  "shell-docs": [
+   {
+    "name": "staged_docs__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-doc-open": [],
+  "shell-windows": [],
+  "shell-dock": [],
+  "shell-input": [],
+  "shell-commands": [],
+  "shell-state": [
+   {
+    "name": "staged_state__composer",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/🧬️composer/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧬️composer",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   },
+   {
+    "name": "staged_state__local_folders",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/📎️local-folders/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📎️local-folders",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-session": [],
+  "shell-window-actions": [],
+  "shell-actions": [],
+  "shell-pointer": [
+   {
+    "name": "staged_pointer__icon_export",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/📤️icon-export/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "📤️icon-export",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-view-paint": [],
+  "shell-view-chrome": [
+   {
+    "name": "staged_view_chrome__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ],
+  "shell-view-overlays": [],
+  "shell-view-panels": [],
+  "shell-async": [
+   {
+    "name": "staged_async__storage_prefs_and_i18n",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/🔑️storage-prefs-and-i18n/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🔑️storage-prefs-and-i18n",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   },
+   {
+    "name": "staged_async__chrome_paint_and_navbar",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/🧱️chrome-paint-and-navbar/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "🧱️chrome-paint-and-navbar",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   },
+   {
+    "name": "staged_async__dock_model_and_measures",
+    "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/⚓️dock-model-and-measures/🦀️.rs",
+    "cfg": [],
+    "glob": true,
+    "slug": "⚓️dock-model-and-measures",
+    "vis": "",
+    "reexport": [
+     "pub"
+    ],
+    "reexport_cfg": [
+     ""
+    ],
+    "new": true
+   }
+  ]
+ }
+}

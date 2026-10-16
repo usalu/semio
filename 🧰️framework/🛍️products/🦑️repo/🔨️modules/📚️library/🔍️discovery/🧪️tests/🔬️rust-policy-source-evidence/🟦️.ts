@@ -2,7 +2,8 @@ import { afterAll, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { interactivityProductionSource, policyMutateRustSourceEvidence, policyReadRustPolicySource, policyReadRustSourceEvidence } from "../../../../../../../../📜️script.ts";
+import { interactivityProductionSource } from "../../../⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
+import { policyMutateRustSourceEvidence, policyReadRustPolicySource, policyReadRustSourceEvidence } from "../../📖️source-access/🦀️rust-evidence/🟦️.ts";
 import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadModuleTreeSource } from "../../📖️source-access/🟦️.ts";
 import vector from "../🧫️fixtures/🔬️rust-policy-source-evidence/🔣️.json";
 

@@ -1,9 +1,9 @@
 /** 🧊️ Hand-authored irregular 3d slot graph and exact typed media projection. */
 import type {Wfc3dSnapshot,Tile,TileMedia3d,Slot3d,SlotEdge,GraphRule,Color} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const WFC3D_SQLITE_SCHEMA=`CREATE TABLE wfc3d_document (id INTEGER PRIMARY KEY, schema_id TEXT NOT NULL, seed TEXT NOT NULL);
 CREATE TABLE wfc3d_tile (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc3d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), authored_id TEXT NOT NULL, label TEXT, weight REAL, media_kind TEXT NOT NULL CHECK(media_kind IN('mesh','mesh_child')), weight_bits INTEGER NOT NULL, weight_class TEXT NOT NULL);
 CREATE TABLE wfc3d_mesh (id INTEGER PRIMARY KEY REFERENCES wfc3d_tile(id));

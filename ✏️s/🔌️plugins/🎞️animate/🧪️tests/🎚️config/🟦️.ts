@@ -2,6 +2,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { frameworkSourcePath } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
@@ -11,7 +12,7 @@ const repoRoot = resolve(root, "../../../../..");
 export default defineConfig({
   root,
   resolve: {
-    alias: [{ find: "@semio-tech/presentation", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") }],
+    alias: [{ find: "@semio-tech/presentation", replacement: frameworkSourcePath("🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") }],
   },
   test: {
     root,

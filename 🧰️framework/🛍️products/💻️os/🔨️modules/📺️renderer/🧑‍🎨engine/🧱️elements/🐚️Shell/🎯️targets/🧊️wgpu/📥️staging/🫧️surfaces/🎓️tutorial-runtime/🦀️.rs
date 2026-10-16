@@ -22,9 +22,9 @@ pub enum TutorialMode {
 /// rather than reimplementing easing.
 #[derive(Clone, Debug)]
 pub struct TutorialCameraConverge {
-    pub(crate) from: semio_framework::onboarding::TutorialCameraState,
-    pub(crate) to: semio_framework::onboarding::TutorialCameraState,
-    pub(super) started_wall_ms: f64,
+    pub from: semio_framework::onboarding::TutorialCameraState,
+    pub to: semio_framework::onboarding::TutorialCameraState,
+    pub started_wall_ms: f64,
 }
 
 /// 🎬️ The active tutorial's full runtime state: the definition itself (recording IS a `TutorialDefinition`
@@ -38,18 +38,18 @@ pub struct TutorialRuntime {
     pub rate: f32,
     /// ✂️ The playhead document/UI state was last synced to — `tutorial_slice(applied_ms, playhead_ms)`
     /// drives each tick's incremental apply; a seek instead jumps this straight to the target.
-    pub(super) applied_ms: f64,
+    pub applied_ms: f64,
     /// 📸️ The live document/UI as they stood the moment the tutorial sandboxed them — restored on exit
     /// (Design Decision 3). `None` for a recording, which is never sandboxed.
-    pub(super) pre_sandbox_document_dsl: Option<String>,
-    pub(super) pre_sandbox_ui: semio_framework::onboarding::TutorialUiSnapshot,
-    pub(super) last_tick_wall_ms: f64,
+    pub pre_sandbox_document_dsl: Option<String>,
+    pub pre_sandbox_ui: semio_framework::onboarding::TutorialUiSnapshot,
+    pub last_tick_wall_ms: f64,
     /// 🎥️ Active per-window convergence tweens (Deviated → Playing) — see `TutorialCameraConverge`.
-    pub(super) converge: HashMap<String, TutorialCameraConverge>,
-    pub(super) recorder_last_camera_wall_ms: HashMap<String, f64>,
-    pub(super) recorder_last_camera_pose: HashMap<String, semio_framework::onboarding::TutorialCameraState>,
-    pub(super) recorder_last_ui: semio_framework::onboarding::TutorialUiSnapshot,
-    pub(super) recorder_last_ui_sample_wall_ms: f64,
+    pub converge: HashMap<String, TutorialCameraConverge>,
+    pub recorder_last_camera_wall_ms: HashMap<String, f64>,
+    pub recorder_last_camera_pose: HashMap<String, semio_framework::onboarding::TutorialCameraState>,
+    pub recorder_last_ui: semio_framework::onboarding::TutorialUiSnapshot,
+    pub recorder_last_ui_sample_wall_ms: f64,
 }
 
 /// 🎬️ One document-track application queued by a tick/seek this frame — see
@@ -71,7 +71,7 @@ pub enum TutorialPendingDocOp {
 
 /// 🎬️ Reuses the navbar's own height token for the tutorial control bar (item 2's "reuse the existing
 /// navbar height theme token" — no second style constant introduced).
-pub(crate) fn tutorial_bar_height(theme: &Theme) -> f32 {
+pub fn tutorial_bar_height(theme: &Theme) -> f32 {
     theme.navbar_height
 }
 
@@ -80,7 +80,7 @@ pub(crate) fn tutorial_bar_height(theme: &Theme) -> f32 {
 /// `World3dScene.camera_json`'s own wire format (`infinite_world`'s `WorldCameraRecord.fov` — see that
 /// crate's `camera.fov.unwrap_or(45.0) as f32 * PI / 180.0` conversion the other way), not
 /// `OrbitController.fov_y`'s radians.
-pub(super) fn orbit_to_tutorial_camera(orbit: &ui_wgpu::wgpu::OrbitController) -> semio_framework::onboarding::TutorialCameraState {
+pub fn orbit_to_tutorial_camera(orbit: &ui_wgpu::wgpu::OrbitController) -> semio_framework::onboarding::TutorialCameraState {
     let camera = orbit.to_camera();
     semio_framework::onboarding::TutorialCameraState::Orbit {
         position: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
@@ -92,7 +92,7 @@ pub(super) fn orbit_to_tutorial_camera(orbit: &ui_wgpu::wgpu::OrbitController) -
 
 /// 🎥️ `TutorialCameraState` → `OrbitController`. `Canvas` (the 2D infinite-canvas camera kind) has no
 /// orbit-controller equivalent — `None` (see the ticket's own scope note on 2D camera tracks).
-pub(super) fn tutorial_camera_to_orbit(state: &semio_framework::onboarding::TutorialCameraState) -> Option<ui_wgpu::wgpu::OrbitController> {
+pub fn tutorial_camera_to_orbit(state: &semio_framework::onboarding::TutorialCameraState) -> Option<ui_wgpu::wgpu::OrbitController> {
     match state {
         semio_framework::onboarding::TutorialCameraState::Orbit { position, target, up, fov } => Some(ui_wgpu::wgpu::OrbitController::from_camera(&ui_wgpu::wgpu::Camera3d {
             position: ui_wgpu::wgpu::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
@@ -108,11 +108,11 @@ pub(super) fn tutorial_camera_to_orbit(state: &semio_framework::onboarding::Tuto
     }
 }
 
-pub(super) fn tutorial_capture_camera_pose(surfaces: &SurfaceState, window_id: &str) -> Option<semio_framework::onboarding::TutorialCameraState> {
+pub fn tutorial_capture_camera_pose(surfaces: &SurfaceState, window_id: &str) -> Option<semio_framework::onboarding::TutorialCameraState> {
     surfaces.world3d_state_for_window(window_id).or_else(|| surfaces.icon_render_states.get(window_id)).map(|world| orbit_to_tutorial_camera(&world.orbit))
 }
 
-pub(super) fn tutorial_apply_camera_pose(surfaces: &mut SurfaceState, window_id: &str, pose: &semio_framework::onboarding::TutorialCameraState) {
+pub fn tutorial_apply_camera_pose(surfaces: &mut SurfaceState, window_id: &str, pose: &semio_framework::onboarding::TutorialCameraState) {
     let Some(orbit) = tutorial_camera_to_orbit(pose) else {
         return;
     };
@@ -133,7 +133,7 @@ impl TutorialState {
     /// ⏱️ Next wall-clock tick owed by the active tutorial. Playback and recording mirror
     /// React's self-scheduling `createTutorialClock`; camera convergence remains live even if its
     /// timeline mode is not currently advancing. Exact playback/convergence ends win over cadence.
-    pub(crate) fn next_tutorial_deadline_ms(&self, now_wall_ms: f64) -> Option<f64> {
+    pub fn next_tutorial_deadline_ms(&self, now_wall_ms: f64) -> Option<f64> {
         if !now_wall_ms.is_finite() {
             return None;
         }
@@ -164,7 +164,7 @@ impl TutorialState {
     ///
     /// 🕒️ Session-only command-history log rows, never part of a tutorial's own replayable
     /// action track (mirrors the `setCamera` skip just above).
-    pub(crate) fn tutorial_note_real_dispatch(&mut self, action: &ActionDescriptor) {
+    pub fn tutorial_note_real_dispatch(&mut self, action: &ActionDescriptor) {
         let Some(runtime) = self.tutorial.as_mut() else {
             return;
         };

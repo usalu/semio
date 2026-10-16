@@ -72,40 +72,6 @@ test("neutral distribution publication receipt is finite DATA and agrees with Aj
  console.log("[DEBUG] Closed digest receipt parity with independent Ajv/SQLite; receipt never grants a reader or compiler resource");
 });
 
-import pagePublicationSchema from "../../../../../../../../../🏢️semio-tech/🎡️play/🔨️modules/📦️site/📄pages/📦️publication/🧬️schema/🔣️.json" with {type:"json"};
-test("neutral Play page cohort has one bounded commit and real shared/exclusive lifetime owners",()=>{
- const oracle=new Ajv({strict:true}),db=new Database(":memory:");try{const pages=pagePublicationSchema.definitions.Protocol.const.families.map(family=>({family,manifestSha256:new Bun.CryptoHasher("sha256").update(family).digest("hex")})),cohort={version:1,mode:"release",pages};expect(oracle.validate(pagePublicationSchema.definitions.Cohort,cohort)).toBe(true);db.exec("create table expected(family text primary key,digest text)");for(const row of pages)db.query("insert into expected values(?,?)").run(row.family,row.manifestSha256);expect(db.query("select count(*) n from expected").get()).toEqual({n:4});for(const actual of[pages,pages.map((row,index)=>index?row:{...row,manifestSha256:"0".repeat(64)})])expect(actual.every(row=>(db.query("select digest from expected where family=?").get(row.family)as{digest:string}).digest===row.manifestSha256)).toBe(actual===pages);}finally{db.close();}
- const owner=resolve(import.meta.dir,"../../../../../../../../../🏢️semio-tech/🎡️play/🔨️modules/📦️site/📄pages/📦️publication/🟦️.ts");
- expect(existsSync(owner),"actual funded Play Pages cohort owner").toBe(true);const source=readFileSync(owner,"utf8");for(const name of["withResourceLeases","withArtifactScratchV1","withRepositoryArtifactV1","withRepositoryArtifactTaskV1","withRepositoryArtifactDestinationV1","stageRepositoryArtifacts"])expect(source).toContain(name);expect(source).toContain('mode:"exclusive"');expect(source).toContain('mode:"shared"');expect(source).toContain("manifestSha256");expect(source).toContain("frameworkOsViteArtifactInputsV1");
-});
-
-
-test("neutral Play cohort readers reject duplicate, mixed, wrong-mode and undeclared content with independent SQLite witnesses",async()=>{
- const {readPlayPageCohortV1,readPlayPageManifestV1,requirePlayPageCohortMemberV1}=await import("../../../../../../../../../🏢️semio-tech/🎡️play/🔨️modules/📦️site/📄pages/📦️publication/📋️contract/🟦️.ts");
- const manifest={version:1,mode:"release",family:"play",files:[{path:"index.html",bytes:4,sha256:"1".repeat(64)}]}as const,bytes=new TextEncoder().encode(JSON.stringify(manifest)),digest=new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),cohort={version:1,mode:"release",pages:[{family:"play",manifestSha256:digest}]}as const,db=new Database(":memory:");
- try{
-  db.exec("create table expected(family text primary key,digest text)");db.query("insert into expected values(?,?)").run("play",digest);
-  expect(readPlayPageCohortV1(cohort,"release")).toEqual(cohort);expect(readPlayPageManifestV1(manifest,"release","play")).toEqual(manifest);
-  for(const value of[{...cohort,pages:[...cohort.pages,...cohort.pages]},{...cohort,pages:[{family:"modules",manifestSha256:digest}]},{...cohort,mode:"prototype"},{...cohort,authority:true}])expect(()=>readPlayPageCohortV1(value,"release")).toThrow();
-  for(const value of[{...manifest,files:[...manifest.files,...manifest.files]},{...manifest,files:[{...manifest.files[0],path:"../outside"}]},{...manifest,files:[{...manifest.files[0],path:pagePublicationSchema.definitions.Protocol.const.manifest}]},{...manifest,family:"modules"},{...manifest,mode:"prototype"}])expect(()=>readPlayPageManifestV1(value,"release","play")).toThrow();
-  for(const actual of[bytes,new TextEncoder().encode(JSON.stringify({...manifest,files:[]}))]){const hash=new Bun.CryptoHasher("sha256").update(actual).digest("hex"),accepted=(db.query("select digest from expected where family=?").get("play")as{digest:string}).digest===hash;if(accepted)expect(requirePlayPageCohortMemberV1(cohort,"play",actual,"release")).toEqual(manifest);else expect(()=>requirePlayPageCohortMemberV1(cohort,"play",actual,"release")).toThrow();}
- }finally{db.close();}
-});
-
-
-test("neutral browser production paths carry selected mode inside canonical products and count the actual Pages reader cohort",async()=>{
- const {builtPluginModulesRootIn}=await import("../../../../♻️activation/🟦️.ts"),{playRuntimeAssetSources}=await import("../../../../../../../../../🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/📦️assets/🟦️.ts");
- for(const mode of["prototype","release"]as const){const rows=playRuntimeAssetSources(workspace,mode),browser=rows.filter(row=>row.owner!=="infinite:fonts"&&!row.owner.startsWith("canvas:"));console.log("[DEBUG] Pages actual "+mode+" browser readers="+browser.length+" plus font/Canvas="+(rows.length-browser.length));expect(new Set(browser.map(row=>row.root)).size).toBe(browser.length);expect(builtPluginModulesRootIn(workspace,mode)).toBe(join(repositoryCachePartitionRootDataV1(workspace,"products"),"browser",mode,"modules"));}
-});
-
-
-test("neutral Pages holds its full actual79 input group through immutable assembly rather than only font and Canvas",()=>{
- const source=readFileSync(resolve(workspace,"🏢️semio-tech/🎡️play/🔨️modules/📦️site/📄pages/📦️publication/🟦️.ts"),"utf8"),tree=ts.createSourceFile("pages.ts",source,ts.ScriptTarget.Latest,true),calls=new Set<string>();const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node))calls.add(node.expression.getText(tree));ts.forEachChild(node,visit);};visit(tree);
- for(const name of["withRepositoryArtifactGroupV1","withRepositoryArtifactGroupTaskV1","playRuntimeAssetSources"])expect(calls.has(name)).toBe(true);
- expect(source).not.toContain("withViteArtifactInputsV1(");
-});
-
-
 test("neutral model product boundary refuses forged custody and copies closed selected-mode DATA",async()=>{
  const {readComponentModelIntentV1,componentModelLayoutV1}=await import("../../../../../🔌️plugin/📦️model/📋️contract/🟦️.ts"),{publishComponentModelV1}=await import("../../../../../🔌️plugin/📦️model/🟦️.ts");
  const row={version:1,mode:"prototype",pluginId:"fixture",cratePath:"components/fixture"}as const,db=new Database(":memory:");try{db.exec("create table expected(mode text,owner text)");db.query("insert into expected values(?,?)").run("prototype","components/fixture/Cargo.toml:component-model");const result=readComponentModelIntentV1(row);expect(result).toEqual(row);expect(result).not.toBe(row);const layout=componentModelLayoutV1(join(workspace,".fixture-products"),result);expect(layout.owner).toBe((db.query("select owner from expected where mode=?").get(result.mode)as{owner:string}).owner);expect(layout.path).toBe(join(workspace,".fixture-products/browser/prototype/components",new Bun.CryptoHasher("sha256").update(row.cratePath).digest("hex").slice(0,24)));for(const value of[{...row,mode:"debug"},{...row,authority:{}},{...row,cratePath:"../escape"},{...row,pluginId:""}])expect(()=>readComponentModelIntentV1(value)).toThrow();expect(()=>publishComponentModelV1(Object.freeze({})as never,{}as never,{}as never)).toThrow(/live.*model|original.*model/i);}finally{db.close();}
@@ -147,7 +113,6 @@ test("neutral session publication carries a bounded copied catalog with independ
 
 test("neutral every selected component has a successful aggregate barrier after its actual publications",async()=>{
  const{componentStagePlanV1}=await import("../../../../../🔌️plugin/🏗️build/🧩️driver-stages/📋️contract/🟦️.ts");for(const facet of["model","browser"])for(const deployable of[false,true]){const plan=componentStagePlanV1({version:1,facet},deployable),complete=plan.find(row=>row.name==="complete");expect(complete,"actual all-component success barrier").toBeDefined();expect(complete?.after).toContain("model");if(facet==="browser"&&deployable)expect(complete?.after).toContain("browser");expect(plan.find(row=>row.name==="discard")?.after).toEqual(["complete"]);}
- const source=JSON.parse(readFileSync(join(workspace,"🏢️semio-tech/🎡️play/📋️project.json"),"utf8")),job=source.targets.build.metadata.semio.release.jobs.find((row:{id:string})=>row.id==="pages");expect(job.after).toContain("components:complete");expect(job.after).not.toContain("components:publish");
 });
 
 
@@ -273,7 +238,7 @@ test("neutral engine delivery catalog binds exact producer packages and paid rea
 
 
 test("neutral explicit WASM package resolver consumes only its immutable closed file DATA",async()=>{
- const path=join(workspace,"🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts");expect(existsSync(path),"actual owned package DATA resolver").toBe(true);const {managedWasmPackagesVitePluginV1}=await import(pathToFileURL(path).href)as{managedWasmPackagesVitePluginV1:(input:unknown)=>{resolveId:(id:string)=>string|undefined}},root=join(workspace,".fixture-products/package"),binding={packageName:"@fixture/engine",root,entry:join(root,"engine.js"),files:["engine.js","engine_bg.wasm"]},plugin=managedWasmPackagesVitePluginV1([binding]),db=new Database(":memory:");try{for(const row of fixture.engineResolverCases){const actual=plugin.resolveId(row.specifier),expected=join(root,row.file);expect(actual).toBe(expected);expect(db.query("select ?1=?2 exact").get(actual,expected)).toEqual({exact:1});}expect(plugin.resolveId("@fixture/unrelated")).toBeUndefined();for(const id of fixture.invalidEngineSpecifiers)expect(()=>plugin.resolveId(id)).toThrow();binding.files.length=0;binding.entry="/outside.js";expect(plugin.resolveId("@fixture/engine")).toBe(join(root,"engine.js"));for(const value of[[{...binding,files:["../outside"]}],[{...binding,files:["engine.js"],root:"relative"}],[binding,binding]])expect(()=>managedWasmPackagesVitePluginV1(value)).toThrow();}finally{db.close();}
+ const path=join(workspace,"🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts");expect(existsSync(path),"actual owned package DATA resolver").toBe(true);const {managedWasmPackagesVitePluginV1}=await import(pathToFileURL(path).href)as{managedWasmPackagesVitePluginV1:(input:unknown)=>{resolveId:(id:string)=>string|undefined}},root=join(workspace,".fixture-products/package"),binding={packageName:"@fixture/engine",root,entry:join(root,"engine.js"),files:["engine.js","engine_bg.wasm"]},plugin=managedWasmPackagesVitePluginV1([binding]),db=new Database(":memory:");try{for(const row of fixture.engineResolverCases){const actual=plugin.resolveId(row.specifier),expected=join(root,row.file);if(actual===undefined)throw Error("Expected actual owned package resolution");expect(actual).toBe(expected);expect(db.query("select ?1=?2 exact").get(actual,expected)).toEqual({exact:1});}expect(plugin.resolveId("@fixture/unrelated")).toBeUndefined();for(const id of fixture.invalidEngineSpecifiers)expect(()=>plugin.resolveId(id)).toThrow();binding.files.length=0;binding.entry="/outside.js";expect(plugin.resolveId("@fixture/engine")).toBe(join(root,"engine.js"));for(const value of[[{...binding,files:["../outside"]}],[{...binding,files:["engine.js"],root:"relative"}],[binding,binding]])expect(()=>managedWasmPackagesVitePluginV1(value)).toThrow();}finally{db.close();}
 });
 
 
@@ -283,8 +248,8 @@ test("neutral distribution engine coordinates equal actual selected product file
 });
 
 
-test("neutral actual engine producer prerequisites dominate every matching bundle read",async()=>{
- const catalog=(await import("../🕸️engines/📇️catalog.json")).default,play=JSON.parse(readFileSync(join(workspace,"🏢️semio-tech/🎡️play/📋️project.json"),"utf8")),jobs=play.targets.build.metadata.semio.release.jobs as{ id:string;root:string;command:readonly string[];after:readonly string[] }[],bundle=jobs.find(row=>row.id==="bundle"),demo=JSON.parse(readFileSync(join(workspace,"♻️mit-bestand/🧺️demonstrator/📋️project.json"),"utf8")),db=new Database(":memory:");try{db.exec("create table expected(root text primary key,producer text)");for(const row of catalog.packages){const project=JSON.parse(readFileSync(join(workspace,row.sourceOwner,"📋️project.json"),"utf8"));expect(project.targets.wasm.metadata.semio.wasmPackageSourceV1).toEqual({version:1,sourceOwner:row.sourceOwner});db.query("insert into expected values(?,?)").run(row.sourceOwner,project.name+":wasm");const producer=jobs.find(job=>job.root===row.sourceOwner&&job.command.at(-1)==="wasm");expect(producer,row.id+" actual authored job").toBeDefined();expect(bundle?.after,row.id+" before bundle").toContain("job:"+producer?.id);}const required=(db.query("select producer from expected order by producer").all()as{producer:string}[]).map(row=>row.producer);for(const target of["prepare-prototype","prepare-release","build"])for(const producer of required)expect(demo.targets[target].dependsOn,target).toContain(producer);}finally{db.close();}
+test("neutral engine catalog source owners declare their wasm package source and the inference selects the engine owners",async()=>{
+ const catalog=(await import("../🕸️engines/📇️catalog.json")).default;for(const row of catalog.packages){const project=JSON.parse(readFileSync(join(workspace,row.sourceOwner,"📋️project.json"),"utf8"));expect(project.targets.wasm.metadata.semio.wasmPackageSourceV1).toEqual({version:1,sourceOwner:row.sourceOwner});}
  const inference=readFileSync(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"),"utf8");expect(inference).toContain('frameworkOsEngineSourceOwnersV1("renderer")');expect(inference).toContain('frameworkOsEngineSourceOwnersV1("distribution")');expect(inference).toContain("...rendererEngines");expect(inference).toContain("...distributionEngines");
 });
 

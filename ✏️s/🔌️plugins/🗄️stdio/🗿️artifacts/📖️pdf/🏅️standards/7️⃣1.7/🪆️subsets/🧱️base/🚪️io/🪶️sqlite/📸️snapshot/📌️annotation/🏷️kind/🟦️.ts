@@ -3,7 +3,7 @@ import type { PdfAnnotationKind } from "../../../../../🧬️schema/📸️snap
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type PdfCell,type Binary64,type SqliteRow } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfAction,readPdfAction,writePdfDestination,readPdfDestination,writePdfFileSpecification,readPdfFileSpecification } from "../../🎯️navigation/🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 const O={state:2,stateModel:3,action:4,destination:5,highlight:6,defaultAppearance:7,quadding:8,lineEnding:9,richText:10,endingStart:11,endingEnd:12,leaderLength:13,caption:14,icon:15,symbol:16,parentHigh:17,parentLow:18,open:19,file:20,sound:21,title:22,movie:23,activation:24,field:25,characteristics:26,additionalActions:27,markStyle:28,colorants:29,entries:30,fixedPrint:31,overlayText:32,repeat:33,subtype:34,interiorPresent:35,calloutPresent:36,point0:37,point1:38,point2:39,point3:40}as const;
 /** 🌐️ Project the full native index as explicitly declared unsigned high and low words. */

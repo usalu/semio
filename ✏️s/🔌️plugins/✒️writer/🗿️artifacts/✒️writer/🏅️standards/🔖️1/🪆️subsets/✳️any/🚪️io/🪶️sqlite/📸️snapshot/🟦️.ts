@@ -1,8 +1,8 @@
 /** ✒️ Writer authored strings and persisted composed child identity. */
 import type { WriterSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteTables, artifactSqliteInteger, artifactSqliteText, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
+import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteTables, artifactSqliteInteger, artifactSqliteText, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 /** 🏛️ The two handcrafted Writer tables mirror the adjacent SQL asset. */
 export const WRITER_SQLITE_SCHEMA=String.raw`CREATE TABLE writer_document (rowid INTEGER PRIMARY KEY, schema TEXT NOT NULL, id TEXT NOT NULL, language_id TEXT NOT NULL, uri TEXT NOT NULL, text TEXT NOT NULL);
 CREATE TABLE writer_document_child (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES writer_document(rowid), child_id TEXT NOT NULL, target_artifact_id TEXT NOT NULL, target_artifact_kind TEXT NOT NULL, target_standard TEXT NOT NULL, target_subset TEXT NOT NULL);

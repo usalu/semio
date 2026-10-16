@@ -7,7 +7,7 @@ import schema from "../🧬️schema/🔣️.json";
 import contract from "./🧫️fixtures/🔣️.json";
 import {deflateSnapshotToSqliteDatabase,deflateSnapshotFromSqliteDatabase} from "../../🟦️.ts";
 import type {DeflateSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 const hints=["fastest","fast","default","maximum"] as const;
 const source=():DeflateSnapshot=>({schema:contract.literal,compressionMethod:8,windowBits:7,compressionLevelHint:"default",dictId:undefined,payload:contract.octets.slice()});
 test("Deflate neutral all six fields, reserved nibbles and ordered octets have independent SQLite witnesses",async()=>{

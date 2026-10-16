@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import * as geometry from "../../🟦️.ts";
 import {point3Fixture,point2Fixture,uvFixture,rgbaFixture,quaternionFixture,transformFixture} from "../🧰️support/🟦️.ts";
 

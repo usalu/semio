@@ -3,8 +3,8 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../🔣️.json";
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
-import referenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
-import { declaredChildDialectSchema } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
+import { artifactReferenceSchema as referenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { declaredChildDialectSchema } from "@semio-tech/framework/schema/oracles/document";
 import { parseSemioChild } from "../🟦️.ts";
 
 const subsets = Object.keys(schema.$defs);

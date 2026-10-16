@@ -7,7 +7,7 @@
  */
 
 import {ARTIFACT_CHILD_SPEC, CAMERA_CALIBRATION_SPEC, CAMERA_TRAJECTORY_SPEC, DENSE_CLOUD_SPEC, DENSE_PARAMS_SPEC, FEATURE_PARAMS_SPEC, FRAME_REF_SPEC, GCP_OBSERVATION_SPEC, GEO_PARAMS_SPEC, GEO_PRODUCTS_SPEC, GROUND_CONTROL_POINT_SPEC, INGEST_PARAMS_SPEC, MATCH_PARAMS_SPEC, MEDIA_STREAM_SPEC, MESH_PARAMS_SPEC, MOTION_PARAMS_SPEC, MOTION_TRACK_SUMMARY_SPEC, QC_REPORT_SPEC, REMODELING_MESH_SPEC, RIG_EXTRINSIC_SPEC, SFM_PARAMS_SPEC, SPARSE_CLOUD_SPEC, VIDEO_SOURCE_SPEC, defaultsOf, type ByteBuffer, type CameraCalibration, type CameraTrajectory, type DenseCloud, type DenseParams, type FeatureParams, type FrameRef, type GcpObservation, type GeoParams, type GeoProducts, type GroundControlPoint, type IngestParams, type MatchParams, type MediaStream, type MeshParams, type MotionParams, type MotionTrackSummary, type QcReportSnapshot, type RecordSpec, type RemodelingAssetChild, type RemodelingDurableArtifact, type RemodelingMesh, type RemodelingSnapshot, type RigExtrinsic, type SfmParams, type SparseCloud, type ValueSpec, type VideoSource} from "../📸️snapshot/🟦️.ts";
-import {binary32Value, binary64Value, type Binary32, type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32Value, binary64Value, type Binary32, type Binary64} from "@semio-tech/framework/value/ieee754";
 
 //#region 🔖️Types
 /** 🎯️ An explicitly assigned optional value, so assigning `null` stays distinct from leaving the slot untouched. */

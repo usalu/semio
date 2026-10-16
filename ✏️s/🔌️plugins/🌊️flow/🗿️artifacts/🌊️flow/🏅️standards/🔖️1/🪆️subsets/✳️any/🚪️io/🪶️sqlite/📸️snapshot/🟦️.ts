@@ -1,6 +1,6 @@
 /** 🌊️ Handwritten persisted Flow parent and typed child target relations. */
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteDatabase}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 /** 🪆️ Exact persisted child handle; local materialization remains a distinct runtime owner. */
 export interface FlowSnapshot{readonly schema:string;readonly content:{readonly childId:string;readonly target:{readonly artifactId:string;readonly dialect:{readonly artifactKind:string;readonly standard:string;readonly subset:string}}}}
 /** 🏛️ Explicit domain schema shared with the native Flow implementation. */

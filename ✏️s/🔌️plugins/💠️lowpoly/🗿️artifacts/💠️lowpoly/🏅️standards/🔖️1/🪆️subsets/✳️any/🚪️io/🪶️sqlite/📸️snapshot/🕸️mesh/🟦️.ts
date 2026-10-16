@@ -1,9 +1,9 @@
 /** 🕸️ Full managed topology and intrinsic surface values have independent relational owners. */
 import type{LowpolyMeshState}from"../../../../🧬️schema/🕸️mesh/🟦️.ts";
-import type{IntrinsicValue}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-import{encodeIeee754Cells,readBinary32,readBinary64}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import{ArtifactSqliteRowIndex,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteCheckpoint}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteRow,SqliteTable,SqliteValue,SqliteOperation}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import type{IntrinsicValue}from"@semio-tech/framework/value/schema/intrinsic";
+import{encodeIeee754Cells,readBinary32,readBinary64}from"@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import{ArtifactSqliteRowIndex,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteCheckpoint}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteRow,SqliteTable,SqliteValue,SqliteOperation}from"@semio-tech/framework/io/sqlite-snapshot";
 type Put=(table:string,cells:readonly SqliteValue[],identity?:bigint)=>Promise<bigint>;
 const VERTEX=[{index:3,width:32},{index:4,width:32},{index:5,width:32},{index:6,width:32},{index:7,width:32},{index:8,width:32}]as const;
 const EDGE=[{index:7,width:32},{index:8,width:32}]as const;

@@ -7,7 +7,7 @@ use super::*;
 //#region ShellTypes
 /// 🪟️ Full-refresh attempts a newly admitted window may spend acquiring its required first
 /// retained body before the host exposes one terminal publication refusal and retires its journal.
-pub(crate) const WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS: u8 = 3;
+pub const WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS: u8 = 3;
 
 //#endregion ShellTypes
 

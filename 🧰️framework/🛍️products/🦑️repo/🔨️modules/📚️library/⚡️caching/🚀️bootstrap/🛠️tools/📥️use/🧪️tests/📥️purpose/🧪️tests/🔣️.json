@@ -33,5 +33,15 @@
       },
       "accepted": false
     }
-  ]
+  ],
+  "receiver": {
+    "entries": [
+      "../../🟦️.ts",
+      "./🟦️.ts"
+    ],
+    "callbacks": 2,
+    "maximumNodeMilliseconds": 15000,
+    "maximumLawMilliseconds": 20000,
+    "sameEnvelope": true
+  }
 }

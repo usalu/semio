@@ -147,7 +147,7 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   const batchFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
   const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
   const causal = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs"), "utf8");
-  const sync = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
+  const sync = ["🦀️.rs", "🖥️native/🦀️.rs", "🌐️wasm/🦀️.rs"].map((root) => readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync", root))).join("\n");
   const component = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
   const reactor = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
   for (const marker of ["DocumentBackboneBindingStateV1", "binding-noncanonical", "binding-live", "stale-generation"]) assert(binding.includes(marker), marker);
@@ -156,7 +156,7 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   for (const marker of ["ArtifactActorMsg::DocumentBackbone", "ArtifactEvent::DocumentBackbone", "DocumentBackboneRetentionV1", "decode_document_backbone_message_exact", "semio_framework_async::oneshot::channel", "pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Io, admission_job)"]) assert(sync.includes(marker), marker);
   for (const marker of ["fn document_socket_io_reactor()", "self.io_reactor.as_ref().map(tokio::runtime::Handle::enter)", "let io_reactor = document_socket_io_reactor();", "tokio::runtime::Builder::new_current_thread().enable_io().enable_time()"]) assert(sync.includes(marker), marker);
   for (const marker of ["struct ArtifactReadinessWake", "connection.read.poll_next_unpin(&mut context)", "future.as_mut().poll(&mut context)"]) assert(sync.includes(marker), marker);
-  for (const marker of ["readiness_requested.store(true", "self.readiness_requested.swap(false", "self.drive_phase = ArtifactDrivePhase::ConnectResult", "if self.semio_hub.is_some() {\n                            self.drive_phase = ArtifactDrivePhase::Hub", "self.drive_phase = ArtifactDrivePhase::Hub;\n                        self.on_hub_message(message).await"]) assert(sync.includes(marker), marker);
+  for (const marker of ["readiness_requested.store(true", "self.readiness_requested.swap(false", "self.drive_phase = ArtifactDrivePhase::ConnectResult", "if self.semio_hub.is_some() {\n                        self.drive_phase = ArtifactDrivePhase::Hub", "self.drive_phase = ArtifactDrivePhase::Hub;\n                    self.on_hub_message(message).await"]) assert(sync.includes(marker), marker);
   const connect = sync.slice(sync.indexOf("async fn start_connect_hub"), sync.indexOf("let Some(credential)", sync.indexOf("async fn start_connect_hub")));
   for (const marker of ["self.artifact_rebootstrap_required", "self.semio_hub.is_some()", "self.connect_future.is_some()", "!self.link.admits_local_edits()", "self.reconnect_at.is_some_and(|deadline| deadline > Instant::now())", "return;"]) assert(connect.includes(marker), "connect admission must retain its document authority, live sockets and backoff: " + marker);
   const handoff = sync.slice(sync.indexOf("fn release_scheduled_after_turn_with"), sync.indexOf("fn arm_deadline"));

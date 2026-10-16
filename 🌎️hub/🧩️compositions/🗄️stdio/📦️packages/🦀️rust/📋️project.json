@@ -330,6 +330,15 @@
         "forwardAllArgs": true
       }
     },
+    "composition-contribution-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts composition contribution-check",
+        "forwardAllArgs": true
+      }
+    },
     "parent-removal-test-check": {
       "executor": "repo:script",
       "cache": false,

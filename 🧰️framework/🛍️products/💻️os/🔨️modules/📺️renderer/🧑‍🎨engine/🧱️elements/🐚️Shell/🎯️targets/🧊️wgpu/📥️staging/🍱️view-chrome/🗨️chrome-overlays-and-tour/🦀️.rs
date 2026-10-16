@@ -7,18 +7,12 @@ use super::*;
 //#region ShellChrome
 //#region 🔖️ChromeOverlaysAndTour
 
-/// ⏱️ Pure delay-threshold check, factored out of `render_chrome_tooltip` so it's unit-testable without
-/// a `DrawList`/`FontAtlas` fixture.
-pub(crate) fn chrome_tooltip_ready(hover: &ChromeTooltipHover, now_ms: f64) -> bool {
-    now_ms - hover.started_ms >= CHROME_TOOLTIP_DELAY_MS
-}
-
 //#region 🧯️TransientNoticeAndAgentOverlays
 
 /// 📐️ The banner's rect: top-centre, `navbar_height + 8px` down, sized to one line of the message
 /// plus the close control. The width estimate is the same monospace approximation
 /// `render_chrome_tooltip` already uses — this renderer measures glyphs only while painting them.
-pub(crate) fn transient_notice_rect(notice: &ShellTransientNotice, close_label: &str, width: f32, theme: &Theme) -> Rect {
+pub fn transient_notice_rect(notice: &ShellTransientNotice, close_label: &str, width: f32, theme: &Theme) -> Rect {
     let glyphs = notice.message.chars().count() + close_label.chars().count() + 2;
     let text_w = glyphs as f32 * theme.font_size_small * 0.6;
     let banner_w = (text_w + theme.padding_standard * 4.0).min(TRANSIENT_NOTICE_MAX_WIDTH).min((width - theme.padding_standard * 2.0).max(1.0));
@@ -31,7 +25,7 @@ pub(crate) fn transient_notice_rect(notice: &ShellTransientNotice, close_label: 
 /// 🎨️ `(border, fill, text)` for one phase, reusing [`transient_notice_tone`]'s own severity map so
 /// the band tints exactly like every other shell banner: a running install is neutral, a cancelled
 /// one a warning, a failed one destructive.
-pub(crate) fn plugin_install_tone(phase: &ShellPluginInstallPhase, theme: &Theme) -> (Rgba, Rgba, Rgba) {
+pub fn plugin_install_tone(phase: &ShellPluginInstallPhase, theme: &Theme) -> (Rgba, Rgba, Rgba) {
     match phase {
         ShellPluginInstallPhase::Resolving | ShellPluginInstallPhase::Loading => transient_notice_tone(semio_framework::Severity::Info, theme),
         ShellPluginInstallPhase::Cancelled => transient_notice_tone(semio_framework::Severity::Warning, theme),
@@ -40,7 +34,7 @@ pub(crate) fn plugin_install_tone(phase: &ShellPluginInstallPhase, theme: &Theme
 }
 
 /// 📐️ The band's rect — same top-centre geometry as the notice, one band height further down.
-pub(crate) fn plugin_install_rect(message: &str, action_label: &str, width: f32, theme: &Theme) -> Rect {
+pub fn plugin_install_rect(message: &str, action_label: &str, width: f32, theme: &Theme) -> Rect {
     let glyphs = message.chars().count() + action_label.chars().count() + 2;
     let text_w = glyphs as f32 * theme.font_size_small * 0.6;
     let band_w = (text_w + theme.padding_standard * 4.0).min(TRANSIENT_NOTICE_MAX_WIDTH).min((width - theme.padding_standard * 2.0).max(1.0));
@@ -53,7 +47,7 @@ pub(crate) fn plugin_install_rect(message: &str, action_label: &str, width: f32,
 
 /// 🗣️ The band's message: phase, which app, step and elapsed seconds while it runs; a failure appends
 /// its own reason. English first, German through [`shell_chrome_string`].
-pub(crate) fn document_opening_banner_text(opening: &ShellDocumentOpening, now_ms: f64, is_de: bool) -> String {
+pub fn document_opening_banner_text(opening: &ShellDocumentOpening, now_ms: f64, is_de: bool) -> String {
     let (key, step) = match opening.phase {
         ShellDocumentOpenPhase::Resolving => ("document.open.resolving", Some(1)),
         ShellDocumentOpenPhase::Instantiating => ("document.open.instantiating", Some(2)),
@@ -77,7 +71,7 @@ pub(crate) fn document_opening_banner_text(opening: &ShellDocumentOpening, now_m
 }
 
 /// 🎨️ `(border, fill, text)` for one phase, the same severity map every shell banner uses.
-pub(crate) fn document_opening_tone(phase: &ShellDocumentOpenPhase, theme: &Theme) -> (Rgba, Rgba, Rgba) {
+pub fn document_opening_tone(phase: &ShellDocumentOpenPhase, theme: &Theme) -> (Rgba, Rgba, Rgba) {
     match phase {
         ShellDocumentOpenPhase::Resolving | ShellDocumentOpenPhase::Instantiating | ShellDocumentOpenPhase::Seeding => transient_notice_tone(semio_framework::Severity::Info, theme),
         ShellDocumentOpenPhase::Cancelled => transient_notice_tone(semio_framework::Severity::Warning, theme),
@@ -87,7 +81,7 @@ pub(crate) fn document_opening_tone(phase: &ShellDocumentOpenPhase, theme: &Them
 
 /// 📐️ The band's rect: the plugin-install band's geometry, one band height and gap further down, so
 /// an open that installs its plugin shows both.
-pub(crate) fn document_opening_rect(message: &str, action_label: &str, width: f32, theme: &Theme) -> Rect {
+pub fn document_opening_rect(message: &str, action_label: &str, width: f32, theme: &Theme) -> Rect {
     let band = plugin_install_rect(message, action_label, width, theme);
     Rect::new(band.x, band.y + band.h + PLUGIN_INSTALL_TOP_GAP, band.w, band.h)
 }
@@ -99,14 +93,14 @@ pub(crate) fn document_opening_rect(message: &str, action_label: &str, width: f3
 /// are stepped ACROSS host opportunities and can be abandoned at a fault, a closed session, a
 /// vanished step or a popped dialog, and an unbalanced `begin_glass_content` would classify every
 /// LATER overlay child as this sheet's foreground.
-pub(crate) fn open_chrome_overlay_glass_content(cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, rect: Rect, radius: f32, style: ui_wgpu::wgpu::GlassStyle) {
+pub fn open_chrome_overlay_glass_content(cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, rect: Rect, radius: f32, style: ui_wgpu::wgpu::GlassStyle) {
     close_chrome_overlay_glass_content(cursor, overlay);
     let region = overlay.push_glass([rect.x, rect.y, rect.w, rect.h], radius, style);
     cursor.depth = region.saturating_add(1);
     overlay.begin_glass_content(region);
 }
 
-pub(crate) fn close_chrome_overlay_glass_content(cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList) {
+pub fn close_chrome_overlay_glass_content(cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList) {
     if cursor.depth == 0 {
         return;
     }

@@ -8,7 +8,7 @@ use super::theme_file_import_and_accessibility::theme_geometry;
 //#region 🎨️ThemeEditorPanel
 /// 🎨️ The eight editable sections React's `buildSettingsThemeTree` carries beside its selector
 /// (`📌️ChromePanels/🟦️.tsx:820-827`), in React's own order, each `(section id suffix, label key)`.
-pub(super) const SHELL_THEME_EDITOR_SECTIONS: &[(&str, &str)] = &[
+pub const SHELL_THEME_EDITOR_SECTIONS: &[(&str, &str)] = &[
     ("colors", "settings.theme.colors"),
     ("spacing", "settings.theme.spacing"),
     ("fonts", "settings.theme.fonts"),
@@ -19,7 +19,7 @@ pub(super) const SHELL_THEME_EDITOR_SECTIONS: &[(&str, &str)] = &[
     ("appearances", "settings.theme.appearances"),
 ];
 
-pub(super) const SHELL_THEME_APPEARANCE_GROUPS: &[(&str, &str)] = &[
+pub const SHELL_THEME_APPEARANCE_GROUPS: &[(&str, &str)] = &[
     ("board", "settings.theme.group.board"),
     ("map", "settings.theme.group.map"),
     ("canvas", "settings.theme.group.canvas"),
@@ -28,11 +28,11 @@ pub(super) const SHELL_THEME_APPEARANCE_GROUPS: &[(&str, &str)] = &[
     ("diagram", "settings.theme.group.diagram"),
 ];
 
-pub(super) const SHELL_THEME_EDITOR_SCROLL_ID: &str = "tree:framework.settings.theme.select";
+pub const SHELL_THEME_EDITOR_SCROLL_ID: &str = "tree:framework.settings.theme.select";
 
 const SHELL_THEME_EDITOR_VIEWPORT_ROWS: usize = 28;
 
-pub(super) const SHELL_THEME_EDITOR_ROW_HEIGHT: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_ROW_UI_SPACING) as f32;
+pub const SHELL_THEME_EDITOR_ROW_HEIGHT: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_ROW_UI_SPACING) as f32;
 
 fn theme_editor_input_item(id: &str, label: &str, value: &str, action: &str, args: Option<DslValue>) -> UiTreeItemNode {
     UiTreeItemNode {
@@ -68,21 +68,21 @@ fn theme_editor_control_item(id: &str, label: &str, control: UiControlNode) -> U
 }
 
 impl ShellInputState {
-    pub(super) fn theme_section_open(&self, id: &str, default_open: bool) -> bool {
+    pub fn theme_section_open(&self, id: &str, default_open: bool) -> bool {
         self.canonical_tree_open(id, default_open)
     }
 
-    pub(super) fn theme_item_open(&self, id: &str) -> bool {
+    pub fn theme_item_open(&self, id: &str) -> bool {
         self.canonical_tree_open(id, false)
     }
 
-    pub(super) fn theme_visible_rows(&self) -> std::ops::Range<usize> {
+    pub fn theme_visible_rows(&self) -> std::ops::Range<usize> {
         let offset = self.scroll_offsets.get(SHELL_THEME_EDITOR_SCROLL_ID).copied().unwrap_or_default().max(0.0);
         let start = (offset / SHELL_THEME_EDITOR_ROW_HEIGHT).floor() as usize;
         start.saturating_sub(2)..start.saturating_add(SHELL_THEME_EDITOR_VIEWPORT_ROWS)
     }
 
-    pub(super) fn theme_window_rows(&self, rows: Vec<UiTreeItemNode>, cursor: &mut usize, visible: &std::ops::Range<usize>) -> (Vec<UiTreeItemNode>, Option<UiTreeWindow>) {
+    pub fn theme_window_rows(&self, rows: Vec<UiTreeItemNode>, cursor: &mut usize, visible: &std::ops::Range<usize>) -> (Vec<UiTreeItemNode>, Option<UiTreeWindow>) {
         let total = rows.len();
         let first = visible.start.saturating_sub(*cursor).min(total);
         let last = visible.end.saturating_sub(*cursor).min(total).max(first);
@@ -92,7 +92,7 @@ impl ShellInputState {
         (materialized, window)
     }
 
-    pub(super) fn theme_leaf_section(&self, id: &str, label: &str, rows: Vec<UiTreeItemNode>, cursor: &mut usize, visible: &std::ops::Range<usize>) -> UiTreeSectionNode {
+    pub fn theme_leaf_section(&self, id: &str, label: &str, rows: Vec<UiTreeItemNode>, cursor: &mut usize, visible: &std::ops::Range<usize>) -> UiTreeSectionNode {
         *cursor += 1;
         let open = self.theme_section_open(id, false);
         let total = rows.len();
@@ -100,7 +100,7 @@ impl ShellInputState {
         UiTreeSectionNode { header_toolbar: None, id: id.to_string(), label: Some(Label::data(label)), default_open: Some(open), presence: UiPresence::default(), items, window }
     }
 
-    pub(crate) fn build_settings_theme_editor_tree(&self, document: &ThemeDocument, is_de: bool, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
+    pub fn build_settings_theme_editor_tree(&self, document: &ThemeDocument, is_de: bool, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
         let active_id = chrome.chrome_build.preferences.theme_id.clone();
         let mut themes = vec![UiSelectItem { value: "semio".into(), label: Label::data("Semio") }, UiSelectItem { value: "mono".into(), label: Label::data("Mono") }];
         for id in chrome.chrome_build.preferences.custom_themes.keys().cloned() {
@@ -141,7 +141,7 @@ impl ShellInputState {
         selector.push(button("framework.settings.theme.export", "settings.theme.export", IconName::Export, "exportTheme", None, false));
         selector.push(button("framework.settings.theme.import", "settings.theme.import", IconName::Import, "importTheme", None, false));
         if active_id.starts_with("custom.") {
-            selector.push(button("framework.settings.theme.delete", "settings.theme.delete", IconName::Trash2, "deleteThemeId", crate::action_args_json!({ "value": active_id }), false));
+            selector.push(button("framework.settings.theme.delete", "settings.theme.delete", IconName::Trash2, "deleteThemeId", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": active_id }), false));
         }
         let visible = self.theme_visible_rows();
         let select_open = self.theme_section_open("framework.settings.theme.select", true);
@@ -158,9 +158,9 @@ impl ShellInputState {
         let leaf_rows = |suffix: &str| -> Vec<UiTreeItemNode> {
             let id = format!("framework.settings.theme.{suffix}");
             match suffix {
-                "colors" => document.colors.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeColor", crate::action_args_json!({ "key": key }))).collect(),
+                "colors" => document.colors.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeColor", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
                 "spacing" => document.spacing.iter().map(|(key, value)| {
-                    let mut item = theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeSpacing", crate::action_args_json!({ "key": key }));
+                    let mut item = theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeSpacing", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }));
                     if key == "compact" {
                         let ui = &theme_geometry::contract()["properties"]["compact"]["x-semio-ui"];
                         let locale = if is_de { "de" } else { "en" };
@@ -171,10 +171,10 @@ impl ShellInputState {
                     }
                     item
                 }).collect(),
-                "fonts" => document.font_stacks.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeFontStack", crate::action_args_json!({ "key": key }))).collect(),
-                "strokes" => document.strokes.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeStroke", crate::action_args_json!({ "key": key }))).collect(),
-                "radii" => document.radii.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeRadius", crate::action_args_json!({ "key": key }))).collect(),
-                "opacities" => document.opacities.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeOpacity", crate::action_args_json!({ "key": key }))).collect(),
+                "fonts" => document.font_stacks.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, value, "setThemeFontStack", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "strokes" => document.strokes.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeStroke", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "radii" => document.radii.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeRadius", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
+                "opacities" => document.opacities.iter().map(|(key, value)| theme_editor_input_item(&format!("{id}.{key}"), key, &value.as_text(), "setThemeOpacity", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": key }))).collect(),
                 _ => Vec::new(),
             }
         };
@@ -187,7 +187,7 @@ impl ShellInputState {
         UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
-    pub(super) fn theme_metrics_section(&self, document: &ThemeDocument, is_de: bool, cursor: &mut usize, visible: &std::ops::Range<usize>) -> UiTreeSectionNode {
+    pub fn theme_metrics_section(&self, document: &ThemeDocument, is_de: bool, cursor: &mut usize, visible: &std::ops::Range<usize>) -> UiTreeSectionNode {
         let id = "framework.settings.theme.metrics";
         *cursor += 1;
         let open = self.theme_section_open(id, false);
@@ -198,7 +198,7 @@ impl ShellInputState {
                 *cursor += 1;
                 let group_open = self.theme_item_open(&section_id);
                 let rows = entries.iter().map(|(key, value)| {
-                    let mut item = theme_editor_input_item(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", crate::action_args_json!({ "section": section, "key": key }));
+                    let mut item = theme_editor_input_item(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "section": section, "key": key }));
                     let guidance = if section == "dom" && key == "rootRemPx" { Some("positiveRoot") }
                         else if theme_geometry::bindings()["bindings"].as_array().is_some_and(|bindings| bindings.iter().any(|binding| binding["section"].as_str() == Some(section.as_str()) && binding["key"].as_str() == Some(key.as_str()))) { Some("nonnegativeScalar") }
                         else { None };
@@ -216,7 +216,7 @@ impl ShellInputState {
         UiTreeSectionNode { header_toolbar: None, id: id.into(), label: Some(Label::data(shell_chrome_string("settings.theme.metrics", is_de))), default_open: Some(open), presence: UiPresence::default(), items, window: None }
     }
 
-    pub(super) fn theme_appearances_section(&self, document: &ThemeDocument, is_de: bool, cursor: &mut usize, visible: &std::ops::Range<usize>) -> UiTreeSectionNode {
+    pub fn theme_appearances_section(&self, document: &ThemeDocument, is_de: bool, cursor: &mut usize, visible: &std::ops::Range<usize>) -> UiTreeSectionNode {
         let id = "framework.settings.theme.appearances";
         *cursor += 1;
         let open = self.theme_section_open(id, false);
@@ -235,13 +235,13 @@ impl ShellInputState {
                         let mut rows = Vec::new();
                         for (paint, reference) in document.appearances.get(appearance).and_then(|entries| entries.get(*group)).into_iter().flatten() {
                             let (hex, alpha) = theme_paint_editor_values(&document.colors, reference);
-                            rows.push(theme_editor_input_item(&format!("{group_id}.{paint}"), paint, &hex, "setThemeAppearancePaint", crate::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "hex" })));
+                            rows.push(theme_editor_input_item(&format!("{group_id}.{paint}"), paint, &hex, "setThemeAppearancePaint", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "hex" })));
                             rows.push(theme_editor_input_item(
                                 &format!("{group_id}.{paint}.alpha"),
                                 paint,
                                 &format!("{alpha:.2}"),
                                 "setThemeAppearancePaint",
-                                crate::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "alpha" }),
+                                semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "alpha" }),
                             ));
                         }
                         let total = rows.len();
@@ -266,3 +266,81 @@ impl ShellInputState {
 
 //#endregion 🎨️ThemeEditorPanel
 
+//#region ♿️ChromeAccessibleNames
+/// 🚫️ Records that a painted chrome control is disabled (`aria-disabled`) — a band control a session refusal blocks.
+pub fn note_chrome_control_disabled(control_id: &str, disabled: bool) {
+    with_chrome_control_names(|names| {
+        if let Some(presentation) = names.get_mut(control_id) {
+            presentation.disabled = disabled;
+        }
+    });
+}
+
+/// ♿️ Records the consequence text a reader hears with one chrome control (`aria-describedby`).
+pub fn note_chrome_control_description(control_id: &str, description: Option<&str>) {
+    with_chrome_control_names(|names| {
+        if let Some(presentation) = names.get_mut(control_id) {
+            presentation.description = description.map(str::to_string);
+        }
+    });
+}
+
+/// ♿️ Records one chrome control's painted label. Called from the two painters every chrome chip goes
+/// through, so a new chip is announced without its author doing anything.
+pub fn note_chrome_control_name(control_id: &str, label: Option<&str>) {
+    let (Some(label), false) = (label, control_id.is_empty()) else { return };
+    with_chrome_control_names(|names| {
+        if names.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY || names.contains_key(control_id) {
+            names.insert(control_id.to_string(), ChromeControlPresentation { label: label.to_string(), description: None, role: None, pressed: None, selected: None, controls: None, value_text: None, value_range: None, disabled: false });
+        }
+    });
+}
+
+pub fn with_chrome_control_names<R>(f: impl FnOnce(&mut BTreeMap<String, ChromeControlPresentation>) -> R) -> R {
+    #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+    {
+        CHROME_CONTROL_NAMES.with(|cell| f(&mut cell.borrow_mut()))
+    }
+    #[cfg(not(any(target_arch = "wasm32", any(test, feature = "testkit"))))]
+    {
+        f(&mut CHROME_CONTROL_NAMES.borrow_mut())
+    }
+}
+
+#[cfg(not(any(target_arch = "wasm32", any(test, feature = "testkit"))))]
+pub static CHROME_CONTROL_NAMES: semio_framework_os_renderer_wgpu_contracts::WorkerCell<BTreeMap<String, ChromeControlPresentation>> = semio_framework_os_renderer_wgpu_contracts::WorkerCell::new(Default::default);
+
+/// ♿️ Semantic properties captured beside the chrome label during its paint walk.
+pub struct ChromeControlPresentation {
+    pub label: String,
+    pub description: Option<String>,
+    pub role: Option<&'static str>,
+    pub pressed: Option<bool>,
+    pub selected: Option<bool>,
+    pub controls: Option<String>,
+    pub value_text: Option<String>,
+    pub value_range: Option<[f64; 3]>,
+    pub disabled: bool,
+}
+
+/// ♿️ The accessible NAME each chrome control painted this walk, keyed by control id.
+///
+/// 🩸️ A GPU canvas has no elements, so the only accessible names this target ever published came out
+/// of the retained DOCUMENT projection (`dumpAccessibility` over `UI_ENGINE`) — the scene trees. Every
+/// navbar chip, footer pill, panel tab, pane chip and surface control was invisible to a reader
+/// (audit W14 §C4), even though React gives each of them an `sr-only` label for free. The two central
+/// chrome item painters record the label they are ABOUT to paint here, so the published name is
+/// always the text on screen rather than a second, drifting table.
+///
+/// ⛓️ Staged per walk and promoted by `publish_retained_hit_registry` together with the hit registry,
+/// so names and targets can never describe different frames — the same double-buffer discipline
+/// `retained_hit_windows` follows. Bounded by [`SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY`].
+pub const SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY: usize = 512;
+
+/// 🪡️ Per thread on wasm and in tests — each test owns its shell, so a concurrent test's frame setup can never
+/// clear the names another test is about to publish — and one worker-wide cell natively.
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+thread_local! {
+    pub static CHROME_CONTROL_NAMES: std::cell::RefCell<BTreeMap<String, ChromeControlPresentation>> = std::cell::RefCell::new(BTreeMap::new());
+}
+//#endregion ♿️ChromeAccessibleNames

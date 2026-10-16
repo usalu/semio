@@ -1,7 +1,8 @@
 //! 🎠️ Shared native activation handoff for headless and rendered hosts.
 
-use super::shard::executor::{RegistrationAdmission, ShardExecutor};
-use super::{CompiledHandle, GuestRuntime, GuestRuntimes, PluginHostError};
+use semio_framework_plugin_host_shard_executor::{RegistrationAdmission, ShardExecutor};
+use semio_framework_plugin_host_guest_runtime::{CompiledHandle, GuestRuntime, GuestRuntimes};
+use super::PluginHostError;
 use semio_framework::kernel::{ActivationEvent, BrokerCapabilityGrant, Budget, Event};
 use semio_framework_actor::activation::KernelActivationReservation;
 use semio_framework_actor::{ActorId, Kernel};

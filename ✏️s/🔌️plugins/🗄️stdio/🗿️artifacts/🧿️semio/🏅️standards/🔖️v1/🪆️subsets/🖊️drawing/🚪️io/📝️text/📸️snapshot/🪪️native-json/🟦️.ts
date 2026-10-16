@@ -1,6 +1,6 @@
 /** 🪪️ Explicit Drawing native JSON scalar and octet boundary; SQLite owns complete word models. */
 import {parseSemioDrawingSnapshot,type SemioDrawingSnapshot,type DrawNode} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary64,binary32,binary64Value as owned64,binary32Value as owned32} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary32,binary64Value as owned64,binary32Value as owned32} from "@semio-tech/framework/value/ieee754";
 const record=(v:unknown):Record<string,unknown>=>{if(v===null||typeof v!=="object"||Array.isArray(v))throw Error("Drawing native JSON record required");return v as Record<string,unknown>;};
 const array=(v:unknown):unknown[]=>{if(!Array.isArray(v))throw Error("Drawing native JSON array required");return v;};
 const number=(v:unknown):number=>{if(typeof v!=="number"||!Number.isFinite(v))throw Error("Drawing native JSON finite scalar required");return v;};

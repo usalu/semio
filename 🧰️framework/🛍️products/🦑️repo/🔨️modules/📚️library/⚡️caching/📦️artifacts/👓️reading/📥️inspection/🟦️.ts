@@ -1,4 +1,4 @@
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "./📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {createHash} from "node:crypto";
 import {join,relative} from "node:path";
 import {lstat,open,opendir} from "node:fs/promises";

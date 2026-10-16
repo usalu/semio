@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-plugin-host-wit-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -6,18 +6,6 @@ use super::*;
 
 //#region ShellLifecycle
 //#region 🧭️PanelAnchorModel
-pub(super) fn dock_tab_path(nodes: &[DockTabNode], tab_id: &str) -> Option<Vec<String>> {
-    for node in nodes {
-        if node.id == tab_id {
-            return Some(vec![node.id.clone()]);
-        }
-        if let Some(mut rest) = dock_tab_path(&node.children, tab_id) {
-            rest.insert(0, node.id.clone());
-            return Some(rest);
-        }
-    }
-    None
-}
 
 fn remove_dock_tab(nodes: &mut Vec<DockTabNode>, tab_id: &str) -> Option<DockTabNode> {
     if let Some(index) = nodes.iter().position(|node| node.id == tab_id) {
@@ -198,7 +186,7 @@ pub fn apply_dock_skeleton(default_dock: &ShellDock, skeleton: Option<&DockSkele
 /// 🗄️ Reads one dock layer out of an `semio.os.config` DOCUMENT — the per-app entry when it parses,
 /// else the shared `os` one, exactly React's `DockLayoutStore::getSnapshot` precedence. Pure over the
 /// document so the layer rules are provable without the process-global store underneath.
-pub(crate) fn read_os_shell_config_layer<T: serde::de::DeserializeOwned>(config: &Value, section: &str, app_id: Option<&str>) -> Option<T> {
+pub fn read_os_shell_config_layer<T: serde::de::DeserializeOwned>(config: &Value, section: &str, app_id: Option<&str>) -> Option<T> {
     let layer = config.get(section)?;
     if let Some(app_id) = app_id {
         if let Some(entry) = layer.get("apps").and_then(|apps| apps.get(app_id)) {
@@ -216,22 +204,16 @@ fn os_shell_config_layer<T: serde::de::DeserializeOwned>(section: &str, app_id: 
 
 /// 🗄️ Reads the persisted dock arrangement — the per-app layer when present, else the shared `os` one,
 /// exactly the precedence React's `DockLayoutStore::getSnapshot` applies.
-pub(crate) fn load_dock_skeleton_from_store(app_id: Option<&str>) -> Option<DockSkeleton> {
+pub fn load_dock_skeleton_from_store(app_id: Option<&str>) -> Option<DockSkeleton> {
     os_shell_config_layer::<DockSkeleton>("dockLayouts", app_id).filter(|skeleton| skeleton.version == DOCK_SKELETON_VERSION)
 }
 
-pub(crate) fn load_dock_ui_from_store(app_id: Option<&str>) -> Option<DockUiState> {
+pub fn load_dock_ui_from_store(app_id: Option<&str>) -> Option<DockUiState> {
     os_shell_config_layer::<DockUiState>("dockUi", app_id).filter(|state| state.version == DOCK_SKELETON_VERSION)
 }
 
 //#endregion 🧭️PanelAnchorModel
 //#region 📏️WindowMeasures
-/// 🪟️ Resolves only the reserved pane identities to their concrete application window.
-pub(crate) fn window_pane_owner(surface_id: &str) -> Option<&str> {
-    [semio_framework::UiRefreshSection::Measures.body_key(), semio_framework::UiRefreshSection::Engagements.body_key(), WINDOW_SEARCH_BODY_KEY, WINDOW_PROJECTION_BODY_KEY]
-        .into_iter()
-        .find_map(|suffix| surface_id.strip_suffix(suffix).and_then(|owner| owner.strip_suffix('/')).filter(|owner| !owner.is_empty()))
-}
 
 //#endregion 📏️WindowMeasures
 //#endregion ShellLifecycle

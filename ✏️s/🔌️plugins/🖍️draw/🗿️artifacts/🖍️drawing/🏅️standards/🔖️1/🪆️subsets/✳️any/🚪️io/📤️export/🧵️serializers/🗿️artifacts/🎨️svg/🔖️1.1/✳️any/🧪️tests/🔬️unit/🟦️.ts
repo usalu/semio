@@ -150,7 +150,7 @@ test("SVG emits constant gradients as solid paint and rejects invalid authored p
   }
 });
 
-import {paintDrawingScene} from "../../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import {paintDrawingScene} from "@semio-tech/framework/2d";
 
 test("canvas and raster scene paint agree with constant SVG paint",async()=>{
   const previous=globalThis.Path2D;

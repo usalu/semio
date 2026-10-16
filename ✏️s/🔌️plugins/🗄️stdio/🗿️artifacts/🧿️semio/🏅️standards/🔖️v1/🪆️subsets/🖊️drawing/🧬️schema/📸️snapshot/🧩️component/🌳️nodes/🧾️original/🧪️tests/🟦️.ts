@@ -6,7 +6,7 @@ import shapes from "../../../../../../🧪️tests/🧫️fixtures/📸️snapsh
 import schema from "../../../../🔣️.json";
 import {parseDrawNode,parseDrawStyle,parseDrawCanvas,parseDrawLayer,parseSemioDrawingSnapshot} from "../../../../🟦️.ts";
 import defaults from "../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🌱️defaults.json";
-import {binary64,binary64Value} from "../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import {existsSync,readFileSync} from "node:fs";
 import {join} from "node:path";
 

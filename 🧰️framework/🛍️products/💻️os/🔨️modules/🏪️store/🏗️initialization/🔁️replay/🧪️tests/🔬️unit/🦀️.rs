@@ -1,9 +1,20 @@
 //! 🧪️ The replay initializer loads a document exactly as a whole load does, one bounded operation per turn, under any wallet, and closes by exact retirement.
 
-use super::*;
-use super::super::fixture_mutations::demo::{AddN, DemoMutation, SetN};
-use super::super::tests::DemoSnapshot;
-use crate::os_store::{document_materialize::create_document_envelope, document_store_owners::fund_document_store_owners, install_unscheduled_catalog, document_store_owners::MemberStoreProducer, text_format::parse_document_pack, text_format::print_document_pack, store_schema::ArtifactCommand, store_schema::SupersedeInput};
+use semio_framework_os_spr::{ActorId, MutationId};
+use semio_framework_os_store_space_schema::ArtifactEnvelope;
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_framework_os_store_initialization_replay::initialization_authority::ArtifactStoreInitializationAuthority;
+use semio_framework_os_store_initialization_replay::{ArtifactStoreReplayInitializer, Phase, permits};
+use semio_framework_job::{Generation, JobOutcomeBorrow, OperationId, StepContext};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use super::fixture_mutations::demo::{AddN, DemoMutation, SetN};
+use super::tests::DemoSnapshot;
+use semio_framework_os_store_document::create_document_envelope;
+use semio_framework_os_store_engine_owners::fund_document_store_owners;
+use semio_framework_os_store_space::lifted_store::install_unscheduled_catalog;
+use semio_framework_os_store_engine_owners::member_producer::MemberStoreProducer;
+use semio_framework_os_store_text_io::text_format::{parse_document_pack, print_document_pack};
+use semio_framework_os_store_space_schema::{ArtifactCommand, SupersedeInput};
 use semio_framework_job::StepBudget;
 
 const SCHEMA: &str = "demo/v1";
@@ -11,7 +22,7 @@ const ACTOR: &str = "actor:replay";
 const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
 const WIDE: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
 
-type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation, super::super::document_store_owners::BoundedDocumentStoreOwnerProducer>;
+type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation, semio_framework_os_store_engine_owners::producer::BoundedDocumentStoreOwnerProducer>;
 type Store = ArtifactStore<DemoSnapshot, DemoMutation>;
 
 fn set(n: i32) -> DemoMutation {
@@ -23,7 +34,7 @@ fn add(delta: i32) -> DemoMutation {
 }
 
 async fn open(envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation>) -> Store {
-    let mut store = Store::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the fixture history is valid");
+    let mut store = Store::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("the fixture history is valid");
     install_unscheduled_catalog(&mut store, fund_document_store_owners(crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners_birth_demand().expect("the fixture catalog quotes its birth"), |grant|crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(grant))).expect("the fixture owners install");
     store
 }
@@ -33,7 +44,7 @@ async fn author(store: &mut Store, command: ArtifactCommand<DemoMutation>) {
         assert!(progress.owned_bytes <= IDENTITY_CEILING);
         true
     };
-    let mut identity: crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut observer).expect("declared fixture identity authority");
+    let mut identity: semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut observer).expect("declared fixture identity authority");
     store.dispatch(command, &mut identity).await.expect("a clean command authors");
     drop(identity.pause().expect("fixture identity receipt"));
 }
@@ -46,7 +57,7 @@ struct Source {
 }
 
 async fn source(name: &str, edits: usize, supersede: &[(usize, Option<i32>)]) -> Source {
-    let mut store = open(create_document_envelope::<DemoSnapshot, DemoMutation>(SCHEMA, name, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut store = open(create_document_envelope::<DemoSnapshot, DemoMutation>(SCHEMA, name, DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let mut operations = 0;
     let mut values: Vec<(bool, i32)> = Vec::new();
     for index in 0..edits {
@@ -72,7 +83,7 @@ async fn source(name: &str, edits: usize, supersede: &[(usize, Option<i32>)]) ->
 }
 
 async fn envelope(source: &Source) -> ArtifactEnvelope<DemoSnapshot, DemoMutation> {
-    parse_document_pack::<DemoSnapshot, DemoMutation>(&source.pack, &source.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope()
+    parse_document_pack::<DemoSnapshot, DemoMutation>(&source.pack, &source.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope()
 }
 
 fn initializer(envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation>) -> Initializer {

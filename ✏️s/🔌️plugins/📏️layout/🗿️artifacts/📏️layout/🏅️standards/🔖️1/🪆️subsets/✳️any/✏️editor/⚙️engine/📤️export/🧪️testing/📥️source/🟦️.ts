@@ -1,5 +1,5 @@
-import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "@semio-tech/framework/compiler/syntax/rust";
+import { validateJsonSchemaSubset } from "@semio-tech/framework/schema";
 import schema from "./🧬️schema/🔣️.json";
 
 /** 🧬️ Describes one actual defining Rust method and its mutable-slot contract. */

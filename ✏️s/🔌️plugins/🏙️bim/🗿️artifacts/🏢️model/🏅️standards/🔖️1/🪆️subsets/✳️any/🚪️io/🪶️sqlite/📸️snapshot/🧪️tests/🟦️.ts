@@ -9,7 +9,7 @@ import counts from "./🧫️fixtures/📏️counts/🔣️.json";
 import controls from "./🧫️fixtures/🎛️control/🔣️.json";
 import documentSchema from "../../../../🧬️schema/🔣️.json";
 import snapshotSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import type {ModelSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 const rich=laws.cases[0]!.snapshot as unknown as ModelSnapshot;
 const maps=["materials","wall_types","slab_types","roof_types","column_types","beam_types","window_types","door_types","curtain_wall_types","sites","buildings","storeys","grids","walls","curtain_walls","curtain_panel_overrides","columns","beams","slabs","roofs","openings","stairs","railings","ramps","ceiling_types","ceilings","spaces","zones","area_schemes","views","sheets","viewports","sheet_revisions","dimensions","tags","text_notes","leaders","annotation_styles","wall_sweeps","schedules","families","family_parameters","family_solids","property_templates","classification_systems","properties","classifications","supports","load_cases","loads","option_groups","design_options","worksets","element_options","element_worksets","space_conditions","clash_sets","rules","issues","issue_comments","components","component_overrides","mep_elements"] as const;

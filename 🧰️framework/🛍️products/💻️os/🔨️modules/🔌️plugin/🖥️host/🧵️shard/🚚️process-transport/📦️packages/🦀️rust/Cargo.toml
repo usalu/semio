@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-host-process-transport"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Process and stdio shard transports with their length-prefixed framing"
+
+[package.metadata.semio]
+role = "product"
+id = "os-plugin-host-process-transport"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[features]
+testkit = ["semio-framework-plugin-host-engine/testkit"]
+
+[dependencies]
+# 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1-host-native): `GuestRuntime`'s `RuntimeActorId`/
+# `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
+# actor crate, already a `[workspace.dependencies]` entry.
+semio-framework-actor = { workspace = true }
+semio-framework-plugin-host-engine = { path = "../../../../🔧️engine/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-plugin-host-engine = { path = "../../../../🔧️engine/📦️packages/🦀️rust", features = ["testkit"] }

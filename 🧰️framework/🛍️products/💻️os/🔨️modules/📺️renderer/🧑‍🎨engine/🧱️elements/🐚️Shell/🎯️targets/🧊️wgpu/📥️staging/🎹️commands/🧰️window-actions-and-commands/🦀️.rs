@@ -44,7 +44,7 @@ fn search_possible_rank_score(query: &str, possible: &ui_wgpu::wgpu::WindowEngag
 /// ⌨️ React's `normalizeEngagementActionText`: separators dropped, tokens PascalCased, a decimal point
 /// INSIDE a number preserved (`3.5` stays `3.5`). Display and matching only — the typed line itself
 /// reaches the program verbatim.
-pub(crate) fn normalize_engagement_action_text(text: &str) -> String {
+pub fn normalize_engagement_action_text(text: &str) -> String {
     let mut words: Vec<String> = Vec::new();
     let mut word = String::new();
     let chars: Vec<char> = text.chars().collect();
@@ -75,7 +75,7 @@ pub(crate) fn normalize_engagement_action_text(text: &str) -> String {
 
 /// 🔎️ React's `filterSearchPossibles`: an empty query keeps the host's own order, otherwise the rows
 /// that score at all, best first.
-pub(crate) fn filter_search_possibles<'a>(query: &str, possibles: &'a [ui_wgpu::wgpu::WindowEngagementPossible]) -> Vec<&'a ui_wgpu::wgpu::WindowEngagementPossible> {
+pub fn filter_search_possibles<'a>(query: &str, possibles: &'a [ui_wgpu::wgpu::WindowEngagementPossible]) -> Vec<&'a ui_wgpu::wgpu::WindowEngagementPossible> {
     if normalize_engagement_action_text(query).is_empty() {
         return possibles.iter().collect();
     }
@@ -103,7 +103,7 @@ impl CommandState {
     ///   `onRepeatLast` when idle and to `onSubmit` during a session
     ///   (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10512`), and the retained line falls through to the
     ///   submit it did bind when no repeat is offered.
-    pub(crate) fn build_window_search_ui(&self, window_id: &str, prefs: &PrefsState, windows: &WindowState) -> Option<UiNode> {
+    pub fn build_window_search_ui(&self, window_id: &str, prefs: &PrefsState, windows: &WindowState) -> Option<UiNode> {
         let engagement = windows.window_engagements.get(window_id)?;
         let input = engagement.input.as_ref()?;
         let is_de = prefs.locale_id == "de";
@@ -124,7 +124,7 @@ impl CommandState {
             accept: None,
             precision: None,
             snaps: Vec::new(),
-            on_change: input.on_change.clone().unwrap_or_else(|| ActionDescriptor { controller_id: "framework".into(), action: "setEngagementInput".into(), args: crate::action_args_json!({ "window": window_id.to_string() }) }),
+            on_change: input.on_change.clone().unwrap_or_else(|| ActionDescriptor { controller_id: "framework".into(), action: "setEngagementInput".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string() }) }),
             on_submit: input.on_submit.clone(),
             on_abort: input.on_abort.clone(),
             on_repeat_last: (!session_active).then(|| input.on_repeat_last.clone()).flatten(),
@@ -140,7 +140,7 @@ impl CommandState {
                 id: WINDOW_SEARCH_SUGGESTIONS_CONTROL_ID.into(),
                 icon_id: if open { IconName::ChevronDown } else { IconName::ChevronRight },
                 text: Some(Label::data(shell_chrome_string("windowSearch.suggestions", is_de))),
-                on_change: ActionDescriptor { controller_id: "framework".into(), action: "toggleSearchPossibles".into(), args: crate::action_args_json!({ "window": window_id.to_string() }) },
+                on_change: ActionDescriptor { controller_id: "framework".into(), action: "toggleSearchPossibles".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string() }) },
                 presence: UiPresence { selected: open, ..UiPresence::default() },
                 menu: None,
             }));
@@ -172,22 +172,22 @@ impl CommandState {
 
 //#endregion 🎬️WindowActionsAndSearchPanes
 impl CommandState {
-    pub(crate) fn stage_arg(&mut self, window_id: &str, action_id: &str, arg_id: &str, value: Value) {
+    pub fn stage_arg(&mut self, window_id: &str, action_id: &str, arg_id: &str, value: Value) {
         self.staged_action_args.entry(staged_key(window_id, action_id)).or_default().insert(arg_id.to_string(), value);
     }
 
-    pub(crate) fn staged_map_for(&self, window_id: &str, action_id: &str) -> serde_json::Map<String, Value> {
+    pub fn staged_map_for(&self, window_id: &str, action_id: &str) -> serde_json::Map<String, Value> {
         self.staged_action_args.get(&staged_key(window_id, action_id)).cloned().unwrap_or_default()
     }
 
-    pub(crate) fn reset_staged_args(&mut self, window_id: &str, action_id: &str) {
+    pub fn reset_staged_args(&mut self, window_id: &str, action_id: &str) {
         self.staged_action_args.remove(&staged_key(window_id, action_id));
     }
 
     /// 📝️ The effective value of one argument — staged if present, else the declared default: React's
     /// `effectiveActionArgs` per row (`🛠️ShellHelpers/🟦️.tsx`), which is what the Actions pane's staged
     /// form paints and what Execute merges.
-    pub(super) fn effective_arg_value(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef) -> Option<Value> {
+    pub fn effective_arg_value(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef) -> Option<Value> {
         self.staged_action_args.get(&staged_key(window_id, action_id)).and_then(|map| map.get(&arg.id).cloned()).or_else(|| arg.default.as_ref().map(dsl_value_as_json))
     }
 }
@@ -205,12 +205,12 @@ impl CommandState {
 ///
 const FUZZY_TEXT_LIMIT: usize = 96;
 
-pub(crate) const FUZZY_SEARCH_THRESHOLD: f64 = 0.4;
+pub const FUZZY_SEARCH_THRESHOLD: f64 = 0.4;
 
-pub(crate) const FUZZY_SEARCH_LIMIT: usize = 20;
+pub const FUZZY_SEARCH_LIMIT: usize = 20;
 
 /// 🔎️ `normalizeFuzzyText` — lowercase, marks stripped, trimmed, bounded.
-pub(crate) fn normalize_fuzzy_text(value: &str) -> String {
+pub fn normalize_fuzzy_text(value: &str) -> String {
     ui_wgpu::wgpu::normalize_nfkd_text(value, false, FUZZY_TEXT_LIMIT)
 }
 
@@ -253,7 +253,7 @@ fn bounded_damerau_levenshtein(left: &[char], right: &[char], maximum: usize) ->
 }
 
 /// 🔎️ `fuzzyTokenScore` — LOWER is better, `None` means "no match at all". Both already normalized.
-pub(crate) fn fuzzy_token_score(query: &str, value: &str, threshold: f64) -> Option<f64> {
+pub fn fuzzy_token_score(query: &str, value: &str, threshold: f64) -> Option<f64> {
     if value.is_empty() {
         return None;
     }
@@ -315,7 +315,7 @@ pub(crate) fn fuzzy_token_score(query: &str, value: &str, threshold: f64) -> Opt
 /// 🔎️ `rankFuzzyItems` — weighted multi-field, multi-token ranking; ties break on declaration order.
 /// An empty query keeps the declared order (React's `items.slice(0, limit)`), so the palette's cold list
 /// is never reshuffled by the ranker.
-pub(crate) fn rank_fuzzy_items<Item>(items: Vec<Item>, query: &str, fields: &[(fn(&Item) -> Option<&str>, f64)], threshold: f64, limit: usize) -> Vec<Item> {
+pub fn rank_fuzzy_items<Item>(items: Vec<Item>, query: &str, fields: &[(fn(&Item) -> Option<&str>, f64)], threshold: f64, limit: usize) -> Vec<Item> {
     if limit == 0 {
         return Vec::new();
     }
@@ -363,7 +363,7 @@ pub(crate) fn rank_fuzzy_items<Item>(items: Vec<Item>, query: &str, fields: &[(f
 //#endregion ActionPanelAndUtilities
 
 /// 🧮️ Resolves required presence and current catalog membership before native staged execution.
-pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
+pub fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
     let staged_dsl = semio_framework_value::DslValue::from(Value::Object(staged.clone()));
     let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
     if semio_framework::unresolved_action_args(defs, &effective).is_empty() {
@@ -375,6 +375,6 @@ pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], stag
 
 // #endregion
 // #region staging
-pub(super) fn staged_key(window_id: &str, action_id: &str) -> String {
+pub fn staged_key(window_id: &str, action_id: &str) -> String {
     format!("{window_id}:{action_id}")
 }

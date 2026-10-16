@@ -1,0 +1,12 @@
+import fs from "node:fs";
+import path from "node:path";
+const [origFile, root, kidsFile] = process.argv.slice(2);
+const kids = JSON.parse(fs.readFileSync(kidsFile, "utf8"));
+const REG = /^[ \t]*\/\/\s*#(end)?region\b\s*(.*)$/;
+const names = (t) => { const s = new Map(); t.split("\n").forEach((l) => { const m = REG.exec(l); if (m && !m[1]) s.set(m[2].trim(), (s.get(m[2].trim()) ?? 0) + 1); }); return s; };
+const o = names(fs.readFileSync(origFile, "utf8"));
+const files = [path.join(root, "🟦️.tsx"), ...kids.map((k) => ["🟦️.ts", "🟦️.tsx"].map((f) => path.join(root, k, f)).find(fs.existsSync))];
+const all = new Map();
+for (const f of files) for (const [n, c] of names(fs.readFileSync(f, "utf8"))) all.set(n, (all.get(n) ?? 0) + c);
+console.log("orig distinct", o.size, "tree distinct", all.size);
+console.log("missing:", [...o.keys()].filter((n) => !all.has(n)).length, [...o.keys()].filter((n) => !all.has(n)).join(" | "));

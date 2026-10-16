@@ -1,6 +1,6 @@
 /** 🧬️ Canonical mutation fixtures must agree with the public tagged wire schema. */
 import { expect, it } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { fileURLToPath } from "node:url";
 import aggregate from "../../🔣️.json";
 import documentSchema from "../../../🔣️.json";
@@ -28,7 +28,7 @@ import diffSchema from "../../../🔺️diff/🔣️.json";
 import fieldCases from "../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️field-patch/🔣️.json";
 import blendSchema from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧬️schema/🔣️.json";
 import {diff as blendDiff} from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔺️diff/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import {parseDrawingLayerNode} from "../../../🟦️.ts";
 import {parseDrawingLayerPatch} from "../../../🔺️diff/🟦️.ts";
 

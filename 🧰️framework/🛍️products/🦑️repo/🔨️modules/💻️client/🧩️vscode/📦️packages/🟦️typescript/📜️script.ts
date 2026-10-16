@@ -15,6 +15,7 @@ import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️pro
 /** 🧭️ `@semio-tech/repo-vscode` router: `bun ./📜️script.ts <dev|test [level]|build|lint|build-vsix>`. */
 import { build } from "vite";
 import { extensionBuildConfig, extensionPackageEnvironment } from "../../🏗️builder/🟦️.ts";
+import { CheckScript as CheckGraphqlTypesScript, GenerateScript as GenerateGraphqlTypesScript, PreviewGeneratedScript } from "../../🔗️graphql-types/🏃️execution/🟦️.ts";
 import { TEST_LEVELS } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runBunx } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -66,11 +67,20 @@ class DevScript extends BundleScript {
   }
 }
 
+/** 🧪️ Proves the generated GraphQL types against the served schema and graphql-js. */
+class TestGraphqlTypesScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-graphql-types accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🔗️graphql-types/🟦️.ts")], this.repoRoot, "vscode:graphql-types", 60_000, { env: scriptInvocationEnvironment(this.invocation, process.env) });
+  }
+}
+
 /** ⏱️The extension-host Mocha case (`🧪️tests/🧩️extension/🟦️.ts`) is this package's only test and can
  * only run inside the VSCode test harness, so it is added at `long` and above. */
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { level } = resolveTestLevel(segments);
+    await new TestGraphqlTypesScript(this.root, this.repoRoot, this.invocation).run([]);
     if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) return;
     runBunx(["vscode-test", "--config", "../../🧪️tests/🎚️config/🟨️.mjs"], this.root);
   }
@@ -135,6 +145,10 @@ const router = new ScriptRouter(import.meta.dir)
   .register("compile-extension", CompileExtensionScript)
   .register("watch-extension", WatchExtensionScript)
   .register("lint", LintScript)
-  .register("build-vsix", BuildVsixScript);
+  .register("build-vsix", BuildVsixScript)
+  .register("generate-graphql-types", GenerateGraphqlTypesScript)
+  .register("preview-generated", PreviewGeneratedScript)
+  .register("check-graphql-types", CheckGraphqlTypesScript)
+  .register("test-graphql-types", TestGraphqlTypesScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

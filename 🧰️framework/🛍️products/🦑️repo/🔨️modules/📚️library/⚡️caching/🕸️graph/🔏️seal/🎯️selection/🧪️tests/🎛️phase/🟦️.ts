@@ -1,0 +1,21 @@
+import {test,expect} from "bun:test";
+import {readFileSync} from "node:fs";
+import ts from "typescript";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import {withBuildTestInvocationV1} from "../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import fixture from "./🔣️.json" with {type:"json"};
+import schema from "./🧬️schema.json" with {type:"json"};
+test("selected producer fixture passes its genuine phase into actual inference admission",async()=>withBuildTestInvocationV1(async original=>{
+ expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
+ const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ast=ts.createSourceFile("selection.ts",source,ts.ScriptTarget.Latest,true),contexts:ts.Expression[]=[];
+ const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&node.expression.getText(ast)==="plugin.createNodesV2[1]"){const context=node.arguments[2];if(context)contexts.push(context);}ts.forEachChild(node,walk);};walk(ast);expect(contexts.length).toBe(1);
+ const actual=new Function("original","process","createIssuedResourceControlV1","return "+contexts[0]!.getText(ast))(original,process,createIssuedResourceControlV1) as {workspaceRoot:string;invocation:ScriptInvocation;phaseControl:ResourceLeaseControl};
+ const implementation=readFileSync(new URL("../../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs",import.meta.url),"utf8"),implementationAst=ts.createSourceFile("inference.mjs",implementation,ts.ScriptTarget.Latest,true),entry=implementationAst.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="invokeCurrentImplementation");if(!entry)throw Error("Actual inference admission function required");
+ const database=new Database(":memory:");database.exec("create table observations(kind text,effects integer)");try{for(const row of fixture.cases){let effects=0;const stop=new AbortController(),phase=row.kind==="actual"?actual.phaseControl:row.kind==="copied"?{...actual.phaseControl}:createRequestedIssuedResourceControlV1(actual.phaseControl,1000,stop.signal);if(row.kind==="cancelled")stop.abort(Error("Actual fixture phase stopped"));
+ const run=new Function("withRepositoryBuildGraphFactStoreV1","invokeCurrentImplementationV1","receiveScriptProcessInvocation","createIssuedResourceControlV1",entry.getText(implementationAst)+";return invokeCurrentImplementation")((root:string,invocation:ScriptInvocation,control:ResourceLeaseControl,body:(_store:unknown,actualControl:ResourceLeaseControl)=>unknown)=>{expect(root).toBe(process.cwd());expect(invocation).toBe(original);requireIssuedResourceControlInvocationV1(control,original);checkResourceLeaseControl(control);return body(undefined,control);},(_kind:string,args:unknown[])=>{const context=args[2] as typeof actual;expect(context.invocation).toBe(original);expect(context.phaseControl).toBe(phase);checkResourceLeaseControl(context.phaseControl);effects++;return "admitted";},()=>{throw Error("Unexpected process receiver fallback");},createIssuedResourceControlV1) as (kind:string,args:unknown[])=>unknown;
+ let failure:{error:unknown}|undefined,result:unknown;try{result=await run("nodes",[[],{}, {...actual,phaseControl:phase}]);}catch(error){failure={error};}if(row.reason===null){expect(failure).toBeUndefined();expect(result).toBe("admitted");}else expect(failure?.error instanceof Error?failure.error.message:String(failure?.error)).toBe(row.reason);expect(effects).toBe(row.effects);database.query("insert into observations values(?,?)").run(row.kind,effects);
+ }expect(database.query("select sum(effects) effects,count(*) cases from observations").get()).toEqual({effects:1,cases:3});expect(original.control.signal.aborted).toBe(false);console.log("[DEBUG] Actual selected-producer context and inference admission preserve genuine phase with Ajv/SQLite refusal oracle; storage is modeled");}finally{database.close();}
+}));

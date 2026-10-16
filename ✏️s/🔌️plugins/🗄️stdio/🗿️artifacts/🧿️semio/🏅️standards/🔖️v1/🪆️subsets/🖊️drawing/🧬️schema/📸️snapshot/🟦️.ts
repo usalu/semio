@@ -1,7 +1,7 @@
 /** 🖊️ Exact owned drawing variants, native geometry words and genuine image octets. */
 import {parseSemioPoint2,parseSemioPoint3,parseSemioQuaternion,parseSemioTransform,parseSemioRgba,type SemioPoint2,type SemioPoint3,type SemioQuaternion,type SemioTransform,type SemioRgba} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
-import { type Binary64, type Binary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64, parseBinary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64, type Binary32 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary64, parseBinary32 } from "@semio-tech/framework/value/ieee754";
 export {parseSemioPoint2,parseSemioPoint3 as parsePoint3,parseSemioQuaternion as parseQuaternion,parseSemioTransform as parseTransform,parseSemioRgba as parseRgba};
 export type {SemioPoint2,SemioPoint3 as Point3,SemioQuaternion as Quaternion,SemioTransform as Transform,SemioRgba as Rgba};
 export type PathSegment={kind:"moveTo";to:SemioPoint2}|{kind:"lineTo";to:SemioPoint2}|{kind:"cubicTo";c1:SemioPoint2;c2:SemioPoint2;to:SemioPoint2}|{kind:"quadTo";c:SemioPoint2;to:SemioPoint2}|{kind:"arcTo";rx:Binary64;ry:Binary64;xRotation:Binary64;largeArc:boolean;sweep:boolean;to:SemioPoint2}|{kind:"close"};

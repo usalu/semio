@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from "./🗄️.sql" with {type:"text"};
 import type {En1998Snapshot,En1998Site,En1998Building,En1998System,En1998Storey,En1998Member,En1998VariableAction,En1998Bridge,En1998Assessment,En1998Silo,En1998Tank,En1998Foundation,En1998RetainingWall,En1998Tower} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 type Exact<T>={[K in keyof T]:T[K] extends number?Binary64:T[K]};
 export type En1998SqliteSite=Exact<En1998Site>;
 export type En1998SqliteSystem=Exact<En1998System>;

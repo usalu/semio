@@ -1,9 +1,9 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from "./🗄️.sql" with {type:"text"};
 import type {BcfSnapshot,BcfTopic,BcfComment,BcfViewpoint,BcfComponents,BcfColoring,BcfRawPart,BcfCamera,BcfPoint3} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const BCF_SQLITE_SCHEMA:string=sql;
 type Entities=Map<bigint,SqliteRow>;
 const CAMERA_FLOATS:readonly Ieee754Column[]=[{index:2,width:64},{index:3,width:64},{index:4,width:64},{index:5,width:64},{index:6,width:64},{index:7,width:64},{index:8,width:64},{index:9,width:64},{index:10,width:64}];

@@ -40,8 +40,8 @@
 // #endregion 🧲️Header
 
 import type { ActionDescriptor, UiComponentSceneNode } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import type { Canvas2dScene, TableScene, World3dScene } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
-import type { AccessibilitySpec, BuiltNode, LayoutSpec, StyleSpec } from "../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
+import type { Canvas2dScene, TableScene, World3dScene } from "@semio-tech/framework/ui/scene";
+import type { AccessibilitySpec, BuiltNode, LayoutSpec, StyleSpec } from "@semio-tech/framework/manifest";
 
 //#region 🔖️SceneModel
 /** 🎞️ One sampled frame of a media stream — `RemodelingSnapshot::streams[].frames[]`. */

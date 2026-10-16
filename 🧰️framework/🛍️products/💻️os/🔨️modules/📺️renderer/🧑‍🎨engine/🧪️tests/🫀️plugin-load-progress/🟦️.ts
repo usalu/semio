@@ -9,7 +9,7 @@ import {componentPackageReceiptSource} from "../../../../🔌️plugin/📥️re
  * 30002 ms with no progress for 30000 ms` — an idle window they were never idle in. */
 
 import { describe, expect, it, beforeEach } from "vitest";
-import { fetchDescriptorManifest, fetchPackageDescriptor } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { fetchDescriptorManifest, fetchPackageDescriptor } from "../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
 import { SHARD_LIVENESS_POLICY } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import {
   beginPluginLoadV1,

@@ -16,7 +16,7 @@ import { pathToFileURL } from "node:url";
 import { OrthographicCamera } from "@react-three/drei/core/OrthographicCamera.js";
 import { PerspectiveCamera } from "@react-three/drei/core/PerspectiveCamera.js";
 import { ICONS, assertUniqueIconConceptAssignments, shortcodeCatalogKey, shortcodeEmoji } from "@semio-tech/assets";
-import { createBrowserStoragePort, createMemoryStoragePort } from "@semio-tech/framework";
+import { createBrowserStoragePort, createMemoryStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
 import * as ReactRuntime from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as ThreeRuntime from "three";

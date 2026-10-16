@@ -1,4 +1,4 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
@@ -31,13 +31,14 @@ test("CAD retained media source pricing preserves exact UTF-8 bytes and ordered 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
 import childSchema from"../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
-import ioSchema from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type{ArtifactSqliteOptions}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
+import type{ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
 import * as projection from "../🟦️.ts";
 import type {CadSqliteReference as Reference,CadSqliteSnapshot as Snapshot} from "../🟦️.ts";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 function snapshot():Snapshot{
  const value=structuredClone(fixture.snapshot);
  return{...owner.parseCadSnapshot(value),referencesByModelDefinitionId:Object.fromEntries(Object.entries(value.referencesByModelDefinitionId).map(([key,rows])=>[key,rows.map(row=>({...row,origin:row.origin.map(binary64)as Reference["origin"],orientation:row.orientation===null?null:row.orientation.map(binary64)as Reference["orientation"],scale:row.scale===null?null:binary64(row.scale),widthWorld:binary64(row.widthWorld),opacity:row.opacity===null?null:binary64(row.opacity)}))]))};
@@ -160,7 +161,7 @@ test("CAD ordered brep event payload matches independent JSON schema admission",
 
 test("CAD GraphQL siblings declare neutral persisted topology and canonical event union",async()=>{
  const {parse,Kind,buildASTSchema,validateSchema}=await import("graphql");
- const refs=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️.graphql",import.meta.url)).text(),children=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql",import.meta.url)).text(),artifact=await Bun.file(new URL("../../../../🧬️schema/🔗️.graphql",import.meta.url)).text();
+ const refs=await Bun.file(frameworkSourceUrl("🔨️modules/🧬️schema/🗿️artifact-reference/🔗️.graphql")).text(),children=await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql")).text(),artifact=await Bun.file(new URL("../../../../🧬️schema/🔗️.graphql",import.meta.url)).text();
  for(const [path,typeName] of [["../../../../🧬️schema/🔗️.graphql","CadArtifact"],["../../../../🧬️schema/📸️snapshot/🔗️.graphql","CadSnapshot"],["../../../../🧬️schema/🔺️diff/🔗️.graphql","CadDiff"]] as const){
   const document=parse(await Bun.file(new URL(path,import.meta.url)).text()),type=document.definitions.find(def=>def.kind===Kind.OBJECT_TYPE_DEFINITION&&def.name.value===typeName);
   if(!type||type.kind!==Kind.OBJECT_TYPE_DEFINITION)throw new Error("CAD GraphQL type missing "+typeName);

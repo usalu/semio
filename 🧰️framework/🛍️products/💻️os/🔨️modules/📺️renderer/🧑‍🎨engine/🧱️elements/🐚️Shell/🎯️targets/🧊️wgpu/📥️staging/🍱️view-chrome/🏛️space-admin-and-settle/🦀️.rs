@@ -9,7 +9,7 @@ use super::*;
 /// ⏱️ Spends one of a retained document's paint opportunities — only when the step was the document's OWN work
 /// (`UiDocumentFrameCursor::last_step_was_own_work`: waiting on the layout worker pool or on another surface's layout costs
 /// nothing) — and answers whether the document may keep stepping under `budget`.
-pub(crate) fn document_opportunity_remains(cursor: &mut ShellChromeChildCursor, budget: usize) -> bool {
+pub fn document_opportunity_remains(cursor: &mut ShellChromeChildCursor, budget: usize) -> bool {
     if cursor.document.last_step_was_own_work() {
         cursor.scalar = cursor.scalar.saturating_add(1);
     }

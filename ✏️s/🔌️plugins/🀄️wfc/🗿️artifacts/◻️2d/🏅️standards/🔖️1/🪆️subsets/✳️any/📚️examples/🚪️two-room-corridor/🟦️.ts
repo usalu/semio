@@ -1,4 +1,4 @@
-import {binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 // 🚪️ Example `two-room-corridor` — the TypeScript twin of `🦀️.rs`'s builder, ported row by row.
 
 import type { Wfc2dColor, Wfc2dSnapshot, Wfc2dTileMedia } from "../../🧬️schema/📸️snapshot/🟦️.ts";

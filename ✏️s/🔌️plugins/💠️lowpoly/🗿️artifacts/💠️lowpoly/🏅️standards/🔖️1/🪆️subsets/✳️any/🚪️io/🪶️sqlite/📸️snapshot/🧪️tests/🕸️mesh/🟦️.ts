@@ -1,5 +1,5 @@
 /** 🕸️ Managed half-edge topology and rich mesh channels remain individually editable SQL state. */
-import artifactReferenceSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
@@ -7,12 +7,12 @@ import fixture from"../🧫️fixtures/🕸️mesh/🔣️.json";
 
 import{parseLowpolyArtifact}from"../../../../../🧬️schema/🟦️.ts";
 import{lowpolySnapshotToSqliteDatabase,lowpolySnapshotFromSqliteDatabase}from"../../🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import valueSchema from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
+import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
+import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import meshSchema from"../../../../../🧬️schema/🕸️mesh/🔣️.json";
-import intrinsicSchema from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️.json";
+import { valueIntrinsicSchema as intrinsicSchema } from "@semio-tech/framework/value/schema/intrinsic";
 import artifactSchema from"../../../../../🧬️schema/🔣️.json";
-import ioSchema from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import childSchema from"../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
 import{decodeLowpolyJsonSnapshot}from"../../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 type Neutral={kind:string;value?:unknown;items?:Neutral[];members?:{name:string;value:Neutral}[]};

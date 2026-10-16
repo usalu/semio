@@ -8,7 +8,7 @@ use super::*;
 /// 🔗️ ticket §2 — `attach_sync_backbone`/`open_document`'s default binding decision: `[Hub, Folder]`
 /// when an identity AND a space both exist, `[Folder]` with a data dir but no identity, `[]`
 /// otherwise. Pure and free-standing so the decision is unit-testable without a live `ShellState`.
-pub(crate) fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&str>, data_dir: Option<&std::path::Path>, surface: Option<&str>) -> Vec<PersistenceBinding> {
+pub fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&str>, data_dir: Option<&std::path::Path>, surface: Option<&str>) -> Vec<PersistenceBinding> {
     let folder = match (space_id, data_dir) {
         (Some(space_id), Some(data_dir)) => Some(PersistenceBinding::Folder { path: data_dir.join("spaces").join(space_id) }),
         _ => None,
@@ -27,15 +27,15 @@ pub(crate) fn default_persistence_bindings(identity: Option<&Identity>, space_id
 /// role forms normalize identically; a surface-suffixed artifact ref must agree with the role; app
 /// and document coordinates are all-or-nothing pairs.
 #[derive(Debug)]
-pub(crate) struct OpenArtifactRelayTarget {
-    pub(crate) artifact_ref: String,
-    pub(crate) dialect: semio_framework_artifact_reference::ArtifactDialect,
-    pub(crate) role: semio_framework::AppRole,
-    pub(crate) plugin_id: Option<String>,
-    pub(crate) app_id: Option<String>,
-    pub(crate) document_id: Option<String>,
-    pub(crate) space_id: Option<String>,
-    pub(crate) schema: Option<String>,
+pub struct OpenArtifactRelayTarget {
+    pub artifact_ref: String,
+    pub dialect: semio_framework_artifact_reference::ArtifactDialect,
+    pub role: semio_framework::AppRole,
+    pub plugin_id: Option<String>,
+    pub app_id: Option<String>,
+    pub document_id: Option<String>,
+    pub space_id: Option<String>,
+    pub schema: Option<String>,
 }
 
 /// 🚪️ Where the one frame-pumped document open stands: a hub document's component is being resolved by
@@ -55,7 +55,7 @@ pub enum ShellDocumentOpenPhase {
 /// names, the program to mount (`None` when the local one already is the lease's component) and the
 /// checkpoint the lease authorizes — an app instance, or a seeded document with the canonical pair its
 /// guest now holds (`None` for a document bound to no hub).
-pub(crate) enum ShellDocumentOpenAnswer {
+pub enum ShellDocumentOpenAnswer {
     #[cfg(not(target_arch = "wasm32"))]
     Resolved {
         plugin_id: String,
@@ -69,7 +69,7 @@ pub(crate) enum ShellDocumentOpenAnswer {
 
 /// ⏳️ The resolution step a hub document open is on, as its band reads it ([`ShellDocumentOpening::resolve_step`]).
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn document_open_resolve_step_code(step: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep) -> u8 {
+pub fn document_open_resolve_step_code(step: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep) -> u8 {
     use semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStep;
     match step {
         ExecutionTargetModuleStep::Lease => 0,
@@ -81,10 +81,10 @@ pub(crate) fn document_open_resolve_step_code(step: semio_framework_os_kernel::o
 
 /// 🎯️ The document half of an open: what the relay asked for, and — once a hub resolution read the
 /// document's lease — the checkpoint that lease authorizes.
-pub(crate) struct ShellDocumentOpenTarget {
-    pub(crate) document_id: String,
-    pub(crate) schema: String,
-    pub(crate) checkpoint: Option<semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1>,
+pub struct ShellDocumentOpenTarget {
+    pub document_id: String,
+    pub schema: String,
+    pub checkpoint: Option<semio_framework_os_kernel::os_directory::DocumentOpenCheckpointV1>,
 }
 
 /// 🚪️ The one document open this shell runs at a time (`os.open-artifact`), advanced by the frame pump
@@ -97,20 +97,20 @@ pub struct ShellDocumentOpening {
     pub phase: ShellDocumentOpenPhase,
     pub cancel_requested: bool,
     pub started_at_ms: f64,
-    pub(crate) plugin_id: String,
-    pub(crate) app_id: String,
-    pub(crate) document: Option<ShellDocumentOpenTarget>,
-    pub(crate) pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, crate::program_bridge::ProgramFault>>>,
-    pub(crate) prepared: Option<ShellPreparedDocumentOpen>,
+    pub plugin_id: String,
+    pub app_id: String,
+    pub document: Option<ShellDocumentOpenTarget>,
+    pub pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>>,
+    pub prepared: Option<ShellPreparedDocumentOpen>,
     /// 🛑️ The token the detached hub resolution's requests check; cancelling the open cancels it.
-    pub(crate) cancel: Option<CancelToken>,
+    pub cancel: Option<CancelToken>,
     /// ⏳️ The resolution step the detached hub resolution last reported (lease, component, descriptor, verified).
-    pub(crate) resolve_step: std::sync::Arc<std::sync::atomic::AtomicU8>,
+    pub resolve_step: std::sync::Arc<std::sync::atomic::AtomicU8>,
 }
 
 impl ShellDocumentOpening {
     /// 🚪️ An open whose first detached step is `pending`, in `phase`.
-    pub(crate) fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, crate::program_bridge::ProgramFault>>>) -> Self {
+    pub fn new(label: String, phase: ShellDocumentOpenPhase, plugin_id: String, app_id: String, document: Option<ShellDocumentOpenTarget>, pending: Option<ShellDetached<Result<ShellDocumentOpenAnswer, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>>) -> Self {
         Self { label, phase, cancel_requested: false, started_at_ms: chrome_now_ms(), plugin_id, app_id, document, pending, prepared: None, cancel: None, resolve_step: std::sync::Arc::default() }
     }
 
@@ -123,7 +123,7 @@ impl ShellDocumentOpening {
 /// 🎯 Resolves the descriptor-bound canonical surface id this local selection may request. It is a
 /// preference, never an authority: a local WGPU selection verifies no execution-target bytes and so
 /// can never mint a `DocumentExecutionTargetLeaseFieldsV1`.
-pub(crate) fn document_socket_surface_from_descriptor(plugin_id: &str, package_id: Option<&str>, manifest: &semio_framework::PluginManifest, app: &AppDefinition, window_kind_id: &str) -> Result<String, String> {
+pub fn document_socket_surface_from_descriptor(plugin_id: &str, package_id: Option<&str>, manifest: &semio_framework::PluginManifest, app: &AppDefinition, window_kind_id: &str) -> Result<String, String> {
     let _package_id = package_id.filter(|value| !value.is_empty()).ok_or_else(|| "document open requires a verified package descriptor".to_string())?;
     if plugin_id != manifest.plugin_id || manifest.version.is_empty() || !manifest.apps.iter().any(|candidate| candidate.id == app.id) || !app.window_kinds.iter().any(|window| window.id == window_kind_id) {
         return Err("document open local plugin selection is not descriptor-bound".into());
@@ -135,7 +135,7 @@ pub(crate) fn document_socket_surface_from_descriptor(plugin_id: &str, package_i
 /// the same plugin, the same package, the same component digest, the document's schema and the
 /// surface the shell requested. Anything else would lend the document actor a kind identity for
 /// code that is not running here.
-pub(crate) fn document_execution_target_admitted(
+pub fn document_execution_target_admitted(
     lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1,
     plugin_id: &str,
     package_id: Option<&str>,
@@ -161,7 +161,7 @@ pub(crate) fn document_execution_target_admitted(
     Ok(())
 }
 
-pub(crate) fn wgpu_document_socket_surface(program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<String, String> {
+pub fn wgpu_document_socket_surface(program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<String, String> {
     document_socket_surface_from_descriptor(&program.plugin_id, program.package_id.as_deref(), &program.manifest, app, window_kind_id)
 }
 

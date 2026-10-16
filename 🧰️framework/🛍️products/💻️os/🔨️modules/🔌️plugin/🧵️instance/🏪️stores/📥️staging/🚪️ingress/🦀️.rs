@@ -17,8 +17,8 @@ impl<A: ArtifactApp> ConstructorState<A> {
 }
 
 impl<A: ArtifactApp> InstanceStores<A> {
-    pub(crate) async fn validate_framework_reserved_commit(&self, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
-        if let Some(fault) = InstanceExtensions::reserved_action_refusal(self, verb) {
+    pub(crate) async fn validate_framework_reserved_commit(&self, refusal: Option<Fault>, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
+        if let Some(fault) = refusal {
             return Err(fault);
         }
         if permit.lease.is_cancelled().await {

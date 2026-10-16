@@ -25,7 +25,7 @@ import type { UiDirtyScope } from "@semio-tech/framework";
 // 🔗️ `🐚️Shell` is imported FIRST on purpose: `ShellHelpers` and `Shell` are mutually recursive, and a
 // suite that enters the cycle through `ShellHelpers` alone evaluates `shellLabel` before `Shell`'s
 // own bindings exist (`Cannot access '__vite_ssr_import_13__' before initialization`). Entering it
-// through `Shell`, the way `🔬️engine-contract` does, is what makes the module graph resolve.
+// through `Shell`, the way `🧰️engine-contract-helpers` does, is what makes the module graph resolve.
 void resolvePluginCanvasStatus;
 
 type LaneRequest = { readonly instanceId: number; readonly scope: UiDirtyScope; readonly replaceBodies: boolean; readonly hostInputs: boolean };

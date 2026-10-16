@@ -71,16 +71,9 @@
   ],
   "consumers": [
     {
-      "path": "📜️script.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧬️schema-overhaul-s2/🟦️.ts",
       "owners": [
-        "🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts",
-        "🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts",
-        "🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts",
-        "🧬️schema/🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts",
-        "🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts",
-        "🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts",
-        "🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts",
-        "🧬️schema/🔍️field-discovery/⚖️comparison/🟦️.ts"
+        "🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts"
       ]
     },
     {

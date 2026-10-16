@@ -51,7 +51,7 @@ export const SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
  * (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`). Declared rather than imported for the same reason
  * {@link SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS} is: this module is bundled into `⚙️vite.config.ts`'s
  * import graph, and reaching `🧵️shard-runtime` from here would drag `ShardClient` and the whole
- * kernel/ui/resident graph into config loading. Held equal by the engine-contract suite. */
+ * kernel/ui/resident graph into config loading. Held equal by the `🛡️runtime-admission` suite. */
 export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
 

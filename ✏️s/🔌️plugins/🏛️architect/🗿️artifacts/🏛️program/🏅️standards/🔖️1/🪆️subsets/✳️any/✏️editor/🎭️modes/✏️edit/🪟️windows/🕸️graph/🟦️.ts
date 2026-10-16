@@ -1,4 +1,4 @@
-import type { Viewport2d } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+import type { Viewport2d } from "@semio-tech/framework/ui/viewport/2d/schema";
 
 /** 🕸️ Architect editor — Graph window: typed twin of `🦀️.rs`'s view boundary. Mirrors
  * `render(program: &ProgramSnapshot, cfg: &ArchitectGraphWindowConfig) -> UiNode`'s signature — the program

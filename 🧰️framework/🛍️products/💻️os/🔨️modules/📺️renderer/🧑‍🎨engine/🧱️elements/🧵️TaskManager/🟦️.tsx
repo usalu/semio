@@ -46,9 +46,10 @@
 import { useEffect, useState, useSyncExternalStore, type ReactElement } from "react";
 import { Button, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor } from "@semio-tech/framework";
-import { type ActivationRegistry, type RuntimeMetricsSnapshot } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { type ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
+import { type RuntimeMetricsSnapshot } from "../../../../../../../🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts";
 import { type SpawnedJobRowV1 } from "../🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
-import { type VideoRenderJobRow } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { type VideoRenderJobRow } from "../../../../../../../🔨️modules/🎠️kernel/🧵️video-render-job/🟦️.ts";
 import { videoRenderExportTaskIdV1, videoRenderExportTextV1 } from "../🎥️VideoRenderHost/🟦️.ts";
 import { type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -69,7 +70,7 @@ export type TaskManagerStage = "healthy" | "warned" | "throttled" | "trapped" | 
  * 🚧️ Every counter is `number | null` because a web `ActivationRegistry` genuinely cannot observe
  * some of them: it delegates straight to `ShardClient` and never holds a `Kernel`, so `turns`/`traps`/
  * `wallUsP95`/`mailboxLen`/`restarts` have no source on that side of the boundary
- * (`🎠️kernel/🟦️.ts`'s `runtimeMetricsActorRows` says the same). `null` renders as an em dash — an
+ * (`🎠️kernel`'s `runtimeMetricsActorRows` says the same). `null` renders as an em dash — an
  * honest "not observable here", never a silent zero that reads as "nothing has happened". */
 export interface TaskManagerRow {
   readonly actorId: string;
@@ -492,7 +493,7 @@ export function runtimeMetricsRowsV1(snapshot: RuntimeMetricsSnapshot): readonly
 
 /** 📈️ The live feed: seeds from `runtimeMetricsSnapshot()` on mount and then follows
  * `ActivationRegistry.metricsBus`'s `os.runtime.metrics` events — the consumer that publisher never
- * had (`🎠️kernel/🟦️.ts`'s `startRuntimeMetricsPublisher` doc called its absence an honest gap).
+ * had (`🎠️kernel`'s `startRuntimeMetricsPublisher` doc called its absence an honest gap).
  * A `null`/absent registry yields no rows, which {@link TaskManagerPanel} reports as "no runtime
  * attached" rather than as an empty runtime. */
 export function useRuntimeMetricsRows(registry: ActivationRegistry | null | undefined): readonly TaskManagerRow[] {

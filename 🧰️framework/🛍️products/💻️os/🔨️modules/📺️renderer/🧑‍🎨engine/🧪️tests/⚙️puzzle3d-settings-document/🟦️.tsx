@@ -14,7 +14,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { Field, Section, formatNumber, uiDataLabel } from "@semio-tech/ui-react";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
-import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const suiteRoot = dirname(fileURLToPath(import.meta.url));

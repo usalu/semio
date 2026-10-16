@@ -1,6 +1,6 @@
 /** 🔣️ Declared Program JSON transport scalars map explicitly to canonical owned fields. */
 import {architectProgramArtifactGuardObject,architectProgramArtifactGuardExactObject,architectProgramArtifactGuardArray,architectProgramArtifactGuardBinary64,architectProgramArtifactGuardUnsigned64,parseProgramArtifact,PROGRAM_ARTIFACT_FIELDS,type ProgramArtifact} from "../../../../🧬️schema/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 
 function float(value:unknown,decode:boolean):unknown {
  if(!decode)return{bits:architectProgramArtifactGuardBinary64(value,"Program JSON binary64").bits.toString(16).padStart(16,"0")};

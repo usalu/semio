@@ -3,16 +3,16 @@ use super::*;
 
 #[path = "🌐️native-asset-stream/🦀️.rs"]
 mod native_asset_stream;
-pub(crate) use native_asset_stream::*;
+pub use native_asset_stream::*;
 
-pub(crate) const RUNTIME_COMPLETION_CAPACITY: usize = 128;
-pub(crate) const EFFECT_STORM_BUDGET: u32 = 64;
+pub const RUNTIME_COMPLETION_CAPACITY: usize = 128;
+pub const EFFECT_STORM_BUDGET: u32 = 64;
 
 //#region 📮️RuntimeMailbox
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct RuntimePresentationWitness {
-    pub(crate) scene_revision: u64,
-    pub(crate) input_generation: u64,
+pub struct RuntimePresentationWitness {
+    pub scene_revision: u64,
+    pub input_generation: u64,
 }
 
 struct RuntimePresentationAuthorityInner {
@@ -24,10 +24,10 @@ struct RuntimePresentationAuthorityInner {
 }
 
 #[derive(Clone)]
-pub(crate) struct RuntimePresentationAuthority(pub(crate) Arc<RuntimePresentationAuthorityInner>);
+pub struct RuntimePresentationAuthority(pub Arc<RuntimePresentationAuthorityInner>);
 
 impl RuntimePresentationAuthority {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(Arc::new(RuntimePresentationAuthorityInner {
             scene_revision: AtomicU64::new(1),
             input_generation: AtomicU64::new(0),
@@ -54,39 +54,39 @@ impl RuntimePresentationAuthority {
     /// One writer, one reader, no race: `poll_runtime_and_resubmit` admits at most one build at a
     /// time, and `redraw_core` admits the finished frame and takes its `BeginGpu` step inside the
     /// SAME host tick, before any later build can write here.
-    pub(crate) fn admit_build(&self, witness: RuntimePresentationWitness) {
+    pub fn admit_build(&self, witness: RuntimePresentationWitness) {
         self.0.admitted_scene_revision.store(witness.scene_revision, Ordering::Release);
         self.0.admitted_input_generation.store(witness.input_generation, Ordering::Release);
         self.0.admitted.store(true, Ordering::Release);
     }
 
     /// 🎟️ The pair a presentation must be admitted against — the live one until a build has ever run.
-    pub(crate) fn admitted(&self) -> RuntimePresentationWitness {
+    pub fn admitted(&self) -> RuntimePresentationWitness {
         if !self.0.admitted.load(Ordering::Acquire) {
             return self.current();
         }
         RuntimePresentationWitness { scene_revision: self.0.admitted_scene_revision.load(Ordering::Acquire), input_generation: self.0.admitted_input_generation.load(Ordering::Acquire) }
     }
 
-    pub(crate) fn mark_scene_changed(&self) {
+    pub fn mark_scene_changed(&self) {
         self.0.scene_revision.fetch_add(1, Ordering::AcqRel);
     }
 
-    pub(crate) fn observe_input_generation(&self, generation: u64) {
+    pub fn observe_input_generation(&self, generation: u64) {
         self.0.input_generation.store(generation, Ordering::Release);
     }
 
-    pub(crate) fn current(&self) -> RuntimePresentationWitness {
+    pub fn current(&self) -> RuntimePresentationWitness {
         RuntimePresentationWitness { scene_revision: self.0.scene_revision.load(Ordering::Acquire), input_generation: self.0.input_generation.load(Ordering::Acquire) }
     }
 
-    pub(crate) fn witness_for(&self, input_generation: u64) -> Option<RuntimePresentationWitness> {
+    pub fn witness_for(&self, input_generation: u64) -> Option<RuntimePresentationWitness> {
         let witness = self.current();
         (witness.input_generation == input_generation).then_some(witness)
     }
 
-    #[cfg(test)]
-    pub(crate) fn matches(&self, scene_revision: u64, input_generation: u64) -> bool {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn matches(&self, scene_revision: u64, input_generation: u64) -> bool {
         self.current() == RuntimePresentationWitness { scene_revision, input_generation }
     }
 }
@@ -98,14 +98,14 @@ struct RuntimeRasterOperationAuthorityInner {
 }
 
 #[derive(Clone)]
-pub(crate) struct RuntimeRasterOperationAuthority(pub(crate) Arc<RuntimeRasterOperationAuthorityInner>);
+pub struct RuntimeRasterOperationAuthority(pub Arc<RuntimeRasterOperationAuthorityInner>);
 
 impl RuntimeRasterOperationAuthority {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(Arc::new(RuntimeRasterOperationAuthorityInner { next_operation: AtomicU64::new(1), exhausted: AtomicBool::new(false), current: Mutex::new(None) }))
     }
 
-    pub(crate) fn begin(&self, scene_revision: u64, preview_generation: u64) -> Result<ui_gpu::RasterTextureWitness, &'static str> {
+    pub fn begin(&self, scene_revision: u64, preview_generation: u64) -> Result<ui_gpu::RasterTextureWitness, &'static str> {
         let mut current = self.0.current.lock().map_err(|_| "raster operation authority was poisoned")?;
         if current.is_some() {
             return Err("raster operation authority was occupied");
@@ -130,15 +130,15 @@ impl RuntimeRasterOperationAuthority {
         Ok(witness)
     }
 
-    pub(crate) fn current(&self) -> Option<ui_gpu::RasterTextureWitness> {
+    pub fn current(&self) -> Option<ui_gpu::RasterTextureWitness> {
         self.0.current.lock().ok().and_then(|current| *current)
     }
 
-    pub(crate) fn matches(&self, witness: ui_gpu::RasterTextureWitness) -> bool {
+    pub fn matches(&self, witness: ui_gpu::RasterTextureWitness) -> bool {
         self.current() == Some(witness)
     }
 
-    pub(crate) fn release(&self, witness: ui_gpu::RasterTextureWitness) -> Result<(), &'static str> {
+    pub fn release(&self, witness: ui_gpu::RasterTextureWitness) -> Result<(), &'static str> {
         let mut current = self.0.current.lock().map_err(|_| "raster operation authority was poisoned")?;
         if *current != Some(witness) {
             return Err("raster operation authority was stale or duplicated");
@@ -148,20 +148,17 @@ impl RuntimeRasterOperationAuthority {
     }
 }
 
-pub(crate) type RuntimeCompletion = runtime_mailbox_core::Completion<RuntimeApply>;
-pub(crate) type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<RuntimeApply, RUNTIME_COMPLETION_CAPACITY>;
+pub type RuntimeCompletion = runtime_mailbox_core::Completion<RuntimeApply>;
+pub type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<RuntimeApply, RUNTIME_COMPLETION_CAPACITY>;
 
 /// 📮️ A completion returned through a reservation the submitting turn already took: the revision was
 /// minted when the work was submitted, it never needs the interaction state to apply, and whether it
 /// CARRIES that state home is read off the apply itself — the one owner of that rule
 /// ([`RuntimeApply::restores_interaction`]), so no call site can disagree with the checkout ledger.
-pub(crate) fn returned_completion(revision: u64, apply: RuntimeApply) -> RuntimeCompletion {
+pub fn returned_completion(revision: u64, apply: RuntimeApply) -> RuntimeCompletion {
     RuntimeCompletion { key: None, revision, requires_interaction: false, restores_interaction: apply.restores_interaction(), apply }
 }
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/📥️enqueue/🦀️.rs"]
-mod runtime_publication_tests;
 
 /// 📮️ Publishes one completion and its scene invalidation as ONE observation. The invalidation is
 /// written while the mailbox lock is still held, so a reader that takes that lock can never see a
@@ -178,7 +175,7 @@ fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, prese
     }
     presentation.mark_scene_changed();
     drop(queue);
-    #[cfg(all(test, not(target_arch = "wasm32")))]
+    #[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
     runtime_publication_tests::pause_after_completion_publication();
     if let Some(waker) = waker.lock().expect("runtime completion waker lock").as_ref() {
         waker();
@@ -193,21 +190,21 @@ enum StagedReferenceImage {
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub(crate) struct StagedReferenceImageAuthority {
+pub struct StagedReferenceImageAuthority {
     entries: std::collections::VecDeque<StagedReferenceImage>,
 }
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl StagedReferenceImageAuthority {
-    pub(crate) const BUSY: u8 = 0;
-    pub(crate) const WRITER: u8 = 1;
-    pub(crate) const REUSED: u8 = 2;
+    pub const BUSY: u8 = 0;
+    pub const WRITER: u8 = 1;
+    pub const REUSED: u8 = 2;
 
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { entries: std::collections::VecDeque::with_capacity(4) }
     }
 
-    pub(crate) fn begin(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken, url: String, descriptor: SceneRasterDescriptor, owner: u64) -> Result<u8, &'static str> {
+    pub fn begin(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken, url: String, descriptor: SceneRasterDescriptor, owner: u64) -> Result<u8, &'static str> {
         if let Some(entry) = self.entries.iter().find(|entry| match entry {
             StagedReferenceImage::Writing { token: candidate, url: candidate_url, descriptor: candidate_descriptor, .. } => *candidate == token && candidate_url == &url && *candidate_descriptor == descriptor,
             StagedReferenceImage::Ready { token: candidate, url: candidate_url, lease } => *candidate == token && candidate_url == &url && lease.identity().descriptor() == descriptor,
@@ -230,7 +227,7 @@ impl StagedReferenceImageAuthority {
         Ok(mode)
     }
 
-    pub(crate) fn push(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken, offset: usize, bytes: &[u8]) -> Result<bool, &'static str> {
+    pub fn push(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken, offset: usize, bytes: &[u8]) -> Result<bool, &'static str> {
         let Some(entry) = self.entries.iter_mut().find(|entry| matches!(entry, StagedReferenceImage::Writing { token: candidate, .. } if *candidate == token)) else {
             return Ok(self.entries.iter().any(|entry| matches!(entry, StagedReferenceImage::Ready { token: candidate, .. } if *candidate == token)));
         };
@@ -242,7 +239,7 @@ impl StagedReferenceImageAuthority {
         Ok(true)
     }
 
-    pub(crate) fn seal(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken) -> Result<bool, &'static str> {
+    pub fn seal(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken) -> Result<bool, &'static str> {
         let Some(index) = self.entries.iter().position(|entry| matches!(entry, StagedReferenceImage::Writing { token: candidate, .. } if *candidate == token)) else {
             return Ok(self.entries.iter().any(|entry| matches!(entry, StagedReferenceImage::Ready { token: candidate, .. } if *candidate == token)));
         };
@@ -259,18 +256,18 @@ impl StagedReferenceImageAuthority {
         }
     }
 
-    pub(crate) fn take(&mut self, token: WorldAssetRequestToken, url: &str) -> Option<SceneRasterLease> {
+    pub fn take(&mut self, token: WorldAssetRequestToken, url: &str) -> Option<SceneRasterLease> {
         let index = self.entries.iter().position(|entry| matches!(entry, StagedReferenceImage::Ready { token: candidate, url: candidate_url, .. } if *candidate == token && candidate_url == url))?;
         let Some(StagedReferenceImage::Ready { lease, .. }) = self.entries.remove(index) else { unreachable!("located ready reference image") };
         Some(lease)
     }
 
-    pub(crate) fn restore(&mut self, token: WorldAssetRequestToken, url: String, lease: SceneRasterLease) {
+    pub fn restore(&mut self, token: WorldAssetRequestToken, url: String, lease: SceneRasterLease) {
         assert!(self.entries.len() < 4, "a just-taken reference raster restores into its exact stage slot");
         self.entries.push_back(StagedReferenceImage::Ready { token, url, lease });
     }
 
-    pub(crate) fn discard(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken) {
+    pub fn discard(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken) {
         let Some(index) = self.entries.iter().position(|entry| match entry {
             StagedReferenceImage::Writing { token: candidate, .. } | StagedReferenceImage::Ready { token: candidate, .. } => *candidate == token,
         }) else {
@@ -283,7 +280,7 @@ impl StagedReferenceImageAuthority {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) enum NativeReferenceDecodeOutput {
+pub enum NativeReferenceDecodeOutput {
     Ready(SceneRasterLease),
     Waiting(DecodedReferenceImage),
     Failed,
@@ -291,28 +288,28 @@ pub(crate) enum NativeReferenceDecodeOutput {
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum NativeReferenceDecodeCloseStep {
+pub enum NativeReferenceDecodeCloseStep {
     Busy,
     Pending { released_items: usize, released_bytes: usize },
     Complete,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct NativeReferenceDecodeJob {
-    pub(crate) token: WorldAssetRequestToken,
-    pub(crate) url: String,
-    pub(crate) input: Mutex<Option<Vec<u8>>>,
-    pub(crate) decoded: Mutex<Option<DecodedReferenceImage>>,
-    pub(crate) output: Mutex<Option<NativeReferenceDecodeOutput>>,
-    pub(crate) phase: std::sync::atomic::AtomicU8,
-    pub(crate) cancelled: AtomicBool,
-    #[cfg(test)]
-    pub(crate) worker_barriers: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
+pub struct NativeReferenceDecodeJob {
+    pub token: WorldAssetRequestToken,
+    pub url: String,
+    pub input: Mutex<Option<Vec<u8>>>,
+    pub decoded: Mutex<Option<DecodedReferenceImage>>,
+    pub output: Mutex<Option<NativeReferenceDecodeOutput>>,
+    pub phase: std::sync::atomic::AtomicU8,
+    pub cancelled: AtomicBool,
+    #[cfg(any(test, feature = "testkit"))]
+    pub worker_barriers: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl NativeReferenceDecodeJob {
-    pub(crate) fn new(token: WorldAssetRequestToken, url: String, bytes: Vec<u8>) -> Self {
+    pub fn new(token: WorldAssetRequestToken, url: String, bytes: Vec<u8>) -> Self {
         Self {
             token,
             url,
@@ -321,12 +318,12 @@ impl NativeReferenceDecodeJob {
             output: Mutex::new(None),
             phase: std::sync::atomic::AtomicU8::new(0),
             cancelled: AtomicBool::new(false),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             worker_barriers: Mutex::new(None),
         }
     }
 
-    pub(crate) fn try_schedule(self: &Arc<Self>, mailbox: RuntimeMailbox) -> bool {
+    pub fn try_schedule(self: &Arc<Self>, mailbox: RuntimeMailbox) -> bool {
         if self.phase.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
         }
@@ -342,7 +339,7 @@ impl NativeReferenceDecodeJob {
                         bytes.as_deref().and_then(infinite_world::world::decode_reference_image_bytes)
                     }
                 });
-                #[cfg(test)]
+                #[cfg(any(test, feature = "testkit"))]
                 if let Some((entered, release)) = scheduled.worker_barriers.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).as_ref().cloned() {
                     entered.wait();
                     release.wait();
@@ -405,7 +402,7 @@ impl NativeReferenceDecodeJob {
         }
     }
 
-    pub(crate) fn cancel(&self) {
+    pub fn cancel(&self) {
         self.cancelled.store(true, Ordering::Release);
         loop {
             let phase = self.phase.load(Ordering::Acquire);
@@ -418,26 +415,26 @@ impl NativeReferenceDecodeJob {
         }
     }
 
-    pub(crate) fn take_output(&self) -> Option<NativeReferenceDecodeOutput> {
+    pub fn take_output(&self) -> Option<NativeReferenceDecodeOutput> {
         if self.phase.compare_exchange(2, 5, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
         }
         self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take()
     }
 
-    pub(crate) fn rearm(&self, decoded: DecodedReferenceImage) -> bool {
+    pub fn rearm(&self, decoded: DecodedReferenceImage) -> bool {
         *self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(decoded);
         let ready = !self.cancelled.load(Ordering::Acquire);
         self.phase.store(if ready { 0 } else { 3 }, Ordering::Release);
         ready
     }
 
-    pub(crate) fn restore_output(&self, output: NativeReferenceDecodeOutput) {
+    pub fn restore_output(&self, output: NativeReferenceDecodeOutput) {
         *self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(output);
         self.phase.store(if self.cancelled.load(Ordering::Acquire) { 3 } else { 2 }, Ordering::Release);
     }
 
-    pub(crate) fn retire_payload_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
+    pub fn retire_payload_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
         if maximum_items == 0 {
             return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
@@ -474,7 +471,7 @@ impl NativeReferenceDecodeJob {
         NativeReferenceDecodeCloseStep::Complete
     }
 
-    pub(crate) fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
+    pub fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
         self.cancel();
         match self.phase.load(Ordering::Acquire) {
             1 | 5 => return NativeReferenceDecodeCloseStep::Busy,
@@ -510,43 +507,43 @@ impl NativeReferenceDecodeJob {
     }
 }
 
-pub(crate) struct NativeAssetHandoff {
-    pub(crate) fetch: Option<RendererAssetFetchOwner>,
-    pub(crate) payload: Option<semio_framework_job::RetainedJobPayload>,
-    pub(crate) seal: bool,
-    pub(crate) reject: bool,
+pub struct NativeAssetHandoff {
+    pub fetch: Option<RendererAssetFetchOwner>,
+    pub payload: Option<semio_framework_job::RetainedJobPayload>,
+    pub seal: bool,
+    pub reject: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct NativeAssetTransportLease {
-    pub(crate) surface_token: Option<AdmittedSurfaceToken>,
-    pub(crate) request_token: WorldAssetRequestToken,
-    pub(crate) cancel: semio_framework_async::CancelToken,
-    pub(crate) cancellation: semio_framework_os_services::HttpBodyCancellationHandle,
-    pub(crate) cancellation_step: Option<semio_framework_os_services::HttpBodyCancellationStep>,
+pub struct NativeAssetTransportLease {
+    pub surface_token: Option<AdmittedSurfaceToken>,
+    pub request_token: WorldAssetRequestToken,
+    pub cancel: semio_framework_async::CancelToken,
+    pub cancellation: semio_framework_os_services::HttpBodyCancellationHandle,
+    pub cancellation_step: Option<semio_framework_os_services::HttpBodyCancellationStep>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum NativeAssetTransportCloseStep {
+pub enum NativeAssetTransportCloseStep {
     Busy,
     Pending(semio_framework_os_services::HttpBodyCancellationStep),
     Terminal,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct NativeAssetTransportGuard<R> {
-    pub(crate) mailbox: RuntimeMailbox<R>,
-    pub(crate) surface_token: Option<AdmittedSurfaceToken>,
-    pub(crate) request_token: WorldAssetRequestToken,
-    pub(crate) armed: bool,
+pub struct NativeAssetTransportGuard<R> {
+    pub mailbox: RuntimeMailbox<R>,
+    pub surface_token: Option<AdmittedSurfaceToken>,
+    pub request_token: WorldAssetRequestToken,
+    pub armed: bool,
 }
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
-pub(crate) struct NativeAssetPageTestBarrier {
-    pub(crate) surface_token: AdmittedSurfaceToken,
-    pub(crate) entered: AtomicBool,
-    pub(crate) release: AtomicBool,
+#[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
+pub struct NativeAssetPageTestBarrier {
+    pub surface_token: AdmittedSurfaceToken,
+    pub entered: AtomicBool,
+    pub release: AtomicBool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -567,7 +564,7 @@ impl<R> Drop for NativeAssetTransportGuard<R> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) enum NativeAssetStreamFailure {
+pub enum NativeAssetStreamFailure {
     Cancelled,
     CancelledPage { payload: semio_framework_job::RetainedJobPayload },
     Unavailable(String),
@@ -589,69 +586,69 @@ impl From<&str> for NativeAssetStreamFailure {
     }
 }
 
-pub(crate) struct RuntimeMailboxInner<R> {
-    pub(crate) runtime: Mutex<R>,
-    pub(crate) presentation_authority: RuntimePresentationAuthority,
-    pub(crate) raster_operation_authority: RuntimeRasterOperationAuthority,
-    pub(crate) world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority,
-    pub(crate) completions: Mutex<RuntimeCompletionQueue>,
-    pub(crate) waker: Mutex<Option<RuntimeHostWaker>>,
-    pub(crate) next_revision: AtomicU64,
-    pub(crate) applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
-    pub(crate) frame_inputs: Mutex<FrameBuildInputs>,
-    pub(crate) retained_control_deadline_us: AtomicU64,
-    pub(crate) shell_clock_deadline_us: AtomicU64,
-    pub(crate) frame_fault: Mutex<Option<String>>,
+pub struct RuntimeMailboxInner<R> {
+    pub runtime: Mutex<R>,
+    pub presentation_authority: RuntimePresentationAuthority,
+    pub raster_operation_authority: RuntimeRasterOperationAuthority,
+    pub world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority,
+    pub completions: Mutex<RuntimeCompletionQueue>,
+    pub waker: Mutex<Option<RuntimeHostWaker>>,
+    pub next_revision: AtomicU64,
+    pub applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
+    pub frame_inputs: Mutex<FrameBuildInputs>,
+    pub retained_control_deadline_us: AtomicU64,
+    pub shell_clock_deadline_us: AtomicU64,
+    pub frame_fault: Mutex<Option<String>>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) frame_maintenance: FrameMaintenanceAuthority,
+    pub frame_maintenance: FrameMaintenanceAuthority,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) frame_maintenance_executions: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
+    pub frame_maintenance_executions: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) frame_deferred_executions: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
-    pub(crate) world3d_close_cursor: Mutex<usize>,
-    pub(crate) world3d_asset_cursor: Mutex<usize>,
-    pub(crate) world3d_asset_decode_cursor: Mutex<usize>,
-    pub(crate) asset_probe: Mutex<Option<RendererAssetProbe>>,
-    pub(crate) asset_decode_session: Mutex<Option<RendererAssetDecodeSession>>,
+    pub frame_deferred_executions: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
+    pub world3d_close_cursor: Mutex<usize>,
+    pub world3d_asset_cursor: Mutex<usize>,
+    pub world3d_asset_decode_cursor: Mutex<usize>,
+    pub asset_probe: Mutex<Option<RendererAssetProbe>>,
+    pub asset_decode_session: Mutex<Option<RendererAssetDecodeSession>>,
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    pub(crate) staged_reference_images: Mutex<StagedReferenceImageAuthority>,
+    pub staged_reference_images: Mutex<StagedReferenceImageAuthority>,
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    pub(crate) scene_raster_pool: SceneRasterPool,
+    pub scene_raster_pool: SceneRasterPool,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_reference_decode: Mutex<Option<Arc<NativeReferenceDecodeJob>>>,
+    pub native_reference_decode: Mutex<Option<Arc<NativeReferenceDecodeJob>>>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_asset_transport: Mutex<Option<NativeAssetTransportLease>>,
-    #[cfg(all(test, not(target_arch = "wasm32")))]
-    pub(crate) native_asset_page_barrier: Mutex<Option<Arc<NativeAssetPageTestBarrier>>>,
-    pub(crate) native_asset_fetching: AtomicBool,
-    pub(crate) native_asset_handoff: Mutex<Option<NativeAssetHandoff>>,
+    pub native_asset_transport: Mutex<Option<NativeAssetTransportLease>>,
+    #[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
+    pub native_asset_page_barrier: Mutex<Option<Arc<NativeAssetPageTestBarrier>>>,
+    pub native_asset_fetching: AtomicBool,
+    pub native_asset_handoff: Mutex<Option<NativeAssetHandoff>>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) native_asset_http: Arc<semio_framework_os_services::HttpPool>,
+    pub native_asset_http: Arc<semio_framework_os_services::HttpPool>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_asset_https: Arc<semio_framework_os_services::HttpPool>,
+    pub native_asset_https: Arc<semio_framework_os_services::HttpPool>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_asset_http_runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
+    pub native_asset_http_runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_asset_http_scope: semio_framework_async::ScopeHandle,
+    pub native_asset_http_scope: semio_framework_async::ScopeHandle,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) native_asset_http_cancel: semio_framework_async::CancelToken,
+    pub native_asset_http_cancel: semio_framework_async::CancelToken,
 }
 
 impl<R> RuntimeMailboxInner<R> {
-    pub(crate) fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, R>> {
+    pub fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, R>> {
         self.runtime.try_lock()
     }
 
-    pub(crate) fn completion(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> RuntimeCompletion {
+    pub fn completion(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> RuntimeCompletion {
         RuntimeCompletion { key, revision: self.next_revision.fetch_add(1, Ordering::Relaxed), requires_interaction, restores_interaction: apply.restores_interaction(), apply }
     }
 
-    pub(crate) fn enqueue(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
+    pub fn enqueue(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
         let completion = self.completion(key, requires_interaction, apply);
         enqueue_runtime_completion(&self.completions, &self.presentation_authority, &self.waker, completion)
     }
 
-    pub(crate) fn finish(&self, completion: RuntimeCompletion) {
+    pub fn finish(&self, completion: RuntimeCompletion) {
         let mut queue = self.completions.lock().expect("runtime completion mailbox lock");
         queue.finish(completion);
         drop(queue);
@@ -664,7 +661,7 @@ impl<R> RuntimeMailboxInner<R> {
 
 /// 🔌️ Everything the runtime mailbox needs of the runtime it guards (plan section 5.3, inversion I2): the interaction checkout, the two pending
 /// frame cursors and the resize entry. The mailbox is generic over it so the transport crate never names the application runtime above it.
-pub(crate) trait MailboxRuntime: Send + 'static {
+pub trait MailboxRuntime: Send + 'static {
     fn interaction(&self) -> Option<&AppInteractionState>;
     fn interaction_mut(&mut self) -> Option<&mut AppInteractionState>;
     fn interaction_available(&self) -> bool;
@@ -681,9 +678,9 @@ pub(crate) trait MailboxRuntime: Send + 'static {
 }
 
 /// 🪪️ Submits owned work without holding the original runtime or a mutex guard across suspension.
-pub(crate) type RuntimeHandle<R> = std::sync::Weak<RuntimeMailboxInner<R>>;
+pub type RuntimeHandle<R> = std::sync::Weak<RuntimeMailboxInner<R>>;
 
-pub(crate) struct RuntimeMailbox<R>(pub(crate) Arc<RuntimeMailboxInner<R>>);
+pub struct RuntimeMailbox<R>(pub Arc<RuntimeMailboxInner<R>>);
 
 impl<R> Clone for RuntimeMailbox<R> {
     fn clone(&self) -> Self {
@@ -692,21 +689,21 @@ impl<R> Clone for RuntimeMailbox<R> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameMaintenanceExecutionEnvelope<R> {
-    pub(crate) mailbox: RuntimeMailbox<R>,
-    pub(crate) registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
-    pub(crate) generation: u64,
-    pub(crate) revision: u64,
-    pub(crate) armed: bool,
+pub struct FrameMaintenanceExecutionEnvelope<R> {
+    pub mailbox: RuntimeMailbox<R>,
+    pub registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
+    pub generation: u64,
+    pub revision: u64,
+    pub armed: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R> FrameMaintenanceExecutionEnvelope<R> {
-    pub(crate) fn new(mailbox: RuntimeMailbox<R>, registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>, generation: u64, revision: u64) -> Self {
+    pub fn new(mailbox: RuntimeMailbox<R>, registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>, generation: u64, revision: u64) -> Self {
         Self { mailbox, registry, generation, revision, armed: true }
     }
 
-    pub(crate) fn begin(mut self) -> Option<FrameMaintenanceExecutionGuard<R>> {
+    pub fn begin(mut self) -> Option<FrameMaintenanceExecutionGuard<R>> {
         let owner_cell = self.registry.try_begin(self.generation)?;
         let owner = owner_cell.try_take()?;
         self.armed = false;
@@ -769,9 +766,9 @@ impl<R> Drop for FrameMaintenanceExecutionGuard<R> {
     }
 }
 
-pub(crate) struct RuntimeDispatchReturn<R>{mailbox:RuntimeMailbox<R>,revision:u64,cursor:Option<RuntimeDispatchCursor>,interaction:Option<AppInteractionState>}
+pub struct RuntimeDispatchReturn<R>{mailbox:RuntimeMailbox<R>,revision:u64,cursor:Option<RuntimeDispatchCursor>,interaction:Option<AppInteractionState>}
 impl<R> RuntimeDispatchReturn<R>{
-    pub(crate) async fn run(mut self){
+    pub async fn run(mut self){
         let cursor=self.cursor.as_mut().expect("original dispatch cursor remains owned");let event=cursor.inflight.as_mut().expect("original in-flight event remains owned");let interaction=self.interaction.as_mut().expect("original dispatch interaction remains owned");
         let _latency=frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(cursor.generation),frame_latency::FrameLatencyStage::DispatchApply,1);dispatch_normalized_event(interaction,event).await;self.complete();
     }
@@ -780,21 +777,21 @@ impl<R> RuntimeDispatchReturn<R>{
 impl<R> Drop for RuntimeDispatchReturn<R>{fn drop(&mut self){if self.cursor.is_some(){self.mailbox.0.finish(returned_completion(self.revision,RuntimeApply::ResumeDispatch{interaction:self.interaction.take(),cursor:self.cursor.take()}));}}}
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameDeferredExecutionEnvelope<R> {
-    pub(crate) mailbox: RuntimeMailbox<R>,
-    pub(crate) registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
-    pub(crate) generation: u64,
-    pub(crate) revision: u64,
-    pub(crate) armed: bool,
+pub struct FrameDeferredExecutionEnvelope<R> {
+    pub mailbox: RuntimeMailbox<R>,
+    pub registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
+    pub generation: u64,
+    pub revision: u64,
+    pub armed: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<R> FrameDeferredExecutionEnvelope<R> {
-    pub(crate) fn new(mailbox: RuntimeMailbox<R>, registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>, generation: u64, revision: u64) -> Self {
+    pub fn new(mailbox: RuntimeMailbox<R>, registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>, generation: u64, revision: u64) -> Self {
         Self { mailbox, registry, generation, revision, armed: true }
     }
 
-    pub(crate) fn begin(mut self) -> Option<FrameDeferredExecutionGuard<R>> {
+    pub fn begin(mut self) -> Option<FrameDeferredExecutionGuard<R>> {
         let owner_cell = self.registry.try_begin(self.generation)?;
         let owner = owner_cell.try_take()?;
         self.armed = false;
@@ -858,7 +855,7 @@ impl<R> Drop for FrameDeferredExecutionGuard<R> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum PresenterInteractionStep {
+pub enum PresenterInteractionStep {
     Ready,
     Restored,
     Waiting { site: &'static str, request: &'static str },

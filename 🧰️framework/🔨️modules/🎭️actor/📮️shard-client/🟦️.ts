@@ -3,7 +3,7 @@ import type { OriginalOperationAdmission, OriginalOperationReceipt } from "../�
 import { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 /** 🧵️ `ShardClient` — the web `ShardTransport` (design-runtime.md §1 `ShardTransport` /
  * §3 "Web shard"): a bounded pool of `🟨️shard-worker.js` Web Workers multiplexed by `actorId`,
- * replacing one-Worker-per-plugin (`PluginWorkerClient`, deleted from `🎠️kernel/🟦️.ts` in
+ * replacing one-Worker-per-plugin (`PluginWorkerClient`, deleted from `🎠️kernel` in
  * the same packet). V8 reserves a 4 GiB guard region per wasm module per worker, so
  * one-worker-per-plugin capped the browser at ~20 plugins; this pools K = `min(hardwareConcurrency-1,
  * 4)` (design's `ShardTable`) workers and pins actors onto them instead.

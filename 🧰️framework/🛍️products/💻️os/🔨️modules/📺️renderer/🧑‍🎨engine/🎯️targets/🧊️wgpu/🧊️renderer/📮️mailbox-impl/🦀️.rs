@@ -4,7 +4,7 @@ use super::*;
 //#region 📮️RuntimeMailbox
 impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// 🏘️ Event closure observes the actual mailbox, checked-out workers and held runtime bodies.
-    pub(crate) fn original_event_terminal_is_empty(&self)->bool{
+    pub fn original_event_terminal_is_empty(&self)->bool{
         if !self.0.completions.try_lock().is_ok_and(|queue|queue.len()==0){return false}
         #[cfg(not(target_arch="wasm32"))]
         if self.0.frame_maintenance.state.load(Ordering::Acquire)!=0||self.0.frame_maintenance_executions.state.load(Ordering::Acquire)!=0||self.0.frame_deferred_executions.state.load(Ordering::Acquire)!=0{return false}
@@ -14,7 +14,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             runtime.interaction_available()&&runtime.pending_frame_deferred().is_none()
         })
     }
-    pub(crate) fn new(runtime: R) -> Self {
+    pub fn new(runtime: R) -> Self {
         let presentation_authority = RuntimePresentationAuthority::new();
         let raster_operation_authority = RuntimeRasterOperationAuthority::new();
         #[cfg(not(target_arch = "wasm32"))]
@@ -61,7 +61,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             native_reference_decode: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
             native_asset_transport: Mutex::new(None),
-            #[cfg(all(test, not(target_arch = "wasm32")))]
+            #[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
             native_asset_page_barrier: Mutex::new(None),
             native_asset_fetching: AtomicBool::new(false),
             native_asset_handoff: Mutex::new(None),
@@ -79,7 +79,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn submit_interaction<F, Fut>(runtime: &mut R, handle: &RuntimeHandle<R>, key: Option<&'static str>, work: F) -> bool
+    pub fn submit_interaction<F, Fut>(runtime: &mut R, handle: &RuntimeHandle<R>, key: Option<&'static str>, work: F) -> bool
     where
         F: FnOnce(AppInteractionState) -> Fut,
         Fut: Future<Output = AppInteractionState> + Send + 'static,
@@ -97,15 +97,15 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         true
     }
 
-    pub(crate) fn downgrade(&self) -> RuntimeHandle<R> {
+    pub fn downgrade(&self) -> RuntimeHandle<R> {
         Arc::downgrade(&self.0)
     }
 
-    pub(crate) fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, R>> {
+    pub fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, R>> {
         self.0.try_lock()
     }
 
-    pub(crate) fn publish_hub_document_status(&self, document_key: String, remote: crate::shell::ShellHubRemoteV1) -> bool {
+    pub fn publish_hub_document_status(&self, document_key: String, remote: semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1) -> bool {
         let Ok(mut runtime) = self.try_lock() else { return false };
         let Some(interaction) = runtime.interaction_mut() else { return false };
         interaction.shell.sync.publish_hub_document_status(document_key, remote);
@@ -113,7 +113,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         true
     }
 
-    pub(crate) fn retire_hub_document_status(&self, document_key: &str) -> bool {
+    pub fn retire_hub_document_status(&self, document_key: &str) -> bool {
         let Ok(mut runtime) = self.try_lock() else { return false };
         let Some(interaction) = runtime.interaction_mut() else { return false };
         interaction.shell.sync.retire_hub_document_status(document_key);
@@ -121,49 +121,49 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         true
     }
 
-    pub(crate) fn world_cursor_wake_authority(&self) -> infinite_world::world::WorldCursorWakeAuthority {
+    pub fn world_cursor_wake_authority(&self) -> infinite_world::world::WorldCursorWakeAuthority {
         self.0.world_cursor_wake.clone()
     }
 
-    pub(crate) fn presentation_authority(&self) -> RuntimePresentationAuthority {
+    pub fn presentation_authority(&self) -> RuntimePresentationAuthority {
         self.0.presentation_authority.clone()
     }
 
-    pub(crate) fn raster_operation_authority(&self) -> RuntimeRasterOperationAuthority {
+    pub fn raster_operation_authority(&self) -> RuntimeRasterOperationAuthority {
         self.0.raster_operation_authority.clone()
     }
 
-    pub(crate) fn presentation_witness_for(&self, input_generation: u64) -> Option<RuntimePresentationWitness> {
+    pub fn presentation_witness_for(&self, input_generation: u64) -> Option<RuntimePresentationWitness> {
         self.0.presentation_authority.witness_for(input_generation)
     }
 
-    pub(crate) fn observe_presentation_input_generation(&self, generation: u64) {
+    pub fn observe_presentation_input_generation(&self, generation: u64) {
         self.0.presentation_authority.observe_input_generation(generation);
     }
 
-    pub(crate) fn admit_build_presentation_witness(&self, witness: RuntimePresentationWitness) {
+    pub fn admit_build_presentation_witness(&self, witness: RuntimePresentationWitness) {
         self.0.presentation_authority.admit_build(witness);
     }
 
-    pub(crate) fn acknowledge_world_cursor_wake(&self, token: &infinite_world::world::WorldCursorWakeToken) -> bool {
+    pub fn acknowledge_world_cursor_wake(&self, token: &infinite_world::world::WorldCursorWakeToken) -> bool {
         self.0.world_cursor_wake.acknowledge(token)
     }
 
-    pub(crate) fn close_world_cursor_wake_step(&self) -> bool {
+    pub fn close_world_cursor_wake_step(&self) -> bool {
         self.0.world_cursor_wake.close_step() && self.0.world_cursor_wake.terminal_is_empty()
     }
 
-    pub(crate) fn close_component_world_step(&self, target: &crate::element_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
+    pub fn close_component_world_step(&self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
         let Ok(mut runtime)=self.try_lock() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
         let Some(interaction)=runtime.interaction_mut() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
         interaction.shell.surfaces.close_component_world_step(target,grant,context)
     }
 
-    pub(crate) fn begin_engine_surface_close(&self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, ()> {
-        engine_canvas::begin_engine_surface_close_token(token)
+    pub fn begin_engine_surface_close(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, ()> {
+        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::begin_engine_surface_close_token(token)
     }
 
-    pub(crate) fn close_engine_surface_step(&self, token: engine_canvas::EngineSurfaceToken, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> bool {
+    pub fn close_engine_surface_step(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> bool {
         let Ok(mut runtime) = self.try_lock() else {
             return false;
         };
@@ -183,14 +183,14 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             semio_framework_job::default_now_us,
             sequence,
         );
-        engine_canvas::close_engine_surface_step(token, &mut context, &mut interaction.input)
+        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::close_engine_surface_step(token, &mut context, &mut interaction.input)
     }
 
-    pub(crate) fn engine_surface_terminal_is_empty(&self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, ()> {
-        engine_canvas::engine_surface_terminal_nonopaque_is_empty(token)
+    pub fn engine_surface_terminal_is_empty(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, ()> {
+        semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_terminal_nonopaque_is_empty(token)
     }
 
-    pub(crate) fn close_input_step(&self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    pub fn close_input_step(&self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         let Ok(mut runtime) = self.try_lock() else {
             return Ok(false);
         };
@@ -228,17 +228,17 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             return Ok(false);
         }
         let Some(interaction) = runtime.interaction_mut() else { return Ok(true) };
-        if !interpreter::close_clipboard_io_step(&mut interaction.input,cx)?{return Ok(false)}
+        if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut interaction.input,cx)?{return Ok(false)}
         Ok(interaction
             .input
             .close_step_with_receipt(|receipt| {
-                settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+                settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
             })
             .is_ok_and(|complete| complete)
             && interaction.input.terminal_is_empty())
     }
 
-    pub(crate) fn take_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
+    pub fn take_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
         if let Some(owner) = take_next_renderer_asset() {
             return Some(RendererAssetFetchOwner::Shared(owner));
         }
@@ -260,7 +260,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// 📡️ Admits the response byte credits one fetch declared. Same three-way answer as
     /// [`Self::seal_renderer_asset_response`], and for the same reason: this runs the instant a
     /// `fetch()` resolves, which is just as likely to land inside a live apply as the seal is.
-    pub(crate) fn reserve_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner, byte_credits: usize) -> RendererAssetSealStep {
+    pub fn reserve_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner, byte_credits: usize) -> RendererAssetSealStep {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => {
                 if reserve_renderer_asset_response(owner, byte_credits) {
@@ -281,7 +281,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
     }
 
-    pub(crate) fn take_completed_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
+    pub fn take_completed_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
         if let Some(owner) = take_next_completed_renderer_asset_step() {
             return Some(RendererAssetFetchOwner::Shared(owner));
         }
@@ -300,12 +300,12 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         Some(RendererAssetFetchOwner::World { surface, surface_token, owner })
     }
 
-    pub(crate) fn finish_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner, rejection: Option<(&'static str, WorldAssetRequestKind, String)>) -> Result<(), RendererAssetFetchOwner> {
+    pub fn finish_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner, rejection: Option<(&'static str, WorldAssetRequestKind, String)>) -> Result<(), RendererAssetFetchOwner> {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => {
                 if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
                     if let Some((detail, _, _)) = rejection {
-                        scenes::icon_export::asset::reject(owner.token(), detail);
+                        semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), detail);
                     }
                 }
                 finish_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared)
@@ -336,8 +336,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         let (detail, kind, url) = rejection;
         log_debug(&format!("asset refused: {detail} — url={url}"));
         match *kind {
-            WorldAssetRequestKind::UiImage { id } => interpreter::apply_ui_image_bytes(id.as_str(), url, &[]),
-            kind @ WorldAssetRequestKind::MapTile { .. } => engine_canvas::apply_map_tile_bytes(kind, &[]),
+            WorldAssetRequestKind::UiImage { id } => semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::apply_ui_image_bytes(id.as_str(), url, &[]),
+            kind @ WorldAssetRequestKind::MapTile { .. } => semio_framework_os_renderer_wgpu_engine_board::tiled_map::apply_map_tile_bytes(kind, &[]),
             WorldAssetRequestKind::Glb | WorldAssetRequestKind::ReferenceImage | WorldAssetRequestKind::Terrain { .. } => {}
         }
     }
@@ -446,8 +446,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     /// 🧵️ Advances the private asset owner independently of frame construction and presentation.
-    pub(crate) fn asset_decode_step(&self) -> RendererAssetDecodeTurn {
-        if scenes::icon_export::asset::retire_cancelled_step() {
+    pub fn asset_decode_step(&self) -> RendererAssetDecodeTurn {
+        if semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::retire_cancelled_step() {
             return RendererAssetDecodeTurn { kind: RendererAssetDecodeTurnKind::Pending, pending: true, detail: None };
         }
         let session = self.pump_asset_decode_session_step(false);
@@ -487,7 +487,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             log_debug_diagnostic(&format!("[TRACE] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
             if matches!(probe.owner(), RendererAssetFetchOwner::Shared(_)) && matches!(probe.owner().kind(), WorldAssetRequestKind::Glb) {
                 let Some(asset) = probe.take_ready_mesh_asset() else { return RendererAssetDecodeTurnKind::Pending };
-                match scenes::icon_export::asset::publish(probe.owner().owner().token(), asset) {
+                match semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::publish(probe.owner().owner().token(), asset) {
                     Ok(()) => probe.finish_ready_mesh(),
                     Err(asset) => {
                         probe.restore_ready_mesh_asset(asset);
@@ -498,8 +498,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             }
             if let Some(bytes) = Self::take_shared_asset_bytes(probe) {
                 match probe.owner().kind() {
-                    WorldAssetRequestKind::UiImage { id } => interpreter::apply_ui_image_bytes(id.as_str(), probe.owner().url(), &bytes),
-                    kind @ WorldAssetRequestKind::MapTile { .. } => engine_canvas::apply_map_tile_bytes(kind, &bytes),
+                    WorldAssetRequestKind::UiImage { id } => semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::apply_ui_image_bytes(id.as_str(), probe.owner().url(), &bytes),
+                    kind @ WorldAssetRequestKind::MapTile { .. } => semio_framework_os_renderer_wgpu_engine_board::tiled_map::apply_map_tile_bytes(kind, &bytes),
                     _ => {}
                 }
                 probe.begin_close();
@@ -665,7 +665,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         false
     }
 
-    pub(crate) fn return_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner) -> Result<(), RendererAssetFetchOwner> {
+    pub fn return_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner) -> Result<(), RendererAssetFetchOwner> {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => return_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared),
             RendererAssetFetchOwner::World { surface, surface_token, owner } => {
@@ -690,7 +690,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// `📓️w3d-world3d-glb-url-lane.md`). Only [`RendererAssetSealStep::Refused`] is a verdict about
     /// the RESPONSE; `Busy` asks the caller to come back, which is what the terrain, mesh and
     /// reference-image reservation loops already do one layer up.
-    pub(crate) fn seal_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner) -> RendererAssetSealStep {
+    pub fn seal_renderer_asset_response(&self, fetch: &mut RendererAssetFetchOwner) -> RendererAssetSealStep {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => {
                 if seal_renderer_asset_response(owner) {
@@ -726,7 +726,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     /// 🧹️ Keeps one closing component's asset authority reachable until its exact borrowers return.
-    pub(crate) fn close_component_asset_step(&self, target: &crate::element_contracts::ScenePointerTarget) -> bool {
+    pub fn close_component_asset_step(&self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget) -> bool {
         if !matches!(target.kind, ui_wgpu::wgpu::SurfaceKind::World3d | ui_wgpu::wgpu::SurfaceKind::IconRender) {
             return true;
         }
@@ -779,7 +779,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         infinite_world::world::close_world3d_asset_step(&mut state.assets)
     }
 
-    pub(crate) fn close_renderer_asset_step(&self) -> bool {
+    pub fn close_renderer_asset_step(&self) -> bool {
         if self.pump_asset_decode_session_step(true).is_some() {
             return false;
         }
@@ -806,7 +806,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         close_renderer_asset_step()
     }
 
-    pub(crate) fn renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> Option<bool> {
+    pub fn renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> Option<bool> {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => renderer_asset_io().try_lock().ok().map(|authority| !authority.cancellation_requested(owner.token())),
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
@@ -817,15 +817,15 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
     }
 
-    pub(crate) fn renderer_asset_cancelled(&self, fetch: &RendererAssetFetchOwner) -> bool {
+    pub fn renderer_asset_cancelled(&self, fetch: &RendererAssetFetchOwner) -> bool {
         self.renderer_asset_current(fetch) == Some(false)
     }
 
-    pub(crate) fn browser_renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> bool {
+    pub fn browser_renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> bool {
         self.renderer_asset_current(fetch) != Some(false)
     }
 
-    pub(crate) fn reject_renderer_asset(&self, fetch: &RendererAssetFetchOwner) -> bool {
+    pub fn reject_renderer_asset(&self, fetch: &RendererAssetFetchOwner) -> bool {
         match fetch {
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return false };
@@ -841,7 +841,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 drop(authority);
                 if !cancelled {
                     if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
-                        scenes::icon_export::asset::reject(owner.token(), "asset transport was unavailable");
+                        semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), "asset transport was unavailable");
                     }
                     Self::record_rejected_asset(&("asset transport was unavailable", owner.kind(), owner.url().to_string()));
                 }
@@ -857,7 +857,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    pub(crate) fn begin_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner, width: u32, height: u32, digest: &str) -> Result<u8, &'static str> {
+    pub fn begin_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner, width: u32, height: u32, digest: &str) -> Result<u8, &'static str> {
         if !matches!(fetch.kind(), WorldAssetRequestKind::ReferenceImage) || !self.browser_renderer_asset_current(fetch) {
             return Err("reference image request retired");
         }
@@ -875,7 +875,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    pub(crate) fn push_renderer_reference_image_rows(&self, fetch: &RendererAssetFetchOwner, offset: usize, pixels: &[u8]) -> Result<bool, &'static str> {
+    pub fn push_renderer_reference_image_rows(&self, fetch: &RendererAssetFetchOwner, offset: usize, pixels: &[u8]) -> Result<bool, &'static str> {
         if !matches!(fetch.kind(), WorldAssetRequestKind::ReferenceImage) || !self.browser_renderer_asset_current(fetch) {
             return Err("reference image request retired");
         }
@@ -884,7 +884,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    pub(crate) fn seal_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner) -> Result<bool, &'static str> {
+    pub fn seal_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner) -> Result<bool, &'static str> {
         if !matches!(fetch.kind(), WorldAssetRequestKind::ReferenceImage) || !self.browser_renderer_asset_current(fetch) {
             return Err("reference image request retired");
         }
@@ -893,7 +893,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    pub(crate) fn discard_staged_reference_image(&self, token: WorldAssetRequestToken) {
+    pub fn discard_staged_reference_image(&self, token: WorldAssetRequestToken) {
         let mut staged = self.0.staged_reference_images.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         staged.discard(&self.0.scene_raster_pool, token);
     }
@@ -1040,7 +1040,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
     }
 
-    pub(crate) fn pump_native_asset_handoff_step(&self, closing: bool) -> Option<bool> {
+    pub fn pump_native_asset_handoff_step(&self, closing: bool) -> Option<bool> {
         let Ok(mut slot) = self.0.native_asset_handoff.try_lock() else { return Some(false) };
         let handoff = slot.as_mut()?;
         if closing {
@@ -1096,14 +1096,14 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job::RetainedJobPayload>, seal: bool, reject: bool) {
+    pub fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job::RetainedJobPayload>, seal: bool, reject: bool) {
         let mut slot = self.0.native_asset_handoff.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         assert!(slot.is_none(), "one native asset fetch is admitted at a time");
         *slot = Some(NativeAssetHandoff { fetch: Some(fetch), payload, seal, reject });
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn retain_native_asset_transport(&self, fetch: &RendererAssetFetchOwner, cancel: semio_framework_async::CancelToken, cancellation: semio_framework_os_services::HttpBodyCancellationHandle) -> NativeAssetTransportGuard<R> {
+    pub fn retain_native_asset_transport(&self, fetch: &RendererAssetFetchOwner, cancel: semio_framework_async::CancelToken, cancellation: semio_framework_os_services::HttpBodyCancellationHandle) -> NativeAssetTransportGuard<R> {
         let surface_token = match fetch {
             RendererAssetFetchOwner::World { surface: _, surface_token, owner: _ } => Some(*surface_token),
             RendererAssetFetchOwner::Shared(_) => None,
@@ -1138,13 +1138,13 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         NativeAssetTransportCloseStep::Pending(step)
     }
 
-    #[cfg(all(test, not(target_arch = "wasm32")))]
-    pub(crate) fn native_asset_transport_live_count(&self) -> usize {
+    #[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
+    pub fn native_asset_transport_live_count(&self) -> usize {
         usize::from(self.0.native_asset_transport.lock().expect("native asset transport slot").is_some())
     }
 
-    #[cfg(all(test, not(target_arch = "wasm32")))]
-    pub(crate) fn wait_native_asset_page_test_barrier(&self, fetch: &RendererAssetFetchOwner) {
+    #[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
+    pub fn wait_native_asset_page_test_barrier(&self, fetch: &RendererAssetFetchOwner) {
         let RendererAssetFetchOwner::World { surface_token, .. } = fetch else { return };
         let barrier = self.0.native_asset_page_barrier.lock().expect("native asset page test barrier").as_ref().filter(|barrier| barrier.surface_token == *surface_token).cloned();
         let Some(barrier) = barrier else { return };
@@ -1155,7 +1155,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn pump_native_asset(&self) -> bool {
+    pub fn pump_native_asset(&self) -> bool {
         if let Some(progressed) = self.pump_native_asset_handoff_step(false) {
             if progressed {
                 if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
@@ -1222,15 +1222,15 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         true
     }
 
-    pub(crate) fn set_waker(&self, waker: RuntimeHostWaker) {
+    pub fn set_waker(&self, waker: RuntimeHostWaker) {
         *self.0.waker.lock().expect("runtime completion waker lock") = Some(waker);
     }
 
-    pub(crate) fn enqueue_apply(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
+    pub fn enqueue_apply(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
         self.0.enqueue(key, requires_interaction, apply)
     }
 
-    pub(crate) fn enqueue_dispatch_on_original_caller(&self,events:&mut ui_host::EventQueue,generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn enqueue_dispatch_on_original_caller(&self,events:&mut ui_host::EventQueue,generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let mut queue=self.0.completions.lock().expect("runtime completion mailbox lock");if queue.len()>=RUNTIME_COMPLETION_CAPACITY-1||events.is_empty(){return Ok(false)}let Some(original)=RuntimeDispatchSource::admit(cx)?else{return Ok(false)};
         let input_generation=events.current_generation();let drained=events.drain_page(ui_host::WorkerContext::new(input_generation));let cursor=RuntimeDispatchCursor::new_for_generation(drained,generation,original);let completion=self.0.completion(None,true,RuntimeApply::DispatchEvents(Some(cursor)));assert!(queue.enqueue(completion),"same locked queue admits the original dispatch owner");drop(queue);self.0.presentation_authority.mark_scene_changed();if let Some(waker)=self.0.waker.lock().expect("runtime completion waker lock").as_ref(){waker()}Ok(true)
     }
@@ -1242,12 +1242,12 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// 📮️ Whether the mailbox still owes the runtime an apply — the per-frame predicate that turns a
     /// queued `DispatchEvents`/`Resize` into the next `request_frame` on an event-driven shell.
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn has_pending_applies(&self) -> bool {
+    pub fn has_pending_applies(&self) -> bool {
         !self.0.completions.lock().expect("runtime completion mailbox lock").ready.is_empty()
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn has_pending_text_work(&self) -> bool {
+    pub fn has_pending_text_work(&self) -> bool {
         self.try_lock().ok().and_then(|runtime| runtime.interaction().map(AppInteractionState::has_pending_text_work)).unwrap_or(false)
     }
 
@@ -1264,7 +1264,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// `has_pending_text_work`: a per-frame predicate the browser tick turns into `request_frame`,
     /// so the work the FRAME TRANSACTION drives keeps its own frames coming.
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn has_pending_world3d_work(&self) -> bool {
+    pub fn has_pending_world3d_work(&self) -> bool {
         self.try_lock()
             .ok()
             .and_then(|runtime| {
@@ -1300,24 +1300,24 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// A checked-out interaction answers `false` on purpose: its owner is a live apply, and
     /// [`Self::has_pending_applies`] already owes the frame.
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn has_pending_settle(&self) -> bool {
-        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(|interaction| crate::shell::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
+    pub fn has_pending_settle(&self) -> bool {
+        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(|interaction| semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn take_text_fault(&self) -> Option<String> {
+    pub fn take_text_fault(&self) -> Option<String> {
         self.try_lock().ok()?.interaction_mut()?.text_fault.take()
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn take_frame_fault(&self) -> Option<String> {
+    pub fn take_frame_fault(&self) -> Option<String> {
         if let Some(fault) = self.0.frame_fault.lock().expect("runtime frame fault lock").take() {
             return Some(fault);
         }
         self.try_lock().ok()?.interaction_mut()?.frame_fault.take()
     }
 
-    pub(crate) fn record_frame_fault(&self, fault: &'static str) {
+    pub fn record_frame_fault(&self, fault: &'static str) {
         log_debug(&format!("[TRACE] frame fault recorded: {fault}"));
         let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
         if slot.is_none() {
@@ -1325,32 +1325,32 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
     }
 
-    pub(crate) fn frame_inputs(&self, now_ms: f64) -> FrameBuildInputs {
+    pub fn frame_inputs(&self, now_ms: f64) -> FrameBuildInputs {
         let mut inputs = self.0.frame_inputs.try_lock().map(|inputs| inputs.clone()).unwrap_or_default();
         inputs.now_ms = now_ms;
         inputs
     }
 
-    pub(crate) fn publish_retained_control_deadline(&self, deadline: Option<f64>) {
+    pub fn publish_retained_control_deadline(&self, deadline: Option<f64>) {
         let due_us = deadline.filter(|seconds| seconds.is_finite() && *seconds >= 0.0).map_or(u64::MAX, |seconds| (seconds * 1_000_000.0).ceil() as u64);
         self.0.retained_control_deadline_us.store(due_us, Ordering::Release);
     }
 
-    pub(crate) fn publish_shell_clock_deadline(&self, deadline: Option<f64>) {
+    pub fn publish_shell_clock_deadline(&self, deadline: Option<f64>) {
         let due_us = deadline.filter(|seconds| seconds.is_finite() && *seconds >= 0.0).map_or(u64::MAX, |seconds| (seconds * 1_000_000.0).ceil() as u64);
         self.0.shell_clock_deadline_us.store(due_us, Ordering::Release);
     }
 
-    pub(crate) fn control_deadline_us(&self) -> Option<u64> {
+    pub fn control_deadline_us(&self) -> Option<u64> {
         let due_us = self.0.retained_control_deadline_us.load(Ordering::Acquire).min(self.0.shell_clock_deadline_us.load(Ordering::Acquire));
         (due_us != u64::MAX).then_some(due_us)
     }
 
-    pub(crate) fn retained_control_deadline(&self, host_seconds: f64) -> Option<ui_render::Deadline> {
-        crate::deadlines::retained_control_deadline(self.control_deadline_us(), semio_framework_job::default_now_us(), host_seconds)
+    pub fn retained_control_deadline(&self, host_seconds: f64) -> Option<ui_render::Deadline> {
+        semio_framework_os_renderer_wgpu_host_plumbing::deadlines::retained_control_deadline(self.control_deadline_us(), semio_framework_job::default_now_us(), host_seconds)
     }
 
-    pub(crate) fn update_frame_inputs(&self, runtime: &R) {
+    pub fn update_frame_inputs(&self, runtime: &R) {
         let Some(interaction) = runtime.interaction() else {
             return;
         };
@@ -1358,16 +1358,16 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn reserve_future(&self, key: Option<&'static str>) -> bool {
+    pub fn reserve_future(&self, key: Option<&'static str>) -> bool {
         self.0.completions.lock().expect("runtime completion mailbox lock").reserve(key)
     }
 
-    pub(crate) fn reserve_interaction_future(&self) -> bool {
+    pub fn reserve_interaction_future(&self) -> bool {
         self.0.completions.lock().expect("runtime completion mailbox lock").reserve_interaction()
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn cancel_interaction_future_reservation(&self) -> bool {
+    pub fn cancel_interaction_future_reservation(&self) -> bool {
         match self.0.completions.try_lock() {
             Ok(mut completions) => completions.cancel_interaction_reservation(),
             Err(std::sync::TryLockError::Poisoned(error)) => error.into_inner().cancel_interaction_reservation(),
@@ -1376,20 +1376,20 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn try_take_abandoned_frame_maintenance(&self) -> Option<FrameMaintenanceRefusal> {
+    pub fn try_take_abandoned_frame_maintenance(&self) -> Option<FrameMaintenanceRefusal> {
         let (generation, owner) = self.0.frame_maintenance_executions.try_take_abandoned()?;
         let _ = self.0.frame_maintenance.release(generation);
         Some(FrameMaintenanceRefusal { owner, reservation_live: false })
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn try_take_abandoned_frame_deferred(&self) -> Option<FrameDeferredExecutionOwner> {
+    pub fn try_take_abandoned_frame_deferred(&self) -> Option<FrameDeferredExecutionOwner> {
         let (_, owner) = self.0.frame_deferred_executions.try_take_abandoned()?;
         owner.try_take()
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
+    pub fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
     where
         F: Future<Output = AppInteractionState> + Send + 'static,
     {
@@ -1402,12 +1402,12 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn spawn_dispatch_reserved(&self,cursor:RuntimeDispatchCursor,interaction:AppInteractionState){
+    pub fn spawn_dispatch_reserved(&self,cursor:RuntimeDispatchCursor,interaction:AppInteractionState){
         let mailbox=self.clone();let revision=mailbox.0.next_revision.fetch_add(1,Ordering::Relaxed);let owner=RuntimeDispatchReturn{mailbox,revision,cursor:Some(cursor),interaction:Some(interaction)};spawn_app_task(owner.run());
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn try_spawn_frame_deferred_reserved(&self, owner: FrameDeferredExecutionOwner) -> Result<(), FrameDeferredExecutionOwner> {
+    pub fn try_spawn_frame_deferred_reserved(&self, owner: FrameDeferredExecutionOwner) -> Result<(), FrameDeferredExecutionOwner> {
         let Some(generation) = owner.generation() else { return Err(owner) };
         let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
         let registry = self.0.frame_deferred_executions.clone();
@@ -1430,7 +1430,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 FrameDeferredWork::ShellMaintenance => {}
                 FrameDeferredWork::PumpSync => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    crate::shell::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
+                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
                     if action.cancelled {
@@ -1440,12 +1440,12 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                         let mut receipt_owner = FrameActionReceiptOwner { receipt };
                         let result = {
                             let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                            crate::shell::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await
+                            semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await
                         };
                         match result {
-                            Ok(()) => receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Accepted),
+                            Ok(()) => receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Accepted),
                             Err(error) => {
-                                receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Refused(&error));
+                                receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(&error));
                                 let Some(owner) = execution.owner_mut() else { return };
                                 if let Some(receipt) = receipt {
                                     if receipt.abort_correlation_on_error {
@@ -1462,11 +1462,11 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 }
                 FrameDeferredWork::FlushTutorial => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    crate::shell::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await;
+                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await;
                 }
                 FrameDeferredWork::Settle => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    crate::shell::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
+                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
                 }
             }
             if !execution.finish() {
@@ -1477,7 +1477,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn try_spawn_frame_maintenance_reserved(&self, owner: FrameMaintenanceOwner) -> Result<(), FrameMaintenanceRefusal> {
+    pub fn try_spawn_frame_maintenance_reserved(&self, owner: FrameMaintenanceOwner) -> Result<(), FrameMaintenanceRefusal> {
         let Some(generation) = owner.generation() else {
             return Err(FrameMaintenanceRefusal { owner: Arc::new(FrameExecutionOwnerCell::new(owner)), reservation_live: true });
         };
@@ -1517,7 +1517,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     cursor.begin_close();
                     interaction.frame_fault = Some(fault.to_string());
                 } else {
-                    cursor.shell_maintenance = crate::shell::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
+                    cursor.shell_maintenance = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
                     if cursor.shell_maintenance {
                         cursor.phase = 0;
                     }
@@ -1547,7 +1547,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn spawn_frame_maintenance_reserved<F>(&self, future: F)
+    pub fn spawn_frame_maintenance_reserved<F>(&self, future: F)
     where
         F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + 'static,
     {
@@ -1555,7 +1555,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn spawn_frame_deferred_reserved<F>(&self, future: F)
+    pub fn spawn_frame_deferred_reserved<F>(&self, future: F)
     where
         F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + 'static,
     {
@@ -1568,7 +1568,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn spawn_dispatch_reserved(&self,cursor:RuntimeDispatchCursor,interaction:AppInteractionState){
+    pub fn spawn_dispatch_reserved(&self,cursor:RuntimeDispatchCursor,interaction:AppInteractionState){
         let mailbox=self.clone();let revision=mailbox.0.next_revision.fetch_add(1,Ordering::Relaxed);let owner=RuntimeDispatchReturn{mailbox,revision,cursor:Some(cursor),interaction:Some(interaction)};spawn_app_task(owner.run());
     }
 

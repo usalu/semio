@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { parse } from "@iarna/toml";
 import { readFileSync } from "node:fs";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 /** 📦️ Validates neutral authored assembly vectors with independent schema and TOML readers. */
 export function runAssemblyChecks(): number {
@@ -31,7 +32,7 @@ export function runAssemblyChecks(): number {
   const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
   assert.equal(/selected_contributions|plugin_exports!|semio_s_artifact_stdio_(?!contract)|include_str!/u.test(source), false);
   checks++;
-  const capabilityRoot = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability";
+  const capabilityRoot = frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability");
   const capability = load(`${capabilityRoot}/🧫️fixtures/🔣️.json`);
   for (const row of capability.cases) {
     assert.equal(row.native, true);

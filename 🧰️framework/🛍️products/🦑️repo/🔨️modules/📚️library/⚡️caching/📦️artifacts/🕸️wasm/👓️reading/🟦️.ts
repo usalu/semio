@@ -1,5 +1,5 @@
 import {withArtifactDescriptorSlotV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../👓️reading/📥️inspection/📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type CompilerAdmissionControl} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";

@@ -1,0 +1,359 @@
+/** 🎯️ Tool-job coverage: concrete factory resolution, microsecond budget laws, proof catalog and reserved routes.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
+ */
+import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { posix } from "node:path";
+import { policyAllRustFiles } from "../../🧩️plugin-consistency/🏛️foundation/🟦️.ts";
+import { TOOL_JOB_FRAMEWORK_RESERVED_IDS, toolJobAppOwnedRows, toolJobDispositions, toolJobProductionProtocolSource, toolJobProductionSource, type ToolJobProof, toolJobProofIdentity, toolJobProofs, toolJobRustBlock, toolJobScanThenMonolithRows, type ToolJobStaticRow, toolJobStaticRows } from "../📋️inventory/🟦️.ts";
+import { toolJobMountedDispatchOneTurnExact, toolJobRetainedDispatchSetup } from "../📤️publication/🟦️.ts";
+
+//#region 🧭️ConcreteFactoryResolution
+/** 🗿️ An artifact crate's own lib root (`🗿️artifacts/<artifact>/🦀️.rs`, declared by that artifact's
+ * `📦️packages/🦀️rust/Cargo.toml` `[lib] path = "../../🦀️.rs"`), which owns the `#[path]` module tree
+ * since the plugin package root became a re-export shell. */
+function toolJobArtifactCrateRoot(file: string): string | undefined {
+  const match = file.match(/^(.*\/🗿️artifacts\/[^/]+)\/🦀️\.rs$/);
+  return match?.[1];
+}
+
+/** 🧭️ Resolves one crate module through its package's explicit taxonomy declarations. */
+function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile: string, modulePath: string): string | undefined {
+  const candidates = new Set<string>();
+  const visit = (source: string, directory: string, prefix: string): void => {
+    const declaration = /#\[path\s*=\s*"([^"]+)"\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*([;{])/g;
+    let match: RegExpExecArray | null;
+    while ((match = declaration.exec(source))) {
+      const target = posix.normalize(posix.join(directory, match[1]!));
+      const name = `${prefix}::${match[2]}`;
+      if (match[3] === ";") {
+        const exportedComponent = prefix === modulePath && match[2] === "component" && /pub\s+use\s+component::\*\s*;/.test(source);
+        if ((name === modulePath || exportedComponent) && files.has(target)) candidates.add(target);
+      } else {
+        const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+        if (!block) return;
+        visit(block.body, target, name);
+        declaration.lastIndex = block.end;
+      }
+    }
+  };
+  for (const [file, source] of files) {
+    if (!file.endsWith("/🦀️.rs")) continue;
+    const packageBoundary = file.lastIndexOf("/📦️packages/");
+    const owningRoot = packageBoundary >= 0 ? file.slice(0, packageBoundary) : toolJobArtifactCrateRoot(file);
+    if (owningRoot === undefined || !ownerFile.startsWith(`${owningRoot}/`)) continue;
+    visit(source, posix.dirname(file), "crate");
+  }
+  return candidates.size === 1 ? [...candidates][0] : undefined;
+}
+
+/** 🧬️ Resolves a compiler type token, including an explicit import alias, to one concrete source type. */
+function toolJobFactoryType(files: ReadonlyMap<string, string>, ownerFile: string, reference: string): { file: string; name: string } | undefined {
+  if (!/^(?:crate::)?[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*$/.test(reference)) return undefined;
+  const ownerSource = files.get(ownerFile) ?? "";
+  let path = reference;
+  if (!reference.includes("::")) {
+    const imports = [...ownerSource.matchAll(/(?:^|\n)\s*use\s+(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?\s*;/g)]
+      .filter((entry) => (entry[2] ?? entry[1]!.split("::").at(-1)) === reference);
+    const local = new RegExp(`(?:struct|enum)\\s+${reference}\\b`).test(ownerSource);
+    if (local && imports.length === 0) return { file: ownerFile, name: reference };
+    if (local || imports.length !== 1) return undefined;
+    path = imports[0]![1]!;
+  }
+  if (!path.startsWith("crate::")) return undefined;
+  const name = path.split("::").at(-1)!;
+  const file = toolJobFactoryModuleFile(files, ownerFile, path.slice(0, -(name.length + 2)));
+  return file ? { file, name } : undefined;
+}
+
+/** 🔐️ Binds the compiler witness to its actual factory, exact owner, route, and live registration site. */
+function toolJobConcreteFactoryExact(files: ReadonlyMap<string, string>, proof: ToolJobProof, ownerBody: string): boolean {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(proof.factory) || !proof.factoryType) return false;
+  const witness = toolJobFactoryType(files, proof.ownerFile, proof.factoryType);
+  if (!witness || witness.name !== proof.factory) return false;
+  const source = files.get(witness.file) ?? "";
+  const implementation = (trait: string, namespace: string): string | undefined => {
+    const start = source.search(new RegExp(`impl\\s+(?:${namespace}::)?${trait}\\s+for\\s+${witness.name}\\s*\\{`));
+    return start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start))?.body;
+  };
+  const factory = implementation("ToolJobFactory", "semio_framework");
+  const owned = implementation("ArtifactOwnedToolJobFactory", "semio_framework_plugin");
+  const canonicalOwner = (owner: string) => owner.replaceAll(/\s+/g, "").replace(/^semio_framework_plugin::/, "");
+  if (!factory || !owned || !factory.includes("type Job =") || !/fn\s+create_job\s*\(/.test(factory) || !/fn\s+execution_contract\s*\(/.test(factory)
+    || canonicalOwner(owned.match(/type\s+Owner\s*=\s*([^;]+);/)?.[1] ?? "") !== canonicalOwner(proof.ownerTypeName)) return false;
+  const listExpression = owned.match(/const\s+TOOL_IDS\s*:[^=]+=\s*([^;]+);/)?.[1]?.trim();
+  const listName = listExpression?.match(/^(?:[A-Za-z_][A-Za-z0-9_]*::)*([A-Z][A-Z0-9_]*)$/)?.[1];
+  const list = listName ? source.match(new RegExp(`const\\s+${listName}\\s*:[^=]+=\\s*&\\[([^\\]]*)\\]`))?.[1] : listExpression;
+  if (!list) return false;
+  const strings = new Map([...source.matchAll(/const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]+)"/g)].map((row) => [row[1]!, row[2]!]));
+  const toolIds = [...list.matchAll(/"([^"]+)"|\b([A-Z][A-Z0-9_]*)\b/g)].map((row) => row[1] ?? strings.get(row[2]!));
+  if (!toolIds.includes(proof.toolId)) return false;
+  const registeredIn = (body: string, file: string) => [...body.matchAll(/registry\.register\(\s*((?:[A-Za-z_][A-Za-z0-9_]*::)*[A-Za-z_][A-Za-z0-9_]*)::new\s*\(/g)].some((entry) => {
+    const registered = toolJobFactoryType(files, file, entry[1]!);
+    return registered?.file === witness.file && registered.name === witness.name;
+  });
+  if (registeredIn(ownerBody, proof.ownerFile)) return true;
+  return [...ownerBody.matchAll(/(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)::register\(registry\)/g)].some((entry) => {
+    const file = toolJobFactoryModuleFile(files, proof.ownerFile, entry[1]!);
+    if (file !== witness.file) return false;
+    const delegated = source.search(/\bfn\s+register\s*\(/);
+    const body = delegated < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", delegated))?.body;
+    return !!body && registeredIn(body, witness.file);
+  });
+}
+
+
+
+
+/** 🪓️ The plugin production sources the tool-job census reads: a declared split root stands for its whole module tree and its mounted children are no census entries of their own, so owner, proof, factory and row evidence stays in one text. */
+export function toolJobPluginProductionSources(root: string): Map<string, string> {
+  const mounted = new Set(POLICY_SPLIT_SOURCE_ROOTS.filter((path) => path.includes("✏️s/🔌️plugins/")).flatMap((path) => policyModuleTreeFiles(root, path).slice(1)));
+  return new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/") && !mounted.has(file)).map((file) => [file, toolJobProductionProtocolSource(POLICY_SPLIT_SOURCE_ROOTS.includes(file) ? policyReadModuleTreeSource(root, file) : policyReadFileSafe(root, file))]));
+}
+
+/** 🧪️ Scans every production app catalog for an exact compiler factory witness and rejects custom-covered generic rows. */
+export function toolJobFactoryProofActivationScan(root: string): { owners: number; customRows: number; genericRows: number; failures: string[] } {
+  const sources = toolJobPluginProductionSources(root);
+  const proofs = toolJobProofs(sources);
+  const failures = toolJobProofCatalogFailures(sources, toolJobStaticRows(sources), toolJobDispositions(sources), proofs).filter((failure) => failure.startsWith("forged bounded reducer factory or compiler witness"));
+  return { owners: new Set(proofs.map((proof) => proof.ownerFile)).size, customRows: proofs.filter((proof) => proof.factoryType !== undefined).length, genericRows: proofs.filter((proof) => proof.factoryType === undefined).length, failures };
+}
+
+//#region ⏱️MicrosecondBudgetLaws
+/** ⏱️ Cross-checks exact microsecond deadlines with strict Ajv and independent BigInt arithmetic. */
+export function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceRaw: string, loanRaw: string): boolean {
+  const plugin = toolJobProductionSource(pluginRaw);
+  const job = toolJobProductionSource(jobRaw);
+  const trace = toolJobProductionSource(traceRaw);
+  const loan = toolJobProductionSource(loanRaw);
+  const body = (source: string, marker: string): string | undefined => {
+    if (source.split(marker).length !== 2) return undefined;
+    return toolJobRustBlock(source, source.indexOf("{", source.indexOf(marker)))?.body;
+  };
+  const setup = toolJobRetainedDispatchSetup(plugin);
+  const operation = body(plugin, "impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
+  const driver = body(loan, "pub fn drive_step<");
+  const fault = body(job, "fn publish_original_worker_fault<");
+  const worker = body(job, "fn drive_worker_job_authority<");
+  const duration = body(job, "pub fn from_duration(");
+  const clock = body(job, "pub fn default_now_us(");
+  const preflight = "ifcx.fuel_remaining()==0||cx.latest_us().map(|now|now>=cx.deadline_us()).unwrap_or_else(||cx.deadline_exceeded())";
+  const compactWorker = worker?.replace(/\s+/g, "");
+  const compactDriver = driver?.replace(/\s+/g, "");
+  return toolJobMountedDispatchOneTurnExact(plugin) && !!setup && !!operation && !!driver && !!worker && !!fault && !!duration && !!clock
+    && /step_budget_us:\s*u64::from\(admission\.proof\.contract\(\)\.max_step_micros\),/.test(setup)
+    && setup.includes("now_us: semio_framework_job::default_now_us,")
+    && setup.includes("fuel_per_step: admission.proof.contract().max_work_units_per_step")
+    && setup.includes("ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)")
+    && ["self.decoded_items > self.contract.max_decoded_items", "self.contract.max_work_units_per_step == 0", "self.contract.max_output_bytes"].every((token) => operation.includes(token))
+    && plugin.includes("if encoded.len() > TYPED_OPERATION_RESULT_PAGE_BYTES") && plugin.includes("one typed-operation result exceeds its fixed incremental encoder authority")
+    && duration.includes("start_us.checked_add(duration_us).map(")
+    && compactWorker!.includes("letretained=authority.issued_retained;")
+    && compactWorker!.includes("letstart_us=(params.now_us)();")
+    && compactWorker!.includes("start_us.and_then(|start_us|StepBudget::from_duration(config.fuel_per_step,start_us,config.step_budget_us,retained))")
+    && compactWorker!.includes("authority.clock.begin(start_us)") && compactWorker!.includes("authority.last_step_end_us=cx.latest_us()")
+    && fault.includes("JobOutcomeBorrow::admit_original_fault(params.operation,params.generation,authority.issued_retained,&mut authority.retained_step_progress,authority.preadmitted_fault.original()")
+    && compactDriver!.includes(preflight) && compactDriver!.indexOf(preflight) < compactDriver!.indexOf("job.step(cx)")
+    && compactDriver!.includes("letend=(cx.now_us)();")
+    && clock.includes("semio_framework_trace::try_now_us()")
+    && /fn default_clock_us\(\) -> Option<u64> \{\s*None\s*\}/.test(trace)
+    && trace.includes("elapsed().as_micros()).ok()");
+}
+
+
+
+
+
+
+//#endregion ⏱️MicrosecondBudgetLaws
+
+
+
+
+
+
+
+
+
+
+/** 🧾️ Reports source-only exact route and publication evidence without running a compiler. */
+export function toolJobOwnerSourceEvidence(sources: ReadonlyMap<string, string>) {
+  const proofs = toolJobProofs(sources);
+  const rows = toolJobStaticRows(sources);
+  const dispositions = toolJobDispositions(sources);
+  return {
+    rows,
+    proofs,
+    dispositions: [...dispositions].map(([key, disposition]) => ({ key, disposition })),
+    appOwned: toolJobAppOwnedRows(sources),
+    scanThenMonolith: toolJobScanThenMonolithRows(sources, proofs),
+    failures: toolJobProofCatalogFailures(sources, rows, dispositions, proofs),
+  };
+}
+//#endregion 🧭️ConcreteFactoryResolution
+
+/** 🧬️ Enforces an exact dynamic proof/declaration bijection without a shared magic row count. */
+export function toolJobProofCatalogFailures(files: ReadonlyMap<string, string>, rows: readonly ToolJobStaticRow[], dispositions: ReadonlyMap<string, string>, proofs: readonly ToolJobProof[]): string[] {
+  const failures: string[] = [];
+  const appOwned = toolJobAppOwnedRows(files);
+  const identities = new Set<string>();
+  const publicKeys = new Set<string>();
+  const constants = new Map<string, string>();
+  for (const source of files.values()) for (const match of source.matchAll(/(?:pub\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*"([^"]+)"/g)) constants.set(match[1]!, match[2]!);
+  const associatedConstants = new Map<string, Array<{ file: string; value?: string }>>();
+  for (const [file, source] of files) {
+    for (const alias of source.matchAll(/(?:pub\s+)?const\s+([A-Z][A-Z0-9_]*)\s*:\s*&(?:'static\s+)?str\s*=\s*([A-Za-z_][A-Za-z0-9_]*)::([A-Z][A-Z0-9_]*)\s*;/g)) {
+      const values: string[] = [];
+      const implementations = new RegExp(`impl\\s+${alias[2]}\\s*\\{`, "g");
+      for (const implementation of source.matchAll(implementations)) {
+        const body = toolJobRustBlock(source, source.indexOf("{", implementation.index))?.body ?? "";
+        const value = body.match(new RegExp(`const\\s+${alias[3]}\\s*:\\s*&(?:'static\\s+)?str\\s*=\\s*"([^"]+)"`))?.[1];
+        if (value !== undefined) values.push(value);
+      }
+      const entries = associatedConstants.get(alias[1]!) ?? [];
+      entries.push({ file, value: values.length === 1 ? values[0] : undefined });
+      associatedConstants.set(alias[1]!, entries);
+    }
+  }
+  if (proofs.length === 0) failures.push("bounded reducer proof catalogs contain no exact owner-local rows");
+  for (const proof of proofs) {
+    const identity = toolJobProofIdentity(proof);
+    const publicKey = `${proof.controllerId}\0${proof.toolId}`;
+    if (!identities.add(identity)) failures.push(`duplicate bounded reducer proof identity ${identity}`);
+    if (!publicKeys.add(publicKey)) failures.push(`ambiguous bounded reducer public key ${publicKey}`);
+    const source = files.get(proof.sourceFile) ?? "";
+    const editorOwner = proof.ownerTypeName.match(/^(?:semio_framework_plugin::)?EditorApp<([A-Za-z_][A-Za-z0-9_]*)>$/)?.[1];
+    const directOwner = editorOwner ? undefined : proof.ownerTypeName.match(/^(?:semio_framework_plugin::)?([A-Za-z_][A-Za-z0-9_]*)$/)?.[1];
+    const owner = editorOwner ?? directOwner;
+    const ownerTrait = editorOwner ? "ArtifactEditor" : directOwner ? "ArtifactApp" : undefined;
+    const ownerPattern = owner && ownerTrait ? new RegExp(`impl\\s+(?:semio_framework_plugin::)?${ownerTrait}\\s+for\\s+${owner}\\s*\\{`) : undefined;
+    const ownerStart = ownerPattern ? source.search(ownerPattern) : -1;
+    const ownerOpen = ownerStart < 0 ? -1 : source.indexOf("{", ownerStart);
+    const ownerImpl = ownerOpen < 0 ? undefined : toolJobRustBlock(source, ownerOpen);
+    const schemaExpression = ownerImpl?.body.match(/const\s+DOCUMENT_SCHEMA\s*:\s*&'static\s+str\s*=\s*(?:"([^"]+)"|((?:[A-Za-z_][A-Za-z0-9_]*::)*[A-Z][A-Z0-9_]*))/);
+    const schemaConstant = schemaExpression?.[2]?.split("::").at(-1) ?? "";
+    let declaredSchema = schemaExpression?.[1] ?? constants.get(schemaConstant);
+    if (!schemaExpression?.[1] && associatedConstants.has(schemaConstant)) {
+      const paths = new Set<string>();
+      const expression = schemaExpression?.[2] ?? "";
+      if (expression.startsWith("crate::")) paths.add(expression.slice(0, -(schemaConstant.length + 2)));
+      else {
+        for (const imported of source.matchAll(/(?:^|\n)\s*use\s+(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)::\{([^}]+)\}\s*;/g)) {
+          if (imported[2]!.split(",").some((entry) => entry.trim() === schemaConstant)) paths.add(imported[1]!);
+        }
+        for (const imported of source.matchAll(new RegExp(`(?:^|\\n)\\s*use\\s+(crate(?:::[A-Za-z_][A-Za-z0-9_]*)+)::${schemaConstant}\\s*;`, "g"))) paths.add(imported[1]!);
+      }
+      const candidates = associatedConstants.get(schemaConstant)!.filter((entry) => entry.file === proof.sourceFile || [...paths].some((path) => toolJobFactoryModuleFile(files, proof.sourceFile, path) === entry.file));
+      declaredSchema = candidates.length === 1 ? candidates[0]!.value : undefined;
+    }
+    if (proof.sourceFile !== proof.ownerFile || !ownerImpl) failures.push(`forged bounded reducer owner/file authority ${identity}`);
+    if (declaredSchema !== proof.documentSchema) failures.push(`forged bounded reducer document schema ${identity}`);
+    const concreteFactoryExact = !!ownerImpl && toolJobConcreteFactoryExact(files, proof, ownerImpl.body);
+    const generic = proof.factory === "BoundedFirstStepCommandJobFactory" && proof.factoryType === undefined
+      && !appOwned.some((row) => row.ownerFile === proof.ownerFile && row.toolId === proof.toolId);
+    if (!generic && !concreteFactoryExact) failures.push(`forged bounded reducer factory or compiler witness ${identity}`);
+    if (!rows.some((row) => row.file === proof.ownerFile && row.id === proof.toolId) || dispositions.get(`${proof.ownerFile}\0${proof.toolId}`) !== "Migrated") failures.push(`extra bounded reducer proof lacks its exact Migrated declaration ${identity}`);
+  }
+  for (const row of rows) {
+    if (dispositions.get(`${row.file}\0${row.id}`) !== "Migrated") continue;
+    const matches = proofs.filter((proof) => proof.ownerFile === row.file && proof.toolId === row.id);
+    if (matches.length !== 1) failures.push(`Migrated declaration has ${matches.length} exact bounded reducer proofs ${row.file}\0${row.id}`);
+  }
+  return failures;
+}
+
+type ToolJobReservedSpec = { id: string; job: string; factory: string; line: number; values: readonly number[]; lanes: readonly string[] };
+
+export function toolJobReservedSpecs(source: string): ToolJobReservedSpec[] {
+  const specs: ToolJobReservedSpec[] = [];
+  const row = /framework_reserved_job!\(\s*([A-Za-z0-9_]+),\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*\d+,\s*([\d_]+),\s*([\d_]+),\s*([\d_]+),\s*([\d_]+),\s*lanes:\s*\[([A-Za-z,\s]+)\],?\s*\);/g;
+  for (const match of source.matchAll(row)) {
+    const values = match.slice(4, 8).map((value) => Number(value!.replaceAll("_", "")));
+    const lanes = match[8]!.split(",").map((lane) => lane.trim());
+    if (values.every((value) => Number.isFinite(value) && value > 0) && lanes.every((lane) => ["HostOnly", "Artifact", "Child"].includes(lane)) && new Set(lanes).size === lanes.length) specs.push({ id: match[3]!, job: match[1]!, factory: match[2]!, line: source.slice(0, match.index).split("\n").length, values, lanes });
+  }
+  return specs;
+}
+
+export function toolJobFrameworkReservedRoutesExact(source: string): boolean {
+  const start = source.lastIndexOf("async fn dispatch_action");
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  const macroIds = TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter((id) => id !== "configuration-binary");
+  const specs = toolJobReservedSpecs(source).filter((spec) => macroIds.includes(spec.id as (typeof macroIds)[number]));
+  const ids = new Set(specs.map((spec) => spec.id));
+  const uniqueJobs = new Set(specs.map((spec) => spec.job));
+  const uniqueFactories = new Set(specs.map((spec) => spec.factory));
+  if (!block || specs.length !== macroIds.length || ids.size !== macroIds.length || uniqueJobs.size !== macroIds.length || uniqueFactories.size !== macroIds.length || macroIds.some((id) => !ids.has(id))) return false;
+  if (specs.some((spec) => spec.lanes.join("\0") !== (["cut", "paste", "import-media"].includes(spec.id) ? ["Artifact", "Child"] : ["HostOnly"]).join("\0"))) return false;
+  const reservedStart = source.lastIndexOf("async fn dispatch_framework_reserved_action");
+  const reservedOpen = reservedStart < 0 ? -1 : source.indexOf("{", reservedStart);
+  const reserved = reservedOpen < 0 ? undefined : toolJobRustBlock(source, reservedOpen);
+  const runnerStart = source.lastIndexOf("async fn run_framework_reserved_job");
+  const runnerOpen = runnerStart < 0 ? -1 : source.indexOf("{", runnerStart);
+  const runner = runnerOpen < 0 ? undefined : toolJobRustBlock(source, runnerOpen);
+  if (!reserved || !runner) return false;
+  const noDirectBranches = !block.body.includes("else if HISTORY_ACTION_IDS.contains(&action)") && !block.body.includes("else if CLIPBOARD_ACTION_IDS.contains(&action)") && !block.body.includes("self.store.dispatch(command)");
+  const exactGuard = block.body.includes("return self.dispatch_framework_reserved_action(action, args, meta).await");
+  const exactRoutes = specs.every(
+    (spec) => source.includes(`registry.register(${spec.factory}::<A>::new(&controller_id))`) && reserved.body.includes(`${spec.job}::new(`),
+  );
+  const configurationExact =
+    source.includes("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurationBinaryJob<A>") &&
+    source.includes("registry.register(FrameworkConfigurationBinaryJobFactory::<A>::new(&controller_id))") &&
+    source.includes('const TOOL_IDS: &\'static [&\'static str] = &["configuration-binary"]') &&
+    source.includes('run_framework_reserved_job("configuration-binary"') &&
+    source.includes("FrameworkConfigurationBinaryStage::Envelope") &&
+    source.includes("FrameworkConfigurationBinaryStage::Decode") &&
+    source.includes("FrameworkConfigurationBinaryStage::Complete");
+  const pluginSeamExact =
+    source.includes("fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, Self>)") &&
+    source.includes("fn build_reserved_tool_job(_request: ArtifactReservedToolJobRequest<Self>)") &&
+    source.includes("A::register_tool_job_factories(&mut app_tool_registry)") &&
+    source.includes("A::build_reserved_tool_job(request)") &&
+    source.includes("registry.register(FrameworkCopyJobFactory::<A>::new(&controller_id))") &&
+    source.includes("registry.register(FrameworkCutJobFactory::<A>::new(&controller_id))") &&
+    source.includes("registry.register(FrameworkPasteJobFactory::<A>::new(&controller_id))") &&
+    !source.includes("registry.register(FrameworkImportMediaJobFactory::<A>::new(&controller_id))");
+  const routeStateMachines = !/impl\s+FrameworkReservedCursor\s*\{[\s\S]*?fn\s+step\s*\(/.test(source) && source.includes('cx.set_stage(concat!("framework-reserved-", $route, "-envelope"))');
+  const exactRunner =
+    runner.body.includes("admit_exact_wire") &&
+    runner.body.includes("proof.admits::<A>") &&
+    ((runner.body.includes("WorkerJobSession::new") && runner.body.includes("session.step(&pool")) ||
+      (runner.body.includes("MountedWorkerJobSession::try_new") && runner.body.includes("session.pump_one(&pool") && runner.body.includes("session.close_step("))) &&
+    runner.body.includes("CheckpointReady(checkpoint)") &&
+    runner.body.includes("candidate.output.len() > proof.contract().max_output_bytes");
+  const commitPermit = source.includes("struct FrameworkReservedCommitPermit") && source.includes("validate_framework_reserved_commit(action, &permit).await?") && source.indexOf("permit.finish();", reservedStart) > source.indexOf("let result = if HISTORY_ACTION_IDS", reservedStart);
+  const importStart = source.lastIndexOf("async fn dispatch_import_media");
+  const importOpen = importStart < 0 ? -1 : source.indexOf("{", importStart);
+  const importBlock = importOpen < 0 ? undefined : toolJobRustBlock(source, importOpen);
+  const configStart = source.lastIndexOf("async fn dispatch_config_command_inner");
+  const configOpen = configStart < 0 ? -1 : source.indexOf("{", configStart);
+  const configBlock = configOpen < 0 ? undefined : toolJobRustBlock(source, configOpen);
+  const binaryFailClosed =
+    !!importBlock &&
+    !!configBlock &&
+    importBlock.body.includes("build_artifact_reserved_media_job") &&
+    importBlock.body.includes('run_framework_reserved_job("import-media"') &&
+    !importBlock.body.includes("A::import_media(") &&
+    configBlock.body.includes("FrameworkConfigurationBinaryJob::<A>") &&
+    configBlock.body.includes('run_framework_reserved_job("configuration-binary"') &&
+    !configBlock.body.includes("decode_op(") &&
+    source.includes("ArtifactCommand<A::ConfigMutation> as ::protocol::OpBinary>::decode_op(&self.raw)");
+  const boundedPreparationAndHeldCommit =
+    source.includes("FrameworkReservedStage::Admitted") &&
+    source.includes("FrameworkReservedStage::Cursor") &&
+    source.includes("FrameworkReservedStage::Retiring") &&
+    reserved.body.includes("framework_reserved_work_items(action, args).await?") &&
+    reserved.body.includes("validate_framework_reserved_commit(action, &permit).await?") &&
+    reserved.body.includes("permit.finish()") &&
+    source.includes("if permit.is_cancelled().await") &&
+    !reserved.body.includes("dispatch_history_action(") &&
+    !reserved.body.includes("dispatch_clipboard_action(") &&
+    !importBlock?.body.includes("serde_json::to_vec(&(port, media))") &&
+    !importBlock?.body.includes("media.clone()") &&
+    source.includes("framework reserved mounted worker transition was rejected") &&
+    source.includes("commit_framework_shared_host_route") &&
+    source.includes("self.validate_framework_reserved_commit(action, permit).await?") &&
+    source.includes("framework route '{verb}' completed against a stale revision or generation");
+  return block.body.includes("interactive-job.unknown-key") && noDirectBranches && exactGuard && exactRoutes && configurationExact && pluginSeamExact && routeStateMachines && exactRunner && commitPermit && binaryFailClosed && boundedPreparationAndHeldCommit;
+}

@@ -1,8 +1,8 @@
 //! ♻️ One admitted empty initialization catalog page per retained close turn.
 
-use super::ArtifactStoreInitializationOwnerCatalog;
+use crate::lifted_store::ArtifactStoreInitializationOwnerCatalog;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use crate::os_vcs::HistoryPageStack;
+use semio_framework_os_vcs::HistoryPageStack;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
 fn demand<T>(owner: &HistoryPageStack<T>) -> Result<usize, ValueError> {
@@ -89,6 +89,4 @@ impl ArtifactStoreInitializationOwnerCatalog {
     pub fn terminal_is_empty(&self) -> bool { self.admitted_items() == 0 }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

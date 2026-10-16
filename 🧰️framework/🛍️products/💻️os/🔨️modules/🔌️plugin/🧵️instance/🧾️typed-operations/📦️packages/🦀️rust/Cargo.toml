@@ -4,7 +4,7 @@ name = "semio-framework-plugin-instance-typed-ops"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Instance use-cases of the plugin SDK: typed operations, typed commands and tool machine turns over the typed bundle"
+description = "Instance use-cases of the plugin SDK: typed operation publication, retirement, private child group publication and tool dispatch over the typed bundle"
 
 [package.metadata.semio]
 role = "framework"
@@ -50,6 +50,10 @@ semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust"
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-render = { path = "../../../🖼️render/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

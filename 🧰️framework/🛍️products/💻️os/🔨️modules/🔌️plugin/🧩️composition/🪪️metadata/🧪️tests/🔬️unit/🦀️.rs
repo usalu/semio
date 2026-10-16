@@ -1,9 +1,20 @@
-use super::*;
+use semio_framework::kernel::ActorId;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use semio_framework_plugin_decl_views::child_view::{ChildContentRetainers, MemberKey, MemberKeyRef, PreparedChildContentIdentity};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::{MemberFactory, SpaceMember};
 
-fn grant(copy: usize, capacity: usize, release: usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 8 } }
-fn reference(value: &serde_json::Value) -> ArtifactRef { ArtifactRef { artifact_id: value["artifact_id"].as_str().unwrap().into(), dialect: ArtifactDialect { artifact_kind: value["dialect"]["artifact_kind"].as_str().unwrap().into(), standard: value["dialect"]["standard"].as_str().unwrap().into(), subset: value["dialect"]["subset"].as_str().unwrap().into() } } }
+#[doc(hidden)]
+pub fn grant(copy: usize, capacity: usize, release: usize) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 8 } }
+#[doc(hidden)]
+pub fn reference(value: &serde_json::Value) -> ArtifactRef { ArtifactRef { artifact_id: value["artifact_id"].as_str().unwrap().into(), dialect: ArtifactDialect { artifact_kind: value["dialect"]["artifact_kind"].as_str().unwrap().into(), standard: value["dialect"]["standard"].as_str().unwrap().into(), subset: value["dialect"]["subset"].as_str().unwrap().into() } } }
 
-fn retire(owner: &mut PrivateChildMemberMetadataIssuer) {
+#[doc(hidden)]
+pub fn retire(owner: &mut PrivateChildMemberMetadataIssuer) {
     let mut count = 0;
     while !owner.terminal_is_empty() {
         let demand = owner.next_close_byte_demand();

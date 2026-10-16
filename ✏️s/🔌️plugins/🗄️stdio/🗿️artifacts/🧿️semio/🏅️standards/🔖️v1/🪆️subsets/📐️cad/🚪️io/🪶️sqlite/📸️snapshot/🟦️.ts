@@ -1,8 +1,8 @@
 /** 📐️ Individually authored CAD geometry tables and exact block/layer ownership. */
 import type {SemioCadSnapshot,CadEntity,CadEntityRecord,CadBlock,SemioPoint2} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_CAD_SQLITE_SCHEMA=`CREATE TABLE semio_cad_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_cad_layer (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_cad_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), name TEXT NOT NULL, color_index INTEGER NOT NULL CHECK (color_index BETWEEN -2147483648 AND 2147483647), line_type TEXT NOT NULL, visible INTEGER NOT NULL CHECK (visible IN (0,1)));
 CREATE TABLE semio_cad_block (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_cad_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), name TEXT NOT NULL, base_x REAL, base_y REAL, base_x_ieee754_bits INTEGER, base_x_numeric_class TEXT, base_y_ieee754_bits INTEGER, base_y_numeric_class TEXT);

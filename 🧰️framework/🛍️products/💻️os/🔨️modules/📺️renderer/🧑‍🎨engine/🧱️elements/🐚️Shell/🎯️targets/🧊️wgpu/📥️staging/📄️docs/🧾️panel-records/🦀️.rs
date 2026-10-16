@@ -10,7 +10,7 @@ use super::*;
 /// (`buildDisplayWindowsTree`'s `framework.display.windows.empty` and the host-less
 /// `{ sections: [{ id: "unavailable", … }] }` fallback, folded into one row here because this
 /// renderer never has a "no host" state distinct from "no window kinds").
-pub(crate) fn display_unavailable_section(id: &str, is_de: bool) -> UiTreeSectionNode {
+pub fn display_unavailable_section(id: &str, is_de: bool) -> UiTreeSectionNode {
     UiTreeSectionNode {
         header_toolbar: None,
         id: id.to_string(),
@@ -31,7 +31,7 @@ pub(crate) fn display_unavailable_section(id: &str, is_de: bool) -> UiTreeSectio
 ///
 /// 🛡️ Unreachable for the declared table (a child always follows its own parent), and a
 /// skip rather than a panic so a future row ordering cannot wedge the panel.
-pub(crate) fn world_projection_template_rows(prefix: &str, window_kind_id: &str, depth: u8, cursor: &mut usize) -> Vec<UiTreeItemNode> {
+pub fn world_projection_template_rows(prefix: &str, window_kind_id: &str, depth: u8, cursor: &mut usize) -> Vec<UiTreeItemNode> {
     let mut rows = Vec::new();
     while let Some(template) = WORLD_PROJECTION_TEMPLATES.get(*cursor) {
         if template.depth < depth {
@@ -60,7 +60,7 @@ pub(crate) fn world_projection_template_rows(prefix: &str, window_kind_id: &str,
 }
 
 /// 🌳️ One React `TreeDataItem` property row with its Select in the inline control cell.
-pub(crate) fn settings_tree_select_item(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str) -> UiTreeItemNode {
+pub fn settings_tree_select_item(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str) -> UiTreeItemNode {
     settings_tree_select_item_with(id, label, value, options, action, None)
 }
 

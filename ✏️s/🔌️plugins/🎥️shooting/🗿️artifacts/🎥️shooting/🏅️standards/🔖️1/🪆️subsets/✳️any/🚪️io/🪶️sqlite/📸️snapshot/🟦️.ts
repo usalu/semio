@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from "./🗄️.sql" with {type:"text"};
 import type {ShootingSnapshot,ShootingAsset,ShootingCamera,ShootingSceneLighting,ShootingSun,ShootingAmbient,ShootingShadow,ShootingMaterial} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
+import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 /** 📐️ Exact owned three-component binary64 geometry. */
 export type ShootingSqliteVector3=[Binary64,Binary64,Binary64];
 /** 🧭️ Exact owned quaternion component identities. */

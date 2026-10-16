@@ -9,10 +9,10 @@ import strokeCases from "../../../../../🧪️tests/🧫️fixtures/🧮️geom
 import coverageCases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️coverage/🔣️.json";
 import flattenCases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️flatten/🔣️.json";
 import retirementCases from "../../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️retirement/🔣️.json";
-import {StrokeOutlineJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts";
+import {StrokeOutlineJob} from "@semio-tech/framework/2d/path/stroke";
 import {PreparedFill} from "../../../../🎨️fill/🎨️sampling/🟦️.ts";
-import {PathFlattenJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts";
-import {CoverageJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts";
+import {PathFlattenJob} from "@semio-tech/framework/2d/path/flatten";
+import {CoverageJob} from "@semio-tech/framework/pixels/coverage";
 import {PathRasterJob,rasterizePath,type PathRasterInput} from "../../🟦️.ts";
 const validate=new Ajv({strict:true}).compile(schema);
 const validateProgress=new Ajv({strict:true}).compile({definitions:schema.definitions,$ref:"#/definitions/progress"});

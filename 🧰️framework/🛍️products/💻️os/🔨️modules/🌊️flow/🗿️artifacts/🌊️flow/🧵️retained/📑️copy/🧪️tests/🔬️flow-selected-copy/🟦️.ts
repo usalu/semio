@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { WORKSPACE_ROOT } from "../../../../../../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
 
 /** 🧪️ Executes flow selected copy policy assertions. */
 export function flowSelectedCopySelfTests(): number {

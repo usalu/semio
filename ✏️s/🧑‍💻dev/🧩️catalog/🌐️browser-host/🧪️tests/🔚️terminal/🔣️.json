@@ -1,0 +1,43 @@
+{
+  "cases": [
+    {
+      "kind": "error",
+      "trace": [
+        "born",
+        "observed",
+        "setup-error",
+        "terminate",
+        "close",
+        "progress-joined",
+        "phase-retired"
+      ],
+      "primary": "same-error"
+    },
+    {
+      "kind": "undefined",
+      "trace": [
+        "born",
+        "observed",
+        "setup-undefined",
+        "terminate",
+        "close",
+        "progress-joined",
+        "phase-retired"
+      ],
+      "primary": "undefined"
+    },
+    {
+      "kind": "success",
+      "trace": [
+        "born",
+        "observed",
+        "setup",
+        "stop",
+        "close",
+        "progress-joined",
+        "phase-retired"
+      ],
+      "primary": "none"
+    }
+  ]
+}

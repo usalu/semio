@@ -1,5 +1,5 @@
 /** 🔺️ Dag sparse durable delta; omitted slots are untouched. */
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseDagArtifact, parseDagContentChild, type DagArtifact } from "../🟦️.ts";
 

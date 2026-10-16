@@ -2,8 +2,8 @@
 import type {DocumentScenePlan,DocumentSceneNode} from "../../../../../../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
 import {ScenePlanCloseJob} from "../../../../../../../../🧬️schema/🎬️scene/🧹️retire/🟦️.ts";
 import {arcGeometry,arcPoint,type ArcGeometry,type Point} from "../../../../../../../../🧬️schema/🧮️geometry/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
-import type {PathSegment} from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
+import type {PathSegment} from "@semio-tech/framework/2d";
 export type PdfWriteLimits={viewBox:readonly[number,number,number,number];maxOutputBytes:number;maxWork:number};
 export type PdfWriteProgress={phase:string;nodes:number;bytes:number;work:number;done:boolean};
 type Body={pages:Uint8Array[];used:number;length:number;dict:string;stream:boolean};

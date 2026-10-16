@@ -1,6 +1,6 @@
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { type Binary64, type Binary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64, parseBinary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
+import { type Binary64, type Binary32 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary64, parseBinary32 } from "@semio-tech/framework/value/ieee754";
 
 export interface SemioPoint3 { x: Binary64; y: Binary64; z: Binary64; }
 export interface SemioPoint2 { x: Binary64; y: Binary64; }

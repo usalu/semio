@@ -1,6 +1,7 @@
 //! 🧩️ Lift file: 3 item(s), about 45 lines, of `📜️declaration/🧩️app/🦀️.rs` that belong to crate `document-media` (WP3).
 //!
 //! WP2 owns the source file and cuts the items here (MediaArtifact, whole_document_media, impl semio_framework_job::Orig); WP3 wires this file with one `mod` line in the crate root. Until `document-media` exists, the source module re-exports the items with `pub use`.
+use semio_framework_plugin_decl_app::media_projection_error;
 use semio_framework_value::DslValue;
 use semio_framework::Fault;
 use semio_framework::FaultCode;
@@ -12,8 +13,6 @@ use semio_framework::MediaPayload;
 use semio_framework::MediaType;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
-use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_plugin_decl_app::MEDIA_SCHEMA_MISMATCH_CODE;
 use semio_framework_plugin_decl_app::MediaArtifactDescriptor;
 use semio_framework_plugin_decl_app::MediaArtifactError;

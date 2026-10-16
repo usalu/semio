@@ -186,3 +186,103 @@ All 12 fleet agents and the relocation session stopped at the session usage limi
 - db is carved into 41 crates and replication into 16 crates plus a facade.
 
 - 2026-10-16: taxonomy sweep done (RESULT-TAXONOMY-SWEEP.md); slug-pattern follow-up dispatched to replace the 778+261 hand lists.
+
+## 2026-10-16 05:00 wave 5 (new coordinator session)
+
+The previous coordinator session ended at about 04:40. Its last executors (kernel engine WP5/WP6 in `okwp56-tools`, kernel sqlite-host in `oksh-tools`) were cut mid-edit; renderer integration 1 left two orphan full differentials running.
+- Census at 04:50: 712 crates, 413 compilable, 6 oversized (plugin, renderer-wgpu, os-kernel, plugin-host, plugin-host-test-component, os-store-sync).
+- Headroom is admitted. The framework lock was refreshed offline (+10 peer ui-contract crates). The launcher now fails at the peer's new `📐️profile` schema check (`Complete observed Cargo compiler profile required`).
+- Wave 5 per `📓️WAVE5-BRIEF.md`:
+  - Sonnet executors: INFRA-UNBLOCK-2, OS-KERNEL-ENGINE (resume), OS-KERNEL-SQLITE-HOST plus sync (resume), PLUGIN-INTEGRATION-1 (flip WP3–WP5), PLUGIN-WP7, RENDERER-INTEGRATION-2 (Shell tier-1, frame-core and WP5 flips), PLUGIN-HOST-CARVE.
+  - Haiku audits: DEPENDENCY-DIRECTION-AUDIT-2, MONOLITH-CENSUS-2.
+  - COMPILE-PASS-2 starts once the launcher reaches cargo.
+- 05:02: INFRA-UNBLOCK-2 fixed the profile refusal. Cargo emits `trim_paths:["object"]`, so the schema now admits it as an optional field and the rlib adapter refuses non-empty values. The next blocker was 2 orphan old-format lease claims (dead pid 37808). Coordinator ruling: option 1. The claims were moved to `🗑️generated/coord-orphan-claims-backup/` and their 2 empty `.queue` dirs were removed; the unblock agent re-probes.
+- Wave 5b, TS and source-file splits per `MONOLITH-CENSUS-2.md`:
+  - ROOT-SCRIPT-SPLIT (`📜️script.ts`, 25.7k lines)
+  - RENDERER-TS-TESTS-SPLIT (engine-contract 14.4k, plugin-runtime 3.8k, typedwire 3.2k)
+  - REPO-TEST-VSCODE-SPLIT (repo test harness 7.7k; vscode client 3.6k with its schema-first codegen move)
+  - MISPLACED-E2E-TESTS (gis service-composition 7.4k relocated to its owners; time-travel e2e made plugin-neutral)
+  - INTERPRETER-KERNEL-TS (Interpreter.tsx host-registry inversion; TS kernel 4k)
+  - COMPILE-PASS-2 waits for `LAUNCHER REACHES CARGO: yes` in RESULT-INFRA-UNBLOCK-2.md
+- Ownership rulings: `🛢️db` stays with this fleet's earlier carve (RESULT-W4-OS-KERNEL-DB.md); its large files are not split further in wave 5. The `🖱️ui/…/🧊️wgpu` files stay with the peer's UI GPU cut.
+- 05:04: LAUNCHER REACHES CARGO. `canvas-assets` and `ui-wgpu-device` (the compile-pass-1 fixes) now check with 0 errors. Every wave-5 slice now switches to real `bun repo cargo` evidence.
+- 05:4x DEPENDENCY-DIRECTION-AUDIT-2 against the baseline:
+  - production R1 framework→`✏️s` edges: 17 → 0
+  - R2 cross-plugin edges: 32 → 4
+  - literal-external: 2543 → 300
+  - R4 general→specific got worse: renderer→specific 661, UI→framework packages 256
+- Wave 5c edge fixers:
+  - SDK-BOUNDARY: P1, 1234 s→framework-internal edges
+  - SMALL-CROSS-EDGES: P8 layout→stdio, P9 hub→s, P10 test-only R1
+  - CARGO-PLUGIN-DIRECTION: P6, 121 bridge→artifacts and stdio contract roles
+  - UI-BARREL-IMPORTS: P3, excluding the peer's `🧬️contract` and the wgpu cut
+- Deferred: P2 (renderer hosts, which waits for the renderer flips), P4 (the os/🔨️modules TS cycle), P5 and P7 (parent-owned build infra and Store). The Shell plugin-staging `#[path]` mounts went to RI2.
+- 06:1x REPO-TEST-VSCODE-SPLIT done (RESULT-REPO-TEST-VSCODE-SPLIT.md):
+  - The test harness (7.7k lines) became 32 acyclic children; tsc passes and the test failure set is unchanged.
+  - The vscode client is now 153 lines plus 13 children, with GraphQL types generated from the served SDL.
+  - The coordinator applied the library re-point hand-off (`rtv-tools/apply-library-repoints.mjs --write`, 3 anchored edits). The 2 library tests now load: 37 pass / 10 fail. All 10 failures are peer fixture drift (stdio TSV schema ENOENT, graph Cargo.toml ENOENT, gltf fixture path shapes) or library-internal readers; none involves the re-point. Log: `🗑️generated/coord-libtests.log`.
+  - Open: library taxonomy rows and the generator-registry entry (`rtv-tools/generator-registry-entry.json`). `repo-vscode:generate-graphql-types` fails on `🛂️manifest/🟦️.ts` → `../🎠️kernel/🟦️.ts`, which INTERPRETER-KERNEL-TS is mid-splitting; recheck when it reports.
+- 07:2x MISPLACED-E2E-TESTS done (RESULT-MISPLACED-E2E-TESTS.md):
+  - Gis service composition: 100 of 129 tests were relocated to the os worker, Directory and config owners. The gis route went from 64/149 to 149/149 passing, with no new failures.
+  - Time-travel e2e: a plugin-neutral framework harness, with the puzzle scenario moved to `✏️s/🔌️plugins/🧩️puzzle/🧪️tests/⏪️time-travel` (`@semio-tech/puzzle-js:time-travel`). 0 framework files name a concrete plugin.
+  - Not yet proven: a run against a live puzzle2d serve. That needs a dev serve from the main session.
+- 07:3x INTERPRETER-KERNEL-TS done (RESULT-INTERPRETER-KERNEL-TS.md):
+  - Interpreter.tsx is now a 150-line entry plus 18 children. It no longer imports any concrete host: the hosts register through `🗺️element-host-registry` from the composition root `🪢️ElementHosts`, with lazy reads that break the init cycle.
+  - The TS kernel became 34 children (old file deleted); 56 plus 23 importers re-pointed by AST.
+  - Renderer suite: 0 new failures. Kernel suite: 91/91.
+  - Not yet proven: a browser boot of the React renderer with the new registry. Add it to the end-to-end boot list.
+- 07:4x UI-BARREL-IMPORTS done (RESULT-UI-BARREL-IMPORTS.md):
+  - `ui-no-framework-packages`: 256 → 244. 21 edges removed; a peer's new tests added 9.
+  - Production edges outside peer areas: 42 → 25.
+  - ui-react vitest: 1162/1162.
+- Hand-off to the parent (the policy lives in the held `📚️library/🕸️dependencies/🧭️direction`): decision T. Exempt `BOOTSTRAP_TOOLING_ENTRY_PATH` from `ui-no-framework-packages`, as the cross-technology rules already do (93 tooling edges).
+- Follow-up queued: D1 left a UI-owned twin of the kernel ephemeral container (`🎨️styling/🫧️ephemeral-state`) next to `🎠️kernel/🫧️transient`. That is two owners of the same mechanism. Give it a single owner in a neutral leaf that both may import, and update the OS renderer pins.
+- 07:5x SMALL-CROSS-EDGES done: P8/P9/P10 cruiser edges 23 → 0 (layout port `embeddedChildSlotV1`, 16 hub→s edges, Play publication tests relocated). Its residuals (layout Rust crates → stdio, the hub shipped-fleet `include_str!` of a stdio fixture, file-read couplings) went to the new slice RUST-CROSS-COUPLINGS (`rcc`).
+- 08:1x PLUGIN-WP7 staged (RESULT-PLUGIN-WP7.md):
+  - acyclic tier-2 order: render < dispatch (new crate) < {typed-ops, time-travel-turns, tool-run-turns} < commands < ladders < app;
+  - all 406 methods are now borrowed-bundle `XCtx`/`XRef` methods;
+  - differential clean.
+  Not flipped. **Critical path: every plugin family crate depends on the oversized `os-kernel`.** Plugin compiles wait for OS-KERNEL-ENGINE and OS-KERNEL-SQLITE-HOST. The T10–T21 bins are computed but not applied.
+- 07:00 compile headroom is the fleet bottleneck again.
+  - The Rust image has about 4.0 GiB free against the 4 GiB gate. It holds cargo 5.9 GB (prototype 3.2, home 1.5) and peer Nx material 5.4 GB (graphs 2.1, tmp 1.5 from 10-15, native 1.0, artifacts 0.8).
+  - The peer's sanctioned `cargo-retirement-historical-preview prototype` fails with `Live Original resource control issuance required` (log `🗑️generated/coord-retire-preview.log`).
+  - Nothing was deleted. The fleet compile mutex (`🗑️generated/cargo-mutex.lock`, WAVE5-BRIEF) was broadcast to the 8 compiling executors, with the kernel slices first.
+  - Escalated to the user: Nx material inside the Rust image, or the image size.
+- 07:2x EPHEMERAL-SINGLE-OWNER done. The transient store has one owner at `🧰️framework/🔨️modules/🫧️transient/🟦️.ts`, and the UI twin is deleted. ui-react passes 1157/1157 and the kernel passes 91/91.
+- Policy hand-offs to the parent: both live in `📚️library/🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs`, which is held by the parent.
+  1. Admit `"^🧰️framework/🔨️modules/🫧️transient/"` in the `pathNot` list of `ui-no-framework-packages` (around line 428). This brings the rule back from 260 to 244.
+  2. Decision T: exempt `BOOTSTRAP_TOOLING_ENTRY_PATH` from the same rule (93 tooling edges).
+- 07:3x SDK-BOUNDARY done (RESULT-SDK-BOUNDARY.md):
+  - `@semio-tech/framework` exports grew from 30 to 125 (95 facade files, explicit named re-exports). A codemod rewrote 807 plugin files.
+  - Rule counts: `plugins-framework-sdk-only` 1763 → 725; `no-cross-technology-✏️s-to-🧰️framework` 1807 → 470.
+  - Vite aliases now use exact-match regexes, which fixed the broken subpath resolution.
+  - Policy edit (`dependencyTypesNot: ["aliased-workspace"]` in `crossTechnologyRules`): the coordinator reviewed it and accepts it. The rule's own comment limits it to relative imports, and alias edges stay covered by `declaredDependencyDirectionRules`.
+  - The remaining 725 edges go to repo-lib (~520, plugin `📜️script.ts`) and os product (~250). Designs are in its §5. Next package: plugin scripts should use repo tooling through a tooling SDK, and os-product consumers should go through the os SDK.
+- SDK-BOUNDARY-2 dispatched for buckets L, B4, B6 and B7 plus the 48 plugin-test source reads. Hand-offs to the parent: B1/B5 (repo-lib runners and the repo test kit, 519 edges: extract neutral runner kernels into `🔨️modules/🏃️process`, inject the product parts) and B2 (os store schemas `🪆️child`/`🔗️link`/`📦️blob` move next to `🧬️schema/🗿️artifact-reference`, 82 edges, needs the Store owner).
+- 07:4x OS-KERNEL-SQLITE-HOST and WP7 sync done statically (RESULT-OS-KERNEL-SQLITE-HOST.md):
+  - The SCC is gone, with 5 carve defects fixed.
+  - Sync is split into a shared host core in `os-store-sync` and a platform `ArtifactHost` in each of `-sync-native` and `-sync-wasm`, all within budget.
+  - Real compile is still refused: headroom was 4,262,895,616 B at 07:09, short by 32 MB.
+  - The `dsl` path-root defect in the carved store crates (space-schema derives `dsl::Mutations` with no dsl dependency) went to OS-KERNEL-ENGINE.
+- 07:5x CARGO-PLUGIN-DIRECTION done statically (RESULT-CARGO-PLUGIN-DIRECTION.md):
+  - The real rule inventory shows 23 strict violations, not 121. The 98 bridge rows were standalone binaries the gate never sees.
+  - 23 → 3: 12 stdio contract crates re-roled to `library`, and `🪐️space/🫀️core` now consumes `semio_framework_os`.
+  - The 3 left are procedural core → os-product flow/playbook model crates. They need framework facade crates (hand-off).
+  - Not compiled: headroom refused 31 attempts.
+- 07:2x RUST-CROSS-COUPLINGS done (RESULT-RUST-CROSS-COUPLINGS.md): cross-technology Rust includes went from 12 to 7.
+  - The hub shipped-fleet test reads `SHIPPED_FLEET_SQLITE_OWNERS` from the stdio test-support crate. Not compiled yet.
+  - The gis io-boundary duplicate was folded into the s dev ownership test.
+  - The Play/demonstrator `project.json` reads moved into their own bun tests.
+  - The hub composition reads of plugin artifacts are justified as sanctioned composition roots.
+  - Deferred to the compile window: the layout→stdio drawing Rust coupling (30 files, 11 crates). Its staged design and the alternative (host the drawing standard in the framework) are in §2.
+- 07:5x COMPILE-PASS-2 stopped partial (RESULT-COMPILE-PASS-2.md):
+  - Framework `--lib`: batch 0 (60 crates) passes. Batches 1–2 had 5 fleet-carve errors (replication-interaction, replication-mutation-messages, pack-format-catalog, replication facade, pack-record-retained), all fixed in source but not recompiled, plus 1 foreign error (peer ui-contract-presentation).
+  - Batch 3 was hit by machine-wide ENFILE at 05:40.
+  - Since 06:05 every launcher call has been refused by headroom (4,162,984 KiB free vs 4,194,304 KiB required).
+  - Remaining after headroom returns: framework batches 1–3 recheck, root `--lib` (99 crates), `--tests`, wasm, `test`, and the hub/teaching/plugin workspaces. The sequence is in its file.
+- 10:4x OS-KERNEL-ENGINE done statically (RESULT-OS-KERNEL-ENGINE.md):
+  - 18 crates carved; the store root went from 11,416 to 1,345 lines.
+  - **The kernel census row is `overLimit=false`**: 5 files / 1,624 lines, down from 56 / 26,162.
+  - The `DslArtifact` derive root now emits `::semio_framework_dsl_record`, and space-schema names `semio_framework_os_dsl`.
+  - No compile ran (headroom). The first command to run once headroom returns: `python3 okeng-tools/waitcc.py lib1 okeng-tools/b2.crates`.
+- 10:4x PLUGIN-HOST-CARVE done statically: 14 producers plus a facade, worst closure 3,429 lines / 6 files / 218,501 B; differential 370/370 clean; 4 seeded regressions caught. Not compiled (headroom). The batched command is in its last section.

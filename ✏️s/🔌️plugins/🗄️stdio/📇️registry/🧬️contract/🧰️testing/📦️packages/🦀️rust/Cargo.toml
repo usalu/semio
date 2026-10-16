@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Original caller authorities for stdio artifact tests"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

@@ -50,17 +50,17 @@ pub enum ShellSpaceAdministrationTurnV1 {
 /// `Failed` ("unknown outcome / refresh required"), so a `create-invite` can never mint twice.
 #[derive(Clone, Debug)]
 pub struct ShellSpaceAdministrationOperationV1 {
-    pub(crate) operation_epoch: u64,
-    pub(crate) space_id: String,
-    pub(crate) phase: ShellSpaceAdministrationPhaseV1,
-    pub(crate) page: Option<DirectorySpaceAdministrationPageV1>,
-    pub(crate) canonical_json: Option<String>,
-    pub(crate) receipt_sha256: Option<String>,
-    pub(crate) invite_capability: Option<String>,
+    pub operation_epoch: u64,
+    pub space_id: String,
+    pub phase: ShellSpaceAdministrationPhaseV1,
+    pub page: Option<DirectorySpaceAdministrationPageV1>,
+    pub canonical_json: Option<String>,
+    pub receipt_sha256: Option<String>,
+    pub invite_capability: Option<String>,
     pending_request: Option<DirectoryCommandRequestV1>,
     pending_cursor: Option<String>,
     fetch_requested: bool,
-    pub(crate) code: Option<DirectoryCommandErrorCodeV1>,
+    pub code: Option<DirectoryCommandErrorCodeV1>,
 }
 
 impl ShellSpaceAdministrationOperationV1 {
@@ -371,12 +371,12 @@ pub fn shell_space_administration_controls(operation: &ShellSpaceAdministrationO
 //#endregion 🏛️SpaceAdministration
 //#region 🎮️DirectoryCommandQueue
 /// ⏳️ Finite per-command deadline; a hung hub can never retain a command turn forever.
-pub(crate) const DIRECTORY_COMMAND_DEADLINE_MS: u64 = 5_000;
+pub const DIRECTORY_COMMAND_DEADLINE_MS: u64 = 5_000;
 
 /// ⏳️ Browser identity retry floor: a hub that refuses `/auth/sessions/me` must not be re-asked on
 /// every 100 ms frame pump. Native needs no twin — its bootstrap is a one-shot pool future.
 #[cfg(target_arch = "wasm32")]
-pub(crate) const BROWSER_IDENTITY_RETRY_MS: u64 = 5_000;
+pub const BROWSER_IDENTITY_RETRY_MS: u64 = 5_000;
 
 /// 🧾️ One transient native command completion: either the authoritative receipt or a closed
 /// terminal code. Never a raw server body, and never a logged capability.
@@ -392,7 +392,7 @@ pub enum ShellDirectoryCommandResultV1 {
 /// failure — lives here so it is provable without a renderer, a surface, or a live hub.
 #[derive(Debug, Default)]
 pub struct ShellDirectoryCommandQueueV1 {
-    pub(crate) pending: Vec<DirectoryCommandRequestV1>,
+    pub pending: Vec<DirectoryCommandRequestV1>,
     results: Vec<(String, ShellDirectoryCommandResultV1)>,
 }
 
@@ -460,7 +460,7 @@ impl ShellDirectoryCommandQueueV1 {
         self.pending.len()
     }
 
-    pub(crate) fn retain(&mut self, request_id: &str, result: ShellDirectoryCommandResultV1) {
+    pub fn retain(&mut self, request_id: &str, result: ShellDirectoryCommandResultV1) {
         self.results.retain(|(id, _)| id != request_id);
         if self.results.len() >= MAX_DIRECTORY_COMMAND_RESULTS {
             self.results.remove(0);
@@ -475,39 +475,39 @@ impl ShellDirectoryCommandQueueV1 {
 /// password hash on the hub, which the directory command deadline does not fit: measured 6.8 s and 13.6 s on
 /// hub 7800 under load ~40, so every native sign-in answered `Unreachable` while React's (no request
 /// deadline, cancellable) signed in (ticket 26/09/23 slice WG8, session 12). Still finite.
-pub(crate) const HUB_SIGN_IN_DEADLINE_MS: u64 = 30_000;
+pub const HUB_SIGN_IN_DEADLINE_MS: u64 = 30_000;
 
 /// 🔐️ What one spawned sign-in answers: the mint's refusal, a mint the hub's own `me` read would not confirm, or the
 /// verified session.
-pub(crate) enum ShellHubSignInAnswer {
+pub enum ShellHubSignInAnswer {
     Failed { code: HubSignInErrorCode, retry_after_seconds: Option<u64> },
     Unverified,
     Verified { origin: String, user_id: String, credential: std::sync::Arc<LocalHubCredential>, client: std::sync::Arc<ShellDirectoryClient>, authority: DirectorySessionAuthorityV1 },
 }
 
 /// 🏘️ What one spawned spaces read answers: the rows, or `Err` when the list could not be read (the rows on screen stay).
-pub(crate) type ShellHubSpacesAnswer = Result<Vec<crate::space_browser::SpaceRow>, ()>;
+pub type ShellHubSpacesAnswer = Result<Vec<semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceRow>, ()>;
 
 /// 🔐️ One hub workspace request whose network legs run on a spawned task and never on the frame's interaction state:
 /// the frame keeps taking input while the hub answers, the chrome shows the phase, and `cancel` ends the request. A
 /// slow hub froze every input of the browser shell for 60–106 s while these legs were awaited inside the action
 /// (ticket 26/09/23 session 12, runs s12g/s12h on hub 7800).
-pub(crate) struct ShellHubTask<T> {
-    pub(crate) receiver: std::sync::mpsc::Receiver<T>,
-    pub(crate) cancel: CancelToken,
+pub struct ShellHubTask<T> {
+    pub receiver: std::sync::mpsc::Receiver<T>,
+    pub cancel: CancelToken,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) task: Option<std::sync::Arc<ShellPoolFuture>>,
+    pub task: Option<std::sync::Arc<ShellPoolFuture>>,
 }
 
 impl<T: 'static> ShellHubTask<T> {
     /// 🚀️ Runs `leg` on the shared pool's I/O lane; the pump reads its answer.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + Send + 'static) -> Self
+    pub fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + Send + 'static) -> Self
     where
         T: Send,
     {
         let (sender, receiver) = std::sync::mpsc::channel();
-        let task = ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, async move {
+        let task = ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
             let _ = sender.send(leg.await);
         });
         Self { receiver, cancel, task: Some(task) }
@@ -515,16 +515,16 @@ impl<T: 'static> ShellHubTask<T> {
 
     /// 🚀️ Runs `leg` on the page's own microtask queue; the pump reads its answer.
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + 'static) -> Self {
+    pub fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + 'static) -> Self {
         let (sender, receiver) = std::sync::mpsc::channel();
-        crate::spawn_app_task(async move {
+        semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
             let _ = sender.send(leg.await);
         });
         Self { receiver, cancel }
     }
 
     /// 📬️ `Some(Ok)` once answered, `Some(Err)` when the task ended without an answer, `None` while it runs.
-    pub(crate) fn answer(&self) -> Option<Result<T, ()>> {
+    pub fn answer(&self) -> Option<Result<T, ()>> {
         match self.receiver.try_recv() {
             Ok(answer) => Some(Ok(answer)),
             Err(std::sync::mpsc::TryRecvError::Empty) => None,
@@ -533,7 +533,7 @@ impl<T: 'static> ShellHubTask<T> {
     }
 
     /// 🛑️ Ends the request: its transport sees the cancellation, and no answer is read any more.
-    pub(crate) fn cancel(self) {
+    pub fn cancel(self) {
         self.cancel.cancel_now();
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(task) = self.task {
@@ -545,3 +545,12 @@ impl<T: 'static> ShellHubTask<T> {
 //#endregion 🔐️HubWorkspaceTask
 //#endregion ShellTypes
 
+//#region ShellTypes
+//#region 🎮️DirectoryCommandQueue
+/// 🧾️ Bounded transient command-result slot depth.
+pub const MAX_DIRECTORY_COMMAND_RESULTS: usize = 64;
+
+/// 🎮️ Bounded (contract §C6 "bounded, in-memory") native directory-command FIFO depth.
+pub const MAX_PENDING_DIRECTORY_COMMANDS: usize = 64;
+//#endregion 🎮️DirectoryCommandQueue
+//#endregion ShellTypes

@@ -8,7 +8,7 @@ use super::*;
 /// ⌨️ The key token a captured chord writes for one key event — the inverse of
 /// [`key_event_matches_chord`]'s key arm, so a chord this renderer captures is one it can match again.
 /// `None` for a key no chord can name (a bare modifier never reaches here as a `KeyAction`).
-pub(crate) fn keybinding_capture_key_token(action: &ui_wgpu::wgpu::KeyAction) -> Option<String> {
+pub fn keybinding_capture_key_token(action: &ui_wgpu::wgpu::KeyAction) -> Option<String> {
     Some(match action {
         ui_wgpu::wgpu::KeyAction::Char(key) => {
             let key = key.trim().to_ascii_lowercase();
@@ -42,7 +42,7 @@ pub(crate) fn keybinding_capture_key_token(action: &ui_wgpu::wgpu::KeyAction) ->
 /// last-writer-wins over the first chord of every row, so exactly the earlier row of a colliding pair
 /// is flagged.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ShellKeybindingRow {
+pub struct ShellKeybindingRow {
     pub control_id: String,
     pub keys: String,
     pub overridden: bool,
@@ -51,7 +51,7 @@ pub(crate) struct ShellKeybindingRow {
 
 /// ⌨️ Every shortcut row with its remapped chord and conflict marker, sorted by control id like
 /// React's own `localeCompare` row order.
-pub(crate) fn shell_keybinding_rows(overrides: &HashMap<String, String>) -> Vec<ShellKeybindingRow> {
+pub fn shell_keybinding_rows(overrides: &HashMap<String, String>) -> Vec<ShellKeybindingRow> {
     let table = shell_shortcut_table(overrides);
     let first_chord = |keys: &str| keys.split(',').map(str::trim).find(|chord| !chord.is_empty()).map(str::to_ascii_lowercase);
     let mut chord_owners: HashMap<String, String> = HashMap::new();
@@ -77,7 +77,7 @@ pub(crate) fn shell_keybinding_rows(overrides: &HashMap<String, String>) -> Vec<
 impl ShellInputState {
     /// 🖱️ The cursor the active utility requests while the pointer is inside the active window silhouette — maps
     /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
-    pub(crate) fn utility_cursor_override(&self, x: f32, y: f32, docs: &DocumentState, windows: &WindowState) -> Option<ui_wgpu::wgpu::SemioCursor> {
+    pub fn utility_cursor_override(&self, x: f32, y: f32, docs: &DocumentState, windows: &WindowState) -> Option<ui_wgpu::wgpu::SemioCursor> {
         let session = docs.session.as_ref()?;
         let window_id = windows.active_window_id.as_deref()?;
         let utility_id = windows.active_utility_for_window(window_id)?;

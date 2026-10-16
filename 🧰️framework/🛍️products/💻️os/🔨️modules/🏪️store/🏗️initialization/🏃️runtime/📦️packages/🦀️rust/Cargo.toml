@@ -22,11 +22,18 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-os-identity = { path = "../../../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 

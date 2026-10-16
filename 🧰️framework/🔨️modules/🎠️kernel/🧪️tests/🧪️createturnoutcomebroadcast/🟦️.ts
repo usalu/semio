@@ -1,13 +1,12 @@
 import { fixtureOriginalWorkStock } from "../../../🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
-type KernelTestModule = typeof import("../../🟦️.ts");
 type IoSchemaTestModule = typeof import("../../../🚪️io/🧬️schema/🟦️.ts");
 type ActorTestModule = typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts");
 type ResidentTestModule = typeof import("../../../🌱️value/💾️resident/🟦️.ts");
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "createTurnOutcomeBroadcast">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../📡️turn-outcome-broadcast/🟦️.ts"), "createTurnOutcomeBroadcast">, source: TestSource): Promise<void> {
   const { createTurnOutcomeBroadcast } = dependencies;
-  type TurnOutcome = import("../../🟦️.ts").TurnOutcome;
+  type TurnOutcome = import("../../📡️turn-outcome-broadcast/🟦️.ts").TurnOutcome;
 
   const { describe, expect, it } = vitest;
 
@@ -57,11 +56,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🟦️.ts"), "AppRouter">, source: TestSource): Promise<void> {
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🧭️app-router/🟦️.ts"), "AppRouter">, source: TestSource): Promise<void> {
   const { AppRouter, dialectCoordinate } = dependencies;
   type AppRef = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRef;
   type AppRole = import("../../../🛂️manifest/🧬️schema/🟦️.ts").AppRole;
-  type AppRouterManifest = import("../../🟦️.ts").AppRouterManifest;
+  type AppRouterManifest = import("../../🧭️app-router/🟦️.ts").AppRouterManifest;
   type ArtifactDialect = import("../../../🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect;
 
   const { describe, expect, it } = vitest;
@@ -95,9 +94,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         expectedFaults: readonly { readonly pluginId: string; readonly code: string; readonly origin: string; readonly severity: string }[];
       }>;
       const { readFile } = await import("node:fs/promises");
-      const { dirname, join } = await import("node:path");
-      const { fileURLToPath } = await import("node:url");
-      const fixture = JSON.parse(await readFile(join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json"), "utf8")) as Fixture;
+      const { join } = await import("node:path");
+      const fixture = JSON.parse(await readFile(join(source.directory, "🧪️tests/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json"), "utf8")) as Fixture;
       const router = AppRouter.build(fixture.manifests);
       for (const owner of fixture.expectedOwners) expect(router.ownerPluginId(owner.artifactKind), owner.artifactKind).toBe(owner.pluginId);
       for (const route of fixture.expectedRoutes) expect(router.entriesFor(route.dialect, route.role), `${dialectCoordinate(route.dialect)}#${route.role}`).toEqual(route.entries);
@@ -111,12 +109,12 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🌱️value/💾️resident/🟦️.ts"), "OwnedResidentLedger"> & Pick<typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts"), "ShardClient"> & Pick<typeof import("../../🟦️.ts"), "ActivationRegistry" | "DEFAULT_MAX_RESIDENT_ACTORS" | "RUNTIME_METRICS_PUBLISH_INTERVAL_MS" | "intersectCapabilityGrants" | "residentActorCapFromMemory" | "runtimeMetricsDue">, source: TestSource): Promise<void> {
+export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🌱️value/💾️resident/🟦️.ts"), "OwnedResidentLedger"> & Pick<typeof import("../../../🎭️actor/📮️shard-client/🟦️.ts"), "ShardClient"> & Pick<typeof import("../../🎛️activation-registry/🟦️.ts"), "ActivationRegistry" | "intersectCapabilityGrants"> & Pick<typeof import("../../🧯️memory-pressure/🟦️.ts"), "DEFAULT_MAX_RESIDENT_ACTORS" | "residentActorCapFromMemory"> & Pick<typeof import("../../⏱️runtime-metrics/🟦️.ts"), "RUNTIME_METRICS_PUBLISH_INTERVAL_MS" | "runtimeMetricsDue">, source: TestSource): Promise<void> {
   const { ActivationRegistry, DEFAULT_MAX_RESIDENT_ACTORS, OwnedResidentLedger, RUNTIME_METRICS_PUBLISH_INTERVAL_MS, ShardClient, intersectCapabilityGrants, residentActorCapFromMemory, runtimeMetricsDue } = dependencies;
-  type MemoryProbe = import("../../🟦️.ts").MemoryProbe;
-  type PluginCatalog = import("../../🟦️.ts").PluginCatalog;
-  type RuntimeMetricsSnapshot = import("../../🟦️.ts").RuntimeMetricsSnapshot;
-  type ActivationRegistry = import("../../🟦️.ts").ActivationRegistry;
+  type MemoryProbe = import("../../🧯️memory-pressure/🟦️.ts").MemoryProbe;
+  type PluginCatalog = import("../../📚️plugin-catalog/🟦️.ts").PluginCatalog;
+  type RuntimeMetricsSnapshot = import("../../⏱️runtime-metrics/🟦️.ts").RuntimeMetricsSnapshot;
+  type ActivationRegistry = import("../../🎛️activation-registry/🟦️.ts").ActivationRegistry;
   type ShardBudget = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardBudget;
   type ShardCapabilityGrant = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardCapabilityGrant;
   type ShardClient = import("../../../🎭️actor/📮️shard-client/🟦️.ts").ShardClient;
@@ -577,7 +575,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "expandPluginRegistry">, source: TestSource): Promise<void> {
+export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🗂️plugin-registry/🟦️.ts"), "expandPluginRegistry">, source: TestSource): Promise<void> {
   const { expandPluginRegistry } = dependencies;
 
   const { describe, expect, it } = vitest;
@@ -604,10 +602,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🟦️.ts"), "IoEntryGraph" | "ioIdentify" | "ioRun">, source: TestSource): Promise<void> {
+export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../🚪️io/🧬️schema/🟦️.ts"), "dialectCoordinate"> & Pick<typeof import("../../🚪️io-router/🟦️.ts"), "IoEntryGraph" | "ioIdentify" | "ioRun">, source: TestSource): Promise<void> {
   const { IoEntryGraph, dialectCoordinate, ioIdentify, ioRun } = dependencies;
   type ArtifactDialect = import("../../../🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect;
-  type IoEntryGraphPlugin = import("../../🟦️.ts").IoEntryGraphPlugin;
+  type IoEntryGraphPlugin = import("../../🚪️io-router/🟦️.ts").IoEntryGraphPlugin;
 
   const { describe, expect, it } = vitest;
   describe("IoEntryGraph", () => {
@@ -707,14 +705,14 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests6(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "createBundledPluginSource" | "createDevPluginSource" | "createExtensionSource">, source: TestSource): Promise<void> {
+export async function registerTests6(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔌️plugin-source/🟦️.ts"), "createBundledPluginSource" | "createDevPluginSource" | "createExtensionSource">, source: TestSource): Promise<void> {
   const { createBundledPluginSource, createDevPluginSource, createExtensionSource } = dependencies;
-  type PluginCatalog = import("../../🟦️.ts").PluginCatalog;
-  type PluginSourceEvent = import("../../🟦️.ts").PluginSourceEvent;
+  type PluginCatalog = import("../../📚️plugin-catalog/🟦️.ts").PluginCatalog;
+  type PluginSourceEvent = import("../../🔌️plugin-source/🟦️.ts").PluginSourceEvent;
 
   const { describe, expect, it, vi } = vitest;
 
-  /** 📡️ A recording {@link import("../../🟦️.ts").PluginSourceWatch}: every open is one stream the test can push events into
+  /** 📡️ A recording {@link import("../../🔌️plugin-source/🟦️.ts").PluginSourceWatch}: every open is one stream the test can push events into
    * and whose unsubscribe it can observe — the shape the `s` shell gives each source (one stream-channel route per watch). */
   const recordingWatch = () => {
     const streams: { readonly listener: (event: unknown) => void; closed: boolean }[] = [];

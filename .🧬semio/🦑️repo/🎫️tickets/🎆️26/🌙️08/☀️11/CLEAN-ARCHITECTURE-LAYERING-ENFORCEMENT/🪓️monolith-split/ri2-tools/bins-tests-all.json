@@ -1,0 +1,338 @@
+[
+ {
+  "name": "section_fixtures",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧰️section-fixtures/🦀️.rs",
+  "dir": "🧰️section-fixtures"
+ },
+ {
+  "name": "panel_anchor_model_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-panel-anchor-model/🦀️.rs",
+  "dir": "🔬️wgpu-panel-anchor-model"
+ },
+ {
+  "name": "shell_input_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-input/🦀️.rs",
+  "dir": "🔬️wgpu-shell-input"
+ },
+ {
+  "name": "shell_boot_isolation_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-boot-isolation/🦀️.rs",
+  "dir": "🔬️wgpu-shell-boot-isolation"
+ },
+ {
+  "name": "window_pane_chrome_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🪟️wgpu-window-pane-chrome/🦀️.rs",
+  "dir": "🪟️wgpu-window-pane-chrome"
+ },
+ {
+  "name": "command_registry_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-command-registry/🦀️.rs",
+  "dir": "🔬️wgpu-command-registry"
+ },
+ {
+  "name": "window_actions_search_pane_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎬️wgpu-window-actions-search-panes/🦀️.rs",
+  "dir": "🎬️wgpu-window-actions-search-panes"
+ },
+ {
+  "name": "appearance_tour_and_footer_pill_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🌓️appearance-tour-and-footer-pills/🦀️.rs",
+  "dir": "🌓️appearance-tour-and-footer-pills"
+ },
+ {
+  "name": "tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📤️icon-export/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️export-batch/🦀️.rs",
+  "dir": "📤️export-batch"
+ },
+ {
+  "name": "tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🪟️tree-windows/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🪟️tree-windows/🦀️.rs",
+  "dir": "🪟️tree-windows"
+ },
+ {
+  "name": "tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⏪️time-travel/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️wgpu-time-travel/🦀️.rs",
+  "dir": "🧪️wgpu-time-travel"
+ },
+ {
+  "name": "tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📎️local-folders/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️wgpu-local-folders/🦀️.rs",
+  "dir": "🧪️wgpu-local-folders"
+ },
+ {
+  "name": "identity_directory_presence_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔖️identity-and-types/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-identity-directory-presence/🦀️.rs",
+  "dir": "🔬️wgpu-identity-directory-presence"
+ },
+ {
+  "name": "shell_pool_future_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧵️shell-async-runners/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-pool-future/🦀️.rs",
+  "dir": "🔬️wgpu-shell-pool-future"
+ },
+ {
+  "name": "shell_document_retirement_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧵️shell-async-runners/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-document-retirement/🦀️.rs",
+  "dir": "🔬️wgpu-shell-document-retirement"
+ },
+ {
+  "name": "window_measures_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⚓️dock-model-and-measures/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/📏️wgpu-window-measures/🦀️.rs",
+  "dir": "📏️wgpu-window-measures"
+ },
+ {
+  "name": "tool_run_panel_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧾️panel-records/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⏯️wgpu-tool-run-panel/🦀️.rs",
+  "dir": "⏯️wgpu-tool-run-panel"
+ },
+ {
+  "name": "app_catalogue_attempt_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧾️panel-records/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🛍️app-catalogue-attempt/🦀️.rs",
+  "dir": "🛍️app-catalogue-attempt"
+ },
+ {
+  "name": "action_window_scope_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧾️panel-records/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🪟️action-window-scope/🦀️.rs",
+  "dir": "🪟️action-window-scope"
+ },
+ {
+  "name": "display_conflicts_marketplace_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⚙️settings-and-dock-persistence/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs",
+  "dir": "🖥️wgpu-display-conflicts-marketplace"
+ },
+ {
+  "name": "shell_shortcuts_palette_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⌨️wgpu-shell-shortcuts-palette/🦀️.rs",
+  "dir": "⌨️wgpu-shell-shortcuts-palette"
+ },
+ {
+  "name": "chord_example_role_parity_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⌨️wgpu-chord-example-role-parity/🦀️.rs",
+  "dir": "⌨️wgpu-chord-example-role-parity"
+ },
+ {
+  "name": "engine_surface_retention_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧲️engine-surface-retention/🦀️.rs",
+  "dir": "🧲️engine-surface-retention"
+ },
+ {
+  "name": "pointer_hit_ownership_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎯️wgpu-pointer-hit-ownership/🦀️.rs",
+  "dir": "🎯️wgpu-pointer-hit-ownership"
+ },
+ {
+  "name": "wheel_and_escape_routing_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎡️wgpu-wheel-and-escape-routing/🦀️.rs",
+  "dir": "🎡️wgpu-wheel-and-escape-routing"
+ },
+ {
+  "name": "panel_window_reservation_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🛟️panel-window-reservation/🦀️.rs",
+  "dir": "🛟️panel-window-reservation"
+ },
+ {
+  "name": "dock_close_reopen_journal_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🛰️wgpu-dock-close-reopen-journals/🦀️.rs",
+  "dir": "🛰️wgpu-dock-close-reopen-journals"
+ },
+ {
+  "name": "board_presence_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/👕️board-presence/🦀️.rs",
+  "dir": "👕️board-presence"
+ },
+ {
+  "name": "driver_editor_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🚗️driver-editor/🦀️.rs",
+  "dir": "🚗️driver-editor"
+ },
+ {
+  "name": "hub_projection_workspace_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔗️hub-projection-workspace/🦀️.rs",
+  "dir": "🔗️hub-projection-workspace"
+ },
+ {
+  "name": "window_lifecycle_template_drag_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🪟️window-lifecycle-template-drag/🦀️.rs",
+  "dir": "🪟️window-lifecycle-template-drag"
+ },
+ {
+  "name": "settings_general_layout_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⚙️settings-general-layout/🦀️.rs",
+  "dir": "⚙️settings-general-layout"
+ },
+ {
+  "name": "detached_sync_task_manager_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔄️detached-sync-task-manager/🦀️.rs",
+  "dir": "🔄️detached-sync-task-manager"
+ },
+ {
+  "name": "sync_owner_lifetime_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⌨️keyboard-and-palette/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔄️sync-owner-lifetime/🦀️.rs",
+  "dir": "🔄️sync-owner-lifetime"
+ },
+ {
+  "name": "retained_chrome_text_laws",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧱️chrome-paint-and-navbar/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-retained-chrome-text-laws/🦀️.rs",
+  "dir": "🔬️wgpu-retained-chrome-text-laws"
+ },
+ {
+  "name": "shell_chrome_parity_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧱️chrome-paint-and-navbar/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-chrome-parity/🦀️.rs",
+  "dir": "🔬️wgpu-shell-chrome-parity"
+ },
+ {
+  "name": "navbar_footer_parity_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🧱️chrome-paint-and-navbar/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧭️wgpu-navbar-footer-parity/🦀️.rs",
+  "dir": "🧭️wgpu-navbar-footer-parity"
+ },
+ {
+  "name": "tutorial_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎓️tutorial-runtime/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-tutorial/🦀️.rs",
+  "dir": "🔬️wgpu-tutorial"
+ },
+ {
+  "name": "ui_prefs_themes_i18n_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-ui-prefs-themes-i18n/🦀️.rs",
+  "dir": "🔬️wgpu-ui-prefs-themes-i18n"
+ },
+ {
+  "name": "browser_prefs_persistence_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🗄️browser-prefs-persistence/🦀️.rs",
+  "dir": "🗄️browser-prefs-persistence"
+ },
+ {
+  "name": "host_door_remainder_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🚪️wgpu-host-door-remainder/🦀️.rs",
+  "dir": "🚪️wgpu-host-door-remainder"
+ },
+ {
+  "name": "tour_overlay_and_chord_glyph_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎓️tour-overlay-and-chord-glyphs/🦀️.rs",
+  "dir": "🎓️tour-overlay-and-chord-glyphs"
+ },
+ {
+  "name": "chrome_overlays_tour_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-chrome-overlays-tour/🦀️.rs",
+  "dir": "🔬️wgpu-chrome-overlays-tour"
+ },
+ {
+  "name": "agent_overlays_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-agent-overlays/🦀️.rs",
+  "dir": "🔬️wgpu-agent-overlays"
+ },
+ {
+  "name": "fault_notices_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️wgpu-fault-notices/🦀️.rs",
+  "dir": "🧪️wgpu-fault-notices"
+ },
+ {
+  "name": "file_open_import_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/📤️wgpu-file-open-import/🦀️.rs",
+  "dir": "📤️wgpu-file-open-import"
+ },
+ {
+  "name": "media_frames_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-media-frames/🦀️.rs",
+  "dir": "🔬️wgpu-media-frames"
+ },
+ {
+  "name": "context_menu_keyboard_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-context-menu-keyboard/🦀️.rs",
+  "dir": "🔬️wgpu-context-menu-keyboard"
+ },
+ {
+  "name": "media_export_encoding_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⬇️wgpu-media-export-encoding/🦀️.rs",
+  "dir": "⬇️wgpu-media-export-encoding"
+ },
+ {
+  "name": "dpi_logical_units_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/📐️wgpu-dpi-logical-units/🦀️.rs",
+  "dir": "📐️wgpu-dpi-logical-units"
+ },
+ {
+  "name": "chrome_maintenance_pressure_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/💓️chrome-maintenance-pressure/🦀️.rs",
+  "dir": "💓️chrome-maintenance-pressure"
+ },
+ {
+  "name": "plugin_install_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎬️wgpu-plugin-install/🦀️.rs",
+  "dir": "🎬️wgpu-plugin-install"
+ },
+ {
+  "name": "document_relay_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔀️wgpu-document-relay/🦀️.rs",
+  "dir": "🔀️wgpu-document-relay"
+ },
+ {
+  "name": "theme_editor_and_accessibility_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs",
+  "dir": "🎨️wgpu-theme-editor-and-accessibility"
+ },
+ {
+  "name": "native_keyboard_ring_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⌨️native-keyboard-ring/🦀️.rs",
+  "dir": "⌨️native-keyboard-ring"
+ },
+ {
+  "name": "presented_input_authority_tests",
+  "host": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🎨️theme-file-import-and-accessibility/🦀️.rs",
+  "target": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎯️presented-input-authority/🦀️.rs",
+  "dir": "🎯️presented-input-authority"
+ }
+]

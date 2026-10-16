@@ -1,7 +1,7 @@
 /** 🌱️ Wires owns the complete native intrinsic Value domain. */
-import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { type Binary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
+import { type Binary64 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary64 } from "@semio-tech/framework/value/ieee754";
 export type WiresValue=
  |{kind:"null"}|{kind:"boolean";value:boolean}|{kind:"unsigned";value:bigint}|{kind:"signed";value:bigint}
  |{kind:"float";value:Binary64}|{kind:"text";value:string}|{kind:"bytes";value:Uint8Array}

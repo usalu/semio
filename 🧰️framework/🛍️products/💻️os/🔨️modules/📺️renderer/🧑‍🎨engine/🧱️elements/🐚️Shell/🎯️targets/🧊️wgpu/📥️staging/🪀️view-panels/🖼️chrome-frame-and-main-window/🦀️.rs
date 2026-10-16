@@ -5,10 +5,10 @@
 use super::*;
 
 //#region ShellChrome
-pub(crate) struct ShellChromeFrameCursor {
-    pub(crate) phase: ShellChromeFramePhase,
-    pub(crate) setup: u8,
-    pub(crate) child: ShellChromeChildCursor,
+pub struct ShellChromeFrameCursor {
+    pub phase: ShellChromeFramePhase,
+    pub setup: u8,
+    pub child: ShellChromeChildCursor,
     /// 🩺️ Opportunities spent inside [`Self::phase`] without leaving it. `FrameBuildPhase::Chrome`
     /// holds the whole frame until this walk answers `true`, so a phase that can never finish
     /// presents NOTHING — no navbar, no window, no footer — and says nothing either: every
@@ -22,7 +22,7 @@ pub(crate) struct ShellChromeFrameCursor {
 }
 
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
-pub(crate) enum ShellChromeFramePhase {
+pub enum ShellChromeFramePhase {
     #[default]
     CloseDocument,
     LoadPreferences,
@@ -83,11 +83,11 @@ impl Default for ShellChromeFrameCursor {
 }
 
 impl ShellChromeFrameCursor {
-    pub(crate) fn terminal_is_complete(&self) -> bool {
+    pub fn terminal_is_complete(&self) -> bool {
         matches!(self.phase, ShellChromeFramePhase::Complete)
     }
 
-    pub(crate) fn advance(&mut self, phase: ShellChromeFramePhase) {
+    pub fn advance(&mut self, phase: ShellChromeFramePhase) {
         self.phase = phase;
         self.child = ShellChromeChildCursor::default();
     }
@@ -127,7 +127,7 @@ impl ShellChromeFrameCursor {
 impl ShellChromeFramePhase {
     /// 🩺️ The phase's own name, for the parked-walk census. A `Debug` derive would do, but this
     /// enum is `Copy` in a hot cursor and the census is the only reader.
-    pub(crate) fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Self::CloseDocument => "CloseDocument",
             Self::LoadPreferences => "LoadPreferences",
@@ -182,7 +182,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     /// 📱️ Below React's mobile breakpoint the eight anchors do not paint at all: ONE mobile
     /// panel carries every anchor's tabs flattened (`mobile_panel_tabs`), filling the body
     /// instead of floating — React's `LayoutMobilePanel`, an in-flow sibling of the canvas.
-    pub(crate) fn render_chrome_step(
+    pub fn render_chrome_step(
         &mut self,
         cursor: &mut ShellChromeFrameCursor,
         draw: &mut DrawList,
@@ -199,16 +199,16 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         let mut failure=None;let completed=(||{
         if let Some(census) = cursor.note_opportunity() {
             debug_log(&format!("[TRACE] wgpu-shell chrome walk parked {census} windows={}", self.dock.dock_window_plan.len()));
-            crate::interpreter::note_chrome_walk_parked(&census);
+            semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_chrome_walk_parked(&census);
         }
         let w = self.chrome.screen_w;
         let h = self.chrome.screen_h;
         let body = self.as_session().body_rect(theme);
         match cursor.phase {
             ShellChromeFramePhase::CloseDocument => {
-                let close_consumed=match crate::interpreter::close_ui_document_one(cx){Ok(advanced)=>advanced||self.docs.close_document_one(),Err(error)=>{failure=Some(error);return false}};
+                let close_consumed=match semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx){Ok(advanced)=>advanced||self.docs.close_document_one(),Err(error)=>{failure=Some(error);return false}};
                 begin_ui_document_opportunity(close_consumed);
-                if crate::interpreter::ui_document_close_pending() {
+                if semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
                     return false;
                 }
                 cursor.phase = ShellChromeFramePhase::LoadPreferences;
@@ -238,7 +238,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                         self.input.retained_hit_windows_staging.clear();
                         self.input.retained_scene_hits_staging.clear();
                         with_chrome_control_names(|names| names.clear());
-                        crate::interpreter::begin_accessibility_visible_documents();
+                        semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
                     }
                     1 => overlay.set_screen_height(h),
                     2 => {
@@ -523,7 +523,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     })();match failure{Some(error)=>Err(error),None=>Ok(completed)}
     }
 
-    pub(crate) fn footer_chrome_layout(&mut self, atlas: &mut FontAtlas, theme: &Theme, width: f32, btn_y: f32, btn_h: f32) -> ShellFooterChromeLayout {
+    pub fn footer_chrome_layout(&mut self, atlas: &mut FontAtlas, theme: &Theme, width: f32, btn_y: f32, btn_h: f32) -> ShellFooterChromeLayout {
         let mobile = self.chrome.mobile_panel_active();
         let bottom_left = if mobile { 0.0 } else { self.as_chrome_view().footer_band_width(atlas, theme, PanelAnchor::BottomLeft) };
         let bottom_middle = if mobile { 0.0 } else { self.as_chrome_view().footer_band_width(atlas, theme, PanelAnchor::BottomMiddle) };
@@ -551,7 +551,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per footer band input")]
-    pub(crate) fn footer_tab_row_rect(&mut self, atlas: &mut FontAtlas, theme: &Theme, index: usize, width: f32, btn_y: f32, btn_h: f32) -> Option<(PanelAnchor, DockTabNode, Rect)> {
+    pub fn footer_tab_row_rect(&mut self, atlas: &mut FontAtlas, theme: &Theme, index: usize, width: f32, btn_y: f32, btn_h: f32) -> Option<(PanelAnchor, DockTabNode, Rect)> {
         if self.chrome.mobile_panel_active() {
             return None;
         }
@@ -611,7 +611,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     /// two retained documents `refresh_window_action_panes` publishes, painted last so their
     /// rows outrank the chips they grow under, exactly as React's open `Pane` body covers the
     /// canvas beneath its own cap.
-    pub(crate) fn render_main_window_step(
+    pub fn render_main_window_step(
         &mut self,
         cursor: &mut ShellChromeChildCursor,
         draw: &mut DrawList,
@@ -684,7 +684,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
-                    let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window_id.as_str() };
+                    let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window_id.as_str() };
                     let viewport_height_for_widgets = draw.screen_height();
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(window_rect);
@@ -836,7 +836,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     let (labels, icon_ids) = self.dock.dock_chrome_maps(&self.prefs, &self.docs, &self.windows);
                     let bounds = self.dock.dock_canvas_bounds;
                     let german = self.prefs.locale_id == "de";
-                    let mut names = |id: &str, name: crate::dock::DockControlName<'_>| note_dock_control_name(id, name, german);
+                    let mut names = |id: &str, name: semio_framework_os_renderer_wgpu_dock::DockControlName<'_>| note_dock_control_name(id, name, german);
                     let mut ctx = DockRenderContext { draw, atlas, icons, input, theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: Some(&mut names) };
                     self.dock.dock_view.paint_chrome(&mut ctx, bounds, false);
                     self.dock.dock_view.register_resize_hits(&mut ctx, bounds);
@@ -863,3 +863,14 @@ impl<'ctx> PanelsViewCtx<'ctx> {
 
 //#endregion ShellChrome
 
+//#region ShellChrome
+/// 🩺️ How many times one parked phase reports itself before it goes quiet: enough to prove the walk
+/// is still parked rather than merely slow, bounded so a wedged shell cannot flood the console.
+pub const SHELL_CHROME_PARKED_REPORTS: u8 = 4;
+
+/// 🩺️ Opportunities one chrome phase may spend before the walk reports itself parked. A complete
+/// walk of a busy shell spends far fewer than this in ANY single phase — every phase is bounded by
+/// its own content (a glyph run, a dock tab, one document's `SHELL_WINDOW_PAINT_OPPORTUNITIES`) —
+/// so crossing it means the phase's own cursor is not advancing at all.
+pub const SHELL_CHROME_PHASE_OPPORTUNITIES: u64 = 1 << 18;
+//#endregion ShellChrome

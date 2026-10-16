@@ -253,7 +253,7 @@ function escapesOwnerRoot(ownerRoot: string, mountingFileRel: string, pathTarget
 
 /** 🥒️ The repository test platform's own case shape: a directory directly under a `🧪️tests` owner dir
  * that carries the feature file. `discoverTestCases`
- * (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts:545`) recognises exactly this, and the Rust
+ * (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧭️case-discovery/🟦️.ts`) recognises exactly this, and the Rust
  * adapter beside the feature is compiled by a GENERATED cache-local crate that mounts it by absolute
  * `#[path]` (`…/🧪️test/🖥️host/🏗️materialization/🟦️.ts:132`) and links `semio-repo-test-host`. No plugin
  * Cargo manifest owns it — by design, since the host crate must be able to link an oracle role

@@ -134,7 +134,7 @@ if __name__ == '__main__':
     name, mode = sys.argv[1], sys.argv[2]
     b, crates, before = run(name)
     report(b)
-    dump(b, crates, before, f'{GEN}/okwp56-out-{name}.json')
+    dump(b, crates, before, f'{GEN}/okeng-out-{name}.json')
     if mode == 'apply':
         AP.TOUCHED = HERE + '/touched.txt'
         plan, texts, new_k, ktext = apply(b, crates, before)

@@ -7,7 +7,7 @@ use super::*;
 //#region ShellLifecycle
 impl DocumentState {
     //#region 🏷️LabelResolution
-    pub(crate) fn chrome_dialog_request(&self, dialog_id: &str, args: Option<DslValue>, prefs: &PrefsState) -> Option<ChromeDialogRequest> {
+    pub fn chrome_dialog_request(&self, dialog_id: &str, args: Option<DslValue>, prefs: &PrefsState) -> Option<ChromeDialogRequest> {
         let session = self.session.as_ref()?;
         let dialog = session.app.dialogs.iter().find(|dialog| dialog.id == dialog_id)?;
         Some(ChromeDialogRequest::from_definition(&session.app.controller_id, dialog, args, prefs.active_terminology(), prefs.active_locale()))
@@ -25,24 +25,24 @@ impl DocumentState {
     /// dispatched: the dock's close, focus and resize journalled NOTHING while the panel toggles right
     /// beside them journalled fine, because those had always read the session (ticket
     /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` steps 15–17).
-    pub(crate) fn shell_command_controller_id(&self, plugins: &PluginState) -> Option<String> {
+    pub fn shell_command_controller_id(&self, plugins: &PluginState) -> Option<String> {
         self.session.as_ref().map(|session| session.app.controller_id.clone()).or_else(|| plugins.host_controller_id())
     }
 
     /// 🎬️ The controller every retained document's own action bindings dispatch to: the live
     /// session's app, falling back to the host program's own app when no session is mounted (a
     /// framework panel painted before the guest opened).
-    pub(crate) fn document_controller_id(&self, plugins: &PluginState) -> String {
+    pub fn document_controller_id(&self, plugins: &PluginState) -> String {
         self.session.as_ref().map(|session| session.app.controller_id.clone()).or_else(|| plugins.host_controller_id()).unwrap_or_default()
     }
 
     /// 🪟️ The session whose exact retained document occupies this dock body.
-    pub(crate) fn window_document_session(&self, window_id: &str, plugins: &PluginState) -> Option<&ActiveSession> {
+    pub fn window_document_session(&self, window_id: &str, plugins: &PluginState) -> Option<&ActiveSession> {
         if window_id == "spawned" { self.spawned_session.as_ref().filter(|_| plugins.space_mode) } else { self.session.as_ref() }
     }
 
     /// 🎯️ The app instance addressed by a retained action's controller and surface.
-    pub(crate) fn action_session(&self, action: &ActionDescriptor, plugins: &PluginState) -> Option<&ActiveSession> {
+    pub fn action_session(&self, action: &ActionDescriptor, plugins: &PluginState) -> Option<&ActiveSession> {
         let requested = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str);
         let spawned = self.spawned_session.as_ref().filter(|_| plugins.space_mode);
         if requested == Some("spawned") || spawned.is_some_and(|session| requested.is_some_and(|id| session.view_state.window_instances.iter().any(|window| window.id == id))) {
@@ -55,7 +55,7 @@ impl DocumentState {
     }
 
     /// 📨️ Commands select the declared plugin and app among the mounted sessions.
-    pub(crate) fn command_session(&self, owner: &semio_framework::manifest::CommandOwnerAddress, window_id: Option<&str>, plugins: &PluginState) -> Option<&ActiveSession> {
+    pub fn command_session(&self, owner: &semio_framework::manifest::CommandOwnerAddress, window_id: Option<&str>, plugins: &PluginState) -> Option<&ActiveSession> {
         use semio_framework::manifest::CommandOwnerAddress;
         let matches = |session: &&ActiveSession| match owner {
             CommandOwnerAddress::Os => false,
@@ -102,7 +102,7 @@ impl DocumentState {
     /// (`manifest::examples_for_app`, twin of React's `examplesForApp`) rather than by plugin id: an
     /// example is a document of the artifact's subset, so a plugin that publishes several dialects
     /// must never offer another artifact's fixtures here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub(crate) fn session_example_rows(&self, plugins: &PluginState, prefs: &PrefsState) -> Vec<ShellExampleRow> {
+    pub fn session_example_rows(&self, plugins: &PluginState, prefs: &PrefsState) -> Vec<ShellExampleRow> {
         let Some(session) = &self.session else {
             return Vec::new();
         };
@@ -122,7 +122,7 @@ impl DocumentState {
     /// host-derived sections — the defect measured on the puzzle 3d editor, where an armed utility's
     /// `UiDirtyScope::None` meant the armed body was never fetched at all
     /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B37).
-    pub(crate) fn host_effect_earned_scope(&self, effects: &[semio_framework::kernel::Effect]) -> UiDirtyScope {
+    pub fn host_effect_earned_scope(&self, effects: &[semio_framework::kernel::Effect]) -> UiDirtyScope {
         use semio_framework::kernel::Effect;
         if effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })) {
             return UiDirtyScope::Full;

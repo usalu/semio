@@ -1,7 +1,8 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { WORKSPACE_ROOT, toolJobRuntimeProofQualified } from "../../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { toolJobRuntimeProofQualified } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts";
 
 /** 🧪️ Compares the runtime join fixture with an independent Ajv exact-authority oracle and hostile source variants. */
 export function toolJobFactoryProofJoinSelfTests(): number {

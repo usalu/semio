@@ -66,13 +66,13 @@ test("Original Client and Server Frame Bytes Agree With Independent Protobuf Bod
  const codec=await import("../../💾️binary/📡️wire/🟦️.ts"),protobuf=await import("protobufjs");
  const rows=[["🎟️client-credit-grant","client",5],["📣️client-preview-publish","client",3],["🙋️client-presence","client",4],["🎫️server-credit-grant","server",7],["🚨️server-error","server",8],["🪪️server-session","server",9]]as const;
  for(const [name,side,tag]of rows){
-  const bytes=readFileSync(resolve(owner,`🧪️tests/🧫️fixtures/📡️wire/${name}/💾️.bin`)),reader=protobuf.Reader.create(bytes),writer=protobuf.Writer.create().uint32(bytes[0]).uint32(tag);
+  const bytes=readFileSync(resolve(owner,`🧪️tests/🧫️fixtures/📡️wire/${name}/💾️.bin`)),reader=protobuf.Reader.create(bytes),laneByte=bytes[0];if(laneByte===undefined)throw Error("Wire lane byte required");const writer=protobuf.Writer.create().uint32(laneByte).uint32(tag);
   expect(bytes[1]).toBe(tag);reader.pos=2;let frame:any;
-  if(tag===5||tag===7){const n=reader.uint64().toNumber();frame={CreditGrant:{n}};writer.uint64(n);}
-  else if(tag===3){const key=reader.string(),seq=reader.uint64().toNumber(),payload=Array.from(reader.bytes());frame={PreviewPublish:{key,seq,payload}};writer.string(key).uint64(seq).bytes(payload);}
-  else if(tag===4){const peer=Array.from(reader.bytes());frame={Presence:{peer}};writer.bytes(peer);}
+  if(tag===5||tag===7){const n=Number(reader.uint64().toString());frame={CreditGrant:{n}};writer.uint64(n);}
+  else if(tag===3){const key=reader.string(),seq=Number(reader.uint64().toString()),payload=Array.from(reader.bytes());frame={PreviewPublish:{key,seq,payload}};writer.string(key).uint64(seq).bytes(Uint8Array.from(payload));}
+  else if(tag===4){const peer=Array.from(reader.bytes());frame={Presence:{peer}};writer.bytes(Uint8Array.from(peer));}
   else if(tag===8){const code=reader.string(),message=reader.string();frame={Error:{code,message}};writer.string(code).string(message);}
-  else{const actor=reader.string(),color=reader.buf[reader.pos++];frame={Session:{actor,color}};writer.string(actor).uint32(color);}
+  else{const actor=reader.string(),color=reader.buf[reader.pos++];if(color===undefined)throw Error("Session color byte required");frame={Session:{actor,color}};writer.string(actor).uint32(color);}
   const lane=bytes[0]===0?"command":"preview",decoded=side==="client"?codec.decodeClientFrame(bytes):codec.decodeServerFrame(bytes),encoded=side==="client"?codec.encodeClientFrame(frame,lane):codec.encodeServerFrame(frame,lane);
   expect(reader.pos).toBe(bytes.length);expect(decoded).toEqual({lane,frame});expect(Buffer.from(encoded).toString("hex")).toBe(bytes.toString("hex"));expect(Buffer.from(writer.finish()).toString("hex")).toBe(bytes.toString("hex"));
  }
@@ -161,7 +161,7 @@ test("Original Binary Primitive Bytes Match the Neutral Corpus and Protobufjs", 
   const position: [number] = [0];
   let decoded: unknown, independent: unknown, oracle: Uint8Array;
   switch (row.kind) {
-   case "u64": binary.writeVarintU64(output, row.value); oracle = writer.uint64(row.value).finish(); decoded = binary.readVarintU64(Uint8Array.from(output), position); independent = protobuf.Reader.create(oracle).uint64().toNumber(); break;
+   case "u64": binary.writeVarintU64(output, row.value); oracle = writer.uint64(row.value).finish(); decoded = binary.readVarintU64(Uint8Array.from(output), position); independent = Number(protobuf.Reader.create(oracle).uint64().toString()); break;
    case "u64Exact": binary.writeVarintU64Exact(output, BigInt(row.value)); oracle = writer.uint64(row.value).finish(); decoded = binary.readVarintU64Exact(Uint8Array.from(output), position).toString(); independent = protobuf.Reader.create(oracle).uint64().toString(); break;
    case "text": binary.writeStr(output, row.value); oracle = writer.string(row.value).finish(); decoded = binary.readStr(Uint8Array.from(output), position); independent = protobuf.Reader.create(oracle).string(); break;
    case "bytes": binary.writeBytes(output, row.value); oracle = writer.bytes(row.value).finish(); decoded = binary.readBytes(Uint8Array.from(output), position); independent = Array.from(protobuf.Reader.create(oracle).bytes()); break;
@@ -254,7 +254,7 @@ test("Extracted Presence IO Preserves the Complete Original Strict Corpus and Pr
   expect(Buffer.from(codec.encodePresencePeer(peer)).toString("hex")).toBe(row.canonicalHex);
   const semantic=JSON.parse(JSON.stringify(peer));if(peer.presencePack!==undefined)semantic.presencePack=Buffer.from(peer.presencePack).toString("base64");if(peer.interaction!==undefined){semantic.interaction.appId=peer.interaction.app_id;delete semantic.interaction.app_id;}
   expect(semantic).toEqual(row.expected);
-  const reference=protobuf.Reader.create(bytes);expect(reference.string()).toBe(row.expected.actor);const flags=reference.uint64().toNumber();expect(reference.uint64().toNumber()).toBe(row.expected.connectedAtMs);
+  const reference=protobuf.Reader.create(bytes);expect(reference.string()).toBe(row.expected.actor);const flags=Number(reference.uint64().toString());expect(Number(reference.uint64().toString())).toBe(row.expected.connectedAtMs);
   if((flags&0b1111111111)!==0)continue;
   const writer=protobuf.Writer.create().string(row.expected.actor).uint64(flags).uint64(row.expected.connectedAtMs);
   if(row.expected.toolRun){const run=row.expected.toolRun;writer.string(run.toolId).uint32(["starting","running","paused","complete","finalizing","finalized","aborting","aborted","faulted"].indexOf(run.state)).uint64(run.stage).uint64(run.completed).bool(run.total!==undefined);if(run.total!==undefined)writer.uint64(run.total);}

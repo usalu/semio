@@ -1,6 +1,6 @@
 /** 🎛️ Sparse adjustment parameters preserve explicit reset and schema bounds. */
 import {expect,test} from "bun:test";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import schema from "../../🔺️diff/🔣️.json";
 import mutationSchema from "../../🧬️mutations/🎛️change-layer/🧬️schema/🔣️.json";
 import fixture from "../../🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json";

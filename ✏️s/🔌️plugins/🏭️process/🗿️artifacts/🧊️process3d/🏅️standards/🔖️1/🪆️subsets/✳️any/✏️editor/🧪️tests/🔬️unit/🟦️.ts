@@ -1,12 +1,13 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 test("production maintenance edit carries explicit schema branch provenance", () => {
   const fixtures = new URL("../🧫️fixtures/production-envelope-edit", import.meta.url);
   const fixture = JSON.parse(readFileSync(new URL("🔣️.json", fixtures), "utf8"));
   const ajv = new Ajv({ strict: true });
-  const schema = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(frameworkSourceUrl("🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json"), "utf8"));
   const validate = ajv.compile(schema.$defs.Edit);
   for (const row of fixture.cases) expect(validate(row.edit)).toBe(row.accepted);
   const source = readFileSync(new URL("🦀️.rs", import.meta.url), "utf8"), begin = source.indexOf('"edits": [{', source.indexOf("fn production_envelope_wire("));

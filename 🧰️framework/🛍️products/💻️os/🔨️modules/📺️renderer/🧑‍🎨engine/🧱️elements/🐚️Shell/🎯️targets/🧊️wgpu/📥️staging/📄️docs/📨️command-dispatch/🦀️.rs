@@ -9,7 +9,7 @@ impl DocumentState {
     //#region 🔖️DirectoryAndIdentity
     /// 🧾️ Invokes the stored Home instance and accepts only its terminal Config publication receipt.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn start_directory_home_publication(&mut self, page: CanonicalDirectoryEventPageV1, plugins: &PluginState, directory: &mut DirectoryState) -> Result<(), String> {
+    pub fn start_directory_home_publication(&mut self, page: CanonicalDirectoryEventPageV1, plugins: &PluginState, directory: &mut DirectoryState) -> Result<(), String> {
         let canonical_json = page.canonical_json().to_string();
         let session_identity = directory.identity.as_ref().map(|identity| ViewSessionIdentity { user_id: identity.user_id.clone(), display_name: identity.display_name.clone() });
         let (epoch, instance_id, program, app, view_state, expected) = {
@@ -36,7 +36,7 @@ impl DocumentState {
         let action_json = semio_framework_pack_json::to_json_string(&invocation);
         let (tx, rx) = std::sync::mpsc::channel();
         let expected_for_task = expected.clone();
-        let pool = crate::renderer_worker_pool();
+        let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
         let task = ShellPoolFuture::spawn(pool, Lane::Io, async move {
             let outcome = match program.handle_action(instance_id, &action_json, &view_state).await {
                 Err(error) => ShellDirectoryHomePublicationOutcome::Rejected(error),

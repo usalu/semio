@@ -11,7 +11,7 @@ impl ShellInputState {
     /// selection), a segment picks its option, a stepper button steps, a chip removes its reference, an
     /// enabled button closes the dialog while the hit pipeline dispatches its event, a gated one does
     /// nothing, and a veil click cancels — sending the cancel action exactly as the Cancel button does.
-    pub(crate) fn resolve_chrome_dialog_click(&mut self, ops: &[ChromeDialogPaintOp], dialog: Rect, x: f32, y: f32, chrome: &mut ChromeState, settle: &mut SettleState) {
+    pub fn resolve_chrome_dialog_click(&mut self, ops: &[ChromeDialogPaintOp], dialog: Rect, x: f32, y: f32, chrome: &mut ChromeState, settle: &mut SettleState) {
         let press = ops.iter().find_map(|op| match op {
             ChromeDialogPaintOp::Hit { rect, stop, event, .. } if rect.contains(x, y) => Some(ChromeDialogPress::Stop { stop: *stop, enabled: event.is_some(), rect: *rect }),
             ChromeDialogPaintOp::Segment { rect, field, option, .. } if rect.contains(x, y) => Some(ChromeDialogPress::Segment { field: *field, option: *option }),
@@ -58,7 +58,7 @@ impl ShellInputState {
     /// On a reference field Enter/Space stage the current selection and Backspace/Delete drop the last
     /// reference; on a chip Enter/Space/Backspace/Delete remove it. Always consumes the key — a modal never
     /// lets one fall through to the shell behind it.
-    pub(crate) fn handle_chrome_dialog_key(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState, settle: &mut SettleState) -> bool {
+    pub fn handle_chrome_dialog_key(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState, settle: &mut SettleState) -> bool {
         use ui_wgpu::wgpu::KeyAction;
         let selection = self.interaction_selection.clone();
         let Some(request) = chrome.chrome_build.dialog_stack.last_mut() else { return false };
@@ -150,7 +150,7 @@ impl ShellInputState {
     /// picks its option, a stepper button steps, a reference field stages the live selection, a chip removes itself,
     /// an enabled button dispatches and closes, a gated one does nothing) and a value edits a text, number or axis
     /// field or sets a slider. `false` when `key` names nothing in the open dialog.
-    pub(crate) fn handle_chrome_dialog_accessibility_event(&mut self, key: &str, event: &ui_render::AccessibilityEvent, chrome: &mut ChromeState, settle: &mut SettleState) -> bool {
+    pub fn handle_chrome_dialog_accessibility_event(&mut self, key: &str, event: &ui_render::AccessibilityEvent, chrome: &mut ChromeState, settle: &mut SettleState) -> bool {
         let selection = self.interaction_selection.clone();
         let Some(request) = chrome.chrome_build.dialog_stack.last_mut() else { return false };
         if key == request.accessibility_key() {

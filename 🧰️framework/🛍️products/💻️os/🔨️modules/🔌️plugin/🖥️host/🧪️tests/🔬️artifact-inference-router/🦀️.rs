@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_plugin_guest_contract::PluginHostError;
 
 #[semio_framework_async_macros::async_test]
 async fn only_exactly_echoed_guest_results_are_publishable() {

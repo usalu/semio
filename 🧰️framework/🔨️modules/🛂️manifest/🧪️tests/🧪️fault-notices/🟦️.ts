@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import i18next from "i18next";
 import { semioSchemaAjvV1 } from "../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import toolRunSchema from "../../../⏯️tool-run/🧬️schema/🔣️.json";
-import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, HISTORY_NOTICE_LABELS } from "../../../🎠️kernel/🟦️.ts";
+import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, HISTORY_NOTICE_LABELS } from "../../../🎠️kernel/🏷️notice-labels/🟦️.ts";
 import fixture from "../🧫️fixtures/🧫️fault-notices/🔣️.json";
 import { SHELL_LOCALES, SHELL_TERMINOLOGIES, faultNoticePlaceholders, fillFaultNotice, isFaultNoticeCode, validateFaultNotices, type FaultNoticeDefinition, type FaultNoticeError, type ShellLocale, type ShellTerminology } from "../../🟦️.ts";
 

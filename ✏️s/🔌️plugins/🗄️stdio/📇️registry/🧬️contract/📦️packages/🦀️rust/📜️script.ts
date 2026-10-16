@@ -4,9 +4,8 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { runContributionChecks } from "../../🧪️tests/📇️contributions/🟦️.ts";
 import { runDefinitionHierarchyChecks } from "../../🧪️tests/🪜️definition-hierarchy/🟦️.ts";
 import {runOriginalCopyCloseChecks} from "../../✏️editing/♻️close/🧪️tests/🟦️.ts";
-import { runCompositionContributionChecks } from "../../🧩️composition/🧪️tests/🟦️.ts";
 import {runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import {configuredExactCargoLawPolicyV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import {configuredExactCargoLawPolicyV1} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 /** ♻️ Executes original decoder/copy custody with one actual executable and exact physical laws. */
@@ -25,4 +24,4 @@ class OriginalOwnershipScript extends BundleScript {
   for(const receipt of receipts)console.log(`[DEBUG] Stdio original ownership receipt ${JSON.stringify(receipt)}`);
  }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-contract", { packages: ["semio-s-artifact-stdio-contract", "semio-s-artifact-stdio-contract-wire", "semio-s-artifact-stdio-contract-window-kit", "semio-s-artifact-stdio-contract-assembly", "semio-s-artifact-stdio-contract-editing", "semio-s-artifact-stdio-contract-editing-patch", "semio-s-artifact-stdio-contract-editing-details", "semio-s-artifact-stdio-contract-part21", "semio-s-artifact-stdio-contract-list-delta", "semio-s-artifact-stdio-contract-media-export", "semio-s-artifact-stdio-contract-native-print", "semio-s-artifact-stdio-contract-testing"], commands: {"test-original-ownership":OriginalOwnershipScript}, twins: [{name:"original-owner-close",run:runOriginalCopyCloseChecks},{ name: "definition-hierarchy", run: runDefinitionHierarchyChecks }, { name: "contribution-removal", run: runContributionChecks }, { name: "composition-selection", run: runCompositionContributionChecks }] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-contract", { packages: ["semio-s-artifact-stdio-contract", "semio-s-artifact-stdio-contract-wire", "semio-s-artifact-stdio-contract-window-kit", "semio-s-artifact-stdio-contract-assembly", "semio-s-artifact-stdio-contract-editing", "semio-s-artifact-stdio-contract-editing-patch", "semio-s-artifact-stdio-contract-editing-details", "semio-s-artifact-stdio-contract-part21", "semio-s-artifact-stdio-contract-list-delta", "semio-s-artifact-stdio-contract-media-export", "semio-s-artifact-stdio-contract-native-print", "semio-s-artifact-stdio-contract-testing"], commands: {"test-original-ownership":OriginalOwnershipScript}, twins: [{name:"original-owner-close",run:runOriginalCopyCloseChecks},{ name: "definition-hierarchy", run: runDefinitionHierarchyChecks }, { name: "contribution-removal", run: runContributionChecks }] });

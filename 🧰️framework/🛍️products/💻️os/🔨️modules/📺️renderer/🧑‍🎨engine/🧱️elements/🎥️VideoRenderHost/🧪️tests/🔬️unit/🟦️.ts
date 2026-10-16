@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MEDIA_VIDEO_RENDER_CAPABILITY, VideoRenderJobLedger, type VideoRenderProgram } from "../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { MEDIA_VIDEO_RENDER_CAPABILITY, type VideoRenderProgram } from "../../../../../../../../../🔨️modules/🎠️kernel/🎥️video-render-program/🟦️.ts";
+import { VideoRenderJobLedger } from "../../../../../../../../../🔨️modules/🎠️kernel/🧵️video-render-job/🟦️.ts";
 import { AvcPcmEncoder, avcDecoderConfigurationRecord } from "../../../../../../../../../🔨️modules/🖌️raster/🎥️video/🟦️.ts";
 import { cancelVideoRenderExportV1, drawVideoRenderSceneV1, runVideoRenderExportV1, subscribeVideoRenderExportJobsV1, type VideoRenderContext2dV1, type VideoRenderEnvironmentV1, videoRenderExportJobLogV1, videoRenderExportJobsSnapshotV1, videoRenderExportTaskIdV1, videoRenderPath2dV1, type WebCodecsVideoEncoderPortV1 } from "../../🟦️.ts";
 

@@ -91,7 +91,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     }
 
     fn maintenance_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        self.maintenance_ladder_demands(body)
+        self.ladder_ref().maintenance_ladder_demands(body)
     }
 
     async fn bind_instance_id(&mut self, instance_id: u32) {
@@ -122,7 +122,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
             && self.history.pending_command_prune.is_none()
             && !self.history.command_prune_requested()
             && self.history.command_log.pruned_terminal_is_empty()
-            && InstanceExtensions::terminal_is_empty(self)
+            && InstanceExtensions::terminal_is_empty(&self.time_travel, &self.tool_runs)
             && self.stores.store.close_owned_store_terminal_is_empty()
             && self.stores.config_store.close_owned_store_terminal_is_empty()
             && self.stores.draft_store.close_owned_store_terminal_is_empty()
@@ -175,7 +175,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
             && self.ingest.document_archive_loads.empty_backing_byte_demand()==Some(0)
             && self.ingest.envelope_field_decoder_retirements.is_empty()
             && self.ingest.envelope_completed_record_retirements.is_empty()
-            && self.retained_fields_terminal_is_empty()
+            && self.ladder_ref().retained_fields_terminal_is_empty()
     }
 
     /// 🎡️ Visits the live-maintenance units in fair order and forwards the unchanged grant to the first that releases something.
@@ -184,11 +184,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     }
 
     fn maintenance_terminal_is_empty(&self) -> bool {
-        self.maintenance_ladder_terminal_is_empty()
+        self.ladder_ref().maintenance_ladder_terminal_is_empty()
     }
 
     fn maintenance_under_pressure(&self) -> bool {
-        self.maintenance_ladder_under_pressure()
+        self.ladder_ref().maintenance_ladder_under_pressure()
     }
 
     async fn app_id(&self) -> &str {
@@ -231,12 +231,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         if self.interaction.local_interaction_query_receipt.is_some(){return Ok(())}
         if self.constructor.has_constructor_receipt() { return Ok(()); }
         if self.constructor.store_constructor_is_pending() { ({ let __a0 = crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,retained); self.stores.drive_store_constructor_unit(&mut self.constructor, __a0) })?; return Ok(()); }
-        if InstanceExtensions::holds_receipt(self) || (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index|self.tools.tool_operations.entry(index).is_some_and(|(_,owner)|owner.publication_ownership_progress.is_some()||owner.original_retirement_receipt.is_some())){return Ok(());}
+        if InstanceExtensions::holds_receipt(&self.time_travel, &self.tool_runs) || (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index|self.tools.tool_operations.entry(index).is_some_and(|(_,owner)|owner.publication_ownership_progress.is_some()||owner.original_retirement_receipt.is_some())){return Ok(());}
         if !self.pending.reserved_commits.is_empty() && self.pending.reserved_commit_outcome.is_none() {
-            self.step_framework_reserved_commit().await?;
+            self.command_ctx().step_framework_reserved_commit().await?;
             return Ok(());
         }
-        if InstanceExtensions::drive_turn(self, &mut retained, identity, cx).await? {
+        if InstanceExtensions::drive_turn(&mut self.extension_ctx(), &mut retained, identity, cx).await? {
             return Ok(());
         }
         if self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()) {
@@ -246,7 +246,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
                 return Ok(());
             }
         }
-        self.advance_typed_operation_publication_one(cx).await.map_err(Into::into)
+        self.typed_ctx().advance_typed_operation_publication_one(cx).await.map_err(Into::into)
     }
 
     fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)> {
@@ -296,7 +296,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     }
 
     fn close_diagnostic(&self) -> String {
-        self.close_rung_name()
+        self.ladder_ref().close_rung_name()
     }
 
     fn typed_operation_diagnostic(&self) -> String {
@@ -309,7 +309,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     fn has_pending_typed_operations(&self) -> bool {
         self.constructor.store_constructor_is_pending() || self.tools.operation_progress_retired
             || self.child_composition.derivable_follow_awaits_retirement(&self.stores)
-            || InstanceExtensions::has_pending_work(self)
+            || InstanceExtensions::has_pending_work(&self.extension_ref())
             || !self.pending.reserved_commits.is_empty()
             || self.pending.reserved_commit_outcome.is_some()
             || !self.tools.tool_operations.is_empty()
@@ -328,7 +328,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     fn has_runnable_typed_operations(&self) -> bool {
         self.constructor.store_constructor_is_pending() || self.tools.operation_progress_retired
             || self.child_composition.derivable_follow_awaits_retirement(&self.stores)
-            || InstanceExtensions::has_pending_work(self)
+            || InstanceExtensions::has_pending_work(&self.extension_ref())
             || !self.pending.reserved_commits.is_empty()
             || self.pending.reserved_commit_outcome.is_some()
             || !self.tools.tool_operations.is_empty()
@@ -488,8 +488,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> {
         let Some(witness) = self.tools.typed_completion_outbox.pop() else { return Ok(None) };
         self.tools.record_settled_typed_operation_command(&mut self.history, &mut self.host_events, witness.operation);
-        self.refresh_cache().await?;
-        let history_patch = if self.history.history_dirty_sequences.is_empty() { None } else { Some(self.history_patch(false).await?) };
+        self.render_ctx().refresh_cache().await?;
+        let history_patch = if self.history.history_dirty_sequences.is_empty() { None } else { Some(self.render_ctx().history_patch(false).await?) };
         let revision = self.stores.store.content_revision_now();
         Ok(Some(TypedOperationCompletion { operation: witness.operation, revision: u64::from_be_bytes(revision[..8].try_into().expect("revision lane width")), ui_scope: witness.ui_scope, history_patch }))
     }
@@ -520,10 +520,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
 
     async fn handle_action(&mut self, action: &str, args: &mut Option<DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         let log_generation_before = self.history.log_generation;
-        let result = self.dispatch_action(action, args, &mut None, meta, identity, cx).await?;
+        let result = self.command_ctx().dispatch_action(action, args, &mut None, meta, identity, cx).await?;
         let Some(result)=result else{return Ok(None)};
         self.child_composition.follow_derivable_children(&mut self.stores, identity).await?;
-        Ok(Some(self.finish_recorded(log_generation_before, action, result).await))
+        Ok(Some(self.render_ctx().finish_recorded(log_generation_before, action, result).await))
     }
 
     fn admit_reserved_spawned_job(&mut self, job: u64, output: Result<Vec<u8>, Fault>) -> Result<bool, Fault> {
@@ -562,10 +562,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         if !self.ingress.action_source_capture_ready(&address.action_id, cx){return Ok(None)}
         let log_generation_before = self.history.log_generation;
         let previous_kind = self.host_events.invocation_kind.replace(kind);
-        let result = self.dispatch_action(&address.action_id, source_args, original_fault, meta, identity, cx).await;
+        let result = self.command_ctx().dispatch_action(&address.action_id, source_args, original_fault, meta, identity, cx).await;
         self.host_events.invocation_kind = previous_kind;
         let Some(result) = result? else{return Ok(None)};
-        Ok(Some(self.finish_recorded(log_generation_before, &address.action_id, result).await))
+        Ok(Some(self.render_ctx().finish_recorded(log_generation_before, &address.action_id, result).await))
     }
 
     async fn handle_response_action(&mut self, action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
@@ -579,25 +579,25 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.media.require_complete_tool_operation_pipeline(&admission)?;
         let log_generation_before = self.history.log_generation;
         let previous_kind = self.host_events.invocation_kind.replace(kind);
-        let result = self.dispatch_typed_command_inner(Box::new(command), admission, meta, identity, cx).await;
+        let result = self.dispatch_ctx().dispatch_typed_command_inner(Box::new(command), admission, meta, identity, cx).await;
         self.host_events.invocation_kind = previous_kind;
         let result = result?;
-        Ok(Some(self.finish_recorded(log_generation_before, action, result).await))
+        Ok(Some(self.render_ctx().finish_recorded(log_generation_before, action, result).await))
     }
 
     async fn handle_command(&mut self, address: &ManifestCommandAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
         let log_generation_before = self.history.log_generation;
-        let result = self.dispatch_command(address, source_args, original_fault, active_mode_id, meta, identity, cx).await?;
+        let result = self.command_ctx().dispatch_command(address, source_args, original_fault, active_mode_id, meta, identity, cx).await?;
         let Some(result)=result else{return Ok(None)};
-        Ok(Some(self.finish_recorded(log_generation_before, &address.command_id, result).await))
+        Ok(Some(self.render_ctx().finish_recorded(log_generation_before, &address.command_id, result).await))
     }
 
     fn original_command_frame_pending(&self)->bool{self.tools.agent_lane_preview.is_some()}
 
     async fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
         let log_generation_before = self.history.log_generation;
-        let result = self.dispatch_command_frame(command_bytes, meta, identity, cx).await?;
-        match result{Some(result)=>Ok(Some(self.finish_recorded(log_generation_before,"typed-command",result).await)),None=>Ok(None)}
+        let result = self.command_ctx().dispatch_command_frame(command_bytes, meta, identity, cx).await?;
+        match result{Some(result)=>Ok(Some(self.render_ctx().finish_recorded(log_generation_before,"typed-command",result).await)),None=>Ok(None)}
     }
 
     /// 🎯️ M1: resolves `A::command_from_intent(intent)` then dispatches through the SAME
@@ -612,7 +612,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         if !self.ingress.action_source_capture_ready(verb, cx){return Ok(None)}
         let mut merged = if self.ingress.action_source_pending(){None}else{merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?};
         let Some(command)=self.ingress.receive_action_command(verb, &mut merged, &mut None, cx).await?else{return Ok(None)};
-        self.dispatch_typed(command, meta, identity, cx).await.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from)
+        self.dispatch_ctx().dispatch_typed(command, meta, identity, cx).await.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes the task resolution's own
@@ -621,7 +621,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     async fn resume_task_command(&mut self, command_bytes: Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let command = <A::Command as ::protocol::OpBinary>::decode_op(&command_bytes)
             .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.task-resume-command"), format!("an AsyncTask resolved TaskResolution::Command with bytes that are not this app's typed Command: {error}")))?;
-        self.dispatch_typed(command, meta, identity, cx).await
+        self.dispatch_ctx().dispatch_typed(command, meta, identity, cx).await
     }
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes each lane's wire ops back into this
@@ -641,8 +641,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         let artifact_mutations = decode_lane::<A::Mutation>(&artifact_ops).await?;
         let config_mutations = decode_lane::<A::ConfigMutation>(&config_ops).await?;
         let draft_mutations = decode_lane::<A::DraftMutation>(&draft_ops).await?;
-        let result = self.dispatch_emit("task-resume-emit", Emit { artifact_mutations, config_mutations, draft_mutations, ..Default::default() }, meta, identity, cx).await?;
-        Ok(self.finish_recorded(log_generation_before, "task-resume-emit", result).await)
+        let result = self.dispatch_ctx().dispatch_emit("task-resume-emit", Emit { artifact_mutations, config_mutations, draft_mutations, ..Default::default() }, meta, identity, cx).await?;
+        Ok(self.render_ctx().finish_recorded(log_generation_before, "task-resume-emit", result).await)
     }
 
     async fn take_last_emit_wire(&mut self) -> Option<EmitWire> {
@@ -668,7 +668,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     /// as a contract gap for the coordinator/host lanes to close (e.g. by always
     /// preferring the pre-planned form, which does carry `origin`).
     async fn transaction_prepare(&mut self, txn_id: &str, _mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome {
-        if let Some(rejection) = InstanceExtensions::transaction_refusal(self, txn_id) {
+        if let Some(rejection) = InstanceExtensions::transaction_refusal(&self.time_travel, &self.tool_runs, txn_id) {
             return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(rejection) };
         }
         if self.txn.pending_transaction.is_some() {
@@ -754,7 +754,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         }
         let PendingTransaction { txn_id, ops, children, origin, .. } = pending;
         if !children.is_empty() {
-            return self.commit_transaction_group(&txn_id, ops, children, origin, meta, identity).await;
+            return self.dispatch_ctx().commit_transaction_group(&txn_id, ops, children, origin, meta, identity).await;
         }
         let label = ops.first().map(|op| protocol::SemanticMutation::<A::Snapshot>::label(op));
         self.stores.store.dispatch(ArtifactCommand::Apply { mutations: ops, transaction: None }, identity).await.map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
@@ -778,7 +778,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
 
     async fn transaction_undo(&mut self, group_id: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         if !self.child_composition.children.is_empty() {
-            return self.transaction_group_history("undo", group_id, identity).await;
+            return self.dispatch_ctx().transaction_group_history("undo", group_id, identity).await;
         }
         if self.stores.store.tail_group_id().await.as_deref() != Some(group_id) {
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("transaction.undo-foreign-tail"), format!("transaction_undo: this instance's tail edit does not belong to group {group_id:?}")));
@@ -790,7 +790,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
 
     async fn transaction_redo(&mut self, group_id: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         if !self.child_composition.children.is_empty() {
-            return self.transaction_group_history("redo", group_id, identity).await;
+            return self.dispatch_ctx().transaction_group_history("redo", group_id, identity).await;
         }
         match self.stores.store.redo_tail().await {
             Some((_, Some(tail_group))) if tail_group == group_id => {
@@ -806,7 +806,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         if self.time_travel.history_unavailable() {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new(PURE_HISTORY_UNAVAILABLE_CODE), "this head-only pure evaluation holds no history; use a live instance"));
         }
-        self.history_patch(true).await
+        self.render_ctx().history_patch(true).await
     }
 
     /// 🫥️ A pure command's head is the HEAD snapshot without history (design §20.8, `📓️api-stepped-document-load.md` §4):
@@ -821,7 +821,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         let head = <A::Snapshot as ArtifactPack>::decode_pack(head).map_err(|error| plugin_sdk_fault(format!("the pure head snapshot does not decode: {error:?}")))?;
         let id = self.stores.store.envelope().id.clone();
         let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &id, head, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        let mut window_reset=Some(self.prepare_document_window_reset()?);
+        let mut window_reset=Some(self.ladder_ref().prepare_document_window_reset()?);
         let actor = self.stores.store.local_actor_id().clone();
         self.stores.store.reset(loaded_with_app_dialect::<A>(envelope)).await.map_err(|error| error.into_fault())?;
         self.pending.commit_document_window_reset(&mut self.stores, &mut self.history, &mut window_reset, cx)?;
@@ -1009,7 +1009,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 📬️ Observes the original mounted load; its registered maintenance job drives retained work.
     async fn poll_document_archive_load(&mut self, operation: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
         if self.ingest.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::awaits_merge) {
-            self.merge_document_archive(operation, identity, cx).await?;
+            self.command_ctx().merge_document_archive(operation, identity, cx).await?;
         }
         self.ingest.document_archive_loads.get(operation).map(ActiveDocumentArchiveLoad::status).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "recursive document archive authority changed before status publication"))
     }
@@ -1072,8 +1072,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     async fn dispatch_config_command(&mut self, command_bytes: &mut Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         let log_generation_before = self.history.log_generation;
-        let Some(result)=self.dispatch_config_command_inner(command_bytes,meta,identity,cx).await? else{return Ok(None)};
-        Ok(Some(self.finish_recorded(log_generation_before,"configCommand",result).await))
+        let Some(result)=self.dispatch_ctx().dispatch_config_command_inner(command_bytes,meta,identity,cx).await? else{return Ok(None)};
+        Ok(Some(self.render_ctx().finish_recorded(log_generation_before,"configCommand",result).await))
     }
 
     async fn ingest_operations(&mut self, mutations: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<protocol::MergeReport>, Fault> {
@@ -1085,7 +1085,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
         self.history.cache = None;
         if self.stores.store.generation() != generation {
-            self.deliver_base_moved(identity, cx).await?;
+            self.dispatch_ctx().deliver_base_moved(identity, cx).await?;
         }
         Ok(reports)
     }
@@ -1128,7 +1128,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let generation = self.stores.store.generation();
         let reports = self.stores.store.tick_backbone_reports().await.map_err(|error| error.into_fault())?;
         if self.stores.store.generation() != generation {
-            self.deliver_base_moved(identity, cx).await?;
+            self.dispatch_ctx().deliver_base_moved(identity, cx).await?;
         }
         self.child_composition.follow_derivable_children(&mut self.stores, identity).await?;
         let folded_member_lanes = self.child_composition.fold_member_inbound(&mut self.stores, &mut self.history).await?;
@@ -1164,26 +1164,26 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             self.pending.pending_render_tree_ready=true;
             return Ok(Some(()));
         }
-        self.refresh_cache().await?;
+        self.render_ctx().refresh_cache().await?;
         if body_key == FRAMEWORK_HISTORY_BODY_KEY {
             let Some((_, _, _, history)) = self.history.cache.as_ref() else {
                 return Err(plugin_sdk_fault("render cache unavailable after refresh").into());
             };
             let mut time_travel = self.time_travel.panel();
             if let Some(panel) = time_travel.as_mut() {
-                self.resolve_time_travel_snaps(panel, view_state);
-                self.resolve_time_travel_options(panel);
-                self.resolve_time_travel_reference_labels(panel);
+                self.time_travel_ref().resolve_time_travel_snaps(panel, view_state);
+                self.time_travel_ref().resolve_time_travel_options(panel);
+                self.time_travel_ref().resolve_time_travel_reference_labels(panel);
             }
-            let reprojection = self.reprojection_status();
+            let reprojection = self.render_ref().reprojection_status();
             let pages = self.child_composition.history_mutation_pages(&self.stores, history, time_travel.as_ref(), view_state);
             let root =
-                ui_history_panel(history, time_travel.as_ref(), reprojection.as_ref(), &pages, &self.tools.registry.controller_id, view_state.locale, A::ROLE == AppRole::Viewer, self.time_travel_busy(), view_state).await?;
+                ui_history_panel(history, time_travel.as_ref(), reprojection.as_ref(), &pages, &self.tools.registry.controller_id, view_state.locale, A::ROLE == AppRole::Viewer, self.time_travel_ref().time_travel_busy(), view_state).await?;
             self.pending.retain_pending_render_tree(built_to_component_tree(root));
             self.pending.pending_render_tree_ready=true;
             return Ok(Some(()));
         }
-        if let Some(root) = InstanceExtensions::render_body(self, body_key, view_state) {
+        if let Some(root) = InstanceExtensions::render_body(&mut self.extension_ctx(), body_key, view_state) {
             self.pending.retain_pending_render_tree(built_to_component_tree(root?));
             self.pending.pending_render_tree_ready=true;
             return Ok(Some(()));
@@ -1205,7 +1205,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
             let Some(node) = A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await? else{return Ok(None)};
             self.pending.retain_pending_render_tree(node);
-            self.stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
+            self.render_ctx().stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
             self.pending.pending_render_tree_ready=true;
             return Ok(Some(()));
         }
@@ -1235,8 +1235,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await?
         }) else{return Ok(None)};
         self.pending.retain_pending_render_tree(node);
-        InstanceExtensions::after_app_render(self, body_key, view_state)?;
-        self.stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
+        InstanceExtensions::after_app_render(&mut self.extension_ctx(), body_key, view_state)?;
+        self.render_ctx().stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
         self.pending.pending_render_tree_ready=true;
         Ok(Some(()))
         }.await;
@@ -1253,7 +1253,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// paths use: `interaction_hover`/`peer_presence` are read-only here, so an owned snapshot
     /// avoids aliasing the `&mut self` field-wise destructure below.
     async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
-        if self.refresh_cache().await.is_err() {
+        if self.render_ctx().refresh_cache().await.is_err() {
             return HashMap::new();
         }
         let interaction_state = self.interaction.interaction_state(&self.stores).await;
@@ -1299,7 +1299,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     async fn window_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        if self.refresh_cache().await.is_err() {
+        if self.render_ctx().refresh_cache().await.is_err() {
             return HashMap::new();
         }
         let interaction_state = self.interaction.interaction_state(&self.stores).await;
@@ -1339,7 +1339,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     async fn tool_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        if self.refresh_cache().await.is_err() {
+        if self.render_ctx().refresh_cache().await.is_err() {
             return HashMap::new();
         }
         let window_config = match self.stores.window_config_store.capture(Some(view_state)).await {
@@ -1386,7 +1386,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// stays the COMMITTED snapshot: a poll decides about work over what has landed, never over a
     /// run's own provisional overlay.
     async fn pending_effects(&mut self, view: Option<&ViewModel>) -> Vec<Effect> {
-        if self.refresh_cache().await.is_err() {
+        if self.render_ctx().refresh_cache().await.is_err() {
             return Vec::new();
         }
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
@@ -1422,7 +1422,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// single funnel — a raw-vec emitter is grouped for free, and an emitter that already built its own
     /// `Menu::group(...)` rows is never re-flattened (`organize_context_menu` is idempotent on already-organized input).
     async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> {
-        if self.refresh_cache().await.is_err() {
+        if self.render_ctx().refresh_cache().await.is_err() {
             return Vec::new();
         }
         let interaction_state = self.interaction.interaction_state(&self.stores).await;
@@ -1451,7 +1451,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     async fn produce_media(&mut self, port: &str, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,crate::app_contract::MediaArtifactOperationFailure> {
         if port == NATURAL_FILE_PORT {
             let codec = A::natural_file_codec().await.ok_or_else(|| MediaArtifactError::Payload("natural file exporter is not mounted".into()))?;
-            self.refresh_cache().await?;
+            self.render_ctx().refresh_cache().await?;
             let snapshot = self.history.cache.as_ref().expect("cache refreshed above").1.as_ref();
             let data = A::encode_natural_file(snapshot).await.map_err(MediaArtifactError::Export)?;
             return Ok(Some(MediaArtifact {
@@ -1502,7 +1502,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             return Ok(!cx.should_yield()&&cx.retained_grant().maximum_items>0&&cx.retained_grant().maximum_depth>0)
         }
         let meta=ActionMeta{actor:self.stores.store.local_actor_id().0.clone(),instance_id:self.tools.live_runtime_instance_id.ok_or_else(||plugin_sdk_fault("media import requires its mounted live instance"))?,view_state:None};
-        let Some(permit)=self.admit_reserved_emit_producer("import-media",&meta,cx)?else{return Ok(false)};
+        let Some(permit)=self.dispatch_ctx().admit_reserved_emit_producer("import-media",&meta,cx)?else{return Ok(false)};
         *self.media.pending_media_import_permit=Some((permit,source));Ok(false)
     }
 
@@ -1521,7 +1521,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     };
                     let instance_id = self.tools.live_runtime_instance_id.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "intrinsic media import requires a bound live app instance"))?;
                     let actor = self.stores.store.local_actor_id().0.clone();
-                    self.dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx).await.map(|_| MediaConsumption::Applied).map_err(MediaArtifactError::Import)
+                    self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx).await.map(|_| MediaConsumption::Applied).map_err(MediaArtifactError::Import)
                 }
             };
         }
@@ -1536,7 +1536,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let actor = self.stores.store.local_actor_id().0.clone();
         let media_type = A::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
         let media = natural_file_input_media(codec, media_type, artifact.data);
-        self.dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx)
+        self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx)
             .await
             .map(|_| MediaConsumption::Applied)
             .map_err(|fault| MediaArtifactError::Payload(fault.message))
@@ -1554,7 +1554,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             return match self.media.receive_owned_media_poll(&mut self.stores, operation_id, cx).await?{None|Some(ArtifactMediaExportPoll::Running{..})=>Ok(None),Some(ArtifactMediaExportPoll::Complete(result))=>match result.into_batch_media(){Ok(media)=>Ok(Some(media)),Err(source)=>self.media.retain_media_submission_refusal(source, cx)},Some(ArtifactMediaExportPoll::Cancelled)=>self.media.retain_media_submission_refusal(MediaError::Payload(port.to_string(),"media export cancelled".into()), cx),Some(ArtifactMediaExportPoll::Failed(detail))=>self.media.retain_media_submission_refusal(MediaError::Payload(port.to_string(),detail), cx)};
         }
-        self.refresh_cache().await?;
+        self.render_ctx().refresh_cache().await?;
         let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);let parent_document_id=self.stores.store.envelope().id.clone();
         let VcsArtifactApp{app:_,cache,child_content_root,transient_store,instance_operation_owner,..}=self;
         let(_,snapshot,config,history)=cache.as_ref().expect("cache refreshed above");
@@ -1661,12 +1661,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     async fn import_media(&mut self, port: &str, media: Media, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let log_generation_before = self.history.log_generation;
-        let result = self.dispatch_import_media(port, media, meta, cx).await?;
-        Ok(self.finish_recorded(log_generation_before, &format!("import-media:{port}"), result).await)
+        let result = self.dispatch_ctx().dispatch_import_media(port, media, meta, cx).await?;
+        Ok(self.render_ctx().finish_recorded(log_generation_before, &format!("import-media:{port}"), result).await)
     }
 
     async fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
-        self.refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
+        self.render_ctx().refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
         let VcsArtifactApp { app: _, cache, child_content_root, instance_operation_owner, .. } = self;

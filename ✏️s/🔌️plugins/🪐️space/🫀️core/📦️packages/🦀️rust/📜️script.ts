@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🌱️ Executes the shared authority's complete app and portable native laws. */
 import {resolve} from "node:path";
-import {readMutationInventoryExecutionPolicy} from "../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
+import {readMutationInventoryExecutionPolicy} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
 import {readCargoTestPolicyV1,runCargoTestsV1} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 if(process.argv[2]!=="test"){
  const {runArtifactRustPackageMain}=await import("../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts");

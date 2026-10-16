@@ -9,11 +9,11 @@ use super::*;
 /// 🪟️ One bounded roster mutation whose first retained body is the release condition for its
 /// optional React-equivalent transfer journal.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct WindowTopologyPublication {
-    pub(crate) window_id: String,
-    pub(crate) body_key: String,
-    pub(crate) attempts: u8,
-    pub(crate) journal_token: Option<u64>,
+pub struct WindowTopologyPublication {
+    pub window_id: String,
+    pub body_key: String,
+    pub attempts: u8,
+    pub journal_token: Option<u64>,
 }
 
 //#endregion 🧯️BootProgramSelection

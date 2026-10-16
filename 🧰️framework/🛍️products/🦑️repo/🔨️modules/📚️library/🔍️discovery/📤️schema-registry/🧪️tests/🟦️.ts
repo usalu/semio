@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { SchemaScript } from "../../../../../../../../📜️script.ts";
+import { SchemaScript } from "../../../🎛️commands/🧬️schema/🟦️.ts";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import Ajv from "ajv";
 import { loadProductionSchemaEntriesV1 } from "../🟦️.ts";

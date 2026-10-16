@@ -309,7 +309,7 @@ pub mod artifact_app_laws {
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
-        app.refresh_cache().await?;
+        app.render_ctx().refresh_cache().await?;
         let read = app.stores.store.snapshot_read().map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
         let (generation, revision) = (app.stores.store.generation_now(), app.stores.store.content_revision());
         if !read.commit_authority_matches(generation, revision) {
@@ -1715,7 +1715,7 @@ pub mod artifact_app_laws {
             document.extend_from_slice(child.child_id.as_bytes());
             document.extend_from_slice(&child.envelope_pack);
         }
-        let config = match app.refresh_cache().await {
+        let config = match app.render_ctx().refresh_cache().await {
             Ok(()) => app.history.cache.as_ref().map(|(_, _, config, _)| pack::snapshot::ArtifactPack::encode_pack(config.as_ref())).unwrap_or_default(),
             Err(_) => Vec::new(),
         };
@@ -1835,7 +1835,7 @@ pub mod artifact_app_laws {
     where A:ArtifactApp,M:super::SpaceMember+super::MemberFactory+Send+'static{
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             if cx.should_yield(){break}
-            if let Some(result)=app.preview_addressed_action(invocation,meta,cx).await?{return Ok(result)}
+            if let Some(result)=app.command_ctx().preview_addressed_action(invocation,meta,cx).await?{return Ok(result)}
         }
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture preview did not settle under its supplied context").into())
     }
@@ -2629,7 +2629,7 @@ pub mod artifact_app_laws {
         let result=async{
         use super::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, PeerPresenceRoot};
         let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default(), protocol::ActorId(super::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
-        app.refresh_cache().await.expect("viewer fixture cache");
+        app.render_ctx().refresh_cache().await.expect("viewer fixture cache");
         let result = {
             let (_, snapshot, config, history) = app.history.cache.as_ref().expect("viewer fixture cache populated");
             let doc = ArtifactView::new(snapshot.as_ref(), history.as_ref());
@@ -2697,7 +2697,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
         let expected_surface_ids: Vec<String> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter()).flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()]).collect();
 
-        let plugin = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
+        let plugin = super::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
 
         for id in &expected_schema_ids {
             assert!(::semio_framework_schema_registry::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
@@ -2726,7 +2726,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
         let schema_count_before = ::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len());
         let io_count_before = semio_framework_os_kernel::io::io_mechanism::io_entries().len();
-        let result = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
+        let result = super::PluginBuilder::new(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
         assert!(result.is_err(), "a declaration that fails preflight must not build a plugin");
         assert_eq!(::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
         assert_eq!(semio_framework_os_kernel::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");

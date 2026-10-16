@@ -1,5 +1,5 @@
 /** 💾️ PNG native admission and emission of precise owned image values. */
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import {defaultPngSnapshot,validatePngImage,pngSamplesPerPixel,type PngSnapshot,type PngColorType,type PngSrgbIntent} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parsePngNative,crc} from "../../🪶️sqlite/📸️snapshot/🧩️chunks/🟦️.ts";
 import {encodeScanlines,type PngScanline} from "../../🪶️sqlite/📸️snapshot/🌈️scanline/🟦️.ts";

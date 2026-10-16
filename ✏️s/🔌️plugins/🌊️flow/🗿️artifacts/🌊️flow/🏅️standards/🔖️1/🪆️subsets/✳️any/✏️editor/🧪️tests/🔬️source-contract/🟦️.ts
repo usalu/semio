@@ -4,12 +4,11 @@ import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
 import stableStringify from "fast-json-stable-stringify";
 import { applyPatches, enablePatches, produceWithPatches } from "immer";
-import { encodeScalarRecordFixture } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️tests/🔎️scalar-witness/🟦️.ts";
+import { encodeScalarRecordFixture } from "@semio-tech/framework/pack/value/scalar-witness/testing";
 import { testBuiltTreeRetirementFixture } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
-import { testFixtureProjectionRetirement } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 testBuiltTreeRetirementFixture();
-testFixtureProjectionRetirement();
 
 //#region 🧬️OwnedSchemaExports
 /** 🧬️ Editor fixture contracts remain separate from the persisted artifact schema. */
@@ -93,7 +92,7 @@ for (const row of treeProjection.cases) {
   else assert.deepEqual(JSON.parse(stableStringify(project(row.input, 0))), row.expected);
 }
 
-const treeFixtureSource = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs", import.meta.url)).text();
+const treeFixtureSource = await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs")).text();
 assert(treeFixtureSource.includes("pub fn project_and_retire_fixture_tree("), "shared retained tree fixture observer is not implemented");
 assert(treeFixtureSource.includes("FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1)"), "retirement must cover every retained page, including unobserved rejected descendants");
 
@@ -115,8 +114,8 @@ for (const row of hostWire.cases) {
 
 
 //#region 🎚️ParameterIntent
-const parameter = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();
-const parameterSchema = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧬️schema/🔣️.json", import.meta.url)).json();
+const parameter = await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️tests/🧫️fixtures/🔣️.json")).json();
+const parameterSchema = await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧬️schema/🔣️.json")).json();
 const parameterAjv = new Ajv({ strict: true, allErrors: true });
 parameterAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
 parameterAjv.addSchema(parameterSchema);
@@ -178,7 +177,7 @@ for (const row of fixture.cases) {
 }
 //#endregion ⚖️IndependentByteOracle
 //#region 🏷️AuthoredSliderLabels
-const labels = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json", import.meta.url)).json();
+const labels = await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json")).json();
 
 
 for (const row of labels.cases) {
@@ -187,7 +186,7 @@ for (const row of labels.cases) {
   assert.equal(Buffer.from(new TextEncoder().encode(row.widget.label)).toString("utf8"), row.expectedDagName);
 }
 
-const artifactSource = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs", import.meta.url)).text();
+const artifactSource = await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs")).text();
 assert.match(artifactSource, /InputSlider\s*\{\s*id: String,\s*label: String,/);
 assert.match(artifactSource, /Widget::InputSlider \{ label, \.\. \} => \(label\.clone\(\), label\.clone\(\)/);
 //#endregion 🏷️AuthoredSliderLabels

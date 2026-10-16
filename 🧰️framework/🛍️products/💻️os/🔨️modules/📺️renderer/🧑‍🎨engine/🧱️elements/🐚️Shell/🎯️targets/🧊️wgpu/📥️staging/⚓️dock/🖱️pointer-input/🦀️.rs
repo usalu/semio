@@ -9,7 +9,7 @@ use super::*;
 //#endregion ShellInput
 
 /// 🖱️ DOM-standard `MouseEvent.button` code onto the retained event's own button identity.
-pub(super) fn retained_pointer_button(button: i16) -> ui_wgpu::wgpu::PointerButton {
+pub fn retained_pointer_button(button: i16) -> ui_wgpu::wgpu::PointerButton {
     match button {
         1 => ui_wgpu::wgpu::PointerButton::Middle,
         2 => ui_wgpu::wgpu::PointerButton::Secondary,
@@ -23,6 +23,6 @@ pub(super) fn retained_pointer_button(button: i16) -> ui_wgpu::wgpu::PointerButt
 /// (`⚙️VirtualFileSystem/🟦️.tsx:520-521`), so a retained press that dropped them could never
 /// express shift-extend or ctrl-toggle on any list surface
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1).
-pub(super) fn retained_event_modifiers(input: &InputState<ActionDescriptor>) -> ui_wgpu::wgpu::EventModifiers {
+pub fn retained_event_modifiers(input: &InputState<ActionDescriptor>) -> ui_wgpu::wgpu::EventModifiers {
     ui_wgpu::wgpu::EventModifiers { shift: input.modifiers.shift, ctrl: input.modifiers.ctrl, alt: input.modifiers.alt, meta: input.modifiers.meta }
 }

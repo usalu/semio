@@ -1,4 +1,6 @@
-import { INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadRustPolicySource, interactivityMountedPreparedRenderFailures } from "../../../../../../📜️script.ts";
+import { INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
+import { policyReadRustPolicySource } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
+import { interactivityMountedPreparedRenderFailures } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts";
 
 /** 📚️ One policy source per audited file, arity-preserving so the failure checkers keep their positional parameters. */
 type PreparedRenderPolicySources = [string, string, string, string, string, string];
@@ -12,7 +14,7 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
     "🧰️framework/🔨️modules/🖱️ui/🖌️render/🖼️frame/🦀️.rs",
     "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎬️scene/🦀️.rs",
-  ];
+  ] as const;
   const clean: Readonly<PreparedRenderPolicySources> = [
     policyReadRustPolicySource(repoRoot, files[0]),
     policyReadRustPolicySource(repoRoot, files[1]),

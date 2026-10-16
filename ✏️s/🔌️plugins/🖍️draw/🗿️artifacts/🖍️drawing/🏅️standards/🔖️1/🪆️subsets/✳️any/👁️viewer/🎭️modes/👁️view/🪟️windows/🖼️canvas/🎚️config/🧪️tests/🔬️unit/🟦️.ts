@@ -6,9 +6,10 @@ import { applyPatch } from "fast-json-patch";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { applyDrawingViewerCanvasWindowConfigMutation,parseDrawingViewerCanvasWindowConfig,type DrawingViewerCanvasWindowConfig } from "../../🧬️schema/🟦️.ts";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 test("viewer cameras are independent and restore from the same neutral trace",async () => {
-  const viewportSchema = await Bun.file(new URL("../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json",import.meta.url)).json();
+  const viewportSchema = await Bun.file(frameworkSourceUrl("🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json")).json();
   const ajv = new Ajv().addMetaSchema(draft7);
   ajv.addSchema(viewportSchema);
   const validate = ajv.compile(schema);

@@ -156,6 +156,10 @@
 
     {"name": "🧪️ build-mode-rlib-state-test prototype", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/build-mode/📜️script.ts test prototype", "cwd": "${workspaceFolder}", "env": {"SEMIO_RLIB_STATE_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.057519}},
     {"name": "🧪️ build-mode-component-profile-test prototype", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/build-mode/📜️script.ts test prototype", "cwd": "${workspaceFolder}", "env": {"SEMIO_COMPONENT_PROFILE_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.057520}},
+    {"name": "🧪️ framework-strict-test prototype", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts test prototype", "cwd": "${workspaceFolder}", "env": {"SEMIO_FRAMEWORK_STRICT_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.057523}},
+    {"name": "🧪️ framework-strict-test release", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts test release", "cwd": "${workspaceFolder}", "env": {"SEMIO_FRAMEWORK_STRICT_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.0575230009999}},
+    {"name": "🧪️ framework-strict-types prototype", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts types-owned prototype", "cwd": "${workspaceFolder}", "env": {"SEMIO_FRAMEWORK_STRICT_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.0575230019999}},
+    {"name": "🧪️ framework-strict-types release", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts types-owned release", "cwd": "${workspaceFolder}", "env": {"SEMIO_FRAMEWORK_STRICT_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.0575230029999}},
     {"name": "🧪️ cargo-input-operation-test prototype", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts test prototype", "cwd": "${workspaceFolder}", "env": {"SEMIO_CARGO_INPUT_OPERATION_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.057522}},
     {"name": "🧪️ cargo-input-operation-test release", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts test release", "cwd": "${workspaceFolder}", "env": {"SEMIO_CARGO_INPUT_OPERATION_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.0575220009999}},
     {"name": "🧪️ cargo-input-operation-types prototype", "type": "node-terminal", "request": "launch", "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/typescript-artifact/📜️script.ts types-owned prototype", "cwd": "${workspaceFolder}", "env": {"SEMIO_CARGO_INPUT_OPERATION_ONLY": "1", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}, "presentation": {"group": "🧹clean🛡️gates", "order": 900.0575220019999}},
@@ -12862,6 +12866,78 @@
       "presentation": {
         "group": "4_test",
         "order": 903.59339
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-instance-dispatch 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/plugin-instance-dispatch-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.30132
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-instance-dispatch 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/plugin-instance-dispatch-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.30133
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-instance-dispatch 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/plugin-instance-dispatch-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.06332
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-instance-dispatch 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/plugin-instance-dispatch-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.06333
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-instance-dispatch 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/plugin-instance-dispatch-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.60084
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-instance-dispatch 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/plugin-instance-dispatch-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.60085
       },
       "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
     },
@@ -60816,6 +60892,66 @@
       }
     },
     {
+      "name": "⚖️gate🏢️semio-tech🎡️playpage-publication-cohort",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🏢️semio-tech/🎡️play/🔨️modules/📦️site/📄pages/📦️publication/🧪️tests/🟦️.ts\"",
+      "cwd": "${workspaceFolder}",
+      "env": {"SEMIO_BUILD_MODE": "ship", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "4_gate",
+        "order": 13.56
+      }
+    },
+    {
+      "name": "⚖️gate🪐️space📄️documents🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo exec --projects=@semio-tech/space-core-rs --exclude-dependencies -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧪️tests/🔬️unit/🟦️.ts\"",
+      "cwd": "${workspaceFolder}",
+      "env": {"SEMIO_BUILD_MODE": "ship", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "4_gate",
+        "order": 13.57
+      }
+    },
+    {
+      "name": "⚖️gate🌍️gis🚪️io🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo exec --projects=@semio-tech/gis-gismap-rs --exclude-dependencies -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧪️tests/🚪️io/🟦️.ts\"",
+      "cwd": "${workspaceFolder}",
+      "env": {"SEMIO_BUILD_MODE": "ship", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "4_gate",
+        "order": 13.58
+      }
+    },
+    {
+      "name": "⚖️gate🏢️semio-tech🎡️playrelease-job-order",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🏢️semio-tech/🎡️play/🧪️tests/🧩️release-job-order/🟦️.ts\"",
+      "cwd": "${workspaceFolder}",
+      "env": {"SEMIO_BUILD_MODE": "ship", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "4_gate",
+        "order": 13.59
+      }
+    },
+    {
+      "name": "⚖️gate♻️mit-bestand🧺️demonstratorengine-producers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo exec --projects=@semio-tech/mit-bestand-demonstrator --exclude-dependencies -- bun test \"${workspaceFolder}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🧩️engine-producers/🟦️.ts\"",
+      "cwd": "${workspaceFolder}",
+      "env": {"SEMIO_BUILD_MODE": "ship", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "4_gate",
+        "order": 13.6
+      }
+    },
+    {
       "name": "🔄️watch logo",
       "type": "node-terminal",
       "request": "launch",
@@ -65593,6 +65729,1014 @@
       "presentation": {
         "group": "4_test",
         "order": 903.60075
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wit 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wit-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33001
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wit 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wit-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33002
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wit 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wit-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33001
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wit 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wit-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33002
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wit 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wit-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33001
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wit 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wit-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33002
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-engine 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-engine-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33003
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-engine 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-engine-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33004
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-engine 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-engine-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33003
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-engine 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-engine-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33004
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-engine 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-engine-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33003
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-engine 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-engine-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33004
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-operation 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-operation-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33005
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-operation 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-operation-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33006
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-operation 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-operation-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33005
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-operation 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-operation-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33006
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-operation 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-operation-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33005
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-operation 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-operation-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33006
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-effects 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-effects-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33007
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-effects 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-effects-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33008
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-effects 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-effects-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33007
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-effects 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-effects-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33008
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-effects 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-effects-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33007
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-effects 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-effects-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33008
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-imports 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-imports-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33009
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-imports 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-imports-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33010
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-imports 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-imports-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33009
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-imports 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-imports-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33010
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-imports 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-imports-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33009
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-imports 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-imports-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33010
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-runtime 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-runtime-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33011
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-runtime 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-runtime-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33012
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-runtime 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-runtime-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33011
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-runtime 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-runtime-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33012
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-runtime 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-runtime-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33011
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-runtime 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-runtime-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33012
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wake 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wake-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33013
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wake 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wake-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33014
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wake 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wake-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33013
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wake 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wake-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33014
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wake 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wake-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33013
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-wake 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-wake-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33014
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-post-turn-relay 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-post-turn-relay-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33015
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-post-turn-relay 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-post-turn-relay-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33016
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-post-turn-relay 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-post-turn-relay-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33015
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-post-turn-relay 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-post-turn-relay-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33016
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-post-turn-relay 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-post-turn-relay-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33015
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-post-turn-relay 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-post-turn-relay-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33016
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-routers 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-routers-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33017
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-routers 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-routers-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33018
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-routers 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-routers-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33017
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-routers 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-routers-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33018
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-routers 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-routers-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33017
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-routers 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-routers-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33018
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-process-transport 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-process-transport-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33019
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-process-transport 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-process-transport-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33020
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-process-transport 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-process-transport-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33019
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-process-transport 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-process-transport-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33020
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-process-transport 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-process-transport-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33019
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-process-transport 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-process-transport-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33020
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33021
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33022
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33021
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33022
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33021
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33022
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-laws 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-laws-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33023
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-laws 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-laws-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33024
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-laws 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-laws-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33023
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-laws 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-laws-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33024
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-laws 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-laws-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33023
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-laws 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-laws-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33024
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-laws 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-laws-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33025
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-laws 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-laws-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33026
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-laws 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-laws-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33025
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-laws 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-laws-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33026
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-laws 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-laws-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33025
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-guest-laws 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-guest-laws-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33026
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-executor 🏗️build 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-executor-rs:build --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33027
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-executor 🏗️build 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-executor-rs:build --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.33028
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-executor 🔎️check 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-executor-rs:check --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33027
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-executor 🔎️check 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-executor-rs:check --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 922.33028
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-executor 🧪️test 🛠️prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-executor-rs:test --configuration=prototype --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33027
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦀️ semio-framework-plugin-host-shard-executor 🧪️test 🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-plugin-host-shard-executor-rs:test --configuration=release --parallel=1 -- --lib --offline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_test",
+        "order": 903.33028
       },
       "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
     },
@@ -77020,7 +78164,7 @@
       "name": "🧪️test🖍️draw🧰️actions⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --run --silent=false --reporter=verbose --testNamePattern=\"neutral utility declarations keep mounted palette commands executable\"",
+      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🪪️window-action-panel/🟦️.ts --run --silent=false --reporter=verbose --testNamePattern=\"neutral utility declarations keep mounted palette commands executable\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -77032,7 +78176,7 @@
       "name": "🧪️test🖍️draw🌅️utility⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --run --silent=false --reporter=verbose --testNamePattern=\"initial window utility decisions follow declared arms and preserve resolved registers|initial utility registers preserve an explicit clear in the store and guest projection\"",
+      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🪪️window-action-panel/🟦️.ts --run --silent=false --reporter=verbose --testNamePattern=\"initial window utility decisions follow declared arms and preserve resolved registers|initial utility registers preserve an explicit clear in the store and guest projection\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -84898,7 +86042,7 @@
       "name": "⚖️gate⏪️time-travel⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-os-dev:time-travel -- --serve http://127.0.0.1:6012/ --renderer react --locales en,de --chords en,de",
+      "command": "bun repo run @semio-tech/framework-os-dev:time-travel -- --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/⏪️time-travel/🟦️.ts --serve http://127.0.0.1:6012/ --renderer react --locales en,de --chords en,de",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -84910,7 +86054,7 @@
       "name": "⚖️gate⏪️time-travel🧊️wgpu",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-os-dev:time-travel -- --serve http://127.0.0.1:6112/ --renderer wgpu --locales en,de --chords en,de",
+      "command": "bun repo run @semio-tech/framework-os-dev:time-travel -- --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/⏪️time-travel/🟦️.ts --serve http://127.0.0.1:6112/ --renderer wgpu --locales en,de --chords en,de",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -87465,7 +88609,7 @@
       "name": "⚖️test-shell-explicit-locale🌐️World3dHost🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-react:test --exclude-dependencies -- long --run ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --silent=false --disableConsoleIntercept --testNamePattern=\"shell explicit locale source\"",
+      "command": "bun repo run @semio-tech/framework-renderer-react:test --exclude-dependencies -- long --run ../../../../🧪️tests/🎫️shell-holds/🟦️.ts --silent=false --disableConsoleIntercept --testNamePattern=\"shell explicit locale source\"",
       "cwd": "${workspaceFolder}",
       "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
       "presentation": {
@@ -87945,7 +89089,7 @@
       "name": "⚖️test-utility-assignment🧰️react🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --run --silent=false --reporter=verbose --testNamePattern=\"guest utility assignments preserve armed tools and window scope\"",
+      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🪪️window-action-panel/🟦️.ts --run --silent=false --reporter=verbose --testNamePattern=\"guest utility assignments preserve armed tools and window scope\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -88155,6 +89299,18 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.036575
+      }
+    },
+    {
+      "name": "⚖️test-worker-law-suites🖥️os🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-os:test -- quick ../../🔨️modules/🏪️store/👷️worker/🟦️.ts",
+      "cwd": "${workspaceFolder}",
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0365751
       }
     },
     {
@@ -94834,6 +95990,18 @@
       "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
     },
     {
+      "name": "🌎️hub 🗄️stdio 🧩️composition 🧪️contribution-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/stdio-plugin:composition-contribution-check",
+      "cwd": "${workspaceFolder}",
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05686
+      }
+    },
+    {
       "name": "🧰️framework 🦑️repo 🦀️workspace 📥️runtime 🧪️contract",
       "type": "node-terminal",
       "request": "launch",
@@ -95322,6 +96490,54 @@
       "presentation": {
         "group": "9_gates",
         "order": 900.05718
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦑️Repo 🧩️vscode 🔗️graphql types 🏭️generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/repo-vscode:generate-graphql-types",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.057181
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦑️Repo 🧩️vscode 🔗️graphql types 👁️preview",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/repo-vscode:preview-generated",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.057182
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦑️Repo 🧩️vscode 🔗️graphql types ✅️check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/repo-vscode:check-graphql-types",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.057183
+      },
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
+    },
+    {
+      "name": "🦑️Repo 🧩️vscode 🔗️graphql types 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/repo-vscode:test-graphql-types",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.057184
       },
       "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
     },
@@ -96298,7 +97514,7 @@
       }
     },
     {
-      "name": "🧪️test🧰️framework🎠️kernel🫧️transient🧬️contract",
+      "name": "🧪️test🧰️framework🫧️transient🧬️contract",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun repo run @semio-tech/framework-transient:test-contract --skip-cache",
@@ -101426,6 +102642,18 @@
       "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"}
     },
     {
+      "name": "🧪️test🧰️framework🚪️io-ports",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework:test-io-ports --skip-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.0585155
+      }
+    },
+    {
       "name": "🧪️test🧰️framework🥽️polygon-mesh",
       "type": "node-terminal",
       "request": "launch",
@@ -101435,6 +102663,30 @@
       "presentation": {
         "group": "9_gates",
         "order": 900.058515
+      }
+    },
+    {
+      "name": "🧪️test🧰️framework🔌️sdk-surface",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework:test-sdk-surface --skip-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.0585175
+      }
+    },
+    {
+      "name": "🧪️test🧰️framework📖️source-text",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework:test-source-text --skip-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {"BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.0585176
       }
     },
     {
@@ -126983,7 +128235,7 @@
       "name": "⚖️artifact-creation-owner🧑‍🎨engine⚛️react🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🔬️engine-contract/🟦️.ts --testNamePattern=\"Space artifact creation host owner\" --silent=false --reporter=verbose",
+      "command": "bun repo run @semio-tech/framework-renderer-react:test -- ../../../../🧪️tests/🌱️artifact-creation-contracts/🟦️.ts --testNamePattern=\"Space artifact creation host owner\" --silent=false --reporter=verbose",
       "cwd": "${workspaceFolder}",
       "env": {"SEMIO_TEST_LEVEL": "long", "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0", "NODE_DISABLE_COMPILE_CACHE": "1"},
       "presentation": {

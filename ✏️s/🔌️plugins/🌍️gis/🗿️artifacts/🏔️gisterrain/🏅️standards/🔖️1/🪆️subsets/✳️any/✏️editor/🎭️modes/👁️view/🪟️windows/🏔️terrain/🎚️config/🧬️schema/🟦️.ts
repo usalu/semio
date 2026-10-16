@@ -1,4 +1,4 @@
-import { parseSchemaRecord } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 
 /** 🧬️ GisTerrainWindowConfig */
 export interface GisTerrainWindowConfig {

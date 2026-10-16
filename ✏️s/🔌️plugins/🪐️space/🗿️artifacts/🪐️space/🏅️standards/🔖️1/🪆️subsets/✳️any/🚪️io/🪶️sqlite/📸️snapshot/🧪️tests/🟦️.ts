@@ -1,7 +1,7 @@
 /** 🧪️ Space's neutral full unsigned64 state agrees with an independently authored SQLite file. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {parseSSpaceArtifact} from "../../../../🧬️schema/🟦️.ts";
 import type{CreateArtifact}from"../../../../🧬️schema/🧬️mutations/🌱create-artifact/🟦️.ts";

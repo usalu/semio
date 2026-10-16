@@ -1,0 +1,128 @@
+[
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📤️icon-export/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "📤️icon-export",
+  "kind": "const",
+  "name": "CONTROL_ID",
+  "head": "pub(super) const CONTROL_ID: &str = \"shell.icon-export.cancel\";",
+  "dest": "shell-pointer",
+  "slug": "📤️icon-export",
+  "unit": 0
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⏪️time-travel/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "⏪️time-travel",
+  "kind": "const",
+  "name": "HISTORY_ROW_KEY_PREFIX",
+  "head": "pub(crate) const HISTORY_ROW_KEY_PREFIX: &str = \"framework.history.entry.\";",
+  "dest": "shell-directory",
+  "slug": "⏪️time-travel",
+  "unit": 3,
+  "done": true
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⏪️time-travel/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "⏪️time-travel",
+  "kind": "const",
+  "name": "HISTORY_MUTATION_ROW_KEY_PREFIX",
+  "head": "pub(crate) const HISTORY_MUTATION_ROW_KEY_PREFIX: &str = \"framework.history.mutation.\";",
+  "dest": "shell-directory",
+  "slug": "⏪️time-travel",
+  "unit": 4,
+  "done": true
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📎️local-folders/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "📎️local-folders",
+  "kind": "const",
+  "name": "SYNC_DOCUMENT_UNIDENTIFIED_CODE",
+  "head": "pub(crate) const SYNC_DOCUMENT_UNIDENTIFIED_CODE: &str = \"sync.attach.document-unidentified\";",
+  "dest": "shell-actions",
+  "slug": "📎️local-folders",
+  "unit": 5
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📎️local-folders/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "📎️local-folders",
+  "kind": "fn",
+  "name": "is_host_route_uri",
+  "head": "pub(crate) fn is_host_route_uri(uri: &str) -> bool {",
+  "dest": "shell-actions",
+  "slug": "📎️local-folders",
+  "unit": 6
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🗨️chrome-overlays-and-tour/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "🗨️chrome-overlays-and-tour",
+  "kind": "const",
+  "name": "RETAINED_PANEL_SCROLL_SUFFIX",
+  "head": "pub(crate) const RETAINED_PANEL_SCROLL_SUFFIX: &str = \".scroll\";",
+  "dest": "shell-input",
+  "slug": "🗨️chrome-overlays-and-tour",
+  "unit": 26,
+  "done": true
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🖼️chrome-frame-and-main-window/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "🖼️chrome-frame-and-main-window",
+  "kind": "const",
+  "name": "SHELL_CHROME_PHASE_OPPORTUNITIES",
+  "head": "pub(super) const SHELL_CHROME_PHASE_OPPORTUNITIES: u64 = 1 << 18;",
+  "dest": "shell-view-panels",
+  "slug": "🖼️chrome-frame-and-main-window",
+  "unit": 33
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🖼️chrome-frame-and-main-window/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "🖼️chrome-frame-and-main-window",
+  "kind": "const",
+  "name": "SHELL_CHROME_PARKED_REPORTS",
+  "head": "pub(super) const SHELL_CHROME_PARKED_REPORTS: u8 = 4;",
+  "dest": "shell-view-panels",
+  "slug": "🖼️chrome-frame-and-main-window",
+  "unit": 34
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🔑️storage-prefs-and-i18n/🦀️.rs",
+  "src_crate": null,
+  "src_slug": "🔑️storage-prefs-and-i18n",
+  "kind": "const",
+  "name": "UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX",
+  "head": "pub(crate) const UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX: &str = \"ui.introduction.seen.\";",
+  "dest": "shell-view-chrome",
+  "slug": "🔑️storage-prefs-and-i18n",
+  "unit": 35
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🔖️identity-and-types/🦀️.rs",
+  "src_crate": "shell-session",
+  "src_slug": "🔖️identity-and-types",
+  "kind": "const",
+  "name": "FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX",
+  "head": "pub(crate) const FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX: &str = \"command.category.\";",
+  "dest": "shell-docs",
+  "slug": "🔖️identity-and-types",
+  "unit": 680,
+  "done": true
+ },
+ {
+  "src": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/🔖️identity-and-types/🦀️.rs",
+  "src_crate": "shell-session",
+  "src_slug": "🔖️identity-and-types",
+  "kind": "const",
+  "name": "FRAMEWORK_TOOL_PANEL_TAB_PREFIX",
+  "head": "pub(crate) const FRAMEWORK_TOOL_PANEL_TAB_PREFIX: &str = \"tool.\";",
+  "dest": "shell-docs",
+  "slug": "🔖️identity-and-types",
+  "unit": 684,
+  "done": true
+ }
+]

@@ -160,8 +160,22 @@
   ],
   "consumers": [
     {
-      "path": "📜️script.ts",
-      "owners": ["🔍️discovery/🚶️file-walk/🟦️.ts", "🔍️discovery/📍️source-coordinate/🟦️.ts", "🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts"]
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🔎️scan/🟦️.ts",
+      "owners": [
+        "🔍️discovery/🚶️file-walk/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts",
+      "owners": [
+        "🔍️discovery/📍️source-coordinate/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+      "owners": [
+        "🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts"
+      ]
     }
   ],
   "sourceData": [

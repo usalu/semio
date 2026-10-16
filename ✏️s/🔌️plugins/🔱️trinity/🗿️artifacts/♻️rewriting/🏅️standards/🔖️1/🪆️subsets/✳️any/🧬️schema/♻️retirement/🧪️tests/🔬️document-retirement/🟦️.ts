@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { semioSchemaAjvV1,addSemioMutationLeafSchemasV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1,addSemioMutationLeafSchemasV1 } from "@semio-tech/framework/schema/oracles/validator";
 
 /** ♻️ Independent typed-owner accounting retains every declared parent and mutation role. */
 export function testRewritingDocumentRetirementOracle(): void {

@@ -687,7 +687,7 @@ export function useUiDocumentRevision(store: UiDocumentStore): UiRevision {
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️typedwire/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot, validateUiDocumentCore }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTypedWireTests } = await import("./🧪️tests/🧪️typedwire/🟦️.tsx");
+  await registerTypedWireTests(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot, validateUiDocumentCore }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests

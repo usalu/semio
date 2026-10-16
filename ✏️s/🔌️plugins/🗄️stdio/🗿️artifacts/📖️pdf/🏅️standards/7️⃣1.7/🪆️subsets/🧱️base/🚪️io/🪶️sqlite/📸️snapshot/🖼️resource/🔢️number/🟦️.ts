@@ -1,6 +1,6 @@
 /** 🔢️ Exact native binary64 fields of each handwritten PDF resource entity. */
 import { pdfFontNumberColumns } from "../../🔤️font/🟦️.ts";
-import type { Ieee754Column } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type { Ieee754Column } from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 
 /** 🖼️ Resource companions preserve every actual IEEE scalar and optional tuple component. */
 export function pdfResourceNumberColumns(table:string):readonly Ieee754Column[]{

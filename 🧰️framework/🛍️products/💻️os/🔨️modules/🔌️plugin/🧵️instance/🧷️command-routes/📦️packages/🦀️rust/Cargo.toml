@@ -4,7 +4,7 @@ name = "semio-framework-plugin-instance-commands"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Instance use-cases of the plugin SDK: command routes, dispatch, groups and ingress over the command bundle"
+description = "Instance use-cases of the plugin SDK: framework-reserved routes, action dispatch and archive merge over the command bundle"
 
 [package.metadata.semio]
 role = "framework"
@@ -54,6 +54,11 @@ semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-render = { path = "../../../🖼️render/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-dispatch = { path = "../../../📨️dispatch/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-typed-ops = { path = "../../../🧾️typed-operations/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel-turns = { path = "../../../../⏪️time-travel/🧵️instance/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

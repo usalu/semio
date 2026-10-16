@@ -1,8 +1,8 @@
 /** 📷️ Direct owned PNG sample and metadata projection. */
 import {parsePngSnapshot,type PngSnapshot,type PngTransparency,type PngBackground} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteInteger,artifactSqliteDocumentReference,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {ValueError,sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteOperation} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteInteger,artifactSqliteDocumentReference,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {ValueError,sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteOperation} from "@semio-tech/framework/io/sqlite-snapshot";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 const invalid=(message:string):never=>{throw new ValueError("invalidValue",message);};
 const n=(row:SqliteRow,column:number,min=0,max=4294967295):number=>{const v=artifactSqliteInteger(row,column);return v>=BigInt(min)&&v<=BigInt(max)?Number(v):invalid("Owned INTEGER exceeds declared precision");};
 const bool=(row:SqliteRow,column:number):boolean=>n(row,column,0,1)===1;

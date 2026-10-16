@@ -4,7 +4,21 @@
 use super::*;
 use crate::tool_jobs::time_travel;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+    /// 🌳️ Supplies the exact live and saved previews to the common original child disposer.
+    pub(crate) fn child_root_retirement_unit(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneStep, Fault> {
+        let member = self.time_travel.member.as_ref().and_then(|member| member.children.as_ref());
+        let review = self.time_travel.member.as_ref().and_then(|member| member.review_children.as_ref().map(|review|&review.view));
+        advance_original_child_root_retirement(&mut self.child_composition.child_content_retirements, &mut self.child_composition.children, Some(&mut self.child_composition.child_member_retirements), &self.child_composition.child_content_root, member, review, &mut self.maintenance.maintenance_child_root_cursor, grant, closing)
+    }
+
+    /// 🎟️ Advances one child-member retirement under the caller's unchanged grant.
+    pub(super) fn child_member_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
+        self.child_composition.child_member_retirement_unit(grant, self.close.close_child_root_detached).map(|step| step.progress())
+    }
+}
+
+impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🕰️ The fixed maintenance stage the NEXT [`PluginApp::maintenance_step`] call will run.
     /// A step-budget law reads this before each unit so an over-budget unit names its own stage
     /// instead of the stale round-robin cursor an idle early return leaves behind.
@@ -22,20 +36,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(self.child_root_retirement_quote(body, self.close.close_child_root_detached)?.unwrap_or_default())
     }
 
-    /// 🌳️ Supplies the exact live and saved previews to the common original child disposer.
-    pub(crate) fn child_root_retirement_unit(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneStep, Fault> {
-        let member = self.time_travel.member.as_ref().and_then(|member| member.children.as_ref());
-        let review = self.time_travel.member.as_ref().and_then(|member| member.review_children.as_ref().map(|review|&review.view));
-        advance_original_child_root_retirement(&mut self.child_composition.child_content_retirements, &mut self.child_composition.children, Some(&mut self.child_composition.child_member_retirements), &self.child_composition.child_content_root, member, review, &mut self.maintenance.maintenance_child_root_cursor, grant, closing)
-    }
-
     /// 📏️ Quotes the next child-member retirement turn; nothing is owed once the registry and its backing are gone.
     pub(super) fn child_member_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(self.child_composition.child_member_retirement_quote(body, self.close.close_child_root_detached)?.unwrap_or_default())
     }
+}
 
-    /// 🎟️ Advances one child-member retirement under the caller's unchanged grant.
-    pub(super) fn child_member_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
-        self.child_composition.child_member_retirement_unit(grant, self.close.close_child_root_detached).map(|step| step.progress())
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+    /// 🎟️ Advances one child-root retirement under the caller's unchanged grant.
+    pub(super) fn child_root_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Fault> {
+        self.child_root_retirement_unit(grant, self.close.close_child_root_detached).map(|step| step.progress())
     }
 }

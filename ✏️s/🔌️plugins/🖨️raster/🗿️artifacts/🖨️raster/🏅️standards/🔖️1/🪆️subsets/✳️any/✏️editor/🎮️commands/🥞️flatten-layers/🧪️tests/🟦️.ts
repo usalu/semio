@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import sharp from "sharp";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import {RasterStackJob,type RasterStackLayer} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts";
+import {RasterStackJob,type RasterStackLayer} from "@semio-tech/framework/pixels/compositing/layers";
 test("flatten command preserves visible appearance and placement",async()=>{
   const validate=new Ajv().compile(schema);
   for(const labels of Object.values(fixture.labels))expect(validate({name:labels.name})).toBe(true);

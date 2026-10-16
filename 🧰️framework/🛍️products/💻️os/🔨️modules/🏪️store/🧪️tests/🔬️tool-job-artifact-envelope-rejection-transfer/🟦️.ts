@@ -1,4 +1,5 @@
-import { policyMutateRustSourceEvidence, toolJobArtifactEnvelopeRejectionTransferExact, type PolicyRustSourceEvidence } from "../../../../../../../📜️script.ts";
+import { policyMutateRustSourceEvidence, type PolicyRustSourceEvidence } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
+import { toolJobArtifactEnvelopeRejectionTransferExact } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts";
 
 /** 🧪️ Executes tool job artifact envelope rejection transfer policy assertions. */
 export function toolJobArtifactEnvelopeRejectionTransferSelfTests(store: PolicyRustSourceEvidence): number {

@@ -1,5 +1,4 @@
-//! 🧾️ Original Host turn currency has one exclusive checked-out wake and no implicit renewal.
-use super::{GuestRelayWakeReceipt,GuestRelayWakeReceiptReceiver};
+
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::RetainedOwnerGate};
 #[path="🎟️root/🦀️.rs"]
 mod original_root;
@@ -11,9 +10,9 @@ pub use driver_policy::{GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRel
 pub struct GuestRelayWakeTurnGrant{pub epoch:u64,pub grant:RetainedCloneGrant}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct GuestRelayWakeTurnReceipt{pub epoch:u64,pub original:RetainedCloneGrant,pub spent:RetainedCloneProgress,pub remaining:RetainedCloneGrant}
-struct OriginalTurn{epoch:u64,original:RetainedCloneGrant,remaining:RetainedCloneGrant,spent:RetainedCloneProgress,checkout:Option<(usize,u64,RetainedCloneGrant)>}
+struct OriginalTurn{pub epoch:u64,pub original:RetainedCloneGrant,pub remaining:RetainedCloneGrant,spent:RetainedCloneProgress,pub checkout:Option<(usize,u64,RetainedCloneGrant)>}
 struct DriverState{last_epoch:u64,turn:Option<OriginalTurn>}
-pub struct GuestRelayWakeReceiptLedger{original:RetainedOwnerGate<DriverState>}
+pub struct GuestRelayWakeReceiptLedger{pub original:RetainedOwnerGate<DriverState>}
 /// 🤝️ Holds the genuine caller context exclusively until its original cumulative receipt is acknowledged.
 pub struct GuestRelayWakeContextTurn<'turn,'context>{ledger:&'turn GuestRelayWakeReceiptLedger,context:Option<&'turn mut semio_framework_job::StepContext<'context>>,epoch:u64,pending:Option<GuestRelayWakeTurnReceipt>}
 impl<'turn,'context> GuestRelayWakeContextTurn<'turn,'context>{
@@ -67,3 +66,12 @@ fn overflow()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolate
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+//#region 🔀️PostTurnRelay
+/// 🧾️ Preserves the exact original embedding policy and native wake effect before another child runs.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct GuestRelayWakeReceipt{pub epoch:u64,pub slot:usize,pub generation:u64,pub grant:semio_framework_value::retained_clone::RetainedCloneGrant,pub progress:semio_framework_value::retained_clone::RetainedCloneProgress}
+
+/// 📥️ The original embedding debits or retains a borrowed full receipt before admitting its successor.
+pub trait GuestRelayWakeReceiptReceiver:Send+Sync{fn checkout(&self,slot:usize,generation:u64)->Result<Option<GuestRelayWakeTurnGrant>,semio_framework_value::ValueError>;fn collect(&self,receipt:&GuestRelayWakeReceipt)->Result<bool,semio_framework_value::ValueError>;}
+//#endregion 🔀️PostTurnRelay

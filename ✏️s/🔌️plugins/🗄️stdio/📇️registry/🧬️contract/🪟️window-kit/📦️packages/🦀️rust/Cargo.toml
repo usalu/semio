@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Window-kit conventions of the stdio artifacts: example switching, argument readers, addressed and structural tables, revisions and media import"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

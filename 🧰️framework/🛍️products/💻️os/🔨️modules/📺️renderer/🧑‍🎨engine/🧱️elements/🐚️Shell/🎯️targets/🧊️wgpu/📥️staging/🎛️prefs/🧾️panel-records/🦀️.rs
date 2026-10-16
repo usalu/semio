@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellLifecycle
 //#region 🧾️PanelRecordsAssembler
-pub(crate) fn display_panel_body(panel_id: &str, sections: Vec<UiTreeSectionNode>) -> UiNode {
+pub fn display_panel_body(panel_id: &str, sections: Vec<UiTreeSectionNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: "column".into(),
         gap: None,
@@ -22,18 +22,18 @@ pub(crate) fn display_panel_body(panel_id: &str, sections: Vec<UiTreeSectionNode
 }
 
 /// ⚙️ One collapsible settings section — React's `TreeDataSection` with `defaultOpen: true`.
-pub(crate) fn settings_section(id: &str, label: &str, children: Vec<UiNode>) -> UiNode {
+pub fn settings_section(id: &str, label: &str, children: Vec<UiNode>) -> UiNode {
     UiNode::Section(UiSectionNode { id: id.to_string(), label: Some(Label::data(label)), default_open: Some(true), presence: UiPresence::default(), menu: None, children })
 }
 
 /// ⚙️ One control-less text row — React's `TreeDataItem` carrying only a `label`.
-pub(crate) fn settings_text_row(text: &str) -> UiNode {
+pub fn settings_text_row(text: &str) -> UiNode {
     UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(text), emphasize: Some(false), data_attributes: None, menu: None })
 }
 
 /// ⚙️ {@link settings_select_row} plus authored action args — the row's own coordinate, for a table
 /// whose action needs to know WHICH row changed (the default-apps `(dialect × role)` pairing).
-pub(crate) fn settings_select_row_with(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str, args: Option<DslValue>) -> UiNode {
+pub fn settings_select_row_with(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str, args: Option<DslValue>) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: format!("{id}.field"),
         label: Label::data(label),
@@ -55,7 +55,7 @@ pub(crate) fn settings_select_row_with(id: &str, label: &str, value: &str, optio
 }
 
 /// 🌳️ One inline settings Select whose action keeps its authored row arguments.
-pub(crate) fn settings_tree_select_item_with(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str, args: Option<DslValue>) -> UiTreeItemNode {
+pub fn settings_tree_select_item_with(id: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str, args: Option<DslValue>) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.to_string(),
         label: Label::data(label),

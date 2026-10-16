@@ -87,6 +87,7 @@ test("shared full policy preserves declared severities and resolver authority", 
   expect(snapshot.policy.forbidden.filter(rule=>rule.name.startsWith("no-cross-package-relative-")).every(rule=>rule.severity==="error")).toBe(true);
   for (const name of ["framework-no-implementation","repo-no-implementation","s-modules-no-plugins",...Object.keys(snapshot.taxonomy.dependencyDirections.rules)]) expect(snapshot.policy.forbidden.find(rule => rule.name === name)?.severity).toBe("error");
   expect(snapshot.policy.forbidden.filter(rule => rule.name.startsWith("no-cross-technology-")).length).toBe(20);
+  expect(snapshot.policy.forbidden.filter(rule => rule.name.startsWith("no-cross-technology-")).every(rule => rule.to.dependencyTypes?.join() === "local" && rule.to.dependencyTypesNot?.join() === "aliased-workspace")).toBe(true);
   expect(snapshot.policy.options.tsPreCompilationDeps).toBe(true); expect(snapshot.policy.options.combinedDependencies).toBe(true);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

@@ -1,5 +1,6 @@
+import{testBrowserHostStageLimitsV1}from"./🏗️staging/📋️contract/🟦️.ts";
 import { createHash } from "node:crypto";
-import { closeSync, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, lstatSync, mkdirSync, openSync, opendirSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { ACTIVATION_RECEIPT_FILE, nextActivationReceipt, parseActivationReceipt, publishActivationReceipt, readActivationReceipt } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES, parseComponentReceiptV1, type ComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
@@ -164,26 +165,15 @@ function regularFile(path: string, label: string): string {
 
 function ownedChild(root: string, child: string, label: string): void {
   const path = relative(root, child);
-  if (!path || path.startsWith("..") || isAbsolute(path)) throw new Error(`${label} is outside its ticket owner`);
+  if (!path || path.startsWith("..") || isAbsolute(path)) throw new Error(`${label} is outside its declared root`);
 }
 
 function moduleEntries(moduleRoot: string): readonly FileEntry[] {
   const entries: FileEntry[] = [];
   let total = 0;
-  const walk = (directory: string): void => {
-    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) => Buffer.from(left.name).compare(Buffer.from(right.name)))) {
-      const path = join(directory, entry.name);
-      if (entry.isSymbolicLink()) throw new Error("Test browser-host module tree contains a symlink");
-      if (entry.isDirectory()) walk(path);
-      else if (entry.isFile()) {
-        const info = lstatSync(path);
-        total += info.size;
-        if (entries.length >= MODULE_FILES_MAX || total > MODULE_BYTES_MAX) throw new Error("Test browser-host module tree exceeds its bound");
-        entries.push(Object.freeze({ relativePath: relative(moduleRoot, path).replaceAll("\\", "/"), path, size: info.size, sha256: sha256File(path) }));
-      } else throw new Error("Test browser-host module tree contains an unsupported node");
-    }
-  };
-  walk(moduleRoot);
+  const pending=[opendirSync(moduleRoot)];let count=0,failed=false;
+  try{while(pending.length){const directory=pending[pending.length-1];if(!directory)throw Error("Actual browser directory required");const entry=directory.readSync();if(!entry){directory.closeSync();pending.pop();continue;}if(++count>testBrowserHostStageLimitsV1.maximumEntries)throw Error("Test browser-host directory entry bound exceeded");const path=join(directory.path,entry.name);if(path.length>256)throw Error("Test browser-host path bound exceeded");if(entry.isSymbolicLink())throw Error("Test browser-host module tree contains a symlink");if(entry.isDirectory())pending.push(opendirSync(path));else if(entry.isFile()){const info=lstatSync(path);total+=info.size;if(entries.length>=MODULE_FILES_MAX||total>MODULE_BYTES_MAX||!info.isFile()||info.isSymbolicLink()||info.nlink!==1)throw Error("Test browser-host module tree exceeds its bound");entries.push(Object.freeze({relativePath:relative(moduleRoot,path).replaceAll("\\","/"),path,size:info.size,sha256:sha256File(path)}));}else throw Error("Test browser-host module tree contains an unsupported node");}}
+  catch(error){failed=true;throw error;}finally{let closeFailed=false,failure:unknown;for(const directory of pending.reverse())try{directory.closeSync();}catch(error){if(!closeFailed){closeFailed=true;failure=error;}}if(!failed&&closeFailed)throw failure;}
   return Object.freeze(entries.sort((left, right) => Buffer.from(left.relativePath).compare(Buffer.from(right.relativePath))));
 }
 
@@ -275,7 +265,6 @@ export function closeTestBrowserHostStagingV1(
   if (!Number.isSafeInteger(hostComponent.byteLength) || hostComponent.byteLength < 1 || hostComponent.byteLength > HOST_COMPONENT_MAX_BYTES || !digest(hostComponent.sha256)) throw new Error("Invalid test browser host component identity");
   if (!isAbsolute(artifactRootInput)) throw new Error("Test browser-host owner must be absolute");
   const artifactRoot = regularDirectory(artifactRootInput, "Test artifact root");
-  if (!artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Test browser-host owner is not ticket generated");
   const browserHostRoot = join(artifactRoot, "browser-host");
   const moduleRoot = regularDirectory(join(browserHostRoot, "modules"), "Test browser module root");
   const activationRoot = join(browserHostRoot, "activation");
@@ -339,9 +328,9 @@ export function closeTestBrowserHostStagingV1(
 export function resolveTestBrowserHostRootsV1(environment: Environment): TestBrowserHostRootsV1 | null {
   const values = [environment[TEST_BROWSER_MODULE_ROOT_ENV], environment[TEST_BROWSER_ACTIVATION_ROOT_ENV], environment[TEST_BROWSER_HOST_RECEIPT_ENV]];
   if (values.every((value) => value === undefined)) return null;
-  if (values.some((value) => value === undefined) || !environment.SEMIO_TEST_ARTIFACT_DIR) throw new Error("Test browser-host roots require one complete ticket authority");
+  if (values.some((value) => value === undefined) || !environment.SEMIO_TEST_ARTIFACT_DIR) throw new Error("Test browser-host roots require one complete closed root declaration");
   const artifactRoot = regularDirectory(environment.SEMIO_TEST_ARTIFACT_DIR, "Test artifact root");
-  if (!isAbsolute(environment.SEMIO_TEST_ARTIFACT_DIR) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Test browser-host artifact root is not ticket owned");
+  if (!isAbsolute(environment.SEMIO_TEST_ARTIFACT_DIR)) throw new Error("Test browser-host artifact root must be absolute");
   const browserHostRoot = regularDirectory(join(artifactRoot, "browser-host"), "Test browser-host root");
   const moduleRoot = regularDirectory(values[0]!, "Test browser module root");
   const activationRoot = regularDirectory(values[1]!, "Test browser activation root");
@@ -369,7 +358,6 @@ export function resolveTestBrowserHostRootsV1(environment: Environment): TestBro
 export function prepareTestBrowserHostRootsV1(artifactRootInput: string): Readonly<{ browserHostRoot: string; moduleRoot: string; activationRoot: string; receiptPath: string }> {
   if (!isAbsolute(artifactRootInput)) throw new Error("Test browser-host owner must be absolute");
   const artifactRoot = regularDirectory(artifactRootInput, "Test artifact root");
-  if (!artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Test browser-host owner is not ticket generated");
   const browserHostRoot = join(artifactRoot, "browser-host");
   const moduleRoot = join(browserHostRoot, "modules");
   const activationRoot = join(browserHostRoot, "activation");

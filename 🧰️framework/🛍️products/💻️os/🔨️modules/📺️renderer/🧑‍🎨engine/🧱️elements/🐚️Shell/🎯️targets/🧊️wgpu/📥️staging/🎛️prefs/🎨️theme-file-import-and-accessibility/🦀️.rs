@@ -5,44 +5,9 @@
 use super::*;
 
 //#region 🎨️ThemeDocumentModel
-/// 🎨️ The AUTHORED design-token document — the very `🔣️.json` the styling codegen turns into
-/// React's `STYLING_SEMIO_THEME` and into this target's compile-time `ui_styling` constants. Embedded
-/// so the wgpu theme EDITOR can enumerate exactly the keys React's editor enumerates
-/// (`host.theme.colors`/`spacing`/`fontStacks`/`strokes`/`radii`/`opacities`/`metrics`/`appearances`),
-/// rather than a hand-kept second key list that would drift on the next regeneration.
-///
-/// ⚖️ The generated `STYLING_SEMIO_THEME` is this document minus `version`/`fontFaces`/`levels`/
-/// `presence` plus `id`/`label`, which is exactly what [`ThemeDocument`]'s `#[serde(default)]` fields
-/// keep and what [`shell_theme_document_base`] stamps back on.
-const SHELL_THEME_DOCUMENT_JSON: &str = include_str!("../../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🔣️.json");
-
-/// 🎨️ The authored base document, parsed once. `id`/`label` are stamped the way the styling codegen
-/// stamps them onto `STYLING_SEMIO_THEME`.
-pub(crate) fn shell_theme_document_base() -> &'static ThemeDocument {
-    static BASE: std::sync::OnceLock<ThemeDocument> = std::sync::OnceLock::new();
-    BASE.get_or_init(|| {
-        let mut document: ThemeDocument = serde_json::from_str(SHELL_THEME_DOCUMENT_JSON).unwrap_or_else(|_| ThemeDocument {
-            id: String::new(),
-            label: String::new(),
-            colors: BTreeMap::new(),
-            spacing: BTreeMap::new(),
-            font_stacks: BTreeMap::new(),
-            canvas_fonts: BTreeMap::new(),
-            strokes: BTreeMap::new(),
-            radii: BTreeMap::new(),
-            opacities: BTreeMap::new(),
-            metrics: BTreeMap::new(),
-            appearances: BTreeMap::new(),
-            icons: None,
-        });
-        document.id = "semio".to_string();
-        document.label = "semio".to_string();
-        document
-    })
-}
 
 /// 🖌️ `parseHex6` — React accepts `#rgb` and `#rrggbb` alike.
-pub(super) fn theme_parse_hex6(hex: &str) -> [u8; 3] {
+pub fn theme_parse_hex6(hex: &str) -> [u8; 3] {
     let raw = hex.trim().trim_start_matches('#');
     if raw.len() == 3 {
         let expand = |index: usize| u8::from_str_radix(&raw[index..index + 1].repeat(2), 16).unwrap_or(0);
@@ -64,7 +29,7 @@ fn theme_blend_hex(a: &str, b: &str, ratio_a: f64) -> [u8; 3] {
 /// 🖌️ The Rust twin of `resolveThemePaint` (`🖱️ui/🎨️styling/🌓️theme/🟦️.ts:109`), including its
 /// `"transparent"` mix special case (a mix against transparent carries `1 - ratio` as its alpha
 /// unless the ref states one). An unresolvable ref answers `None` rather than inventing a colour.
-pub(super) fn theme_resolve_paint(colors: &BTreeMap<String, String>, paint: &ThemePaintRef) -> Option<[u8; 4]> {
+pub fn theme_resolve_paint(colors: &BTreeMap<String, String>, paint: &ThemePaintRef) -> Option<[u8; 4]> {
     let mut alpha = paint.alpha.unwrap_or(1.0);
     let rgb = if let Some((left, right, ratio)) = paint.mix.as_ref() {
         let left_hex = colors.get(left)?;
@@ -87,7 +52,7 @@ impl PrefsState {
     /// 🎨️ The theme document this session is editing — the live draft, else the selected custom
     /// theme's own persisted document, else the authored base. React's
     /// `uiThemeBase = uiThemeDraft ?? activeUiTheme()`, verbatim.
-    pub(crate) fn theme_document(&self, chrome: &ChromeState) -> ThemeDocument {
+    pub fn theme_document(&self, chrome: &ChromeState) -> ThemeDocument {
         if let Some(draft) = self.theme_draft.as_ref() {
             return draft.clone();
         }
@@ -99,7 +64,7 @@ impl PrefsState {
 
     /// 🎨️ The draft, seeded from the active document on first write — React's `draftThemePatch`,
     /// which `structuredClone`s `uiThemeBase` before every patch.
-    pub(super) fn theme_draft_patch(&mut self, patch: impl FnOnce(&mut ThemeDocument), chrome: &ChromeState) {
+    pub fn theme_draft_patch(&mut self, patch: impl FnOnce(&mut ThemeDocument), chrome: &ChromeState) {
         let mut draft = self.theme_draft.take().unwrap_or_else(|| self.theme_document(chrome));
         patch(&mut draft);
         set_active_theme_document(Some(draft.clone()));
@@ -107,7 +72,7 @@ impl PrefsState {
     }
 
     /// 🛡️ Stages a geometry edit and publishes only a fully resolvable document.
-    pub(super) fn theme_geometry_draft_patch(&mut self, patch: impl FnOnce(&mut ThemeDocument), chrome: &ChromeState) {
+    pub fn theme_geometry_draft_patch(&mut self, patch: impl FnOnce(&mut ThemeDocument), chrome: &ChromeState) {
         let mut draft = self.theme_document(chrome);
         patch(&mut draft);
         if theme_document_geometry(&draft).is_some() {
@@ -118,7 +83,7 @@ impl PrefsState {
 
     /// 🎨️ Drops the draft and the present-side re-tokenisation with it — React's
     /// `dispatch({ type: "SET_UI_THEME_DRAFT", value: null })`.
-    pub(crate) fn clear_theme_draft(&mut self) {
+    pub fn clear_theme_draft(&mut self) {
         self.theme_draft = None;
         set_active_theme_document(None);
     }
@@ -127,7 +92,7 @@ impl PrefsState {
 /// 🖌️ What React's appearance-paint row shows: the resolved `#rrggbb` from `rgba8ToHex` and the
 /// resolved alpha as `rgba[3] / 255` (`buildThemeAppearanceGroupItems`), so the boxes read the same
 /// on both renderers even for a `mix`/`token` ref that carries neither literally.
-pub(super) fn theme_paint_editor_values(colors: &BTreeMap<String, String>, reference: &ThemePaintRef) -> (String, f64) {
+pub fn theme_paint_editor_values(colors: &BTreeMap<String, String>, reference: &ThemePaintRef) -> (String, f64) {
     let [r, g, b, a] = theme_resolve_paint(colors, reference).unwrap_or([0, 0, 0, 255]);
     (format!("#{r:02x}{g:02x}{b:02x}"), f64::from(a) / 255.0)
 }
@@ -138,7 +103,7 @@ pub(super) fn theme_paint_editor_values(colors: &BTreeMap<String, String>, refer
 /// beside `theme_id` in the same owned preference snapshot `frame()`'s `resolve_theme_for_ids` reads,
 /// which is what makes an edit in the Settings panel repaint the chrome on the very next frame —
 /// React's `applyUiThemeToRoot(uiThemeDraft)`.
-pub(crate) fn set_active_theme_document(document: Option<ThemeDocument>) {
+pub fn set_active_theme_document(document: Option<ThemeDocument>) {
     with_chrome_prefs(|prefs| {
         prefs.theme_document_draft = document;
         prefs.theme_document_generation = prefs.theme_document_generation.wrapping_add(1);
@@ -159,7 +124,7 @@ impl PrefsState {
     /// the new alpha. Either way the ref becomes a literal `{ hex, alpha }` — a token/mix ref
     /// the user has overridden is no longer that token, exactly as React's
     /// `next.appearances[a][g][k] = { hex, alpha }` replaces it outright.
-    pub(crate) fn apply_theme_editor_commit(&mut self, verb: &str, args: &Value, chrome: &ChromeState) {
+    pub fn apply_theme_editor_commit(&mut self, verb: &str, args: &Value, chrome: &ChromeState) {
         let text = args.get("value").and_then(Value::as_str).unwrap_or_default().to_string();
         let key = args.get("key").and_then(Value::as_str).unwrap_or_default().to_string();
         match verb {
@@ -226,3 +191,92 @@ impl PrefsState {
 
 //#endregion ⚖️MergePolicyAndThemeCommits
 
+//#region 🎨️ThemeDocumentModel
+/// 🖌️ One resolved paint as this target's linear-float [`Rgba`], through the same
+/// `ui_styling::color::rgba8_to_linear` decode every generated palette constant went through.
+pub fn theme_paint_rgba(colors: &BTreeMap<String, String>, group: &BTreeMap<String, ThemePaintRef>, key: &str, fallback: Rgba) -> Rgba {
+    group.get(key).and_then(|paint| theme_resolve_paint(colors, paint)).map(|[r, g, b, a]| Rgba::from_srgb8(r, g, b, a)).unwrap_or(fallback)
+}
+
+/// 🎨️ Re-tokenises one appearance of a `Theme` FROM a live document — the runtime twin of the ui
+/// crate's compile-time `from_chrome`, field for field, so an edit in the settings panel repaints the
+/// shell on the next frame exactly as React's `SET_UI_THEME_DRAFT` + `applyUiThemeToRoot` repaints
+/// its DOM.
+///
+/// 🪜️ The six `level*` surfaces are NOT authored paints: the styling projection injects them as
+/// `oklabMix(base, foreground, k · shadeStepPercent/100)` (`🖱️ui/🎨️styling/📽️projection/🟦️.ts:129`),
+/// so they are recomputed here through `ui_styling::color::oklab_mix` — which is what makes editing
+/// `chrome.base` move the navbar, the panels and the menu surface and not just the page background.
+///
+/// ⚖️ A key the document does not carry keeps the built-in value it had: this layers onto the
+/// appearance's own generated `Theme`, it does not replace it, so a partial custom document can never
+/// blank a surface.
+///
+/// 🪜️ The formula-derived ramp, recomputed off the two paints it is a function of.
+pub fn theme_from_document(document: &ThemeDocument, dark: bool) -> Theme {
+    let mut theme = if dark { Theme::dark() } else { Theme::light() };
+    let colors = &document.colors;
+    if let Some([r, g, b]) = colors.get("diff-added").map(|hex| theme_parse_hex6(hex)) {
+        theme.diff_added = Rgba::from_srgb8(r, g, b, 255);
+    }
+    let appearance = document.appearances.get(if dark { "dark" } else { "light" });
+    if let Some(chrome) = appearance.and_then(|groups| groups.get("chrome")) {
+        let paint = |key: &str, fallback: Rgba| theme_paint_rgba(colors, chrome, key, fallback);
+        let base = paint("base", theme.background);
+        let foreground = paint("foreground", theme.text);
+        theme.background = base;
+        theme.input_bg = base;
+        theme.canvas_clear = base;
+        theme.text = foreground;
+        theme.muted = paint("muted", theme.muted);
+        theme.text_muted = paint("mutedForeground", theme.text_muted);
+        theme.accent = paint("accent", theme.accent);
+        theme.accent_hover = paint("activeHover", theme.accent_hover);
+        theme.active_foreground = paint("activeForeground", theme.active_foreground);
+        theme.selected = paint("activeBase", theme.selected);
+        theme.button_hover = paint("hoverInteractiveFill", theme.button_hover);
+        theme.row_hover = theme.button_hover;
+        theme.separator = paint("borderNormal", theme.separator);
+        theme.panel_border = theme.separator;
+        theme.border_normal = theme.separator;
+        theme.border_emphasized = paint("borderEmphasized", theme.border_emphasized);
+        theme.text_element = paint("borderElement", theme.text_element);
+        let focus_alpha = document.opacities.get("chromeFocusRingAlpha").and_then(ThemeNumber::scalar).unwrap_or(f64::from(theme.focus_ring.a));
+        theme.focus_ring = theme.accent.with_alpha(focus_alpha as f32);
+        let shade_step = ui_styling::levels::SHADE_STEP_PERCENT as f32 / 100.0;
+        let base_linear = [base.r, base.g, base.b, base.a];
+        let foreground_linear = [foreground.r, foreground.g, foreground.b, foreground.a];
+        theme.level_bg = std::array::from_fn(|index| {
+            let mixed = ui_styling::color::oklab_mix(base_linear, foreground_linear, index as f32 * shade_step);
+            Rgba::new(mixed[0], mixed[1], mixed[2], mixed[3])
+        });
+        theme.navbar = theme.level_bg[1];
+        theme.button = theme.level_bg[1];
+        theme.panel = theme.level_bg[3];
+        theme.temporary = theme.level_bg[5];
+    }
+    if let Some(outcome) = appearance.and_then(|groups| groups.get("outcome")) {
+        theme.error = theme_paint_rgba(colors, outcome, "error", theme.error);
+        theme.warning = theme_paint_rgba(colors, outcome, "warning", theme.warning);
+        theme.success = theme_paint_rgba(colors, outcome, "success", theme.success);
+        theme.progress = theme_paint_rgba(colors, outcome, "progress", theme.progress);
+    }
+    if let Some(diagram) = appearance.and_then(|groups| groups.get("diagram")) {
+        theme.checker_light = theme_paint_rgba(colors, diagram, "checkerLight", theme.checker_light);
+        theme.checker_dark = theme_paint_rgba(colors, diagram, "checkerDark", theme.checker_dark);
+        theme.diagram_stroke = theme_paint_rgba(colors, diagram, "stroke", theme.diagram_stroke);
+        theme.diagram_seam = theme_paint_rgba(colors, diagram, "seam", theme.diagram_seam);
+        theme.diagram_accent = theme_paint_rgba(colors, diagram, "accent", theme.diagram_accent);
+        theme.diagram_accent_fill = theme_paint_rgba(colors, diagram, "accentFill", theme.diagram_accent_fill);
+        theme.diagram_shape_outline = theme_paint_rgba(colors, diagram, "shapeOutline", theme.diagram_shape_outline);
+        theme.diagram_field_residual = theme_paint_rgba(colors, diagram, "fieldResidual", theme.diagram_field_residual);
+        theme.diagram_field_reaction = theme_paint_rgba(colors, diagram, "fieldReaction", theme.diagram_field_reaction);
+        theme.diagram_field_displacement = theme_paint_rgba(colors, diagram, "fieldDisplacement", theme.diagram_field_displacement);
+    }
+    theme.border_radius = document.radii.get("chrome").and_then(ThemeNumber::scalar).map_or(theme.border_radius, |value| value as f32);
+    theme.stroke_hairline = document.strokes.get("chromeBorderHairline").and_then(ThemeNumber::scalar).map_or(theme.stroke_hairline, |value| value as f32);
+    theme.stroke_focus = document.strokes.get("chromeBorderFocus").and_then(ThemeNumber::scalar).map_or(theme.stroke_focus, |value| value as f32);
+    apply_theme_document_metrics(&mut theme, document);
+    theme
+}
+//#endregion 🎨️ThemeDocumentModel

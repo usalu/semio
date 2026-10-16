@@ -1,9 +1,10 @@
 import { test, expect } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
-import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../🟦️.ts";
+import { addSemioMutationLeafSchemasV1, compileSchemaScopeExport, semioSchemaAjvV1 } from "../🟦️.ts";
 import corpus from "./🧫️fixtures/🔣️.json";
 
 test("portable mutation leaf registration binds exact physical directory ownership", () => {
@@ -43,4 +44,27 @@ test("actual format policy matches shared asserted and annotation-only format ca
     for (const value of row.invalid) expect(validate(value.instance), row.id).toBe(false);
   }
   console.log("[DEBUG] actual semantic validator policy replayed shared draft-07 payload cases");
+});
+
+test("a scope export validates exactly the hand-listed rows, keeps every annotation and resolves its declared dependency", () => {
+  const root = mkdtempSync(join(tmpdir(), "semio-scope-export-"));
+  try {
+    const dependency = { $schema: "http://json-schema.org/draft-07/schema#", $id: "https://neutral.example/dependency.json", $defs: { Weight: { type: "number", format: "double", "x-semio-state": "artifact" } } };
+    const scope = { $schema: "http://json-schema.org/draft-07/schema#", $id: "https://neutral.example/scope.json", $defs: {
+      Row: { type: "object", additionalProperties: false, required: ["id", "weight"], "x-semio-formats": ["json"], "x-semio-child-kind": "row", properties: { id: { type: "string", minLength: 1 }, weight: { $ref: "https://neutral.example/dependency.json#/$defs/Weight" } } },
+      Flag: { type: "boolean" },
+    } };
+    mkdirSync(join(root, "schema"), { recursive: true });
+    writeFileSync(join(root, "schema/dependency.json"), JSON.stringify(dependency));
+    writeFileSync(join(root, "schema/scope.json"), JSON.stringify(scope));
+    const row = compileSchemaScopeExport(root, "schema/scope.json", "Row", ["schema/dependency.json"]);
+    for (const value of [{ id: "a", weight: 1.5 }, { id: "b", weight: 0 }]) expect(row(value)).toBe(true);
+    for (const value of [{ id: "", weight: 1 }, { id: "a" }, { id: "a", weight: "1" }, { id: "a", weight: 1, extra: true }, null, []]) expect(row(value)).toBe(false);
+    const flag = compileSchemaScopeExport(root, "schema/scope.json", "Flag");
+    expect(flag(true)).toBe(true);
+    expect(flag("true")).toBe(false);
+    expect(() => compileSchemaScopeExport(root, "schema/scope.json", "Absent")).toThrow();
+    expect(() => compileSchemaScopeExport(root, "schema/scope.json", "Row")).toThrow();
+    expect(() => compileSchemaScopeExport(root, "schema/absent.json", "Row")).toThrow();
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });

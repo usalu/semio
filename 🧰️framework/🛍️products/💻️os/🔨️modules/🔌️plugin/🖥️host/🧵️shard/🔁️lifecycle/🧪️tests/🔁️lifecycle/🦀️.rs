@@ -1,5 +1,16 @@
+
+use semio_framework_actor::{ActorId, PackageHash, PackageId};
+use semio_framework_plugin_host_shard::{AdmissionLimit, CancelCursor, DeferredAuthority, IssuedShardTurn, LifecycleRetry, SHARD_DEFERRED_BYTES, ShardFrame, ShardLoop, ShardRegistrationReason, ShardTransports, turn_budget_from_grant};
+use std::sync::Arc;
+use semio_framework::kernel::Event;
+use semio_framework_plugin_host_guest_runtime::{GuestRuntimes, PackageRef};
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_plugin_host_shard::{LoopbackTransport, fixture_instance_close_event};
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_plugin_host_guest_runtime::MockGuestRuntime;
+#[cfg(test)]
+use std::sync::Mutex;
 fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
-use super::*;
 
 fn lane() -> semio_framework_actor::Lane {
     semio_framework_actor::Lane::Interactive
@@ -22,7 +33,7 @@ async fn setup() -> (ShardLoop, Arc<MockGuestRuntime>, Arc<Mutex<Vec<Vec<u8>>>>)
     let mock = Arc::new(MockGuestRuntime::new().await);
     let transport = LoopbackTransport::default();
     let outbound = Arc::clone(&transport.outbound);
-    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), ShardTransports::Loopback(transport),crate::shard::test_identity_issuer()).await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), ShardTransports::Loopback(transport),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     let package = PackageRef { package: PackageId("lifecycle-retry".into()), hash: PackageHash([0; 32]) };
     let compiled = mock.compile(&package, &[]).await.unwrap();
     for actor in [ActorId(1), ActorId(2)] {

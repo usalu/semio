@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellInput
 impl CommandState {
-    pub(crate) fn dismiss_overlays(&mut self, x: f32, y: f32, input: &mut InputState<ActionDescriptor>, input_state: &mut ShellInputState) -> bool {
+    pub fn dismiss_overlays(&mut self, x: f32, y: f32, input: &mut InputState<ActionDescriptor>, input_state: &mut ShellInputState) -> bool {
         let hit = input.hit_at(x, y);
         let on_palette = hit.and_then(|hit| hit.control_id.as_deref()).is_some_and(|id| [ShellPaletteKind::Search, ShellPaletteKind::Find].into_iter().any(|kind| kind.owns_control_id(id)));
         if matches!(input_state.overlay_state, OverlayState::Search | OverlayState::Find) && !on_palette {
@@ -31,7 +31,7 @@ impl CommandState {
 
     /// 🔍️ Find-in-content rows — React's `UIFind` ranks its own `UIFindItem[]` through the very same
     /// `rankFuzzyItems` call (same fields/weights/threshold/limit), so this is not a second algorithm.
-    pub(crate) fn filtered_find_items(&self) -> Vec<ShellFindItem> {
+    pub fn filtered_find_items(&self) -> Vec<ShellFindItem> {
         rank_fuzzy_items(
             self.find_items.iter().cloned().collect(),
             &self.find_query,
@@ -41,14 +41,14 @@ impl CommandState {
         )
     }
 
-    pub(crate) fn palette_query(&self, kind: ShellPaletteKind) -> &str {
+    pub fn palette_query(&self, kind: ShellPaletteKind) -> &str {
         match kind {
             ShellPaletteKind::Search => &self.search_query,
             ShellPaletteKind::Find => &self.find_query,
         }
     }
 
-    pub(crate) fn set_palette_query(&mut self, kind: ShellPaletteKind, value: String, input: &mut InputState<ActionDescriptor>, input_state: &mut ShellInputState) {
+    pub fn set_palette_query(&mut self, kind: ShellPaletteKind, value: String, input: &mut InputState<ActionDescriptor>, input_state: &mut ShellInputState) {
         match kind {
             ShellPaletteKind::Search => {
                 self.search_query = value.clone();
@@ -63,7 +63,7 @@ impl CommandState {
         input_state.accessibility_focused_control_id = Some(kind.input_id().to_string());
     }
 
-    pub(crate) fn close_command_palette(&mut self, input: &mut InputState<ActionDescriptor>, input_state: &mut ShellInputState) {
+    pub fn close_command_palette(&mut self, input: &mut InputState<ActionDescriptor>, input_state: &mut ShellInputState) {
         if input_state.pending_chrome_release.as_deref().is_some_and(|id| [ShellPaletteKind::Search, ShellPaletteKind::Find].into_iter().any(|kind| kind.owns_control_id(id))) {
             input_state.pending_chrome_release = None;
         }

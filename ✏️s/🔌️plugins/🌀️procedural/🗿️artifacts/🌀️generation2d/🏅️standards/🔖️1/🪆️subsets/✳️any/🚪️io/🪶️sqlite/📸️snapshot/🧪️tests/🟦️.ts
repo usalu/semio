@@ -2,7 +2,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {generation2dSnapshotToSqliteDatabase,generation2dSnapshotFromSqliteDatabase,GENERATION2D_SQLITE_SCHEMA} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import corpus from"./🧫️fixtures/🔣️.json";
 import{proceduralSnapshotFixture}from"../../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🧪️tests/🧰️support/🟦️.ts";
 
@@ -11,7 +11,7 @@ import{parseGeneration2dArtifact}from"../../../../🧬️schema/🟦️.ts";
 import Ajv from"ajv";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
 import{diff as moveNodeDiff}from"../../../../../../../../../🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🟦️.ts";
-import {binary64,binary64Value} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import type{CreateWidget}from"../../../../🧬️schema/🧬️mutations/🌱️create-widget/🦠️mutation/🟦️.ts";
 import{generation2dGestureLeafTwinSelfTests}from"../../../../🧬️schema/🧬️mutations/🧪️tests/🧪️gesture-leaves/🟦️.ts";
 import{diff as create3dWidgetDiff}from"../../../../../../../../../🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🔺️diff/🟦️.ts";

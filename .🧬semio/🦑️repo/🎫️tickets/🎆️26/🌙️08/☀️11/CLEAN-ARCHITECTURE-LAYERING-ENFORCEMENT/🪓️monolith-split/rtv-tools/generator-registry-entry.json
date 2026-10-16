@@ -1,0 +1,29 @@
+{
+  "repo-vscode-graphql-types": {
+    "ownership": "owned",
+    "ownerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
+    "target": "@semio-tech/repo-vscode:generate-graphql-types",
+    "previewTarget": "@semio-tech/repo-vscode:preview-generated",
+    "checkTarget": "@semio-tech/repo-vscode:check-graphql-types",
+    "inputPatterns": [
+      "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
+      "🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⌛️queries/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📖️parse/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📋️plan/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📥️source/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/📽️projection/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🔗️graphql-types/🏃️execution/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📋️project.json",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "outputRoots": [
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🤖️generated/🔗️graphql-types/🟦️.ts",
+        "inclusion": "ignored"
+      }
+    ],
+    "reason": "The VS Code client owns the TypeScript projection of the served GraphQL schema and of the operations it sends, replacing the types it carried by hand"
+  }
+}

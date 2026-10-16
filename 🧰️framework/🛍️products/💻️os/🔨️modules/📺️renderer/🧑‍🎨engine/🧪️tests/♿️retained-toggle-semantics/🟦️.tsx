@@ -13,7 +13,8 @@ import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolu
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import type { Component, UiNodeRecord, UiSnapshot } from "@semio-tech/framework";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
-import { interpretUiNode, type UiInterpreterContext } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { interpretUiNode } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { type UiInterpreterContext } from "../../🧱️elements/🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
 import { createAccessibilityMirror } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { uiAccessibilityProjectionNodeV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
 

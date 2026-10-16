@@ -1,7 +1,7 @@
 /** 🔣️ Remodeling physical JSON scalars, defaults and text codec. */
 import {RemodelingCodecError,camelOf,REMODELING_SNAPSHOT_SPEC,type RemodelingSnapshot,type RecordSpec,type ValueSpec,type Float32Buffer} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 const fail=(path:string,message:string):never=>{throw new RemodelingCodecError(path,message)};
-import {binary32,binary64,parseBinary32,parseBinary64,type Binary32,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32,binary64,parseBinary32,parseBinary64,type Binary32,type Binary64} from "@semio-tech/framework/value/ieee754";
 const isPlainObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 const finiteNumber = (value: unknown, path: string): number => (typeof value === "number" && Number.isFinite(value) ? value : (fail(path, `expected a finite number, got ${JSON.stringify(value)}`) as never));
 const wholeNumber = (value: unknown, path: string, signed: boolean): number => {

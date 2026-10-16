@@ -1,6 +1,8 @@
 //! 🤝️ The domain-neutral seam between a retained store initializer and the job that drives it.
 
-use super::{ArtifactStore, Mutation, ToValue, FromValue};
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_framework_os_spr::Mutation;
+use semio_framework_value::{ToValue, FromValue};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
 

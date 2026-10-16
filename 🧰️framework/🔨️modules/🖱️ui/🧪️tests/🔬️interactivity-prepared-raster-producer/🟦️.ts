@@ -1,4 +1,4 @@
-import { interactivityPreparedRasterProducerFailures } from "../../../../../📜️script.ts";
+import { interactivityPreparedRasterProducerFailures } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity prepared raster producer policy assertions. */
 export function interactivityPreparedRasterProducerSelfTests(): void {

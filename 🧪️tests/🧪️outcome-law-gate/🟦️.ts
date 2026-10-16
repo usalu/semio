@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { policyOutcomeCodeFileBreaches, policyOutcomeVocabulary } from "../../📜️script.ts";
+import { policyOutcomeCodeFileBreaches, policyOutcomeVocabulary } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts";
 
 type Level = "info" | "warning" | "error" | "fatal";
 type Breach =

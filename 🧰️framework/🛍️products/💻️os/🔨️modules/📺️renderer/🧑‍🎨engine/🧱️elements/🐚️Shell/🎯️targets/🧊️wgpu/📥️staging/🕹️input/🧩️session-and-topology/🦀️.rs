@@ -7,17 +7,17 @@ use super::*;
 //#region ShellLifecycle
 impl ShellInputState {
     //#region 🏷️LabelResolution
-    pub(crate) fn canonical_tree_open(&self, id: &str, default_open: bool) -> bool {
+    pub fn canonical_tree_open(&self, id: &str, default_open: bool) -> bool {
         self.tree_open_states.get(id).copied().unwrap_or(default_open)
     }
 
-    pub(crate) fn set_canonical_tree_open(&mut self, id: &str, open: bool) {
+    pub fn set_canonical_tree_open(&mut self, id: &str, open: bool) {
         self.tree_open_states.insert(id.to_string(), open);
     }
 
     /// 🖱️ Folds one immediate-mode tree row. The chevron and the row share this, so a row with
     /// children opens from its label.
-    pub(crate) fn toggle_immediate_tree_item(&mut self, item_id: &str) {
+    pub fn toggle_immediate_tree_item(&mut self, item_id: &str) {
         let key = format!("tree.{item_id}");
         let collapsed = self.collapsed_sections.get(&key).copied().unwrap_or(false);
         let next_open = !self.canonical_tree_open(item_id, !collapsed);
@@ -25,7 +25,7 @@ impl ShellInputState {
         self.set_canonical_tree_open(item_id, next_open);
     }
 
-    pub(crate) fn observe_interaction_output(&mut self, output: &DslValue) {
+    pub fn observe_interaction_output(&mut self, output: &DslValue) {
         let output = dsl_value_as_json(output);
         let Some(view) = output.get("interactionView") else { return };
         if view.get("selectionCleared").and_then(Value::as_bool) == Some(true) {
@@ -37,12 +37,12 @@ impl ShellInputState {
         }
     }
 
-    pub(crate) fn set_interaction_selection_projection(&mut self, selection: HashMap<String, semio_framework::DomainSelection>) {
+    pub fn set_interaction_selection_projection(&mut self, selection: HashMap<String, semio_framework::DomainSelection>) {
         self.interaction_selection = selection;
     }
 
     //#endregion 🏷️LabelResolution
-    pub(crate) fn context_window_instance_id(&self, x: f32, y: f32) -> Option<&str> {
+    pub fn context_window_instance_id(&self, x: f32, y: f32) -> Option<&str> {
         self.presented_input_geometry.dock_drop_bodies.iter().find(|(_, bounds, _)| bounds.contains(x, y)).map(|(_, _, window_id)| window_id.as_str())
     }
 
@@ -54,7 +54,7 @@ impl ShellInputState {
     /// the dragged window from the committed tree; an abandoned drag then had to be undone by
     /// re-applying that snapshot, and any drop that refused left the shell one `sync_dock` away from
     /// losing the user's layout.
-    pub(crate) fn claim_chrome_pointer(&mut self, pointer_id: ui_render::PointerId) -> bool {
+    pub fn claim_chrome_pointer(&mut self, pointer_id: ui_render::PointerId) -> bool {
         if self.chrome_pointer_owner.is_some_and(|owner| owner != pointer_id) {
             return false;
         }
@@ -62,7 +62,7 @@ impl ShellInputState {
         true
     }
 
-    pub(crate) fn begin_pending_dock_drag(&mut self, pointer_id: ui_render::PointerId, payload: DockDragPayload, x: f32, y: f32, dock: &mut ShellDockState) -> bool {
+    pub fn begin_pending_dock_drag(&mut self, pointer_id: ui_render::PointerId, payload: DockDragPayload, x: f32, y: f32, dock: &mut ShellDockState) -> bool {
         if !self.claim_chrome_pointer(pointer_id) {
             return false;
         }
@@ -72,7 +72,7 @@ impl ShellInputState {
 
     /// 🧳️ Bridges one semantic Tree transfer into the dock authority before retained routing takes
     /// ownership of the gesture. Both shell-painted and retained Tree hits use this one decoder.
-    pub(crate) fn begin_window_template_drag_from_hit(&mut self, pointer_id: ui_render::PointerId, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32, docs: &DocumentState, dock: &mut ShellDockState) -> bool {
+    pub fn begin_window_template_drag_from_hit(&mut self, pointer_id: ui_render::PointerId, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32, docs: &DocumentState, dock: &mut ShellDockState) -> bool {
         let Some((item_id, drag_data)) = hit.control_id.as_deref().and_then(tree_hit_item_id).zip(hit.drag_data.as_ref()) else {
             return false;
         };

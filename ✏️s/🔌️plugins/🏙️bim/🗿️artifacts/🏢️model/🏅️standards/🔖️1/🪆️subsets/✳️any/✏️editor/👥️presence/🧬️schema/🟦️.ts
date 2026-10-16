@@ -1,4 +1,4 @@
-import { parseViewport2d, type Viewport2d } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+import { parseViewport2d, type Viewport2d } from "@semio-tech/framework/ui/viewport/2d/schema";
 
 /** 👥️ Shareable live BIM presence. */
 export interface BimPresence {

@@ -6,10 +6,10 @@ use super::*;
 
 //#region ShellTypes
 /// 🪟️ Separates framework layout application from the effective React Mode prop identity.
-pub(super) struct DockInputIdentity {
-    pub(super) source: Option<WindowLayout>,
-    pub(super) mode_layout: Option<WindowLayout>,
-    pub(super) roster: Vec<String>,
+pub struct DockInputIdentity {
+    pub source: Option<WindowLayout>,
+    pub mode_layout: Option<WindowLayout>,
+    pub roster: Vec<String>,
 }
 
 //#endregion ShellTypes

@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralMap } from "@semio-tech/framework";
+import { ephemeralMap } from "../../../../🫧️transient/🟦️.ts";
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";

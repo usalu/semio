@@ -809,13 +809,6 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     }
 }
 
-impl<PA: PluginApp> Plugin<PA> {
-    /// 🏗️ Starts a typestate plugin builder from a stable plugin id.
-    pub fn builder(plugin_id: impl Into<String>) -> PluginBuilder<NeedsLabel, PA> {
-        PluginBuilder::new(plugin_id)
-    }
-}
-
 //#region 🧪️DependencyContributionFixtureMount
 #[cfg(test)]
 #[path = "🧪️tests/🪪️artifact-admission/🦀️.rs"]

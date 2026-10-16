@@ -23,7 +23,9 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-engine-graph = { path = "../../../🕸️engine-graph/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-surfaces = { path = "../../../🫧️shell-surfaces/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-vocab = { path = "../../../📖️shell-vocab/📦️packages/🦀️rust" }

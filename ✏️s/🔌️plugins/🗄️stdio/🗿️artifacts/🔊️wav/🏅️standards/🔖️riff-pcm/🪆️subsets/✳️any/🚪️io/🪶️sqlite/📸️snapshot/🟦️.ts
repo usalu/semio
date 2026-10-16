@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from "./🗄️.sql" with {type:"text"};
-import {parseBinary32,binary32Value,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary32,binary32Value,type Binary32} from "@semio-tech/framework/value/ieee754";
 /** 🎧️ Individually authored WAV sample domains and RIFF chunk relationships. */
 import type {WavSnapshot,WavData,WavChunkRef,RiffChunk} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 /** 🏛️ The individually handwritten canonical WAV relational schema. */
 export const WAV_SQLITE_SCHEMA:string=sql;
 

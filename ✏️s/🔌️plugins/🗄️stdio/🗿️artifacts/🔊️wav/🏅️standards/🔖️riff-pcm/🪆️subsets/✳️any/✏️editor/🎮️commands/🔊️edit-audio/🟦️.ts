@@ -1,4 +1,4 @@
-import {binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32} from "@semio-tech/framework/value/ieee754";
 import type { WavData, WavFmt, WavMutation, WavSnapshot } from "../../../🧬️schema/🧬️mutations/🟦️";
 
 export const WAV_AUDIO_EDIT_PAYLOAD_SCHEMA = "s.stdio.wav.command.edit-audio.v1" as const;

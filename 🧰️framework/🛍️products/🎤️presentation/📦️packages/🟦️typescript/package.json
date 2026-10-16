@@ -11,7 +11,18 @@
   "license": "LGPL-3.0-or-later",
   "semio": {
     "role": "framework",
-    "id": "presentation"
+    "id": "presentation",
+    "storybook": {
+      "id": "presentation",
+      "titlePrefix": "🎬️presentation",
+      "sourceRoots": [
+        "📦️packages/🟦️typescript",
+        "🎯️targets/⚛️react"
+      ],
+      "storyGlobs": [
+        "🎯️targets/⚛️react/📖️stories/**/🧪️.story.tsx"
+      ]
+    }
   },
   "repository": {
     "type": "git",

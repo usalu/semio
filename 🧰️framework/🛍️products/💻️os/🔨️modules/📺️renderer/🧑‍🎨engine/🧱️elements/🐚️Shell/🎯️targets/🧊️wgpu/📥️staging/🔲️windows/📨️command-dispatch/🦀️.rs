@@ -10,7 +10,7 @@ impl WindowState {
     /// state first, then the session and its first window become current. The synchronous tail of
     /// [`Self::switch_to_app`], shared with the frame-pumped open ([`Self::advance_document_opening`]),
     /// which renders on the settle lane instead of inline.
-    pub(super) fn install_app_session(&mut self, plugin_id: &str, app: AppDefinition, instance_id: u32, prefs: &PrefsState, directory: &mut DirectoryState, docs: &mut DocumentState) {
+    pub fn install_app_session(&mut self, plugin_id: &str, app: AppDefinition, instance_id: u32, prefs: &PrefsState, directory: &mut DirectoryState, docs: &mut DocumentState) {
         #[cfg(not(target_arch = "wasm32"))]
         if let (Some(home), Some(current)) = (directory.directory_home.as_mut(), docs.session.as_ref()) {
             if home.is_instance(&current.plugin_id, current.instance_id) {

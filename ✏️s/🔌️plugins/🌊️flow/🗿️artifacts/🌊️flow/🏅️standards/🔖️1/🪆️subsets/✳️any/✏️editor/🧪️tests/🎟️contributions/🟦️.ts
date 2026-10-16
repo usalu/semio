@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 /** 🧾️ The original contribution worker consumes actual effects before yielding or refusing. */
 export function testFlowContributionsReceiver():void{
  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎟️contributions/🔣️.json",import.meta.url),"utf8"));
 assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributions/🔣️.json",import.meta.url)),false,"Testing examples have no schema authority");
- const grantSchema=JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",import.meta.url),"utf8")),grant=new Ajv({strict:true,allErrors:true}).compile(grantSchema);let assertions=1;
+ const grantSchema=JSON.parse(readFileSync(frameworkSourceUrl("🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"),"utf8")),grant=new Ajv({strict:true,allErrors:true}).compile(grantSchema);let assertions=1;
  for(const row of fixture.cases){assert.equal(grant(row.grant),true,JSON.stringify(grant.errors));assert.equal(grant(row.remaining),true,JSON.stringify(grant.errors));assertions+=2;}
  const db=new Database(":memory:");db.run("CREATE TABLE receipt(items INTEGER, copied INTEGER, capacity INTEGER, released INTEGER)");
  const grantAxes=["maximumItems","maximumCopyBytes","maximumCapacityBytes","maximumReleaseBytes","maximumDepth"];

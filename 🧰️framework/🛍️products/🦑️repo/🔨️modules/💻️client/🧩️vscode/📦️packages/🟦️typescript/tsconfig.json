@@ -15,6 +15,6 @@
       "@semio-tech/assets": ["../../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"]
     }
   },
-  "include": ["🟦️.ts", "../../🟦️.ts", "../../🧪️tests/🧩️extension/🟦️.ts"],
+  "include": ["🟦️.ts", "../../🟦️.ts", "../../⌛️queries/🟦️.ts", "../../🔗️graphql-types/🏃️execution/🟦️.ts", "../../🧪️tests/🧩️extension/🟦️.ts", "../../🧪️tests/🔗️graphql-types/🟦️.ts"],
   "exclude": ["node_modules", "out", "test"]
 }

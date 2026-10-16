@@ -1,6 +1,6 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import {parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("GLTF handwritten semantic schema agrees with independent SQLite table and foreign-key interpretation",async()=>{
  const names=["📄️document","🧩️extras","🌳️node","🏔️mesh","📦️buffer","🖌️material","🖼️texture","🦴️skin","🎬️animation","🎥️camera"];

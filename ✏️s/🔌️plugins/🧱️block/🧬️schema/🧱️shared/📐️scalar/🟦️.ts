@@ -1,6 +1,6 @@
 /** 📐️ Literal Block-owned primitive admission shared by its real document records. */
-import {type Binary64,parseBinary64} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {textUtf8ByteLength} from "../../../../../../🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts";
+import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
+import {textUtf8ByteLength} from "@semio-tech/framework/value/text";
 export type BlockVector3=[Binary64,Binary64,Binary64];
 export type BlockVector4=[Binary64,Binary64,Binary64,Binary64];
 export const fail=(why:string):never=>{throw new Error("Block "+why)};

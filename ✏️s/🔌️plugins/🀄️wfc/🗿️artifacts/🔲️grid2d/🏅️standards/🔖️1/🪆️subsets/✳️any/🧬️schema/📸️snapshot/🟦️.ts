@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 /** 📸️ Grid2dSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling. Tiles carry their own
  * 2D media (inline bitmap, inline vector, or a composed `s.stdio.semio@v1/image` child); the solved
  * assignment is an inference over this document and never appears here. */

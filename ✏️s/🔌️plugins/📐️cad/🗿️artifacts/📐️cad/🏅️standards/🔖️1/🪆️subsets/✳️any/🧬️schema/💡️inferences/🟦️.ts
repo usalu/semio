@@ -21,7 +21,7 @@ export interface CadInference {
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { kernelGeometry, type Vec3 } from "@semio-tech/framework-3d-js";
+import { kernelGeometry, type Vec3 } from "@semio-tech/framework/3d";
 import {
   Model,
   buildTypologyToEntityKindMapForModelDefinition,

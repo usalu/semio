@@ -1119,10 +1119,10 @@ export function artifactNameHitsOfText(path: string, text: string, names: readon
 /** 🚪️ The census's own rule vocabulary — this module names the words it looks for. */
 export const ARTIFACT_NAME_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts"];
 
-const ARTIFACT_NAME_SCOPE_EXCLUDED = /(^|\/)(🧪️tests|tests|🧫️fixtures|benches|examples|🔮️oracles|🤖️generated|🗑️generated)\/|\.(test|spec)\.tsx?$/u;
+const ARTIFACT_NAME_SCOPE_EXCLUDED = /(^|\/)(🧪️tests|tests|🧫️fixtures|benches|examples|🔮️oracles|⚖️laws|🤖️generated|🗑️generated)\/|\.(test|spec)\.tsx?$/u;
 
 /** 🧹️ The artifact-neutrality census (design §22.31 c) over every tracked Rust / TypeScript source under `🧰️framework/` outside
- * tests, fixtures, oracles, generated trees, declaration files and {@link ARTIFACT_NAME_CENSUS_EXEMPT}: every line that names an
+ * tests, fixtures, oracles, laws (which name what they police), generated trees, declaration files and {@link ARTIFACT_NAME_CENSUS_EXEMPT}: every line that names an
  * artifact outside a doc comment. Cross-checked file by file against `git grep -c -i` (the oracle counts every line carrying a
  * name, doc comments included): the scanner never finds more lines in a file than the oracle, and never a file it does not list. */
 export function runArtifactNameCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {

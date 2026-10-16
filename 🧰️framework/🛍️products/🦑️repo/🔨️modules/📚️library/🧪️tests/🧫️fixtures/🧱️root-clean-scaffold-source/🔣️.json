@@ -273,7 +273,12 @@
       "path": "📜️script.ts",
       "owners": [
         "🧼️workspace-cleanup/🎮️command/🟦️.ts",
-        "🏗️authoring/🎮️command/🟦️.ts",
+        "🏗️authoring/🎮️command/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts",
+      "owners": [
         "🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts"
       ]
     },

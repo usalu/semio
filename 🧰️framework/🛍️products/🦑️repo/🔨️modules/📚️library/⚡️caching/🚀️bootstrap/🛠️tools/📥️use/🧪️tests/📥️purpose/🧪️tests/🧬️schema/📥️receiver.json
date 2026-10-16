@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "required": [
+    "entries",
+    "callbacks",
+    "sameEnvelope",
+    "maximumNodeMilliseconds",
+    "maximumLawMilliseconds"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "entries": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "callbacks": {
+      "const": 2
+    },
+    "maximumNodeMilliseconds": {
+      "const": 15000
+    },
+    "maximumLawMilliseconds": {
+      "const": 20000
+    },
+    "sameEnvelope": {
+      "const": true
+    }
+  }
+}

@@ -21,7 +21,7 @@ test("Semio Table code-admitted intermediate owner survives independently querie
 });
 
 import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
-import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import{independentSqliteExtent as completeIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("Semio Table Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as SemioTableSnapshot;const database=await semioTableSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:7,maxColumns:8};expect(await semioTableSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioTableSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);
  for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:6},{...limits,maxColumns:7}]){await expect(semioTableSnapshotToSqliteDatabase(source,short)).rejects.toThrow();await expect(semioTableSnapshotFromSqliteDatabase(database,short)).rejects.toThrow();}

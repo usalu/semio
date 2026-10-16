@@ -37,7 +37,7 @@ pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)]
 ///
 /// ⚠️ A producer that offers no `cancelAction` is never driven: this shell learns no domain verb from
 /// code, so a run it has no published way to end is left to the user.
-pub(crate) fn settle_watch_verdict(watch: &mut ShellSettleWatch, status: &World3dComputeStatus) -> ShellSettleVerdict {
+pub fn settle_watch_verdict(watch: &mut ShellSettleWatch, status: &World3dComputeStatus) -> ShellSettleVerdict {
     let signature = settle_progress_signature(status);
     if watch.signature != signature {
         watch.signature = signature;

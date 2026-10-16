@@ -2,22 +2,22 @@
 use super::*;
 
 //#region 📮️RuntimeMailbox
-pub(crate) struct AppPresenter {
-    pub(crate) gpu: GpuContext,
-    pub(crate) engine: engine_canvas::EngineCanvasPresenter,
-    pub(crate) gate: ui_wgpu::wgpu::PreparedRenderGate,
-    pub(crate) runtime: AppMailbox,
-    pub(crate) presentation_authority: RuntimePresentationAuthority,
-    pub(crate) raster_operation_authority: RuntimeRasterOperationAuthority,
-    pub(crate) window: Option<Arc<Window>>,
+pub struct AppPresenter {
+    pub gpu: GpuContext,
+    pub engine: semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter,
+    pub gate: ui_wgpu::wgpu::PreparedRenderGate,
+    pub runtime: AppMailbox,
+    pub presentation_authority: RuntimePresentationAuthority,
+    pub raster_operation_authority: RuntimeRasterOperationAuthority,
+    pub window: Option<Arc<Window>>,
     #[cfg(target_arch = "wasm32")]
-    pub(crate) offscreen_token: Option<ui_wgpu::wgpu::OffscreenPresentToken>,
-    pub(crate) last_cursor: Option<(SemioCursor, bool)>,
-    pub(crate) pending: Option<AppPresentCursor>,
-    pub(crate) retirement: Option<AppPresentedRetirement>,
-    pub(crate) retained_fault: Option<String>,
-    pub(crate) surface_resize: Option<AppSurfaceResizeCursor>,
-    pub(crate) stall: AppPresentStallWatch,
+    pub offscreen_token: Option<ui_wgpu::wgpu::OffscreenPresentToken>,
+    pub last_cursor: Option<(SemioCursor, bool)>,
+    pub pending: Option<AppPresentCursor>,
+    pub retirement: Option<AppPresentedRetirement>,
+    pub retained_fault: Option<String>,
+    pub surface_resize: Option<AppSurfaceResizeCursor>,
+    pub stall: AppPresentStallWatch,
 }
 
 /// 🐕️ The presentation ladder's own watchdog: the last progress signature [`AppPresenter::present_step`]
@@ -35,9 +35,9 @@ pub(crate) struct AppPresenter {
 /// engine packets) resets the count on every one of them and only a genuinely frozen cursor
 /// accumulates.
 #[derive(Default)]
-pub(crate) struct AppPresentStallWatch {
+pub struct AppPresentStallWatch {
     signature: Option<AppPresentProgress>,
-    pub(crate) steps: u32,
+    pub steps: u32,
 }
 
 /// 🐕️ Every index a healthy presentation step moves: the ladder phase, the engine packet, the upload
@@ -48,7 +48,7 @@ pub(crate) struct AppPresentStallWatch {
 /// `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY
 /// example boot (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(crate) enum AppPresentInputWait {
+pub enum AppPresentInputWait {
     #[default]
     None,
     RuntimeLock,
@@ -65,19 +65,19 @@ impl AppPresentInputWait {
     }
 }
 
-pub(crate) type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, u32)>, (u32, u32, usize), usize, AppPresentInputWait, u64);
+pub type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, u32)>, (u32, u32, usize), usize, AppPresentInputWait, u64);
 
 /// 🐕️ Consecutive non-advancing `Pending` answers after which a pending presentation is aborted
 /// rather than waited on. `present_step` is driven several times per frame transaction turn, so this
 /// is well under a second of wall clock and three orders of magnitude above the longest healthy
 /// non-advancing run this ladder has (`Uploads`/`Render` answering `Ok(false)` while the GPU queue
 /// drains).
-pub(crate) const APP_PRESENT_STALL_STEPS: u32 = 4_096;
+pub const APP_PRESENT_STALL_STEPS: u32 = 4_096;
 
 /// 🐕️ The watchdog's whole arithmetic, over the progress signature alone: `Some(shape)` on exactly the
 /// step a signature has repeated [`APP_PRESENT_STALL_STEPS`] times, `None` on every other step, and a
 /// reset the moment any term of the signature moves.
-pub(crate) fn note_present_stall_signature(watch: &mut AppPresentStallWatch, signature: AppPresentProgress) -> Option<String> {
+pub fn note_present_stall_signature(watch: &mut AppPresentStallWatch, signature: AppPresentProgress) -> Option<String> {
     if signature.6.awaiting_runtime(signature.0) {
         watch.signature = None;
         watch.steps = 0;
@@ -114,7 +114,7 @@ struct AppSurfaceResizeCursor {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum AppPresentPhase {
+pub enum AppPresentPhase {
     Fullscreen,
     Engine,
     BeginGpu,
@@ -131,7 +131,7 @@ pub(crate) enum AppPresentPhase {
 }
 
 impl AppPresentPhase {
-    pub(crate) fn latency_stage(self) -> frame_latency::FrameLatencyStage {
+    pub fn latency_stage(self) -> frame_latency::FrameLatencyStage {
         match self {
             Self::Fullscreen => frame_latency::FrameLatencyStage::PresenterFullscreen,
             Self::Engine => frame_latency::FrameLatencyStage::PresenterEngine,
@@ -151,9 +151,9 @@ impl AppPresentPhase {
 }
 
 struct AppPresentCursor {
-    media_collect:crate::media_slots::original_collect::OriginalPresentedRoster,
-    media_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<crate::media_slots::PresentedMediaSlot>>>,
-    media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
+    media_collect:semio_framework_os_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,
+    media_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>>>,
+    media_slots: Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>,
     has_animated_primitives: bool,
     frame: AppFramePresentation,
     phase: AppPresentPhase,
@@ -190,7 +190,7 @@ enum RasterCandidateRetirement {
     Complete,
 }
 
-pub(crate) enum AppPresentStep {
+pub enum AppPresentStep {
     Idle,
     Pending,
     AwaitingRuntime,
@@ -204,7 +204,7 @@ pub(crate) enum AppPresentStep {
         retained_control_deadline: Option<f64>,
         shell_clock_deadline: Option<f64>,
         has_animated_primitives: bool,
-        media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
+        media_slots: Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>,
     },
 }
 
@@ -339,11 +339,11 @@ impl AppPresentedRetirement {
 }
 
 impl AppPresenter {
-    pub(crate) fn surface_resize_available(&self) -> bool {
+    pub fn surface_resize_available(&self) -> bool {
         self.surface_resize.is_none()
     }
 
-    pub(crate) fn begin_surface_resize(&mut self, candidate: surface_lane::PreparedSurfaceResize) -> Result<(), surface_lane::PreparedSurfaceResize> {
+    pub fn begin_surface_resize(&mut self, candidate: surface_lane::PreparedSurfaceResize) -> Result<(), surface_lane::PreparedSurfaceResize> {
         if self.surface_resize.is_some() {
             return Err(candidate);
         }
@@ -351,7 +351,7 @@ impl AppPresenter {
         Ok(())
     }
 
-    pub(crate) fn surface_resize_step(&mut self) -> bool {
+    pub fn surface_resize_step(&mut self) -> bool {
         let Some(cursor) = self.surface_resize.as_mut() else { return true };
         match cursor.phase {
             AppSurfaceResizePhase::Apply => {
@@ -395,7 +395,7 @@ impl AppPresenter {
         }
     }
 
-    pub(crate) fn close_surface_resize_step(&mut self) -> bool {
+    pub fn close_surface_resize_step(&mut self) -> bool {
         if let Some(cursor) = self.surface_resize.as_mut() {
             if cursor.candidate.take().is_some() {
                 cursor.phase = AppSurfaceResizePhase::Retire;
@@ -408,22 +408,22 @@ impl AppPresenter {
         self.engine.invalidate_primary_metrics_step()
     }
 
-    pub(crate) fn has_pending_presentation(&self) -> bool {
+    pub fn has_pending_presentation(&self) -> bool {
         self.pending.is_some() || self.retirement.is_some() || self.retained_fault.is_some() || self.gate.has_pending_acknowledgement()
     }
 
-    pub(crate) fn awaiting_runtime(&self) -> bool {
+    pub fn awaiting_runtime(&self) -> bool {
         self.pending.as_ref().is_some_and(|cursor| cursor.input_wait.awaiting_runtime(cursor.phase))
     }
 
-    pub(crate) fn holds_presented_input_publication(&self) -> bool {
+    pub fn holds_presented_input_publication(&self) -> bool {
         self.pending.as_ref().is_some_and(|cursor| matches!(cursor.phase, AppPresentPhase::Render | AppPresentPhase::CloseGpu | AppPresentPhase::Acknowledge | AppPresentPhase::Media))
     }
 
     /// 🩺️ Which of the four owners is holding the presentation gate shut — the gate that decides
     /// whether `admit_next_frame` runs a frame build at all, and therefore whether the runtime mailbox
     /// is pumped this tick.
-    pub(crate) fn presentation_gate_shape(&self) -> String {
+    pub fn presentation_gate_shape(&self) -> String {
         format!(
             "pending={} phase={:?} retirement={} retained-fault={:?} gate-ack={} stall-steps={}",
             self.pending.is_some(),
@@ -445,7 +445,7 @@ impl AppPresenter {
         )
     }
 
-    pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
+    pub fn close_cursor_wake_step(&mut self) -> bool {
         let Some(pending) = self.pending.as_mut() else { return true };
         if pending.frame.cursor_wake.take().is_some() {
             return false;
@@ -453,14 +453,14 @@ impl AppPresenter {
         true
     }
 
-    pub(crate) fn close_original_media_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_original_media_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(cursor)=self.pending.as_mut()else{return Ok(true)};
-        if !cursor.media_collect.terminal_is_empty(){if !crate::interpreter::close_presented_media_slots(&mut cursor.media_collect,cx)?{return Ok(false)}}
+        if !cursor.media_collect.terminal_is_empty(){if !semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::close_presented_media_slots(&mut cursor.media_collect,cx)?{return Ok(false)}}
         if let Some(owner)=cursor.media_close.as_mut(){if owner.terminal_is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cursor.media_close=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}
         if !cursor.media_slots.is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let original=std::mem::take(&mut cursor.media_slots);match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>cursor.media_close=Some(owner),Err((original,source))=>{cursor.media_slots=source;return Err(original.into())}}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}Ok(true)
     }
 
-    pub(crate) fn close_frame_owners_step(&mut self) -> Result<bool, String> {
+    pub fn close_frame_owners_step(&mut self) -> Result<bool, String> {
         if !self.engine.close_active_candidate_step(&mut self.gpu)? {
             return Ok(false);
         }
@@ -545,7 +545,7 @@ impl AppPresenter {
         Ok(self.pending.is_none() && self.retirement.as_ref().is_none_or(AppPresentedRetirement::terminal_is_empty) && self.retained_fault.is_none() && self.gate.terminal_is_empty() && self.raster_operation_authority.current().is_none())
     }
 
-    pub(crate) fn close_world_owners_step(&mut self) -> Result<bool, String> {
+    pub fn close_world_owners_step(&mut self) -> Result<bool, String> {
         if !self.close_frame_owners_step()? || !self.engine.terminal_is_empty() {
             return Ok(false);
         }
@@ -561,7 +561,7 @@ impl AppPresenter {
         Ok(self.world_owners_terminal_is_empty())
     }
 
-    pub(crate) fn world_owners_terminal_is_empty(&self) -> bool {
+    pub fn world_owners_terminal_is_empty(&self) -> bool {
         self.pending.is_none()
             && self.retirement.as_ref().is_none_or(AppPresentedRetirement::terminal_is_empty)
             && self.gate.terminal_is_empty()
@@ -573,7 +573,7 @@ impl AppPresenter {
             && self.retained_fault.is_none()
     }
 
-    pub(crate) fn admit_next_frame(&mut self, produce: impl FnOnce() -> Option<AppFramePresentation>) -> Option<SemioCursor> {
+    pub fn admit_next_frame(&mut self, produce: impl FnOnce() -> Option<AppFramePresentation>) -> Option<SemioCursor> {
         if self.has_pending_presentation() {
             return None;
         }
@@ -619,7 +619,7 @@ impl AppPresenter {
     /// the first pointer event (`worker-present-failed: prepared frame authority was stale before
     /// acknowledgement`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END): a superseded frame must be
     /// acknowledged and replaced by the next one, never turned into a surface fault.
-    pub(crate) fn present_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<AppPresentStep, semio_framework_job::OriginalTurnFailure> {
+    pub fn present_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<AppPresentStep, semio_framework_job::OriginalTurnFailure> {
         if cx.should_yield(){return Ok(AppPresentStep::Pending)}
         if let Some(cursor)=self.pending.as_mut().filter(|cursor|cursor.phase==AppPresentPhase::Media){
             let Ok(runtime)=self.runtime.try_lock()else{return Ok(AppPresentStep::RetryRuntime)};let Some(interaction)=runtime.interaction.as_ref()else{return Ok(AppPresentStep::AwaitingRuntime)};if !interaction.shell.input.drive_presented_media_slots(&mut cursor.media_collect,&mut cursor.media_slots,cx)?{return Ok(AppPresentStep::Pending)}cursor.phase=AppPresentPhase::ProgressAcknowledge;return Ok(AppPresentStep::Pending)
@@ -899,15 +899,15 @@ impl AppPresenter {
                 let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::AwaitingRuntime) };
                 let AppInteractionState { shell, input, .. } = interaction;
                 match shell.input.progress_presented_input_candidate(input, input_candidate) {
-                    interpreter::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
-                    interpreter::PresentedInputCandidateProgress::Pending { advanced } => {
+                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
+                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Pending { advanced } => {
                         cursor.input_wait = AppPresentInputWait::SceneIntent;
                         if advanced {
                             cursor.input_progress = cursor.input_progress.saturating_add(1);
                         }
                         return Ok(AppPresentStep::Pending);
                     }
-                    interpreter::PresentedInputCandidateProgress::Stale => {
+                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale => {
                         drop(runtime);
                         cursor.frame.packet = self.gate.abort_pending();
                         cursor.witness = None;
@@ -1043,21 +1043,21 @@ impl AppPresenter {
                 }
                 let AppInteractionState { shell, input, .. } = interaction;
                 match shell.input.progress_presented_input_candidate(input, input_candidate) {
-                    interpreter::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
-                    interpreter::PresentedInputCandidateProgress::Pending { advanced } => {
+                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
+                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Pending { advanced } => {
                         cursor.input_wait = AppPresentInputWait::SceneIntent;
                         if advanced {
                             cursor.input_progress = cursor.input_progress.saturating_add(1);
                         }
                         return Ok(AppPresentStep::Pending);
                     }
-                    interpreter::PresentedInputCandidateProgress::Stale => {
+                    semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale => {
                         cursor.frame.packet = self.gate.abort_pending();
                         cursor.phase = AppPresentPhase::Aborted;
                         return Err("prepared frame input authority was stale before acknowledgement".to_string());
                     }
                 }
-                if !crate::shell::PanelsViewCtx::of(&mut shell).acknowledge_presented_input(input, input_candidate) {
+                if !semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut shell).acknowledge_presented_input(input, input_candidate) {
                     return Ok(AppPresentStep::Pending);
                 }
                 cursor.has_animated_primitives = packet.has_animated_primitives();
@@ -1119,37 +1119,37 @@ impl AppPresenter {
         }
     }
 
-    pub(crate) fn engine_surface_token_at(&self, index: usize) -> Option<engine_canvas::EngineSurfaceToken> {
+    pub fn engine_surface_token_at(&self, index: usize) -> Option<semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken> {
         self.engine.surface_token_at(index)
     }
 
-    pub(crate) fn begin_engine_surface_close(&mut self, token: engine_canvas::EngineSurfaceToken) -> bool {
+    pub fn begin_engine_surface_close(&mut self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> bool {
         self.engine.begin_surface_close(token)
     }
 
-    pub(crate) fn close_engine_surface_step(&mut self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, String> {
+    pub fn close_engine_surface_step(&mut self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> Result<bool, String> {
         self.engine.close_surface_step(&mut self.gpu, token)
     }
 
-    pub(crate) fn engine_surface_terminal_is_empty(&self, token: engine_canvas::EngineSurfaceToken) -> bool {
+    pub fn engine_surface_terminal_is_empty(&self, token: semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken) -> bool {
         self.engine.surface_terminal_is_empty(token)
     }
 
-    pub(crate) fn begin_engine_raster_close(&mut self, host_id: &str) -> Result<bool, String> {
-        let key = engine_canvas::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
+    pub fn begin_engine_raster_close(&mut self, host_id: &str) -> Result<bool, String> {
+        let key = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
         self.gpu.begin_exact_raster_close(&key)
     }
 
-    pub(crate) fn close_engine_raster_step(&mut self, host_id: &str) -> Result<bool, String> {
-        let key = engine_canvas::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
+    pub fn close_engine_raster_step(&mut self, host_id: &str) -> Result<bool, String> {
+        let key = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
         self.gpu.close_exact_raster_step(&key)
     }
 
-    pub(crate) fn engine_raster_terminal_is_empty(&self, host_id: &str) -> bool {
-        engine_canvas::engine_raster_key(host_id).is_some_and(|key| self.gpu.exact_raster_terminal_is_empty(&key))
+    pub fn engine_raster_terminal_is_empty(&self, host_id: &str) -> bool {
+        semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(host_id).is_some_and(|key| self.gpu.exact_raster_terminal_is_empty(&key))
     }
 
-    pub(crate) fn engine_surfaces_terminal_is_empty(&self) -> bool {
+    pub fn engine_surfaces_terminal_is_empty(&self) -> bool {
         self.engine.terminal_is_empty()
     }
 }
@@ -1158,7 +1158,7 @@ impl AppPresenter {
 //#region 📮️RuntimeMailbox
 impl AppPresenter {
     /// 🌍️ Plan section 5.3, inversion I3: the world3d dynamic-resource close step needs the presenter's GPU and the mailbox's runtime, so it lives with the presenter and borrows the mailbox.
-    pub(crate) fn close_world3d_dynamic_step(&mut self,mailbox:&AppMailbox,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
+    pub fn close_world3d_dynamic_step(&mut self,mailbox:&AppMailbox,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
         if cx.retirement_should_yield(){return Ok(false)}
         if !mailbox.close_renderer_asset_step() {
             return Ok(false);

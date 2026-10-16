@@ -35,7 +35,7 @@ test("Semio image complete and intermediate RGBA8 owners have independently edit
 });
 
 import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
-import{independentSqliteExtent as completeIndependentExtent}from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import{independentSqliteExtent as completeIndependentExtent}from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("Semio Image Native matched full and metadata empty independently preserve all complete cells",async()=>{
  for(const item of completeSemanticContract.cases){const source=structuredClone(item.sourceSnapshot)as unknown as SemioImageSnapshot;;const database=await semioImageSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:4,maxColumns:7};expect(await semioImageSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioImageSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);
  for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:3},{...limits,maxColumns:6}]){await expect(semioImageSnapshotToSqliteDatabase(source,short)).rejects.toThrow();await expect(semioImageSnapshotFromSqliteDatabase(database,short)).rejects.toThrow();}

@@ -2,12 +2,12 @@
 import sql from "./🗄️.sql" with {type:"text"};
 import type {RasterSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {RasterLayerNode,RasterLayerMask,RasterTransform} from "../../../🧬️schema/🟦️.ts";
-import type {IntrinsicValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import type {SqliteDatabase,SqliteValue,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,readBinary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {artifactSqliteOrderKeyEntries,artifactSqliteCompareKeys} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🔤️keys/🟦️.ts";
+import type {IntrinsicValue} from "@semio-tech/framework/value/schema";
+import type {SqliteDatabase,SqliteValue,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,readBinary32} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "@semio-tech/framework/value/ieee754";
+import {artifactSqliteOrderKeyEntries,artifactSqliteCompareKeys} from "@semio-tech/framework/io/sqlite-snapshot/artifact/keys";
 export const RASTER_SQLITE_SCHEMA:string=sql;
 const bool=(value:boolean)=>{if(typeof value!=="boolean")throw Error("Raster boolean required");return value?1n:0n;};
 const text=(value:string)=>{if(typeof value!=="string")throw Error("Raster text required");return value;};

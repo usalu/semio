@@ -15,15 +15,35 @@ import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️proc
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 //#region 🎯️Tasks
+/** 🧱️ The facade package and every producer crate it is assembled from. */
+const HOST_FAMILY = [
+  "semio-framework-plugin-host-wit",
+  "semio-framework-plugin-host-engine",
+  "semio-framework-plugin-host-operation",
+  "semio-framework-plugin-host-effects",
+  "semio-framework-plugin-host-imports",
+  "semio-framework-plugin-host-guest-runtime",
+  "semio-framework-plugin-host-wake",
+  "semio-framework-plugin-host-post-turn-relay",
+  "semio-framework-plugin-host-routers",
+  "semio-framework-plugin-host-process-transport",
+  "semio-framework-plugin-host-shard",
+  "semio-framework-plugin-host-shard-laws",
+  "semio-framework-plugin-host-guest-laws",
+  "semio-framework-plugin-host-shard-executor",
+  "semio-framework-plugin-host",
+] as const;
+const familyPackages = HOST_FAMILY.flatMap((name) => ["-p", name]);
+
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargo(["check", "--manifest-path", "Cargo.toml", ...segments], this.root);
+    await runCargo(["check", "--manifest-path", "Cargo.toml", ...familyPackages, ...segments], this.root);
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
+    await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...familyPackages, ...segments], this.root);
   }
 }
 
@@ -63,7 +83,7 @@ class ServiceOperationConversionCheckScript extends BundleScript {
     assert(segments.every((segment) => segment === "--native"), "service-operation-conversion-check accepts only --native");
     const hostRoot = join(import.meta.dir, "..", "..");
     const wit = readFileSync(join(hostRoot, "..", "🧬️schema", "📜️.wit"), "utf8");
-    const synchronous = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
+    const synchronous = readFileSync(join(hostRoot, "🔗️wit-bindings", "🔀️conversion", "🦀️.rs"), "utf8");
     const asynchronous = readFileSync(join(hostRoot, "📥️imports", "🦀️.rs"), "utf8");
     const kernel = join(this.repoRoot, "🧰️framework", "🔨️modules", "🎠️kernel");
     const fixture = JSON.parse(readFileSync(join(kernel, "🧪️tests/🧫️fixtures/💡️service-operation/🔣️.json", "💡️service-operation", "🔣️.json"), "utf8"));
@@ -73,12 +93,22 @@ class ServiceOperationConversionCheckScript extends BundleScript {
     if (!segments.includes("--native")) return;
     const laws = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, env: { ...process.env, CARGO_BUILD_JOBS: "1", RUST_MIN_STACK: "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [
         { package: "semio-framework", target: { kind: "lib" }, laws: ["kernel::service_operation_tests::installed_owner_service_effects_match_the_portable_and_serde_oracles"] },
-        { package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: [
-          "component::service_operation_tests::service_operation_preserves_its_exact_owner_action_and_payload",
-          "component::service_operation_tests::service_operation_rejects_a_malformed_payload",
-          "component::imports::effect_conversion_tests::service_operation_preserves_its_exact_owner_action_and_payload",
-          "component::imports::effect_conversion_tests::service_operation_rejects_a_malformed_payload",
-        ] },
+        {
+          package: "semio-framework-plugin-host-wit",
+          target: { kind: "lib" },
+          laws: [
+            "service_operation_tests::service_operation_preserves_its_exact_owner_action_and_payload",
+            "service_operation_tests::service_operation_rejects_a_malformed_payload",
+          ],
+        },
+        {
+          package: "semio-framework-plugin-host-imports",
+          target: { kind: "lib" },
+          laws: [
+            "effect_conversion_tests::service_operation_preserves_its_exact_owner_action_and_payload",
+            "effect_conversion_tests::service_operation_rejects_a_malformed_payload",
+          ],
+        },
       ], progress: (event) => console.log(`service-operation ${event.stage} ${event.package} ${event.law ?? ""}`) });
     console.log(`plugin-host-service-operation-native: groups=${laws.length} laws=${laws.reduce((count, group) => count + group.laws.length, 0)} passed`);
   }
@@ -96,42 +126,49 @@ class LifecycleCheckScript extends BundleScript {
       budgetMs: 900_000,
       env: { ...process.env, SEMIO_TEST_BUDGET_MS: "900000" },
     });
-    const focused = [
-      "component::shard::tests::replay_owners_drop_safely_from_every_owned_frontier_and_balance_accounting",
-      "component::shard::tests::replay_failure_and_actor_loss_enter_one_close_funnel_before_reporting",
-      "component::shard::tests::spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completion_reaches_the_originating_actor",
-      "component::shard::tests::cancel_job_effect_stops_a_job_before_it_is_ever_stepped",
-      "component::shard::tests::cancel_job_effect_failure_retires_the_actor_and_surfaces_the_typed_fault",
-      "component::shard::tests::cancel_unregisters_the_instance_and_no_further_step_job_happens",
-      "component::shard::tests::actor_cancel_failure_retires_the_instance_and_reports_fault_instead_of_cancelled",
-      "component::shard::tests::exclusive_placement_is_stepped_before_inline_placement_admitted_the_same_pump",
-      "component::shard::tests::exclusive_selection_never_crosses_a_lifecycle_barrier",
-      "component::shard::tests::job_step_uses_the_owning_actors_last_granted_budget",
-      "component::shard::executor::tests::fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain",
-      "component::effects::tests::router_effect_runs_through_the_retained_compute_session",
-      "component::effects::tests::router_effect_on_a_stopped_compute_pool_returns_worker_lost_without_stranding_its_owner",
-      "component::guest_cold_relay_tests::detached_reaper_reclaims_one_slot_per_opportunity_round_robin_and_refuses_stale_generation",
-      "component::guest_cold_relay_tests::detached_reaper_never_steals_a_live_draining_callers_exact_output",
-      "component::guest_cold_relay_tests::dropping_a_pending_mounted_future_reaps_without_a_second_foreground_poll",
-      "component::guest_cold_relay_tests::wake_incapable_close_uses_one_coalesced_bounded_fallback",
-      "component::guest_cold_relay_tests::retained_pool_future_retries_saturation_once_and_terminalizes_shutdown",
-      "component::guest_cold_relay_tests::neutral_relay_lifecycle_traces_drive_production_machines",
+    const focused: readonly (readonly [string, string])[] = [
+      ["semio-framework-plugin-host-shard-laws", "unit::replay_owners_drop_safely_from_every_owned_frontier_and_balance_accounting"],
+      ["semio-framework-plugin-host-shard-laws", "unit::replay_failure_and_actor_loss_enter_one_close_funnel_before_reporting"],
+      ["semio-framework-plugin-host-shard-laws", "unit::spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completion_reaches_the_originating_actor"],
+      ["semio-framework-plugin-host-shard-laws", "unit::cancel_job_effect_stops_a_job_before_it_is_ever_stepped"],
+      ["semio-framework-plugin-host-shard-laws", "unit::cancel_job_effect_failure_retires_the_actor_and_surfaces_the_typed_fault"],
+      ["semio-framework-plugin-host-shard-laws", "unit::cancel_unregisters_the_instance_and_no_further_step_job_happens"],
+      ["semio-framework-plugin-host-shard-laws", "unit::actor_cancel_failure_retires_the_instance_and_reports_fault_instead_of_cancelled"],
+      ["semio-framework-plugin-host-shard-laws", "unit::exclusive_placement_is_stepped_before_inline_placement_admitted_the_same_pump"],
+      ["semio-framework-plugin-host-shard-laws", "unit::exclusive_selection_never_crosses_a_lifecycle_barrier"],
+      ["semio-framework-plugin-host-shard-laws", "unit::job_step_uses_the_owning_actors_last_granted_budget"],
+      ["semio-framework-plugin-host-shard-executor", "tests::fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain"],
+      ["semio-framework-plugin-host-effects", "tests::router_effect_runs_through_the_retained_compute_session"],
+      ["semio-framework-plugin-host-effects", "tests::router_effect_on_a_stopped_compute_pool_returns_worker_lost_without_stranding_its_owner"],
+      ["semio-framework-plugin-host-post-turn-relay", "guest_cold_relay_tests::detached_reaper_reclaims_one_slot_per_opportunity_round_robin_and_refuses_stale_generation"],
+      ["semio-framework-plugin-host-post-turn-relay", "guest_cold_relay_tests::detached_reaper_never_steals_a_live_draining_callers_exact_output"],
+      ["semio-framework-plugin-host-post-turn-relay", "guest_cold_relay_tests::dropping_a_pending_mounted_future_reaps_without_a_second_foreground_poll"],
+      ["semio-framework-plugin-host-post-turn-relay", "guest_cold_relay_tests::wake_incapable_close_uses_one_coalesced_bounded_fallback"],
+      ["semio-framework-plugin-host-post-turn-relay", "guest_cold_relay_tests::retained_pool_future_retries_saturation_once_and_terminalizes_shutdown"],
+      ["semio-framework-plugin-host-post-turn-relay", "guest_cold_relay_tests::neutral_relay_lifecycle_traces_drive_production_machines"],
     ];
-    const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    if (listed.status !== 0) throw new Error(`plugin-host lifecycle inventory failed with status ${listed.status}`);
-    const discovered = listed.stdout
-      .split("\n")
-      .filter((line) => line.endsWith(": test"))
-      .map((line) => line.slice(0, -": test".length));
-    const laws = focused.map((suffix) => {
-      const matches = discovered.filter((name) => name.endsWith(suffix));
-      if (matches.length !== 1) throw new Error(`plugin-host lifecycle gate expected exactly one ${suffix} law, selected ${matches.length}`);
-      return matches[0]!;
+    const discoveredByPackage = new Map<string, string[]>();
+    const discover = (pkg: string): string[] => {
+      const known = discoveredByPackage.get(pkg);
+      if (known) return known;
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", "-p", pkg, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      if (listed.status !== 0) throw new Error(`plugin-host lifecycle inventory of ${pkg} failed with status ${listed.status}`);
+      const names = listed.stdout
+        .split("\n")
+        .filter((line) => line.endsWith(": test"))
+        .map((line) => line.slice(0, -": test".length));
+      discoveredByPackage.set(pkg, names);
+      return names;
+    };
+    const laws = focused.map(([pkg, suffix]) => {
+      const matches = discover(pkg).filter((name) => name.endsWith(suffix));
+      if (matches.length !== 1) throw new Error(`plugin-host lifecycle gate expected exactly one ${suffix} law in ${pkg}, selected ${matches.length}`);
+      return [pkg, matches[0]!] as const;
     });
-    console.log(`plugin-host-lifecycle-laws: ${laws.join(" ")}`);
-    for (const law of laws) await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", law, "--", "--exact"], this.root);
-    await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib"], this.root);
-    await runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features"], this.root);
+    console.log(`plugin-host-lifecycle-laws: ${laws.map(([pkg, law]) => `${pkg}:${law}`).join(" ")}`);
+    for (const [pkg, law] of laws) await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "-p", pkg, law, "--", "--exact"], this.root);
+    await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...familyPackages], this.root);
+    await runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", ...familyPackages], this.root);
   }
 }
 
@@ -155,7 +192,7 @@ function guestFaultOracle(): number {
     const actual = row.code === fixture.code && row.retryable === true && row.events.length <= 1 && row.events.every((event: string) => ["open", "close", "ack"].includes(event));
     assert.equal(actual, row.eligible, row.id);
   }
-  const host = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
+  const host = readFileSync(join(hostRoot, "🎭️guest-runtime", "🦀️.rs"), "utf8");
   const retained = readFileSync(join(hostRoot, "🧬️component-codec", "🎟️retained-turn", "🦀️.rs"), "utf8");
   const owned = readFileSync(join(hostRoot, "..", "🧠️interpreter", "🏃️runtime", "🦀️.rs"), "utf8");
   const contract = readFileSync(join(hostRoot, "..", "🧬️guest-contract", "🦀️.rs"), "utf8");
@@ -262,31 +299,55 @@ class GuestFaultCheckScript extends BundleScript {
           laws: ["activation::tests::neutral_reservation_traces_gate_dispatch_until_exact_binding", "activation::tests::reservation_exhaustion_collision_and_stale_binding_leave_no_partial_admission"],
         },
         {
+          package: "semio-framework-plugin-host-shard-executor",
+          target: { kind: "lib" },
+          laws: [
+            "tests::terminal_registration_reply_wakes_outside_the_state_lock",
+            "tests::admitted_registration_reply_wakes_outside_the_state_lock",
+            "tests::shard_stack_authority_matches_the_neutral_fixture",
+            "tests::shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool",
+            "tests::fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain",
+            "tests::every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_shards",
+            "tests::suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_registered",
+            "tests::concurrent_send_frame_bursts_never_drop_an_outcome",
+            "tests::pending_drive_wake_and_wake_storm_claim_exactly_one_schedule",
+            "tests::registration_acknowledgement_and_terminal_refusal_preserve_exact_owners",
+          ],
+        },
+        {
+          package: "semio-framework-plugin-host-shard-laws",
+          target: { kind: "lib" },
+          laws: [
+            "lifecycle_tests::unknown_transport_actors_never_allocate_host_bookkeeping",
+            "lifecycle_tests::neutral_retry_order_uses_the_production_selector",
+            "lifecycle_tests::retry_keeps_exact_event_budget_credit_and_one_peer_order",
+            "lifecycle_tests::retry_refuses_replacement_and_stale_queue_cannot_reach_same_id_successor",
+            "lifecycle_tests::cancellation_revokes_retry_before_another_guest_call",
+            "lifecycle_tests::retry_occupies_the_original_fixed_lane_capacity",
+            "lifecycle_tests::terminal_faults_never_create_a_lifecycle_retry",
+          ],
+        },
+        {
+          package: "semio-framework-plugin-host-wit",
+          target: { kind: "lib" },
+          laws: [
+            "cold_pair::tests::neutral_cold_ingress_variants_preserve_authority_and_refuse_hostile_wit",
+            "cold_pair::tests::native_cold_pages_use_dedicated_bounded_input",
+          ],
+        },
+        {
           package: "semio-framework-plugin-host",
           target: { kind: "lib" },
           laws: [
-            "component::shard::executor::tests::terminal_registration_reply_wakes_outside_the_state_lock",
-            "component::shard::executor::tests::admitted_registration_reply_wakes_outside_the_state_lock",
-            "component::shard::executor::tests::shard_stack_authority_matches_the_neutral_fixture",
-            "component::shard::executor::tests::shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool",
-            "component::shard::executor::tests::fifo_ingress_selects_interactive_before_earlier_background_without_unbounded_drain",
-            "component::shard::executor::tests::every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_shards",
-            "component::shard::executor::tests::suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_registered",
-            "component::shard::executor::tests::concurrent_send_frame_bursts_never_drop_an_outcome",
-            "component::shard::executor::tests::pending_drive_wake_and_wake_storm_claim_exactly_one_schedule",
-            "component::shard::executor::tests::registration_acknowledgement_and_terminal_refusal_preserve_exact_owners",
-            "component::shard::lifecycle::tests::unknown_transport_actors_never_allocate_host_bookkeeping",
-            "component::cold_pair::tests::neutral_cold_ingress_variants_preserve_authority_and_refuse_hostile_wit",
-            "component::cold_pair::tests::native_cold_pages_use_dedicated_bounded_input",
             "component::activation::tests::neutral_activation_failures_retire_the_exact_kernel_and_guest_owners",
-            "component::guest_fault_tests::structured_guest_fault_survives_wit_owned_and_async_channels",
-            "component::guest_fault_tests::malformed_and_oversized_guest_faults_cannot_authorize_retry",
-            "component::shard::lifecycle::tests::neutral_retry_order_uses_the_production_selector",
-            "component::shard::lifecycle::tests::retry_keeps_exact_event_budget_credit_and_one_peer_order",
-            "component::shard::lifecycle::tests::retry_refuses_replacement_and_stale_queue_cannot_reach_same_id_successor",
-            "component::shard::lifecycle::tests::cancellation_revokes_retry_before_another_guest_call",
-            "component::shard::lifecycle::tests::retry_occupies_the_original_fixed_lane_capacity",
-            "component::shard::lifecycle::tests::terminal_faults_never_create_a_lifecycle_retry",
+          ],
+        },
+        {
+          package: "semio-framework-plugin-host-guest-runtime",
+          target: { kind: "lib" },
+          laws: [
+            "guest_fault_tests::structured_guest_fault_survives_wit_owned_and_async_channels",
+            "guest_fault_tests::malformed_and_oversized_guest_faults_cannot_authorize_retry",
           ],
         },
       ], progress(event) {
@@ -328,7 +389,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
       assert.equal(row.root, expected[2], row.id);
     }
     const codec = readFileSync(join(owner, "🦀️.rs"), "utf8");
-    const synchronous = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
+    const synchronous = readFileSync(join(hostRoot, "🎭️guest-runtime", "🦀️.rs"), "utf8");
     const scale = readFileSync(join(this.repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧪️testing", "⚖️scale", "🦀️.rs"), "utf8");
     for (const kind of ["Upsert", "SetComponent", "SetLayout", "SetActivity", "SetChildren", "SetStyle", "SetAccessibility", "SetBindings", "SetMenu", "Remove", "SetRoot"]) {
       assert(codec.includes(`wit_ui::PatchOp::${kind}`), `missing ${kind} reverse codec`);
@@ -345,15 +406,21 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     assert(existsSync(scaleWasm), "registered scale component was not materialized");
     const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 86_400_000, lawMilliseconds: 60_000 }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432", CARGO_BUILD_JOBS: "1" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, groups: [
         {
-          package: "semio-framework-plugin-host",
+          package: "semio-framework-plugin-host-wit",
           target: { kind: "lib" },
           laws: [
-            "component::ui_patch::tests::every_wit_patch_variant_moves_into_one_exact_kernel_owner",
-            "component::ui_patch::tests::emitted_and_returned_channels_are_atomic_bounded_and_drained_once",
-            "component::ui_patch::tests::target_budget_receipt_and_malformed_pack_refuse_before_publication",
-            "component::ui_patch_component_tests::genuine_component_returned_and_imported_patches_keep_channel_order_and_exact_authority",
-            "component::ui_patch_component_tests::imported_then_returned_channels_refuse_atomically_without_a_transport_token",
-            "component::ui_patch_component_tests::malformed_import_is_drained_before_the_next_exact_patch_owner_is_published",
+            "ui_patch::tests::every_wit_patch_variant_moves_into_one_exact_kernel_owner",
+            "ui_patch::tests::emitted_and_returned_channels_are_atomic_bounded_and_drained_once",
+            "ui_patch::tests::target_budget_receipt_and_malformed_pack_refuse_before_publication",
+          ],
+        },
+        {
+          package: "semio-framework-plugin-host-guest-laws",
+          target: { kind: "lib" },
+          laws: [
+            "ui_patch_component_tests::genuine_component_returned_and_imported_patches_keep_channel_order_and_exact_authority",
+            "ui_patch_component_tests::imported_then_returned_channels_refuse_atomically_without_a_transport_token",
+            "ui_patch_component_tests::malformed_import_is_drained_before_the_next_exact_patch_owner_is_published",
           ],
         },
       ], progress(event) {
@@ -445,21 +512,21 @@ class RouterEffectSourceCustodyScript extends BundleScript {
     } finally { parser.delete(); }
     console.log(`[DEBUG] router effect source custody: strict schema, five independent grants, UTF8 Buffer oracle, ${law.sources.length} original capacities, Rust completeOwningFiles=6 mainHostOwningSpans=8 originalShardLoopDefinitions=true wholeAsyncClosureOwnersRustcPending=true, independent actor policy, native pending`);
     if (!segments.includes("--native")) return;
-    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 86_400_000, lawMilliseconds: 60_000 }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::effects::tests::router_effect_original_sources_keep_capacity_until_funded_close", "component::effects::tests::router_effect_original_box_frame_has_a_separate_funded_terminal_turn", "component::effects::tests::router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody", "component::shard::identity::tests::shard_original_identity_loans_preserve_partial_children_and_actor_ledgers", "component::shard::identity::tests::shard_original_identity_slot_requires_each_original_positive_axis"] }], progress: (event) => console.log(`router-effect-source-custody ${event.stage} ${event.law ?? ""}`) });
+    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 86_400_000, lawMilliseconds: 60_000 }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-host-effects", target: { kind: "lib" }, laws: ["tests::router_effect_original_sources_keep_capacity_until_funded_close", "tests::router_effect_original_box_frame_has_a_separate_funded_terminal_turn", "tests::router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody"] }, { package: "semio-framework-plugin-host-shard-laws", target: { kind: "lib" }, laws: ["identity_tests::shard_original_identity_loans_preserve_partial_children_and_actor_ledgers", "identity_tests::shard_original_identity_slot_requires_each_original_positive_axis"] }], progress: (event) => console.log(`router-effect-source-custody ${event.stage} ${event.law ?? ""}`) });
   }
 }
 
 class SqliteObservationCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("sqlite-observation-check has a fixed native observation contract");
-    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-host", target: { kind: "lib" }, laws: ["component::shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }], progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`) });
+    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-host-guest-laws", target: { kind: "lib" }, laws: ["shared_wasmtime_engine_tests::sqlite_observation_uses_the_host_pool_clock_and_cancellation_without_an_external_reactor"] }], progress: (event) => console.log(`sqlite-observation ${event.stage} ${event.law ?? ""}`) });
   }
 }
 
 class OwnedInstanceCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("owned-instance-check has a fixed native fixture contract");
-    await runCargo(["test","--manifest-path","Cargo.toml","-p","semio-framework-plugin-host","--lib","owned_instance_open_tests","--","--nocapture"],this.repoRoot);
+    await runCargo(["test","--manifest-path","Cargo.toml","-p","semio-framework-plugin-host-guest-laws","--lib","owned_instance_open_tests","--","--nocapture"],this.repoRoot);
   }
 }
 
@@ -467,11 +534,15 @@ class CountComponentCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("count-component-check has an exact three-law contract");
     if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("count-component-check requires the task artifact root");
-    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), lawMilliseconds: 300000 }, cwd:this.repoRoot, groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:[
-      "component::owned_instance_open_tests::count_component_tests::count_component_full_i32_both_native_encodings_use_real_wasm_and_independent_sqlite",
-      "component::owned_instance_open_tests::count_component_tests::count_component_cancellation_occurs_during_real_export_and_import_interpretation",
-      "component::owned_instance_open_tests::count_component_tests::count_component_selected_compiled_refusal_owners_preserve_all_eight_causes_and_full_nul_diagnostics",
-    ]}], progress:event=>console.log(`count-component ${event.stage} ${event.law??""}`) });
+    await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), lawMilliseconds: 300000 }, cwd:this.repoRoot, groups:[{
+      package: "semio-framework-plugin-host-guest-laws",
+      target: { kind: "lib" },
+      laws: [
+        "owned_instance_open_tests::count_component_tests::count_component_full_i32_both_native_encodings_use_real_wasm_and_independent_sqlite",
+        "owned_instance_open_tests::count_component_tests::count_component_cancellation_occurs_during_real_export_and_import_interpretation",
+        "owned_instance_open_tests::count_component_tests::count_component_selected_compiled_refusal_owners_preserve_all_eight_causes_and_full_nul_diagnostics",
+      ],
+    }], progress:event=>console.log(`count-component ${event.stage} ${event.law??""}`) });
   }
 }
 
@@ -480,7 +551,7 @@ class OriginalDriverPolicyScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-original-driver-policy-native accepts no arguments");
   const names=["original_host_actor_and_wake_returns_share_one_finite_treasury_and_exact_checkout","original_host_driver_treasury_never_renews_and_rejects_receipts_outside_the_independent_admission_policy","original_host_production_driver_keeps_same_finite_treasury_across_all_wake_returns","original_host_context_loan_preserves_same_recipient_and_returns_cumulative_wake_once","original_host_wake_ledger_keeps_actual_turn_exclusion_all_currencies_and_explicit_driver_return"];
-  const receipts=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), lawMilliseconds: 120000 }, cwd:this.repoRoot, groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:names.map(name=>`component::original_wake_receipts::tests::${name}`)}], progress:event=>console.log(`[DEBUG] original Host driver ${event.stage} ${event.law??""}`) });
+  const receipts=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), lawMilliseconds: 120000 }, cwd:this.repoRoot, groups:[{package:"semio-framework-plugin-host-wake",target:{kind:"lib"},laws:names.map(name=>`tests::${name}`)}], progress:event=>console.log(`[DEBUG] original Host driver ${event.stage} ${event.law??""}`) });
   console.log(`[DEBUG] original Host driver exact groups=${receipts.length} laws=${names.length}`);
  }
 }

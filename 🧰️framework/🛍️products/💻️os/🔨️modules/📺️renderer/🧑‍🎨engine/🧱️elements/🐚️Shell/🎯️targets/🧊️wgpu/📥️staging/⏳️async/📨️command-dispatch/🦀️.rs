@@ -9,7 +9,7 @@ use super::*;
 //#endregion ShellActions
 
 #[cfg(target_arch = "wasm32")]
-pub(crate) fn directory_now_ms() -> u64 {
+pub fn directory_now_ms() -> u64 {
     let millis = chrome_now_ms();
     if millis.is_finite() && millis > 0.0 {
         millis as u64
@@ -23,6 +23,6 @@ pub(crate) fn directory_now_ms() -> u64 {
 /// `NativeDirectoryTransport`'s `HttpPool` reads); the browser door has no pool and the page
 /// answers every hop with `fetch`'s own timing, so `Date.now()` is the only shared reading.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn directory_now_ms() -> u64 {
-    crate::renderer_worker_pool().now_ms()
+pub fn directory_now_ms() -> u64 {
+    semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().now_ms()
 }

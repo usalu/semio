@@ -134,7 +134,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     let (slot, child_id) = member_key();
     let declared = ArtifactRef { artifact_id: child_id.clone(), dialect: member_dialect() }.to_uri();
     app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], transaction: None }, &mut caller.identity).await.expect("the parent declares its member");
-    app.refresh_cache().await.expect("the parent view follows its declaration");
+    app.render_ctx().refresh_cache().await.expect("the parent view follows its declaration");
     app.register_child(slot, child_id, member_dialect(), member_store().await, &mut caller.identity).await.expect("the owned member registers");
     app
 }
@@ -293,7 +293,7 @@ async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_unt
 
     let expected = &member_fixture()["abort"];
     let mut app = member_app(number(&expected["target"]), &mut caller).await;
-    app.refresh_cache().await.expect("backfill the command log before the invariant capture");
+    app.render_ctx().refresh_cache().await.expect("backfill the command log before the invariant capture");
     let base = member_child(&app).snapshot_ref().clone();
     let (parent_generation, parent_edits, commands) = (app.stores.store.generation(), app.stores.store.envelope().vcs.edits.len(), app.history.command_log.len());
     let (member_generation, member_edits) = (member_child(&app).generation(), member_child(&app).envelope().vcs.edits.len());

@@ -1,5 +1,5 @@
 /** 🔺️ Forms sparse durable delta: scalar slots, positional step and response row deltas (steps carry nested positional question deltas); the derived child handles are re-derived by the central applier, and omitted slots are untouched. */
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseFormsArtifact, type FormsArtifact } from "../🟦️.ts";
 import { parseFormsDefinition } from "../📝️definition/🟦️.ts";
 import { parseFormsResponse, type FormsResponse } from "../📨️response/🟦️.ts";

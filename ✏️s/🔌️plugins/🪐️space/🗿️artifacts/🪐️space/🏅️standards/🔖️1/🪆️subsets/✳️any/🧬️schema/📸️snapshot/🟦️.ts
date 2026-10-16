@@ -1,5 +1,5 @@
 /** 🪐️ Persisted Space metadata and full native unsigned64 timestamps. */
-import{parseSchemaRecord}from"../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import{parseSchemaRecord}from"@semio-tech/framework/schema/record";
 export interface SpaceArtifactDialect{artifactKind:string;standard:string;subset:string}
 export interface SpaceArtifactRow{id:string;name:string;kindId:string;schema:string;dialect:SpaceArtifactDialect;createdAtMs:bigint;createdBy:string;updatedAtMs:bigint;updatedBy:string}
 export interface SSpaceSnapshot{schema:string;spaceId:string;artifacts:SpaceArtifactRow[]}

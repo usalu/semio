@@ -41,7 +41,7 @@ export type PlaygroundSessionPlugin = {
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
   /** 🔗️ Pre-build dependency edges carry only the depended-on plugin id — the registry has no pin to read; the exact
-   * `=X.Y.Z` pin travels on the loaded descriptor's own `dependencies` (see `dependsOnToPluginDependencies`, `🎠️kernel/🟦️.ts`). */
+   * `=X.Y.Z` pin travels on the loaded descriptor's own `dependencies` (see `dependsOnToPluginDependencies`, `🎠️kernel`). */
   readonly dependencies: readonly { readonly pluginId: string }[];
 };
 

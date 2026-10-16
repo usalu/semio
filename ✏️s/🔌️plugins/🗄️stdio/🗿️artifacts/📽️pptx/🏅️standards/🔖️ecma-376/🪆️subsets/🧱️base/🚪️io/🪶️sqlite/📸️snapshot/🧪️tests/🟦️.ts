@@ -5,7 +5,7 @@ import { Database } from 'bun:sqlite';
 import { Buffer } from 'node:buffer';
 import Ajv from 'ajv';
 import Ajv2020 from 'ajv/dist/2020';
-import { exportSqliteDatabase, importSqliteDatabase } from '@semio-tech/framework';
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import xmlSchema from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
 import { parsePptxSnapshot, type PptxSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";

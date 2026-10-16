@@ -132,7 +132,6 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     ],
     aliases: {
       "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
-      "@semio-tech/framework": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
     },
     storyGlobs: ["../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/📖️stories/**/🧪️.story.tsx"],
   },
@@ -149,7 +148,6 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     aliases: {
       "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
       "@semio-tech/framework-renderer-wgpu": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
-      "@semio-tech/framework": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
       "/plugin-modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules",
       "/renderer-modules": ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules",
     },

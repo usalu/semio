@@ -24,6 +24,9 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-hub-contracts = { path = "../../../🔐️hub-contracts/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-hub-workspace = { path = "../../../🏘️hub-workspace/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-chrome-state = { path = "../../../🎚️shell-chrome-state/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-commands = { path = "../../../🎹️shell-commands/📦️packages/🦀️rust" }
@@ -35,12 +38,15 @@ semio-framework-os-renderer-wgpu-shell-history = { path = "../../../⏪️shell-
 semio-framework-os-renderer-wgpu-shell-input = { path = "../../../🕹️shell-input/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-plugins = { path = "../../../🧲️shell-plugins/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-session = { path = "../../../🚶️shell-session/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-surfaces = { path = "../../../🫧️shell-surfaces/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-sync = { path = "../../../🔃️shell-sync/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-vocab = { path = "../../../📖️shell-vocab/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-window-actions = { path = "../../../🪝️shell-window-actions/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-windows = { path = "../../../🔲️shell-windows/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-ui-engine-dump = { path = "../../../🔎️ui-engine-dump/📦️packages/🦀️rust" }
 base64 = "0.22.1"
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }

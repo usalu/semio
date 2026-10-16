@@ -1,5 +1,6 @@
 import * as React from "react";
-import { createMemoryStoragePort, dialogChoiceArgs, isShellLocale, type DialogChoice } from "@semio-tech/framework";
+import { createMemoryStoragePort } from "../../../../🔨️modules/🗄️storage-port/🟦️.ts";
+import { dialogChoiceArgs, isShellLocale, type DialogChoice } from "@semio-tech/framework";
 import { computeAccessibleDescription, computeAccessibleName } from "dom-accessibility-api";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";

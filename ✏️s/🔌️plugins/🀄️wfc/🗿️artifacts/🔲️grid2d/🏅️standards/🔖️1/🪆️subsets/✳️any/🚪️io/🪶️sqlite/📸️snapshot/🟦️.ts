@@ -1,9 +1,9 @@
 /** 🔲️ Explicit regular two-dimensional constraints and per-command point coordinates. */
 import type{Grid2dSnapshot,WfcColor,WfcPoint2,WfcPathSegment,WfcVectorPath,WfcTile2d,WfcTileMedia2d,WfcDirection2d,WfcAdjacencyRule2d,WfcPinnedCell2d,WfcCell2d}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 export const WFC_GRID2D_SQLITE_SCHEMA=`CREATE TABLE wfc_grid2d_document (
  id INTEGER PRIMARY KEY CHECK(id=1), schema_id TEXT NOT NULL, seed TEXT NOT NULL,
  width INTEGER NOT NULL CHECK(width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4294967295),

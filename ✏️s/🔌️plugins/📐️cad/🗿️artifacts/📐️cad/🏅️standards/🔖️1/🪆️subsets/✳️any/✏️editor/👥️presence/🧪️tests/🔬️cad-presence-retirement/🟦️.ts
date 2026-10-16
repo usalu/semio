@@ -1,6 +1,9 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { WORKSPACE_ROOT, toolJobRustBlock, toolJobImmutableOperationRootsExact, toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { toolJobRustBlock } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
+import { toolJobImmutableOperationRootsExact, toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 /** 🧱️ One retirement unit a CAD presence lane contributes, or `null` when the lane is absent. */
 type CadPresenceRetirementPart = { readonly unit: string; readonly repeat: number } | null;
@@ -80,7 +83,7 @@ export function cadPresenceRetirementSelfTests(): number {
     if (bytes !== law.expectedBytes) throw new Error(`CAD presence roster byte oracle: ${law.name}`);
   }
   if (fixture.grant.maximumItems !== 1 || fixture.grant.maximumBytes !== 4096) throw new Error("CAD retirement grant example differs from the one-item native cursor");
-  const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
+  const storeBase = frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
   const storeFixture: PresenceStoreRetirementFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🧹️retirement.json"), "utf8"));
   for (const law of storeFixture.cases) {
     if (law.expectedSnapshots !== law.peers.length + 1 || law.expectedActorBytes !== law.peers.reduce((sum, peer) => sum + Buffer.byteLength(peer.actor, "utf8"), 0)) throw new Error(`presence Store retirement oracle: ${law.name}`);
@@ -255,7 +258,7 @@ export function cadPresenceRetirementSelfTests(): number {
   const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"), "utf8");
   const pluginLawSource = readFileSync(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   if (!pluginLawSource.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") || !pluginLawSource.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority")) throw new Error("peer capture native laws are missing");
-  const contextFixture = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json"), "utf8"));
+  const contextFixture = JSON.parse(readFileSync(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json"), "utf8"));
   const captureProof = (plugin: string, store: string, channel: string, retirement: string): boolean => toolJobPeerInteractionRootsExact(plugin, store, channel, retirement);
   if (!captureProof(pluginSource, storeSource, channelSource, retirementSource)) throw new Error("peer capture census rejected its real exact helper/base/factory authority");
   const captureHostiles = [

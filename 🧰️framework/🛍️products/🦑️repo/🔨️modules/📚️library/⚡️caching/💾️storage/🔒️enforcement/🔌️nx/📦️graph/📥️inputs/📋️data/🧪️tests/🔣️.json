@@ -1,0 +1,163 @@
+{
+  "cases": [
+    {
+      "id": "missing-task-env",
+      "kind": "tasks",
+      "plans": {
+        "app:build": [
+          "file:src.ts"
+        ]
+      },
+      "environments": {},
+      "accepted": true,
+      "expected": {
+        "plans": {
+          "app:build": [
+            "file:src.ts"
+          ]
+        },
+        "values": {}
+      }
+    },
+    {
+      "id": "unicode-env",
+      "kind": "tasks",
+      "plans": {
+        "task": [
+          "env:A"
+        ]
+      },
+      "environments": {
+        "task": {
+          "A": "🌊",
+          "EMPTY": ""
+        }
+      },
+      "accepted": true,
+      "expected": {
+        "plans": {
+          "task": [
+            "env:A"
+          ]
+        },
+        "values": {
+          "task": {
+            "A": "🌊",
+            "EMPTY": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "wrong-instruction",
+      "kind": "tasks",
+      "plans": {
+        "task": [
+          3
+        ]
+      },
+      "environments": {},
+      "accepted": false
+    },
+    {
+      "id": "wrong-env",
+      "kind": "tasks",
+      "plans": {
+        "task": []
+      },
+      "environments": {
+        "task": {
+          "A": 3
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "receipt",
+      "kind": "receipt",
+      "receipt": {
+        "version": 1,
+        "values": {
+          "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      },
+      "accepted": true,
+      "expected": {
+        "version": 1,
+        "values": {
+          "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      }
+    },
+    {
+      "id": "empty-receipt",
+      "kind": "receipt",
+      "receipt": {
+        "version": 1,
+        "values": {}
+      },
+      "accepted": true,
+      "expected": {
+        "version": 1,
+        "values": {}
+      }
+    },
+    {
+      "id": "missing-receipt-values",
+      "kind": "receipt",
+      "receipt": {
+        "version": 1,
+        "other": {}
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-version",
+      "kind": "receipt",
+      "receipt": {
+        "version": 2,
+        "values": {}
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-name",
+      "kind": "receipt",
+      "receipt": {
+        "version": 1,
+        "values": {
+          "SEMIO_SOURCE_CLOSURE_BAD": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "wrong-digest",
+      "kind": "receipt",
+      "receipt": {
+        "version": 1,
+        "values": {
+          "SEMIO_SOURCE_CLOSURE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "utf8": [
+    {
+      "text": "A",
+      "bytes": 1,
+      "accepted": true
+    },
+    {
+      "text": "🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊",
+      "bytes": 1024,
+      "accepted": true
+    },
+    {
+      "text": "🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊🌊",
+      "bytes": 1028,
+      "accepted": false
+    }
+  ]
+}

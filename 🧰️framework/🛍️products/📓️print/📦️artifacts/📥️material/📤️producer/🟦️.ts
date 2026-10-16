@@ -8,7 +8,7 @@ import{tectonicDistributionV1,printBundlePlanV1,readPrintBundleRangeV1,readPrint
 import{withArtifactScratchV1,withArtifactDestinationTaskV1}from"./../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"./../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1,type RepositoryArtifactV1}from"./../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
-import{withArtifactDescriptorV1,artifactReadFlagsV1}from"./../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📥️inspection/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,artifactReadFlagsV1}from"../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"./../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"./../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"./../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

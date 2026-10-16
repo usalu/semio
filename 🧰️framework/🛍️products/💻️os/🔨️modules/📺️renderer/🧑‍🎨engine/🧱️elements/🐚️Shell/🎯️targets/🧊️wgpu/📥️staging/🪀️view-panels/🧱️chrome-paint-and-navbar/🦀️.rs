@@ -5,7 +5,7 @@
 use super::*;
 
 /// 🪟️ Centers the localized Mode notice using the same line boxes as the React empty dock.
-pub(crate) fn empty_dock_notice_lines(atlas: &mut FontAtlas, bounds: Rect, theme: &Theme, german: bool) -> Vec<(std::ops::Range<usize>, Rect)> {
+pub fn empty_dock_notice_lines(atlas: &mut FontAtlas, bounds: Rect, theme: &Theme, german: bool) -> Vec<(std::ops::Range<usize>, Rect)> {
     let text = shell_chrome_string("display.emptyShell", german);
     let lines = atlas.wrap_lines(text, bounds.w, theme.font_size_body);
     let height = ui_wgpu::wgpu::text::line_height(theme.font_size_body);
@@ -18,16 +18,16 @@ pub(crate) fn empty_dock_notice_lines(atlas: &mut FontAtlas, bounds: Rect, theme
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub(crate) struct ShellFooterChromeLayout {
-    pub(crate) center: ShellChromeCenteredBand,
-    pub(crate) presence: Option<Rect>,
-    pub(crate) hub: Rect,
-    pub(crate) sign_in: Option<Rect>,
-    pub(crate) bottom_right_left: f32,
+pub struct ShellFooterChromeLayout {
+    pub center: ShellChromeCenteredBand,
+    pub presence: Option<Rect>,
+    pub hub: Rect,
+    pub sign_in: Option<Rect>,
+    pub bottom_right_left: f32,
 }
 
 #[allow(clippy::too_many_arguments, reason = "one retained footer status item")]
-pub(crate) fn render_footer_status_step(
+pub fn render_footer_status_step(
     cursor: &mut ShellChromeChildCursor,
     draw: &mut DrawList,
     atlas: &mut FontAtlas,

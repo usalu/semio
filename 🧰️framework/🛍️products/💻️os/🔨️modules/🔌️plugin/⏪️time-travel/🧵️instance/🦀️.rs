@@ -28,32 +28,15 @@ use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Ent
 
 use crate::artifact_instance::item;
 use crate::artifact_instance::{ToolOperations};
+use crate::artifact_instance::{ExtensionCtx, ExtensionRef, MediaTransfers, TimeTravelCtx, TimeTravelRef};
+use crate::tool_jobs::ToolRunLedger;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
-    /// 🧭️ The store state a session observes — of the store it edits; `None` when that composed member is gone.
-    fn time_travel_base(&self) -> Option<TimeTravelBase> {
-        match self.time_travel_query(TimeTravelStoreQuery::Base)? {
-            TimeTravelQueryOutput::Base(base) => Some(base),
-            TimeTravelQueryOutput::Positions(_) | TimeTravelQueryOutput::Value(_) => None,
-        }
-    }
-
-    /// 🔎️ A store-only read of the store the session edits: the document's own, or the composed member's through its
-    /// typed visitor (design §12); `None` when that member is gone.
-    fn time_travel_query(&self, query: TimeTravelStoreQuery) -> Option<TimeTravelQueryOutput> {
-        match self.time_travel.member.as_ref() {
-            None => Some(TimeTravelStoreState::query(Some(&self.time_travel.document), &self.stores.store, query)),
-            Some(member) => {
-                let entry = self.child_composition.children.member(member.key.borrowed())?;
-                Some(entry.member.visit_member(TimeTravelMemberQuery { owners: member.owners.as_deref(), query }))
-            }
-        }
-    }
-
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 📨️ Runs one typed command on the store the session edits: the document's own, or the composed member's through
     /// its typed visitor (design §12).
     async fn time_travel_run(&mut self, command: TimeTravelStoreCommand) -> Result<TimeTravelStoreOutput, Fault> {
-        let VcsArtifactApp { store, time_travel, children, .. } = self;
+        let TimeTravelCtx { stores, time_travel, child_composition, .. } = self;
+        let (store, children) = (&mut stores.store, &mut child_composition.children);
         match time_travel.member.as_mut() {
             None => time_travel.document.run(store, command).await,
             Some(member) => {
@@ -66,7 +49,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🪪️ Finalizes the same retained document or composed member replay.
     async fn time_travel_commit(&mut self, drafts: protocol::HistoryInputDrafts, finalization: store::HistoryFinalization, actor: Option<&str>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelCommit, Fault> {
-        let VcsArtifactApp { store, time_travel, children, .. } = self;
+        let TimeTravelCtx { stores, time_travel, child_composition, .. } = self;
+        let (store, children) = (&mut stores.store, &mut child_composition.children);
         match time_travel.member.as_mut() {
             None => time_travel.document.commit_finished(store, drafts, finalization, actor, identity).await,
             Some(member) => {
@@ -85,7 +69,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             self.time_travel.replace_editor(None);
         }
         {
-            let VcsArtifactApp { store, time_travel, children, .. } = self;
+            let TimeTravelCtx { stores, time_travel, child_composition, .. } = self;
+        let (store, children) = (&mut stores.store, &mut child_composition.children);
             time_travel.document.settle(store, stage)?;
             if let Some(member) = time_travel.member.as_mut() {
                 let key = member.key.clone();
@@ -119,19 +104,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(())
     }
 
-    /// 🧹️ One bounded close unit of the history-edit ledger: the session vanishes, every typed owner settles against its
-    /// store, then one owner retires.
-    fn member_subject_retirement_demands(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{
-        if !self.time_travel.closing&&self.time_travel.session.stage!=TimeTravelStage::Inactive{return Ok(None)}
-        let Some(member)=self.time_travel.member.as_ref()else{return Ok(None)};
-        if member.review_children.is_some()||member.children.is_some(){return Ok(Some(RetirementDemand{copy_bytes:size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>(),depth:1,..Default::default()}))}
-        if let Some(owners)=member.owners.as_ref(){if !owners.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inactive original member retains live typed sources"))}return Ok(Some(RetirementDemand{copy_bytes:size_of_val(&member.owners),release_bytes:size_of_val(owners.as_ref()),depth:1,..Default::default()}))}
-        if let Some(owner)=member.metadata_close.as_ref(){return if owner.terminal_is_empty(){Ok(Some(RetirementDemand{copy_bytes:size_of_val(&member.metadata_close),depth:1,..Default::default()}))}else{Ok(Some(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original member metadata depth overflow"))?}))}}
-        Ok(Some(RetirementDemand{copy_bytes:if member.metadata_retired{size_of::<TimeTravelMemberSubject>()}else{size_of::<TimeTravelMemberMetadata>()},depth:1,..Default::default()}))
-    }
-
     fn member_subject_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{
-        let Some(demand)=self.member_subject_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?else{return Ok(None)};
+        let Some(demand)=self.shared().member_subject_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?else{return Ok(None)};
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
         if self.time_travel.member.as_ref().unwrap().review_children.is_some(){if self.drive_original_review_children(grant)?{let(original,receipt)=self.time_travel.take_command_receipt().expect("original subject close owns its review receipt");assert_eq!(original,grant);return Ok(Some(RetainedCloneStep::Progress(receipt)))}}
         let member=self.time_travel.member.as_mut().unwrap();
@@ -142,14 +116,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if !<TimeTravelMemberMetadata as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(Fault::from("original member metadata producer is unsupported"))}
         let original=TimeTravelMemberMetadata{key:std::mem::take(&mut member.key),path:member.path.take_original(),dialect:std::mem::replace(&mut member.dialect,ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()})};match ControlledRetirement::new(original){Ok(owner)=>member.metadata_close=Some(owner),Err((error,original))=>{member.key=original.key;member.path=original.path;member.dialect=original.dialect;return Err(error.into_fault())}}
         Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
-    }
-
-    pub(crate) fn time_travel_retirement_demands(&self, body: usize) -> Result<RetirementDemand,ValueError> {
-        if self.time_travel.document.discarded_factory.is_none()&&(!self.time_travel.document.discarded.is_empty()||self.time_travel.document.discarded_pending.is_some()){self.stores.store.owned_mutation_retirement_factory()?;return Ok(RetirementDemand{depth:1,..Default::default()});}
-        let demand=self.time_travel.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}
-        if let Some(demand)=self.member_subject_retirement_demands(body)?{return Ok(demand)}
-        if self.time_travel.closing&&!self.time_travel.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"time travel close retains an undeclared original session editor preview or authoring frontier"));}
-        Ok(Default::default())
     }
 
     pub(crate) fn time_travel_retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>,Fault> {
@@ -169,105 +135,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if self.drive_original_discard_command(grant)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original command turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
         if self.drive_original_review_children(grant)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original review view turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
         if let Some(step)=self.time_travel_retire_step(grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-        self.time_travel_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
+        self.shared().time_travel_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
         Ok(if self.time_travel.terminal_is_empty(){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})
-    }
-
-    /// 🧲️ Resolves every editor row's `snapSource` to concrete numbers before the panel is built
-    /// ([`time_travel_resolve_snaps`]): a `Config` key reads the focused window's config, then the app config; a
-    /// `Snapshot` pointer reads the document the session previews.
-    pub(crate) fn resolve_time_travel_snaps(&self, panel: &mut TimeTravelPanel, view: &ViewModel) {
-        let Some(editor) = panel.editor.as_mut() else { return };
-        let config = std::cell::OnceCell::new();
-        let preview = std::cell::OnceCell::new();
-        let window = view.focused_window_id.as_deref().and_then(|id| view.window_instances.iter().find(|window| window.id == id));
-        time_travel_resolve_snaps(&mut editor.rows, |source| match source {
-            SnapSource::Step => None,
-            SnapSource::Config { key } => {
-                let pointer = if key.starts_with('/') { key.clone() } else { format!("/{key}") };
-                let windowed = window
-                    .and_then(|window| self.stores.window_config_store.pointer_values(&window.window_kind_id, std::slice::from_ref(&pointer)).into_iter().find(|(window_id, _)| *window_id == window.id))
-                    .and_then(|(_, values)| values.into_iter().next().flatten())
-                    .and_then(|value| value.as_f64());
-                windowed.or_else(|| time_travel_pointer_get(config.get_or_init(|| semio_framework_value::ToValue::to_value(self.stores.config_store.snapshot_owner().as_ref())), &pointer).and_then(DslValue::as_f64))
-            }
-            SnapSource::Snapshot { pointer } => time_travel_pointer_get(preview.get_or_init(|| self.time_travel_previewed_value()), pointer).and_then(DslValue::as_f64),
-        });
-    }
-
-    /// 🪟️ The document the session previews, as a value: the composed member's shown value, else the app's render snapshot
-    /// (the state before the edited mutation with its draft while editing, the replayed head while reviewing).
-    fn time_travel_previewed_value(&self) -> DslValue {
-        match self.time_travel.member.is_some() {
-            true => match self.time_travel_query(TimeTravelStoreQuery::ShownValue(self.time_travel.session.stage)) {
-                Some(TimeTravelQueryOutput::Value(Some(value))) => value,
-                _ => DslValue::Null,
-            },
-            false => {
-                let committed = self.stores.store.snapshot_owner();
-                semio_framework_value::ToValue::to_value(self.time_travel.render_snapshot_or(&self.tool_runs, &committed).as_ref())
-            }
-        }
-    }
-
-    /// 🗝️ Resolves every editor row's `optionSource` to the keys the previewed document holds ([`time_travel_resolve_options`],
-    /// design §20.11), its templates filled from the draft payload.
-    pub(crate) fn resolve_time_travel_options(&self, panel: &mut TimeTravelPanel) {
-        let Some(editor) = panel.editor.as_mut() else { return };
-        if !editor.rows.iter().any(|row| matches!(row.input.schema, ArgSchema::String { option_source: Some(_), .. })) {
-            return;
-        }
-        let payload = self.time_travel.editor.as_ref().map_or(DslValue::Null, |draft| draft.value.clone());
-        time_travel_resolve_options(&mut editor.rows, &payload, &self.time_travel_previewed_value());
-    }
-
-    /// 🏷️ Labels every id the editor's reference rows name, in the document the session previews: the app's entity label
-    /// (`ArtifactApp::entity_label` over the reference's kinds — the hook a plugin refines chips by), else the entity's own
-    /// name in that document ([`time_travel_entity_names`]), else its kind word and a short id
-    /// ([`time_travel_reference_fallback_label`], gap N3). A session on a composed member skips the app's hook, which reads
-    /// only its own document, and names the member's entities from the member's preview.
-    pub(crate) fn resolve_time_travel_reference_labels(&self, panel: &mut TimeTravelPanel) {
-        let Some(editor) = panel.editor.as_mut() else { return };
-        let member = self.time_travel.member.is_some();
-        let committed = self.stores.store.snapshot_owner();
-        let shown = self.time_travel.render_snapshot_or(&self.tool_runs, &committed);
-        let mut unnamed: Vec<(String, Vec<String>)> = Vec::new();
-        for row in &editor.rows {
-            let ArgSchema::Reference { kinds, .. } = &row.input.schema else { continue };
-            let ids: Vec<String> = match &row.value {
-                DslValue::Array(items) => items.iter().filter_map(reference_id_text).collect(),
-                other => reference_id_text(other).into_iter().collect(),
-            };
-            for id in ids {
-                match (!member).then(|| A::entity_label(shown.as_ref(), kinds, &id)).flatten() {
-                    Some(label) => {
-                        editor.reference_labels.insert(id, label);
-                    }
-                    None => unnamed.push((id, kinds.clone())),
-                }
-            }
-        }
-        if unnamed.is_empty() {
-            return;
-        }
-        let document = match member {
-            true => match self.time_travel_query(TimeTravelStoreQuery::ShownValue(self.time_travel.session.stage)) {
-                Some(TimeTravelQueryOutput::Value(Some(value))) => value,
-                _ => DslValue::Null,
-            },
-            false => semio_framework_value::ToValue::to_value(shown.as_ref()),
-        };
-        let names = time_travel_entity_names(&document, &unnamed.iter().map(|(id, _)| id.as_str()).collect());
-        for (id, kinds) in unnamed {
-            let label = names.get(&id).cloned().unwrap_or_else(|| time_travel_reference_fallback_label(&kinds, &id));
-            editor.reference_labels.insert(id, label);
-        }
-    }
-
-    /// 🏃️ Ledger work, a remote history change the document store still replays (unless paused), or a base change the
-    /// watch has not delivered to an open session yet.
-    pub(crate) fn time_travel_has_pending_work(&self) -> bool {
-        self.time_travel.has_pending_work() || self.reprojection_drives() || (self.time_travel.is_active() && self.time_travel_base() != Some(self.time_travel.session.base))
     }
 
     /// 🧾️ Holds back the history row of `action`, a history step whose replay the document store deferred (gap N17): it
@@ -276,31 +145,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     pub(crate) fn defer_history_step_row(&mut self, action: &str) {
         self.time_travel.deferred_history_row = Some(action.to_string());
         self.note_time_travel_changed(false, false);
-    }
-
-    /// 🚜️ Whether driver turns step the document store's waiting reprojection: a local history step always (it cannot be
-    /// paused, only dropped), a remote change unless the user paused it.
-    fn reprojection_drives(&self) -> bool {
-        self.stores.store.reprojection_progress().is_some() && (self.stores.store.local_step_pending() || !self.time_travel.reprojection_paused)
-    }
-
-    /// 📡️ The history change this replica replays before adopting it, as the history wire and body show it: a whole-document
-    /// load first (its archive operation's progress), else the document store's waiting reprojection — this replica's own
-    /// history step or a remote change — with whether the user paused a remote one and the code of a refused adoption;
-    /// `None` while nothing waits.
-    pub(crate) fn reprojection_status(&self) -> Option<HistoryReprojection> {
-        if let Some(load) = self.ingest.live_document_load().and_then(|operation| self.ingest.document_archive_loads.get(operation)).map(ActiveDocumentArchiveLoad::status) {
-            return Some(HistoryReprojection { done: u32::try_from(load.completed).unwrap_or(u32::MAX), total: u32::try_from(load.total).unwrap_or(u32::MAX), processed: None, kind: HistoryReprojectionKind::Load, paused: false, fault: None });
-        }
-        let kind = if self.stores.store.local_step_pending() { HistoryReprojectionKind::Step } else { HistoryReprojectionKind::Remote };
-        match (self.stores.store.reprojection_progress(), self.time_travel.reprojection_fault.as_ref()) {
-            (Some(progress), fault) => {
-                let processed = self.stores.store.reprojection_operation_preparation_progress().map(|work| work.items).filter(|items| *items > 0).map(|items| u32::try_from(items).unwrap_or(u32::MAX));
-                Some(HistoryReprojection { done: progress.done, total: progress.total, processed, kind, paused: kind == HistoryReprojectionKind::Remote && self.time_travel.reprojection_paused, fault: fault.map(|(code, _)| code.clone()) })
-            }
-            (None, Some((code, kind))) => Some(HistoryReprojection { done: 0, total: 0, processed: None, kind: *kind, paused: false, fault: Some(code.clone()) }),
-            (None, None) => None,
-        }
     }
 
     /// 🧹️ Dismisses the row of a refused history-change adoption (nothing replays any more) once the user dispatches anything
@@ -327,7 +171,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let stepped = self.stores.store.step_reprojection(Some(deadline_us)).await;
         if local && !self.stores.store.local_step_pending() {
             if let Some(action) = self.time_travel.deferred_history_row.take().filter(|_| stepped.is_ok()) {
-                self.tools.record_command(&mut self.history, &action, ActionKind::History, None, None, Vec::new(), None);
+                self.tools.record_command(&mut *self.history, &action, ActionKind::History, None, None, Vec::new(), None);
             }
         }
         match stepped {
@@ -344,7 +188,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.time_travel.reprojection_paused = false;
                 if self.stores.store.generation() != generation {
                     self.history.cache = None;
-                    self.deliver_base_moved(identity, cx).await?;
+                    self.as_dispatch().deliver_base_moved(identity, cx).await?;
                 }
                 self.note_time_travel_changed(true, true);
             }
@@ -398,12 +242,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         TimeTravelActionOutcome::Applied(TimeTravelStage::Inactive)
     }
 
-    /// 🔍️ Read-only inspection of this instance's history-edit ledger for app-level tests.
-    #[cfg(any(test, feature = "artifact-app-testing"))]
-    pub fn time_travel_ledger(&self) -> &TimeTravelLedger<A> {
-        &self.time_travel
-    }
-
     /// 🧾️ A session change: a fresh history cursor, so the next patch is always delivered, carrying every row when
     /// their overlay moved (`rows`); the body refreshes (every window once when the rendered `document` swapped).
     fn note_time_travel_changed(&mut self, document: bool, rows: bool) {
@@ -427,20 +265,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    /// 🎯️ The applied position of every session target at the current base of the store it edits; `None` when one of
-    /// them vanished or the edited member is gone.
-    fn time_travel_positions(&self) -> Option<Vec<TimeTravelTarget>> {
-        let session = &self.time_travel.session;
-        let targets: Vec<MutationId> = session.accepted.iter().map(|draft| draft.target.mutation.clone()).chain(session.pending.as_ref().map(|pending| pending.target.mutation.clone())).collect();
-        if targets.is_empty() {
-            return Some(Vec::new());
-        }
-        match self.time_travel_query(TimeTravelStoreQuery::Positions(targets))? {
-            TimeTravelQueryOutput::Positions(positions) => positions,
-            TimeTravelQueryOutput::Base(_) | TimeTravelQueryOutput::Value(_) => None,
-        }
-    }
-
     /// 👀️ Store watch (design §4, driver contract): every change of the content revision of the store the session edits
     /// (never of its local generation alone: a document port attaching or detaching is no base move) reaches the
     /// session as `BaseMoved` with the re-resolved target positions — the open editor's too, so the rows downstream of
@@ -448,12 +272,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// remotely, document replaced, the edited member gone) exits the session, since nothing it drafted is addressable
     /// anymore. Answers whether the base moved.
     async fn watch_time_travel_base(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<bool, Fault> {
-        let base = self.time_travel_base();
+        let base = self.shared().time_travel_base();
         if base == Some(self.time_travel.session.base) {
             return Ok(false);
         }
         let mut effects = Vec::new();
-        match (base, self.time_travel_positions()) {
+        match (base, self.shared().time_travel_positions()) {
             (Some(base), Some(positions)) => effects.extend(self.time_travel.session.apply(TimeTravelEvent::BaseMoved { base, positions }).unwrap_or_default()),
             (base, _) => {
                 let base = base.unwrap_or(self.time_travel.session.base);
@@ -549,24 +373,17 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.apply_time_travel_event(event, Some(meta), effects, identity).await
     }
 
-    /// 🎞️ The identity of the document snapshot the session shows in its stage on the document's own store (`None`: the
-    /// committed document) — what tells whether a session change swapped the document a window renders. A session on a
-    /// composed member marks its children view itself ([`Self::refresh_time_travel_children`]).
-    fn time_travel_shown_identity(&self) -> Option<usize> {
-        self.time_travel.document.shown(self.time_travel.session.stage).map(|shown| Arc::as_ptr(shown.snapshot_owner()) as usize)
-    }
-
     /// ⚖️ Applies one event to the session and performs its effects; a refusal changes nothing. Every window body is
     /// re-published only when the event or its effects swapped the document a window shows (the committed document, the
     /// draft preview, the replayed head); any other edge — the finalize prompt opening or closing, an accepted draft
     /// starting its replay, a replay run again — re-publishes the history body and the chips alone.
     async fn reduce_unprepared_time_travel_event(&mut self, event: TimeTravelEvent, meta: Option<&ActionMeta>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelActionOutcome, Fault> {
-        let shown = self.time_travel_shown_identity();
+        let shown = self.shared().time_travel_shown_identity();
         match self.time_travel.session.apply(event) {
             Ok(session_effects) => {
                 self.note_time_travel_changed(false, true);
                 self.perform_time_travel_effects(session_effects, meta, effects, identity).await?;
-                self.time_travel.document_dirty |= shown != self.time_travel_shown_identity();
+                self.time_travel.document_dirty |= shown != self.shared().time_travel_shown_identity();
                 Ok(TimeTravelActionOutcome::Applied(self.time_travel.session.stage))
             }
             Err(refusal) => {
@@ -616,7 +433,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// editor.
     async fn show_time_travel_preview(&mut self, target: &MutationId, replacement: &protocol::InputReplacement) -> Result<(), Fault> {
         let drafts = self.time_travel.accepted_drafts();
-        let deadline_us = self.time_travel_turn_deadline();
+        let deadline_us = self.shared().time_travel_turn_deadline();
         let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::Preview { target: target.clone(), replacement: replacement.clone(), drafts, deadline_us, clock: self.time_travel.turn_clock }).await? else {
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-mismatch"), "a history-edit preview answered another command"));
         };
@@ -668,7 +485,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             self.publish_time_travel_member(authored).await?;
         }
         if let Some(meta) = meta.filter(|_| self.time_travel.session.stage == TimeTravelStage::Inactive) {
-            self.revalidate_interaction_on_document_change(meta, identity).await?;
+            self.as_render().revalidate_interaction_on_document_change(meta, identity).await?;
         }
         Ok(effects)
     }
@@ -686,14 +503,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.history.push_log_entry(CommandLogAppend { action_id: HISTORY_EDIT_COMMIT_ACTION_ID, label, kind: ActionKind::History, edit_id: None, transition_id: None, timestamp: None, inverse: None });
         let generation = self.child_composition.admit_child_content_publication()?;
         self.child_composition.publish_member_content(generation, key.borrowed()).await?;
-        self.child_composition.send_member_lane(&mut self.stores, &key, authored).await
-    }
-
-    /// ⏳️ Whether this instance refuses to open a history edit now (`timeTravel.busy`): a mutating tool run, an agent
-    /// transaction or an open tool transaction holds it, the undo or redo of a finalize is being authored, or its own history
-    /// step still replays — what disables every Edit row action with its reason (audit W2A-9).
-    pub(crate) fn time_travel_busy(&self) -> bool {
-        (!self.time_travel.is_active()&&self.time_travel.member.is_some()) || self.tool_runs.holds_mutating_run() || self.txn.pending_transaction.is_some() || self.stores.store.open_transaction().is_some() || self.time_travel.authoring.is_some() || self.stores.store.local_step_pending()
+        self.child_composition.send_member_lane(&mut *self.stores, &key, authored).await
     }
 
     /// ✏️ Opens (or retargets) the session on `mutationId` of the store `store` names (`<slot>/<childId>`, a composed
@@ -711,7 +521,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             let generation = time_travel_arg_generation(args).unwrap_or(session.generation);
             return self.apply_time_travel_event(TimeTravelEvent::Withdraw { generation }, Some(meta), effects, identity).await;
         }
-        if self.time_travel_busy() {
+        if self.shared().time_travel_busy() {
             return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy));
         }
         if self.time_travel.session.stage==TimeTravelStage::Reviewing&&self.time_travel.member.as_ref().is_some_and(|member|member.children.is_some()&&(self.time_travel.review_children_pending()||member.review_children.is_none())){return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy))}
@@ -730,7 +540,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 }
             };
             self.time_travel.member = member;
-            match self.time_travel_base() {
+            match self.shared().time_travel_base() {
                 Some(base) if base != self.time_travel.session.base => {
                     let _ = self.time_travel.session.apply(TimeTravelEvent::BaseMoved { base, positions: Vec::new() });
                 }
@@ -761,7 +571,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.note_time_travel_changed(true, true);
                 self.perform_time_travel_effects(session_effects, Some(meta), effects, identity).await?;
                 if opening {
-                    self.deliver_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta, identity,cx).await?;
+                    self.as_dispatch().deliver_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta, identity,cx).await?;
                 }
                 Ok(TimeTravelActionOutcome::Applied(self.time_travel.session.stage))
             }
@@ -903,18 +713,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let Some(editor) = self.time_travel.editor.as_ref() else { return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Session(TimeTravelRefusal::Illegal))) };
         let Some((input, false)) = path.and_then(|path| time_travel_input_at(&editor.inputs, &editor.value, path)) else { return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::UnknownInput)) };
         let ArgSchema::Reference { domain: Some(domain), kinds, .. } = &input.schema else { return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::UnknownInput)) };
-        let state = self.interaction.interaction_selection_snapshot(&self.stores);
+        let state = self.interaction.interaction_selection_snapshot(&*self.stores);
         let selection = state.selection.get(domain).map(|selection| protocol::DomainSelection { ids: selection.ids.iter().filter_map(|row| A::selection_reference_id(kinds, row)).collect(), ..selection.clone() });
         match time_travel_selection_value(&input, selection.as_ref()) {
             Ok(value) => self.draft_time_travel_input(path, Some(value), None, generation, meta, effects, identity).await,
             Err(refusal) => Ok(TimeTravelActionOutcome::Rejected(refusal)),
         }
-    }
-
-    /// ⌛️ The wall deadline of a driver turn that begins now: [`TIME_TRAVEL_TURN_WALL_US`] on the ledger's turn clock (from
-    /// zero when the clock cannot be read, so the turn ends after its first operation).
-    fn time_travel_turn_deadline(&self) -> u64 {
-        (self.time_travel.turn_clock)().unwrap_or(0).saturating_add(TIME_TRAVEL_TURN_WALL_US)
     }
 
     /// ⏯️ One bounded driver turn (≤ [`TIME_TRAVEL_TURN_WALL_US`], design §20.14): owed scope, retirement, base watch, one
@@ -925,7 +729,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if grant.maximum_items==0{return Ok(());}
         if self.drive_original_discard_command(grant)?{return Ok(())}
         if self.drive_original_review_children(grant)?{return Ok(())}
-        let deadline_us = self.time_travel_turn_deadline();
+        let deadline_us = self.shared().time_travel_turn_deadline();
         if self.time_travel.reprojection_paused && self.stores.store.reprojection_progress().is_none() {
             self.time_travel.reprojection_paused = false;
         }
@@ -956,7 +760,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if self.time_travel.authoring.is_some() && self.step_supersede_authoring(deadline_us, identity).await? != SupersedeAuthored::Pending {
             self.note_time_travel_changed(true, true);
         }
-        if self.reprojection_drives() {
+        if self.shared().reprojection_drives() {
             self.step_reprojection_turn(deadline_us, identity, cx).await?;
         }
         self.prepare_time_travel_patch().await?;
@@ -982,7 +786,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     fn drive_original_discard_command(&mut self,grant:RetainedCloneGrant)->Result<bool,Fault>{
         if self.time_travel.command_receipt.is_some(){return Ok(true)}
         if grant.maximum_items==0&&self.time_travel.pending_command.is_some(){self.time_travel.command_receipt=Some((grant,Default::default()));return Ok(true)}
-        let VcsArtifactApp{store,time_travel,children,child_content_retirements,child_content_generation,..}=self;
+        let TimeTravelCtx{stores,time_travel,child_composition,..}=self;
+        let (store,children,child_content_retirements,child_content_generation)=(&mut stores.store,&mut child_composition.children,&mut child_composition.child_content_retirements,&mut child_composition.child_content_generation);
         let receipt=(||->Result<Option<RetainedCloneProgress>,ValueError>{
             if let Some(cursor)=time_travel.discard_cursor.as_mut(){
                 if time_travel.closing{cursor.begin_close()}
@@ -1019,7 +824,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if let Some(previous) = self.time_travel.patch.take() {
             self.history.history_dirty_sequences.extend(previous.upserts.iter().map(|entry| entry.seq));
         }
-        self.time_travel.patch = Some(self.history_patch(false).await?);
+        self.time_travel.patch = Some(self.as_render().history_patch(false).await?);
         Ok(())
     }
 
@@ -1053,7 +858,185 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelRef<'v, A, M, X> {
+    /// 🧭️ The store state a session observes — of the store it edits; `None` when that composed member is gone.
+    fn time_travel_base(&self) -> Option<TimeTravelBase> {
+        match self.time_travel_query(TimeTravelStoreQuery::Base)? {
+            TimeTravelQueryOutput::Base(base) => Some(base),
+            TimeTravelQueryOutput::Positions(_) | TimeTravelQueryOutput::Value(_) => None,
+        }
+    }
+
+    /// 🔎️ A store-only read of the store the session edits: the document's own, or the composed member's through its
+    /// typed visitor (design §12); `None` when that member is gone.
+    fn time_travel_query(&self, query: TimeTravelStoreQuery) -> Option<TimeTravelQueryOutput> {
+        match self.time_travel.member.as_ref() {
+            None => Some(TimeTravelStoreState::query(Some(&self.time_travel.document), &self.stores.store, query)),
+            Some(member) => {
+                let entry = self.child_composition.children.member(member.key.borrowed())?;
+                Some(entry.member.visit_member(TimeTravelMemberQuery { owners: member.owners.as_deref(), query }))
+            }
+        }
+    }
+
+    /// 🧹️ One bounded close unit of the history-edit ledger: the session vanishes, every typed owner settles against its
+    /// store, then one owner retires.
+    fn member_subject_retirement_demands(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{
+        if !self.time_travel.closing&&self.time_travel.session.stage!=TimeTravelStage::Inactive{return Ok(None)}
+        let Some(member)=self.time_travel.member.as_ref()else{return Ok(None)};
+        if member.review_children.is_some()||member.children.is_some(){return Ok(Some(RetirementDemand{copy_bytes:size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>(),depth:1,..Default::default()}))}
+        if let Some(owners)=member.owners.as_ref(){if !owners.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inactive original member retains live typed sources"))}return Ok(Some(RetirementDemand{copy_bytes:size_of_val(&member.owners),release_bytes:size_of_val(owners.as_ref()),depth:1,..Default::default()}))}
+        if let Some(owner)=member.metadata_close.as_ref(){return if owner.terminal_is_empty(){Ok(Some(RetirementDemand{copy_bytes:size_of_val(&member.metadata_close),depth:1,..Default::default()}))}else{Ok(Some(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original member metadata depth overflow"))?}))}}
+        Ok(Some(RetirementDemand{copy_bytes:if member.metadata_retired{size_of::<TimeTravelMemberSubject>()}else{size_of::<TimeTravelMemberMetadata>()},depth:1,..Default::default()}))
+    }
+
+    pub(crate) fn time_travel_retirement_demands(&self, body: usize) -> Result<RetirementDemand,ValueError> {
+        if self.time_travel.document.discarded_factory.is_none()&&(!self.time_travel.document.discarded.is_empty()||self.time_travel.document.discarded_pending.is_some()){self.stores.store.owned_mutation_retirement_factory()?;return Ok(RetirementDemand{depth:1,..Default::default()});}
+        let demand=self.time_travel.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}
+        if let Some(demand)=self.member_subject_retirement_demands(body)?{return Ok(demand)}
+        if self.time_travel.closing&&!self.time_travel.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"time travel close retains an undeclared original session editor preview or authoring frontier"));}
+        Ok(Default::default())
+    }
+
+    /// 🧲️ Resolves every editor row's `snapSource` to concrete numbers before the panel is built
+    /// ([`time_travel_resolve_snaps`]): a `Config` key reads the focused window's config, then the app config; a
+    /// `Snapshot` pointer reads the document the session previews.
+    pub(crate) fn resolve_time_travel_snaps(&self, panel: &mut TimeTravelPanel, view: &ViewModel) {
+        let Some(editor) = panel.editor.as_mut() else { return };
+        let config = std::cell::OnceCell::new();
+        let preview = std::cell::OnceCell::new();
+        let window = view.focused_window_id.as_deref().and_then(|id| view.window_instances.iter().find(|window| window.id == id));
+        time_travel_resolve_snaps(&mut editor.rows, |source| match source {
+            SnapSource::Step => None,
+            SnapSource::Config { key } => {
+                let pointer = if key.starts_with('/') { key.clone() } else { format!("/{key}") };
+                let windowed = window
+                    .and_then(|window| self.stores.window_config_store.pointer_values(&window.window_kind_id, std::slice::from_ref(&pointer)).into_iter().find(|(window_id, _)| *window_id == window.id))
+                    .and_then(|(_, values)| values.into_iter().next().flatten())
+                    .and_then(|value| value.as_f64());
+                windowed.or_else(|| time_travel_pointer_get(config.get_or_init(|| semio_framework_value::ToValue::to_value(self.stores.config_store.snapshot_owner().as_ref())), &pointer).and_then(DslValue::as_f64))
+            }
+            SnapSource::Snapshot { pointer } => time_travel_pointer_get(preview.get_or_init(|| self.time_travel_previewed_value()), pointer).and_then(DslValue::as_f64),
+        });
+    }
+
+    /// 🪟️ The document the session previews, as a value: the composed member's shown value, else the app's render snapshot
+    /// (the state before the edited mutation with its draft while editing, the replayed head while reviewing).
+    fn time_travel_previewed_value(&self) -> DslValue {
+        match self.time_travel.member.is_some() {
+            true => match self.time_travel_query(TimeTravelStoreQuery::ShownValue(self.time_travel.session.stage)) {
+                Some(TimeTravelQueryOutput::Value(Some(value))) => value,
+                _ => DslValue::Null,
+            },
+            false => {
+                let committed = self.stores.store.snapshot_owner();
+                semio_framework_value::ToValue::to_value(self.time_travel.render_snapshot_or(&*self.tool_runs, &committed).as_ref())
+            }
+        }
+    }
+
+    /// 🗝️ Resolves every editor row's `optionSource` to the keys the previewed document holds ([`time_travel_resolve_options`],
+    /// design §20.11), its templates filled from the draft payload.
+    pub(crate) fn resolve_time_travel_options(&self, panel: &mut TimeTravelPanel) {
+        let Some(editor) = panel.editor.as_mut() else { return };
+        if !editor.rows.iter().any(|row| matches!(row.input.schema, ArgSchema::String { option_source: Some(_), .. })) {
+            return;
+        }
+        let payload = self.time_travel.editor.as_ref().map_or(DslValue::Null, |draft| draft.value.clone());
+        time_travel_resolve_options(&mut editor.rows, &payload, &self.time_travel_previewed_value());
+    }
+
+    /// 🏷️ Labels every id the editor's reference rows name, in the document the session previews: the app's entity label
+    /// (`ArtifactApp::entity_label` over the reference's kinds — the hook a plugin refines chips by), else the entity's own
+    /// name in that document ([`time_travel_entity_names`]), else its kind word and a short id
+    /// ([`time_travel_reference_fallback_label`], gap N3). A session on a composed member skips the app's hook, which reads
+    /// only its own document, and names the member's entities from the member's preview.
+    pub(crate) fn resolve_time_travel_reference_labels(&self, panel: &mut TimeTravelPanel) {
+        let Some(editor) = panel.editor.as_mut() else { return };
+        let member = self.time_travel.member.is_some();
+        let committed = self.stores.store.snapshot_owner();
+        let shown = self.time_travel.render_snapshot_or(&*self.tool_runs, &committed);
+        let mut unnamed: Vec<(String, Vec<String>)> = Vec::new();
+        for row in &editor.rows {
+            let ArgSchema::Reference { kinds, .. } = &row.input.schema else { continue };
+            let ids: Vec<String> = match &row.value {
+                DslValue::Array(items) => items.iter().filter_map(reference_id_text).collect(),
+                other => reference_id_text(other).into_iter().collect(),
+            };
+            for id in ids {
+                match (!member).then(|| A::entity_label(shown.as_ref(), kinds, &id)).flatten() {
+                    Some(label) => {
+                        editor.reference_labels.insert(id, label);
+                    }
+                    None => unnamed.push((id, kinds.clone())),
+                }
+            }
+        }
+        if unnamed.is_empty() {
+            return;
+        }
+        let document = match member {
+            true => match self.time_travel_query(TimeTravelStoreQuery::ShownValue(self.time_travel.session.stage)) {
+                Some(TimeTravelQueryOutput::Value(Some(value))) => value,
+                _ => DslValue::Null,
+            },
+            false => semio_framework_value::ToValue::to_value(shown.as_ref()),
+        };
+        let names = time_travel_entity_names(&document, &unnamed.iter().map(|(id, _)| id.as_str()).collect());
+        for (id, kinds) in unnamed {
+            let label = names.get(&id).cloned().unwrap_or_else(|| time_travel_reference_fallback_label(&kinds, &id));
+            editor.reference_labels.insert(id, label);
+        }
+    }
+
+    /// 🏃️ Ledger work, a remote history change the document store still replays (unless paused), or a base change the
+    /// watch has not delivered to an open session yet.
+    pub(crate) fn time_travel_has_pending_work(&self) -> bool {
+        self.time_travel.has_pending_work() || self.reprojection_drives() || (self.time_travel.is_active() && self.time_travel_base() != Some(self.time_travel.session.base))
+    }
+
+    /// 🚜️ Whether driver turns step the document store's waiting reprojection: a local history step always (it cannot be
+    /// paused, only dropped), a remote change unless the user paused it.
+    fn reprojection_drives(&self) -> bool {
+        self.stores.store.reprojection_progress().is_some() && (self.stores.store.local_step_pending() || !self.time_travel.reprojection_paused)
+    }
+
+    /// 🎯️ The applied position of every session target at the current base of the store it edits; `None` when one of
+    /// them vanished or the edited member is gone.
+    fn time_travel_positions(&self) -> Option<Vec<TimeTravelTarget>> {
+        let session = &self.time_travel.session;
+        let targets: Vec<MutationId> = session.accepted.iter().map(|draft| draft.target.mutation.clone()).chain(session.pending.as_ref().map(|pending| pending.target.mutation.clone())).collect();
+        if targets.is_empty() {
+            return Some(Vec::new());
+        }
+        match self.time_travel_query(TimeTravelStoreQuery::Positions(targets))? {
+            TimeTravelQueryOutput::Positions(positions) => positions,
+            TimeTravelQueryOutput::Base(_) | TimeTravelQueryOutput::Value(_) => None,
+        }
+    }
+
+    /// 🎞️ The identity of the document snapshot the session shows in its stage on the document's own store (`None`: the
+    /// committed document) — what tells whether a session change swapped the document a window renders. A session on a
+    /// composed member marks its children view itself ([`Self::refresh_time_travel_children`]).
+    fn time_travel_shown_identity(&self) -> Option<usize> {
+        self.time_travel.document.shown(self.time_travel.session.stage).map(|shown| Arc::as_ptr(shown.snapshot_owner()) as usize)
+    }
+
+    /// ⏳️ Whether this instance refuses to open a history edit now (`timeTravel.busy`): a mutating tool run, an agent
+    /// transaction or an open tool transaction holds it, the undo or redo of a finalize is being authored, or its own history
+    /// step still replays — what disables every Edit row action with its reason (audit W2A-9).
+    pub(crate) fn time_travel_busy(&self) -> bool {
+        (!self.time_travel.is_active()&&self.time_travel.member.is_some()) || self.tool_runs.holds_mutating_run() || self.txn.pending_transaction.is_some() || self.stores.store.open_transaction().is_some() || self.time_travel.authoring.is_some() || self.stores.store.local_step_pending()
+    }
+
+    /// ⌛️ The wall deadline of a driver turn that begins now: [`TIME_TRAVEL_TURN_WALL_US`] on the ledger's turn clock (from
+    /// zero when the clock cannot be read, so the turn ends after its first operation).
+    fn time_travel_turn_deadline(&self) -> u64 {
+        (self.time_travel.turn_clock)().unwrap_or(0).saturating_add(TIME_TRAVEL_TURN_WALL_US)
+    }
+}
+
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ✍️ Authors `inputs` within `scope` (unscoped: every line) resumably (design §16.6) — the restore of an undo or the
     /// re-authoring of a redo: a Report replay of the inputs over the applied history, stepped within this turn's budget and
     /// then per reactor turn, finalized by `commit_finished_replay` without replaying again. Answers whether it landed, is
@@ -1073,14 +1056,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             Err(vcs::VcsError::ValidationFailed(_) | vcs::VcsError::Rejected { .. }) => return Ok(SupersedeAuthored::Refused),
             Err(error) => return Err(error.into_fault()),
         }
-        self.step_supersede_authoring(self.time_travel_turn_deadline(), identity).await
+        self.step_supersede_authoring(self.shared().time_travel_turn_deadline(), identity).await
     }
 
     /// ⏭️ One turn of the undo or redo of a finalize being authored: steps its replay until the turn deadline, then commits
     /// the finished replay in its scope; a store that moved meanwhile replays the same inputs again from the new base.
     async fn step_supersede_authoring(&mut self, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<SupersedeAuthored, Fault> {
         let stepped = {
-            let VcsArtifactApp { store, time_travel, .. } = self;
+            let TimeTravelCtx { stores, time_travel, .. } = self;
+            let store = &mut stores.store;
             let clock = time_travel.turn_clock;
             let Some(authoring) = time_travel.authoring.as_mut() else { return Ok(SupersedeAuthored::Refused) };
             let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
@@ -1130,11 +1114,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// `Supersede` carrying the previous effective input, its redo re-authors the edit's own inputs); `None` leaves the
     /// verb to the document, configuration, child and shell lanes.
     pub(crate) async fn dispatch_supersede_history_action(&mut self, action: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<InvocationResult>, Fault> {
-        self.refresh_cache().await?;
+        self.as_render().refresh_cache().await?;
         let (child_applied_tails, child_has_redo_tail) = self.child_composition.child_history_tails().await;
         let authored = match action {
-            "undo" => self.history.supersede_undo_target(&self.stores, &child_applied_tails).map(|entry| self.history.supersedes.restore(entry)),
-            "redo" if !child_has_redo_tail => self.history.supersede_redo_target(&self.stores).map(|(entry, undo)| self.history.supersedes.redo(entry, undo)),
+            "undo" => self.history.supersede_undo_target(&*self.stores, &child_applied_tails).map(|entry| self.history.supersedes.restore(entry)),
+            "redo" if !child_has_redo_tail => self.history.supersede_redo_target(&*self.stores).map(|(entry, undo)| self.history.supersedes.redo(entry, undo)),
             _ => None,
         };
         let Some((scope, inputs)) = authored.filter(|(_, inputs)| !inputs.is_empty()) else { return Ok(None) };
@@ -1198,45 +1182,48 @@ impl InstanceExtension for TimeTravelExtension {
         action == HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID
     }
 
-    async fn dispatch_action<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        app.freeze_tool_machines();
-        app.dispatch_time_travel_action(action, args, meta, identity, cx).await
+    async fn dispatch_action<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+        let mut ctx = TimeTravelCtx::of_extension(ctx);
+        ctx.as_render().freeze_tool_machines();
+        ctx.dispatch_time_travel_action(action, args, meta, identity, cx).await
     }
 
-    fn reserved_action_refusal<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &VcsArtifactApp<A, M>, action: &str) -> Option<Fault> {
-        (app.time_travel.freezes_local_emits() && time_travel_freezes_reserved_action(action)).then(|| time_travel_frozen_fault(action))
+    fn reserved_action_refusal<A: ArtifactApp>(time_travel: &TimeTravelLedger<A>, _tool_runs: &ToolRunLedger<A>, action: &str) -> Option<Fault> {
+        (time_travel.freezes_local_emits() && time_travel_freezes_reserved_action(action)).then(|| time_travel_frozen_fault(action))
     }
 
-    fn freezes_document<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &VcsArtifactApp<A, M>) -> bool {
-        app.time_travel.freezes_local_emits()
+    fn freezes_document<A: ArtifactApp>(time_travel: &TimeTravelLedger<A>, _tool_runs: &ToolRunLedger<A>) -> bool {
+        time_travel.freezes_local_emits()
     }
 
-    fn document_refusal<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &VcsArtifactApp<A, M>, verb: &str) -> Option<Fault> {
-        app.time_travel.freezes_local_emits().then(|| time_travel_frozen_fault(verb))
+    fn document_refusal<A: ArtifactApp>(time_travel: &TimeTravelLedger<A>, _tool_runs: &ToolRunLedger<A>, verb: &str) -> Option<Fault> {
+        time_travel.freezes_local_emits().then(|| time_travel_frozen_fault(verb))
     }
 
-    fn transaction_refusal<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &VcsArtifactApp<A, M>, txn_id: &str) -> Option<Fault> {
-        app.time_travel.freezes_local_emits().then(|| VcsArtifactApp::<A, M>::transaction_fault(FaultOrigin::Framework, semio_framework_time_travel::TIME_TRAVEL_FROZEN_CODE, format!("transaction {txn_id:?} would change the document while a history edit is open on this instance")))
+    fn transaction_refusal<A: ArtifactApp>(time_travel: &TimeTravelLedger<A>, _tool_runs: &ToolRunLedger<A>, txn_id: &str) -> Option<Fault> {
+        time_travel.freezes_local_emits().then(|| MediaTransfers::<A>::transaction_fault(FaultOrigin::Framework, semio_framework_time_travel::TIME_TRAVEL_FROZEN_CODE, format!("transaction {txn_id:?} would change the document while a history edit is open on this instance")))
     }
 
-    fn has_pending_work<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &VcsArtifactApp<A, M>) -> bool {
-        app.time_travel_has_pending_work()
+    fn has_pending_work<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &ExtensionRef<'_, A, M, X>) -> bool {
+        TimeTravelRef::of_extension_ref(ctx).time_travel_has_pending_work()
     }
 
-    fn holds_receipt<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &VcsArtifactApp<A, M>) -> bool {
-        app.time_travel.has_command_receipt()
+    fn holds_receipt<A: ArtifactApp>(time_travel: &TimeTravelLedger<A>, _tool_runs: &ToolRunLedger<A>) -> bool {
+        time_travel.has_command_receipt()
     }
 
-    fn terminal_is_empty<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &VcsArtifactApp<A, M>) -> bool {
-        app.time_travel.terminal_is_empty()
+    fn terminal_is_empty<A: ArtifactApp>(time_travel: &TimeTravelLedger<A>, _tool_runs: &ToolRunLedger<A>) -> bool {
+        time_travel.terminal_is_empty()
     }
 
-    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, crate::PluginLifecycleFailure> {
-        if !app.time_travel_has_pending_work() {
+    async fn drive_turn<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, retained: &mut RetainedCloneGrant, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, crate::PluginLifecycleFailure> {
+        let mut ctx = TimeTravelCtx::of_extension(ctx);
+        if !ctx.shared().time_travel_has_pending_work() {
             return Ok(false);
         }
-        app.drive_time_travel_turn(crate::plugin_runtime::original_plugin_turn_grant(app.mounted_policy.maintenance, *retained), identity, cx).await?;
-        Ok(app.time_travel.has_command_receipt())
+        let grant = crate::plugin_runtime::original_plugin_turn_grant(ctx.mounted_policy.maintenance, *retained);
+        ctx.drive_time_travel_turn(grant, identity, cx).await?;
+        Ok(ctx.time_travel.has_command_receipt())
     }
 }
 

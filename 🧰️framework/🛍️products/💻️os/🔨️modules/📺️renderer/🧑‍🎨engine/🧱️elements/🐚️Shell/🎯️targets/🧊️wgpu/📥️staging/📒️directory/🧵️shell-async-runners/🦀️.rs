@@ -10,16 +10,16 @@ type ShellDirectoryStream = DirectoryStream<ShellDirectoryTransport>;
 
 #[cfg(not(target_arch = "wasm32"))]
 /// 📡️ Finite directory-stream actor: bounded turns, I/O-lane dials, timer-wheel wakeups, ordered output.
-pub(crate) struct ShellDirectoryRunner {
-    pub(crate) pool: WorkerPool,
-    pub(crate) stream: std::sync::Mutex<ShellDirectoryStream>,
-    pub(crate) context: OperationContext,
-    pub(crate) events: std::sync::Mutex<std::collections::VecDeque<DirectoryStreamMessage>>,
-    pub(crate) scheduled: std::sync::atomic::AtomicBool,
-    pub(crate) notified: std::sync::atomic::AtomicBool,
-    pub(crate) cancelled: std::sync::atomic::AtomicBool,
-    pub(crate) terminal: std::sync::atomic::AtomicBool,
-    pub(crate) timer_deadline_ms: std::sync::atomic::AtomicU64,
+pub struct ShellDirectoryRunner {
+    pub pool: WorkerPool,
+    pub stream: std::sync::Mutex<ShellDirectoryStream>,
+    pub context: OperationContext,
+    pub events: std::sync::Mutex<std::collections::VecDeque<DirectoryStreamMessage>>,
+    pub scheduled: std::sync::atomic::AtomicBool,
+    pub notified: std::sync::atomic::AtomicBool,
+    pub cancelled: std::sync::atomic::AtomicBool,
+    pub terminal: std::sync::atomic::AtomicBool,
+    pub timer_deadline_ms: std::sync::atomic::AtomicU64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -30,7 +30,7 @@ impl ShellDirectoryRunner {
     const SOCKET_POLL_MS: u64 = 8;
     const DIAL_TIMEOUT_MS: u64 = 1_000;
 
-    pub(crate) fn start(pool: WorkerPool, stream: ShellDirectoryStream, context: OperationContext) -> std::sync::Arc<Self> {
+    pub fn start(pool: WorkerPool, stream: ShellDirectoryStream, context: OperationContext) -> std::sync::Arc<Self> {
         let runner = std::sync::Arc::new(Self {
             pool,
             stream: std::sync::Mutex::new(stream),
@@ -46,7 +46,7 @@ impl ShellDirectoryRunner {
         runner
     }
 
-    pub(super) fn schedule(self: &std::sync::Arc<Self>) {
+    pub fn schedule(self: &std::sync::Arc<Self>) {
         self.notified.store(true, std::sync::atomic::Ordering::Release);
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) || self.scheduled.swap(true, std::sync::atomic::Ordering::AcqRel) {
             return;
@@ -55,7 +55,7 @@ impl ShellDirectoryRunner {
         self.pool.submit(Lane::Io, Box::new(move || runner.run_turn()));
     }
 
-    pub(super) fn run_turn(self: std::sync::Arc<Self>) {
+    pub fn run_turn(self: std::sync::Arc<Self>) {
         self.notified.store(false, std::sync::atomic::Ordering::Release);
         let started = self.pool.now_ms();
         let mut processed = 0usize;
@@ -135,17 +135,17 @@ impl ShellDirectoryRunner {
         });
     }
 
-    pub(crate) fn drain(self: &std::sync::Arc<Self>) -> Vec<DirectoryStreamMessage> {
+    pub fn drain(self: &std::sync::Arc<Self>) -> Vec<DirectoryStreamMessage> {
         let events = self.events.lock().expect("directory events mutex poisoned").drain(..).collect();
         self.schedule();
         events
     }
 
-    pub(crate) fn take_terminal(&self) -> bool {
+    pub fn take_terminal(&self) -> bool {
         self.terminal.swap(false, std::sync::atomic::Ordering::AcqRel)
     }
 
-    pub(crate) fn cancel(&self) {
+    pub fn cancel(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.context.cancel.cancel_now();
         self.stream.lock().expect("directory stream mutex poisoned").close();
@@ -158,20 +158,20 @@ impl ShellDirectoryRunner {
 /// `ShellDirectoryRunner` above already follows for the directory stream. No blocking call ever
 /// enters the render loop, and a cancel is a hard terminal.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct ShellInferenceRunner {
-    pub(crate) port: std::sync::Arc<CompiledDocumentHttpPortV1>,
-    pub(crate) pool: WorkerPool,
-    pub(crate) client: std::sync::Arc<ShellDirectoryClient>,
-    pub(crate) context: OperationContext,
-    pub(crate) owner: String,
-    pub(crate) service_id: String,
-    pub(crate) scope: DocumentScope,
-    pub(crate) driver: std::sync::Mutex<Box<dyn InstalledServiceDriverV1>>,
-    pub(crate) statuses: std::sync::Mutex<std::collections::VecDeque<InstalledServiceStatusV1>>,
-    pub(crate) scheduled: std::sync::atomic::AtomicBool,
-    pub(crate) notified: std::sync::atomic::AtomicBool,
-    pub(crate) cancelled: std::sync::atomic::AtomicBool,
-    pub(crate) timer_deadline_ms: std::sync::atomic::AtomicU64,
+pub struct ShellInferenceRunner {
+    pub port: std::sync::Arc<CompiledDocumentHttpPortV1>,
+    pub pool: WorkerPool,
+    pub client: std::sync::Arc<ShellDirectoryClient>,
+    pub context: OperationContext,
+    pub owner: String,
+    pub service_id: String,
+    pub scope: DocumentScope,
+    pub driver: std::sync::Mutex<Box<dyn InstalledServiceDriverV1>>,
+    pub statuses: std::sync::Mutex<std::collections::VecDeque<InstalledServiceStatusV1>>,
+    pub scheduled: std::sync::atomic::AtomicBool,
+    pub notified: std::sync::atomic::AtomicBool,
+    pub cancelled: std::sync::atomic::AtomicBool,
+    pub timer_deadline_ms: std::sync::atomic::AtomicU64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -180,7 +180,7 @@ impl ShellInferenceRunner {
     const MAX_ACTIONS_PER_TURN: usize = 4;
     const MAX_TURN_MS: u64 = 4;
 
-    pub(crate) fn start(pool: WorkerPool, client: std::sync::Arc<ShellDirectoryClient>, port: std::sync::Arc<CompiledDocumentHttpPortV1>, context: OperationContext, contribution: InstalledServiceContributionV1, scope: DocumentScope, driver: Box<dyn InstalledServiceDriverV1>) -> std::sync::Arc<Self> {
+    pub fn start(pool: WorkerPool, client: std::sync::Arc<ShellDirectoryClient>, port: std::sync::Arc<CompiledDocumentHttpPortV1>, context: OperationContext, contribution: InstalledServiceContributionV1, scope: DocumentScope, driver: Box<dyn InstalledServiceDriverV1>) -> std::sync::Arc<Self> {
         let runner = std::sync::Arc::new(Self {
             port,
             pool,
@@ -200,7 +200,7 @@ impl ShellInferenceRunner {
         runner
     }
 
-    pub(super) fn schedule(self: &std::sync::Arc<Self>) {
+    pub fn schedule(self: &std::sync::Arc<Self>) {
         self.notified.store(true, std::sync::atomic::Ordering::Release);
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) || self.scheduled.swap(true, std::sync::atomic::Ordering::AcqRel) {
             return;
@@ -209,14 +209,14 @@ impl ShellInferenceRunner {
         self.pool.submit(Lane::Io, Box::new(move || runner.run_turn()));
     }
 
-    pub(crate) fn intend(self: &std::sync::Arc<Self>, action: &str, payload: DslValue) {
+    pub fn intend(self: &std::sync::Arc<Self>, action: &str, payload: DslValue) {
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { return; }
         if self.driver.lock().expect("service driver mutex poisoned").intend(action,payload).is_err() { return; }
         self.publish();
         self.schedule();
     }
 
-    pub(crate) fn publish(self: &std::sync::Arc<Self>) {
+    pub fn publish(self: &std::sync::Arc<Self>) {
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { return; }
         let status = InstalledServiceStatusV1 { owner:self.owner.clone(), service_id:self.service_id.clone(), payload:self.driver.lock().expect("service driver mutex poisoned").status() };
         if store::pack_rt::encode_wire_value(&status.payload).len()>16*1024 {self.cancel();return;}
@@ -230,7 +230,7 @@ impl ShellInferenceRunner {
         statuses.push_back(status);
     }
 
-    pub(super) fn run_turn(self: std::sync::Arc<Self>) {
+    pub fn run_turn(self: std::sync::Arc<Self>) {
         self.notified.store(false, std::sync::atomic::Ordering::Release);
         let started = self.pool.now_ms();
         let mut processed = 0usize;
@@ -262,7 +262,7 @@ impl ShellInferenceRunner {
     }
 
     /// 📡 Invokes one declared operation; retirement suppresses every completion callback.
-    pub(crate) fn submit_action(self: &std::sync::Arc<Self>, turn: InstalledServiceTurnV1) {
+    pub fn submit_action(self: &std::sync::Arc<Self>, turn: InstalledServiceTurnV1) {
         let InstalledServiceTurnV1::Call {action,payload}=turn else {return};
         let weak=std::sync::Arc::downgrade(self);
         let client=self.client.clone();
@@ -299,11 +299,11 @@ impl ShellInferenceRunner {
         });
     }
 
-    pub(crate) fn drain(self: &std::sync::Arc<Self>) -> Vec<InstalledServiceStatusV1> {
+    pub fn drain(self: &std::sync::Arc<Self>) -> Vec<InstalledServiceStatusV1> {
         self.statuses.lock().expect("inference statuses mutex poisoned").drain(..).collect()
     }
 
-    pub(crate) fn cancel(&self) {
+    pub fn cancel(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.context.cancel.cancel_now();
     }
@@ -311,41 +311,41 @@ impl ShellInferenceRunner {
 
 //#endregion 💡️InferencePort
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) type ShellDirectoryPageResult = (u64, Result<CanonicalDirectoryEventPageV1, DirectoryClientError>);
+pub type ShellDirectoryPageResult = (u64, Result<CanonicalDirectoryEventPageV1, DirectoryClientError>);
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) enum ShellDirectoryHomePublicationOutcome {
+pub enum ShellDirectoryHomePublicationOutcome {
     Published(DirectoryEventPageAckV1),
-    Rejected(crate::program_bridge::ProgramFault),
+    Rejected(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault),
     Terminal(String),
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) type ShellDirectoryHomePublicationResult = (u64, u32, DirectoryEventPageAckV1, ShellDirectoryHomePublicationOutcome);
+pub type ShellDirectoryHomePublicationResult = (u64, u32, DirectoryEventPageAckV1, ShellDirectoryHomePublicationOutcome);
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct DirectoryHomeProjection {
-    pub(crate) plugin_id: String,
-    pub(crate) instance_id: u32,
-    pub(crate) app: AppDefinition,
-    pub(crate) view_state: ViewModel,
-    pub(crate) bootstrap: DirectoryEventPageBootstrapV1,
-    pub(crate) page_task: Option<std::sync::Arc<ShellPoolFuture>>,
-    pub(crate) page_cancel: Option<CancelToken>,
-    pub(crate) page_rx: Option<std::sync::mpsc::Receiver<ShellDirectoryPageResult>>,
-    pub(crate) home_task: Option<std::sync::Arc<ShellPoolFuture>>,
-    pub(crate) home_rx: Option<std::sync::mpsc::Receiver<ShellDirectoryHomePublicationResult>>,
-    pub(crate) stream: Option<std::sync::Arc<ShellDirectoryRunner>>,
-    pub(crate) retry_at_ms: u64,
-    pub(crate) closed: bool,
+pub struct DirectoryHomeProjection {
+    pub plugin_id: String,
+    pub instance_id: u32,
+    pub app: AppDefinition,
+    pub view_state: ViewModel,
+    pub bootstrap: DirectoryEventPageBootstrapV1,
+    pub page_task: Option<std::sync::Arc<ShellPoolFuture>>,
+    pub page_cancel: Option<CancelToken>,
+    pub page_rx: Option<std::sync::mpsc::Receiver<ShellDirectoryPageResult>>,
+    pub home_task: Option<std::sync::Arc<ShellPoolFuture>>,
+    pub home_rx: Option<std::sync::mpsc::Receiver<ShellDirectoryHomePublicationResult>>,
+    pub stream: Option<std::sync::Arc<ShellDirectoryRunner>>,
+    pub retry_at_ms: u64,
+    pub closed: bool,
     destroy_authority: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl DirectoryHomeProjection {
-    pub(crate) const RETRY_DELAY_MS: u64 = 50;
+    pub const RETRY_DELAY_MS: u64 = 50;
 
-    pub(crate) fn new(plugin_id: String, instance_id: u32, app: AppDefinition, view_state: ViewModel) -> Result<Self, DirectoryClientError> {
+    pub fn new(plugin_id: String, instance_id: u32, app: AppDefinition, view_state: ViewModel) -> Result<Self, DirectoryClientError> {
         Ok(Self {
             plugin_id,
             instance_id,
@@ -364,11 +364,11 @@ impl DirectoryHomeProjection {
         })
     }
 
-    pub(crate) fn is_instance(&self, plugin_id: &str, instance_id: u32) -> bool {
+    pub fn is_instance(&self, plugin_id: &str, instance_id: u32) -> bool {
         self.plugin_id == plugin_id && self.instance_id == instance_id
     }
 
-    pub(crate) fn active_session(&self) -> ActiveSession {
+    pub fn active_session(&self) -> ActiveSession {
         ActiveSession { plugin_id: self.plugin_id.clone(), instance_id: self.instance_id, app: self.app.clone(), view_state: self.view_state.clone() }
     }
 
@@ -389,7 +389,7 @@ impl DirectoryHomeProjection {
         }
     }
 
-    pub(crate) fn begin_epoch(&mut self, after: u64) -> Result<u64, DirectoryClientError> {
+    pub fn begin_epoch(&mut self, after: u64) -> Result<u64, DirectoryClientError> {
         self.cancel_io();
         self.bootstrap.close();
         let epoch = self.bootstrap.bootstrap_epoch().checked_add(1).ok_or_else(|| DirectoryClientError::Decode("native directory bootstrap epoch exhausted".into()))?;
@@ -399,7 +399,7 @@ impl DirectoryHomeProjection {
         Ok(epoch)
     }
 
-    pub(crate) fn retry(&mut self, now_ms: u64, receipt_sha256: &str) -> Result<u64, DirectoryClientError> {
+    pub fn retry(&mut self, now_ms: u64, receipt_sha256: &str) -> Result<u64, DirectoryClientError> {
         let after = self.bootstrap.reject(self.bootstrap.bootstrap_epoch(), receipt_sha256)?;
         self.retry_at_ms = now_ms.saturating_add(Self::RETRY_DELAY_MS);
         Ok(after)
@@ -411,7 +411,7 @@ impl DirectoryHomeProjection {
     /// rebootstrap refetched from the epoch number instead of the reset frontier `0` — the kernel's
     /// own `DirectoryEventPageBootstrapV1::wake` has always answered the frontier
     /// (`📇️directory/🔌️client/🦀️.rs:374`) and the live arm below already did.
-    pub(crate) fn wake(&mut self, rebootstrap: bool) -> Result<Option<u64>, DirectoryClientError> {
+    pub fn wake(&mut self, rebootstrap: bool) -> Result<Option<u64>, DirectoryClientError> {
         if rebootstrap {
             self.begin_epoch(0)?;
             return Ok(Some(self.bootstrap.after()));
@@ -420,13 +420,13 @@ impl DirectoryHomeProjection {
         Ok(self.bootstrap.wake(false))
     }
 
-    pub(crate) fn close(&mut self) {
+    pub fn close(&mut self) {
         self.cancel_io();
         self.bootstrap.close();
         self.closed = true;
     }
 
-    pub(crate) fn take_destroy_authority(&mut self) -> Option<(String, u32)> {
+    pub fn take_destroy_authority(&mut self) -> Option<(String, u32)> {
         self.close();
         if !self.destroy_authority {
             return None;
@@ -438,3 +438,11 @@ impl DirectoryHomeProjection {
 
 //#endregion ShellTypes
 
+//#region ShellTypes
+#[cfg(not(target_arch = "wasm32"))]
+pub fn close_unowned_directory_dial<T: DirectoryWsConnection>(result: Result<T, TransportError>) {
+    if let Ok(mut connection) = result {
+        connection.close();
+    }
+}
+//#endregion ShellTypes

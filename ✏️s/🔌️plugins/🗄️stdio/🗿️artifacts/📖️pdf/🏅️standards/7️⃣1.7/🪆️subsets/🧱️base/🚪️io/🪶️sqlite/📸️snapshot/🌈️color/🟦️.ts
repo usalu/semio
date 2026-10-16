@@ -3,8 +3,8 @@ import { writePdfArtifactReference,readPdfArtifactReference,PDF_ARTIFACT_REFEREN
 import type { PdfFunction, PdfColorSpace, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type PdfCell, type ArtifactSqliteOptions, type SqliteDatabase, type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { PDF_COS_SQLITE_SCHEMA, writePdfDictionary, readPdfDictionary } from "../🧩️cos/🟦️.ts";
-import { artifactSqliteInteger, artifactSqliteText, artifactSqliteCheckpoint } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { Ieee754Column } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { artifactSqliteInteger, artifactSqliteText, artifactSqliteCheckpoint } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { Ieee754Column } from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 
 /** 🏛️ Handwritten function domains, ordered samples and color alternate relationships. */
 export const PDF_COLOR_SQLITE_SCHEMA = PDF_COS_SQLITE_SCHEMA + PDF_ARTIFACT_REFERENCE_SQLITE_SCHEMA + `

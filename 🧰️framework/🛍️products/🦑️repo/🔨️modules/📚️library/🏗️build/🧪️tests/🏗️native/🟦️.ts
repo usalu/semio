@@ -10,15 +10,12 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json";
 const root=resolve(import.meta.dir,"../../../../../../../..");
 
-test("All Cargo workspaces explicitly own native and WASM prototype and release profiles", () => {
+test("All Cargo workspaces consume selected inline profiles without authored manifest tables", async () => {
+ const {renderCargoProfileConfigurationV1}=await import("../../🎚️mode/🦀️profile/🟦️.ts"),{parse}=await import("@iarna/toml");
+ expect(Bun.TOML.parse(readFileSync(resolve(root,".cargo/config.toml"),"utf8"))).not.toHaveProperty("profile");
  for(const manifest of fixture.workspaces) {
-  const parsed = Bun.TOML.parse(readFileSync(resolve(root,manifest),"utf8")) as any;
-  const central = Bun.TOML.parse(readFileSync(resolve(root,".cargo/config.toml"),"utf8")) as any;
-  for(const row of fixture.modes) expect(central.profile[row.nativeProfile]).toBeDefined();
-  expect(parsed.profile.prototype).toBeUndefined();
-  expect(central.profile.prototype).toMatchObject({inherits:"dev",incremental:true,lto:false});
-  expect(parsed.profile["wasm-prototype"]).toMatchObject({incremental:true,lto:false});
-  expect(central.profile.release).toMatchObject({incremental:false,lto:"thin"});
+  expect(Bun.TOML.parse(readFileSync(resolve(root,manifest),"utf8"))).not.toHaveProperty("profile");
+  for(const row of fixture.modes)for(const target of["x86_64-unknown-linux-gnu","wasm32-wasip2"]){const rendered=renderCargoProfileConfigurationV1({version:1,mode:row.mode,producer:"artifact",operation:"build",target},manifest,"repository"),text=rendered.selectors.join("\n"),actual=Bun.TOML.parse(text);expect(actual).toEqual(parse(text));expect(actual).toHaveProperty("profile."+row.mode);expect(actual).not.toHaveProperty("profile."+(row.mode==="prototype"?"release":"prototype"));}
  }
 });
 

@@ -6,8 +6,8 @@ import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgProjectHeader,dwgReconstructHeader } from "../../🔧️header/🟦️.ts";
 import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import { exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 import { dwgHeaderFixture as header } from "../🧰️support/🔧️header/🟦️.ts";
 async function project(value:DwgHeaderVariables){const p=await DwgProjection.create(DWG_SQLITE_SCHEMA);await p.insert("dwg_document",["owned","AC1024",2n,1252n]);await dwgProjectHeader(p,value);return p.finish();}

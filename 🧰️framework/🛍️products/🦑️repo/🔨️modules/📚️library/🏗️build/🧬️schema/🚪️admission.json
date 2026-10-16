@@ -5,17 +5,83 @@
     "ownerInputs": {
       "type": "object",
       "maxProperties": 65536,
-      "additionalProperties": {"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}}
+      "additionalProperties": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "ownerFacts": {
       "type": "object",
-      "required": ["project", "files", "dependencies"],
+      "required": [
+        "project",
+        "files",
+        "dependencies"
+      ],
       "additionalProperties": false,
       "properties": {
-        "project": {"type":"object","required":["name","targets"],"additionalProperties":true,"properties":{"name":{"type":"string","minLength":1},"targets":{"type":"object","additionalProperties":{"type":"object"}}}},
-        "files": {"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":256}},
-        "dependencies": {"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}},
-        "dependencyInputs": {"$ref":"#/$defs/ownerInputs"}
+        "project": {
+          "type": "object",
+          "required": [
+            "name",
+            "targets"
+          ],
+          "additionalProperties": true,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "targets": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "dependencyInputs": {
+          "$ref": "#/$defs/ownerInputs"
+        }
+      }
+    },
+    "candidateInvalidation": {
+      "type": "object",
+      "required": [
+        "kind",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "invalidated"
+        },
+        "reason": {
+          "enum": [
+            "owner-registry",
+            "source-authority"
+          ]
+        }
       }
     }
   },

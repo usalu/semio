@@ -11,7 +11,7 @@ impl SyncState {
     /// 🔐️ Applies one sign-in answer: a verified session owns the directory client, the socket grants and the book's
     /// last user, then the spaces read starts on its own task; a session verified for a hub no longer selected is
     /// dropped; anything else is the session's localized error.
-    pub(super) fn apply_hub_sign_in(&mut self, answer: ShellHubSignInAnswer, directory: &mut DirectoryState) {
+    pub fn apply_hub_sign_in(&mut self, answer: ShellHubSignInAnswer, directory: &mut DirectoryState) {
         match answer {
             ShellHubSignInAnswer::Failed { code, retry_after_seconds } => {
                 directory.hub_workspace.session = reduce_hub_session(&directory.hub_workspace.session, &HubSessionEvent::Failed { code, retry_after_seconds });
@@ -39,7 +39,7 @@ impl SyncState {
     }
 
     /// 📬️ Reads the answers of the hub workspace's spawned requests, once each; answers whether the workspace changed.
-    pub(crate) fn poll_hub_workspace_tasks(&mut self, directory: &mut DirectoryState) -> bool {
+    pub fn poll_hub_workspace_tasks(&mut self, directory: &mut DirectoryState) -> bool {
         let mut changed = false;
         if let Some(answer) = directory.hub_sign_in_task.as_ref().and_then(ShellHubTask::answer) {
             directory.hub_sign_in_task = None;
@@ -51,9 +51,9 @@ impl SyncState {
             match answer.and_then(|rows| rows) {
                 Ok(rows) => {
                     directory.hub_workspace.rows = rows;
-                    directory.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Ready;
+                    directory.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Ready;
                 }
-                Err(()) => directory.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Stale,
+                Err(()) => directory.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Stale,
             }
             changed = true;
         }
@@ -63,7 +63,7 @@ impl SyncState {
     //#endregion 🔐️HubWorkspaceLane
     /// 🪪️ Drains `identity_bootstrap_rx` and starts a fresh zero-frontier retained-Home epoch.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn poll_identity_bootstrap(&mut self, chrome: &mut ChromeState, directory: &mut DirectoryState) {
+    pub fn poll_identity_bootstrap(&mut self, chrome: &mut ChromeState, directory: &mut DirectoryState) {
         let Some(rx) = directory.identity_bootstrap_rx.as_ref() else { return };
         match rx.try_recv() {
             Ok(Ok(outcome)) => {

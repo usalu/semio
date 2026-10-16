@@ -1,4 +1,4 @@
-import { toolJobPuzzle2dReservedRoutesExact, toolJobPuzzleReservedRoutesExact } from "../../../../../📜️script.ts";
+import { toolJobPuzzle2dReservedRoutesExact, toolJobPuzzleReservedRoutesExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🛣️routes/🟦️.ts";
 
 /** 🧪️ The puzzle outbox as the guards read it: the commit builder prepares the raw wire, completion lends the sealed pages. */
 const PUZZLE_JOBS_FIXTURE = `

@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 
 //#region 🔖️Adapter
 /// 🔗️ The fixture URIs one line of feature text names: `shared://`, `local://`, `asset://` or `schema://` at a word
-/// start, up to whitespace or one of `"'`,;)]` — `TEST_INPUT_URI_RE` of `🧪️test/🟦️.ts`.
+/// start, up to whitespace or one of `"'`,;)]` — `TEST_INPUT_URI_RE` of `🧪️test/📥️fixture-inputs/🟦️.ts`.
 pub fn test_input_uris_in(text: &str) -> Vec<String> {
     let mut found = Vec::new();
     let mut at = 0;
@@ -52,7 +52,7 @@ impl<'a> Context<'a> {
     }
 
     /// 🔗️ Every fixture URI the scenario's steps name, in step order and whatever scheme the feature uses — the
-    /// platform's one fixture-URI grammar (`TEST_INPUT_URI_RE`, `🧪️test/🟦️.ts`). The feature is the single place a
+    /// platform's one fixture-URI grammar (`TEST_INPUT_URI_RE`, `🧪️test/📥️fixture-inputs/🟦️.ts`). The feature is the single place a
     /// vector path is written down.
     pub fn step_input_uris(&self) -> Vec<String> {
         self.scenario.steps.iter().flat_map(|(_, text)| test_input_uris_in(text)).collect()

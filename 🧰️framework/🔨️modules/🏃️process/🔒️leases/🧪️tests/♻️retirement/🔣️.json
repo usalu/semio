@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "idle",
+      "recognized": true,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": true
+    },
+    {
+      "name": "reader",
+      "recognized": true,
+      "hashMatches": true,
+      "kernelHeld": true,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "writer",
+      "recognized": true,
+      "hashMatches": true,
+      "kernelHeld": true,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "foreign",
+      "recognized": false,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "extra-table",
+      "recognized": false,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "extra-trigger",
+      "recognized": false,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "wrong-schema",
+      "recognized": false,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "wrong-hash",
+      "recognized": true,
+      "hashMatches": false,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "uninitialized",
+      "recognized": false,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": false
+    },
+    {
+      "name": "hardlink",
+      "recognized": true,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": false,
+      "retired": false
+    },
+    {
+      "name": "symlink",
+      "recognized": true,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": false,
+      "retired": false
+    },
+    {
+      "name": "sidecar",
+      "recognized": true,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": false,
+      "retired": false
+    },
+    {
+      "name": "wal",
+      "recognized": false,
+      "hashMatches": true,
+      "kernelHeld": false,
+      "physicalSafe": true,
+      "retired": false
+    }
+  ],
+  "cleanup": [
+    {
+      "primary": "undefined",
+      "closeFailures": 2,
+      "gateHeldAfterFailure": true,
+      "gateHeldAfterCompletion": false,
+      "completeBeforeRelease": false
+    },
+    {
+      "primary": "frozen",
+      "closeFailures": 2,
+      "gateHeldAfterFailure": true,
+      "gateHeldAfterCompletion": false,
+      "completeBeforeRelease": false
+    },
+    {
+      "primary": "frozen",
+      "closeFailures": 1,
+      "completeBeforeRelease": true,
+      "gateHeldAfterFailure": false,
+      "gateHeldAfterCompletion": false
+    }
+  ]
+}

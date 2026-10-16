@@ -1,5 +1,16 @@
 use super::*;
 use semio_framework_job::InteractiveJob;
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicBool;
+use semio_framework::kernel::Budget;
+use semio_framework_plugin_host_guest_runtime::{GuestRuntimes, PackageRef};
+use semio_framework_plugin_guest_contract::{JobStep, PluginHostError};
+use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
+use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
+use semio_framework_plugin_host_engine::plugin_host_worker_pool;
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_plugin_host_guest_runtime::{MockGuestRuntime, MockJobStepGate};
+use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
 
 fn relay_lifecycle_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/♻️relay-lifecycle.json")).expect("relay lifecycle fixture")
@@ -7,7 +18,7 @@ fn relay_lifecycle_fixture() -> serde_json::Value {
 
 #[test]
 fn neutral_relay_lifecycle_traces_drive_production_machines() {
-    let _replay_authority = shard::replay_test_authority();
+    let _replay_authority = semio_framework_plugin_host_shard::replay_test_authority();
     for trace in relay_lifecycle_fixture()["traces"].as_array().expect("relay lifecycle traces") {
         let actual: serde_json::Value = serde_json::from_str(&exercise_relay_lifecycle_trace(&trace.to_string(),test_relay_wake_authority()).expect("production lifecycle trace")).expect("production lifecycle projection");
         assert_eq!(actual, trace["expected"], "{} production projection", trace["🪪️id"]);

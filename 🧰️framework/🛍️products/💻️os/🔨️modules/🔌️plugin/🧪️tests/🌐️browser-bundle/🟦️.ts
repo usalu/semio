@@ -217,9 +217,11 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       assert.notEqual(sealBrowserCodegenPolicy(input).sha256, sealed.sha256);
       row[key] = digest.sha256;
     }
-    input.compiler.inputs[0].sha256 = "c".repeat(64);
-    assert.equal(sealed.record.compiler.inputs[0].sha256, digest.sha256);
-    assert(Object.isFrozen(sealed.record.compiler.inputs[0]));
+    const inputCompilerEntry=input.compiler.inputs[0],sealedCompilerEntry=sealed.record.compiler.inputs[0];
+    assert(inputCompilerEntry&&sealedCompilerEntry,"compiler input fixture required");
+    inputCompilerEntry.sha256 = "c".repeat(64);
+    assert.equal(sealedCompilerEntry.sha256, digest.sha256);
+    assert(Object.isFrozen(sealedCompilerEntry));
     const executable = exactExecutableFingerprint(realpathSync(process.execPath));
     assert.equal(executable.path, realpathSync(process.execPath));
     assert.equal(executable.byteLength, lstatSync(executable.path).size);
@@ -317,7 +319,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert.deepEqual(browserActorImportAdmissionV1(componentBytes), { admitted: input.closed.importInterfaces, refused: [] });
     assert.deepEqual(browserActorImportAdmissionV1(Buffer.from(input.unsupported, "hex")), { admitted: [], refused: ["untrusted:remote/pure@1.0.0"] });
     assert.throws(() => browserActorImportAdmissionV1(componentBytes.subarray(0, componentBytes.byteLength - 1)), /malformed component/);
-    const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), invocation, { importInterfaces: input.closed.importInterfaces });
+    const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { importInterfaces: input.closed.importInterfaces });
     assert.deepEqual(artifact.bytes, new TextEncoder().encode(nodeClosure));
     const runtimeRoot = join(evidence, "captured-runtime");
     for (const name of ["🌐️host/🟦️.ts", "🌐️wasi/🟦️.ts"]) {
@@ -378,7 +380,8 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
         if (codegenComplete && ++readChecks === 2) {
           const rows = readdirSync(replacementRoot);
           assert.equal(rows.length, 1);
-          const generated = join(replacementRoot, rows[0], "browser-actor.js");
+          const row=rows[0];assert(row,"generated actor fixture row required");
+          const generated = join(replacementRoot, row, "browser-actor.js");
           renameSync(generated, generated + ".retained");
           writeFileSync(generated, "throw new Error('untrusted replacement');", { mode: 0o600 });
           replaced = true;
@@ -395,7 +398,8 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
         cancelled() {
           const rows = readdirSync(replacementRoot);
           if (!replaced && rows.length === 1) {
-            const directory = join(replacementRoot, rows[0]);
+            const row=rows[0];assert(row,"captured actor fixture row required");
+            const directory = join(replacementRoot, row);
             if (readdirSync(directory).includes("compiler.mjs")) {
               const path = join(directory, name);
               renameSync(path, path + ".retained");
@@ -407,7 +411,8 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
         },
       }, replacementRoot), /captured input identity/);
       assert.equal(replaced, true);
-      const directory = join(replacementRoot, readdirSync(replacementRoot)[0]);
+      const row=readdirSync(replacementRoot)[0];assert(row,"captured directory fixture required");
+      const directory = join(replacementRoot, row);
       assert.equal(readdirSync(directory).some(name => name.startsWith("browser-actor.")), false);
       assert.equal(readFileSync(join(directory, "codegen.stdout.json"), "utf8"), "");
     }
@@ -497,7 +502,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     const port = { dispatch: (frame: import("../../🌐️browser-bundle/🌐️host/🟦️.ts").BrowserHostFrame) => { frames.push(frame); }, cancelEffect: (id: string) => { cancellations.push(id); return "queued" as const; }, log() {}, nowMs: () => 12n, operationClockUs: () => undefined, traceSpan() {} };
     const ok = (val: unknown) => ({ tag: "ok", val });
     const make = (index: number, signal?: AbortSignal) => createBrowserHostActivation({ actorId: fixture.actors[index].id, activationGeneration: BigInt(fixture.actors[index].generation) }, port, signal);
-    const requestId = (index = frames.length - 1) => (frames[index].frame.envelope.payload.payload as { requestId: string }).requestId;
+    const requestId = (index = frames.length - 1) => { const frame=frames[index];assert(frame,"actual dispatched frame required");return (frame.frame.envelope.payload.payload as { requestId: string }).requestId; };
     const a = make(0), b = make(1);
     const first = a.hostAsync.artifactRead({ artifact: 1n });
     const aId = requestId();

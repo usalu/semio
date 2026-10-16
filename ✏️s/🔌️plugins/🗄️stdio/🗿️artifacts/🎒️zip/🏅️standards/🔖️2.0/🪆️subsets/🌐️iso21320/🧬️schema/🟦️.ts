@@ -8,7 +8,7 @@ export const meta = {
 /** 🛡️ Owned source diagnostics matching native ISO member-header policy. */
 export interface ZipIso21320Diagnostic { readonly code:string; readonly severity:"Error"|"Warning"; readonly message:string }
 import type {ZipSnapshot} from "../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import {NativeDecodeControl} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 
 /** 🛡️ Reads independent owned headers without materializing native archive bytes. */
 export async function checkZipIso21320Conformance(snapshot:ZipSnapshot,control=new NativeDecodeControl(0,()=>true)):Promise<readonly ZipIso21320Diagnostic[]>{

@@ -3,13 +3,12 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::tree_windows::*;
 use super::{ShellState, UiDirtyScope};
 
 impl<'ctx> SessionCtx<'ctx> {
     /// 🪟️ One settle step of the scheduler: bodies whose refresh crossed settle (the owed scope drained and nothing renders), and
     /// every body now due refreshes — a guest body through the owed partial refresh, a shell-owned panel by republishing it.
-    pub(crate) fn pump_tree_windows(&mut self) {
+    pub fn pump_tree_windows(&mut self) {
         if self.settle.owed_refresh_scope.asks_for_nothing() && self.settle.settle_pump.rendering.is_none() {
             for body in self.dock.tree_windows.in_flight() {
                 self.dock.tree_windows.settled(&body);

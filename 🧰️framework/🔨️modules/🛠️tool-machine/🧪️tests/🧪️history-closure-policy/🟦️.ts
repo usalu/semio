@@ -1,4 +1,4 @@
-import { HISTORY_CLOSURE_RULES, historyClosureFindings, type HistoryClosureFinding, type HistoryClosureRule } from "../../../../../📜️script.ts";
+import { HISTORY_CLOSURE_RULES, historyClosureFindings, type HistoryClosureFinding, type HistoryClosureRule } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 
 /** 🧩️ Joins token fragments so this planted-violation file never carries a banned token itself. */
 const t = (...parts: readonly string[]): string => parts.join("");

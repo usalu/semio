@@ -16,7 +16,7 @@ impl DocumentState {
     ///
     /// 🛡️ The reserved check is PER CHORD, exactly where React puts it (`if (reservedChords.has(chord))
     /// continue`), so a binding whose second chord is the shell's still fires on its first.
-    pub(super) fn match_app_keybinding(&self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &ChromeState) -> Option<ActionDescriptor> {
+    pub fn match_app_keybinding(&self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &ChromeState) -> Option<ActionDescriptor> {
         let session = self.session.as_ref()?;
         let reserved = reserved_shell_chords_v1(&chrome.shortcut_table(), &[]);
         session
@@ -33,7 +33,7 @@ impl DocumentState {
 /// 🪶️ Drops the spawned-app entry a closed window owned and re-points `active_spawned_id` at
 /// whatever is left — the pure half of [`Self::teardown_spawned_window`], mirroring React's
 /// `buildSpacePanelState(nextSpawned, tab, nextSpawned[0]?.id)` (`🏛️ShellHost/🟦️.tsx:10537`).
-pub(crate) fn take_spawned_entry(panel: &mut SpacePanelState, window_id: &str) -> Option<SpawnedAppEntry> {
+pub fn take_spawned_entry(panel: &mut SpacePanelState, window_id: &str) -> Option<SpawnedAppEntry> {
     let slot = panel.spawned_apps.iter().position(|entry| entry.id == window_id)?;
     let closed = panel.spawned_apps.remove(slot);
     panel.active_spawned_id = panel.spawned_apps.first().map(|entry| entry.id.clone());

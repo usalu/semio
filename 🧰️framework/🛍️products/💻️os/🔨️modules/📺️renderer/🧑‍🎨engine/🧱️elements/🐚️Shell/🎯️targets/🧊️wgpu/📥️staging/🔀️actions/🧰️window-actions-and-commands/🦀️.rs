@@ -10,7 +10,7 @@ use super::*;
 /// ⌨️ Resolves the window an app-wide chord addresses — twin of `resolveKeybindingTargetWindowV1`.
 /// `mounted` is the ACTIVE MODE's window instances in layout order, never every declared kind: a verb
 /// owned by a window this mode does not mount has no reachable owner and must say so.
-pub(crate) fn resolve_keybinding_target_window_v1(app: &AppDefinition, mounted: &[WindowScopeInstanceV1], focused_window_id: Option<&str>, action_id: &str) -> (WindowScopeTargetKindV1, Option<String>) {
+pub fn resolve_keybinding_target_window_v1(app: &AppDefinition, mounted: &[WindowScopeInstanceV1], focused_window_id: Option<&str>, action_id: &str) -> (WindowScopeTargetKindV1, Option<String>) {
     let declares = |window_kind_id: &str| app.window_kinds.iter().any(|kind| kind.id == window_kind_id && semio_framework::window_kind_actions(app, kind).iter().any(|action| action.id == action_id));
     if let Some(focused) = focused_window_id.and_then(|id| mounted.iter().find(|instance| instance.id == id)) {
         if declares(&focused.window_kind_id) {
@@ -24,7 +24,7 @@ pub(crate) fn resolve_keybinding_target_window_v1(app: &AppDefinition, mounted: 
 }
 
 /// 🚦️ `⌘⇧G · Add Generation — not available in this mode`, in the reader's language.
-pub(crate) fn keybinding_unowned_text_v1(locale: &str, chord: &str, label: &str) -> String {
+pub fn keybinding_unowned_text_v1(locale: &str, chord: &str, label: &str) -> String {
     let tail = if locale == "de" { KEYBINDING_UNOWNED_LABEL_DE } else { KEYBINDING_UNOWNED_LABEL_EN };
     format!("{chord} · {label} — {tail}")
 }
@@ -34,7 +34,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 🚀️ Executes a staged action once (P2): validates required args, dispatches exactly one
     /// `ActionDescriptor` with the merged effective args, and keeps the staged values for tweak-and-
     /// repeat. No-operations when the active utility gates actions or a required arg is still unset.
-    pub(crate) fn execute_staged_action<'a>(&'a mut self, window_id: &'a str, action_id: &'a str) -> ShellTurn<'a, Result<(), String>> {
+    pub fn execute_staged_action<'a>(&'a mut self, window_id: &'a str, action_id: &'a str) -> ShellTurn<'a, Result<(), String>> {
         shell_turn(async move {
             let Some(session) = self.docs.session.clone() else {
                 return Ok(());
@@ -57,7 +57,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 🧭️ React's `RESET_DOCK` clears BOTH persisted dock layers — the arrangement override
     /// (`dockLayoutStore`) and the per-anchor chrome (`dockUiStateStore`) — so the panel dock
     /// returns to its computed default, not just the window layout.
-    pub(crate) fn apply_os_command<'a>(&'a mut self, command_id: &'a str, option_value: Option<&'a str>) -> ShellTurn<'a, Result<(), String>> {
+    pub fn apply_os_command<'a>(&'a mut self, command_id: &'a str, option_value: Option<&'a str>) -> ShellTurn<'a, Result<(), String>> {
 
         shell_turn(async move {
             debug_log(&format!("[TRACE] wgpu-shell os command id={command_id} value={option_value:?}"));
@@ -101,7 +101,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                         "os.setThemeId" => "setThemeId",
                         _ => unreachable!(),
                     };
-                    self.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "value": value }) }).await
+                    self.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await
                 }
                 _ => Ok(()),
             }
@@ -116,7 +116,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// branch, straight to the normal plugin-forwarding tail) for the framework settings arms below.
     /// The recursion itself is exactly what the ticket calls for; `dispatch_action` is a [`ShellTurn`], boxed at its definition.
     /// No-ops without an active session: nothing to log a shell command against.
-    pub(crate) async fn note_shell_setting_command(&mut self, command_id: &str, value: Option<&str>) -> Result<(), String> {
+    pub async fn note_shell_setting_command(&mut self, command_id: &str, value: Option<&str>) -> Result<(), String> {
         let Some(controller_id) = self.plugins.host_controller_id() else {
             return Ok(());
         };
@@ -132,7 +132,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// any control id `shell_command_for_control` doesn't recognize, and without an active session
     /// (nothing to log a shell command against). Not itself inside `dispatch_action`, so a plain
     /// `.await` (no `Box::pin`) suffices here.
-    pub(crate) async fn note_control_command(&mut self, control_id: &str, detail: Option<Value>) -> Result<(), String> {
+    pub async fn note_control_command(&mut self, control_id: &str, detail: Option<Value>) -> Result<(), String> {
         let Some((command_id, label)) = shell_command_for_control(control_id, self.prefs.locale_id == "de") else {
             return Ok(());
         };

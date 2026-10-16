@@ -45,7 +45,7 @@ pub struct DirectoryState {
     /// consumer it feeds is `chrome_build.agent`, which stays transport-free. Disarmed — and therefore
     /// inert — until a supervisor hands over a config, exactly as React's own `discoverAgentBridgeConfig`
     /// answering `null` leaves its hook `disabled`.
-    pub agent_bridge: crate::agent_bridge_door::AgentBridgeTransport,
+    pub agent_bridge: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge_door::AgentBridgeTransport,
     /// 🛰️ The scope this shell asks the agent-bridge supervisor with ([`AgentBridgeOfferScopeOwnerV1`]).
     pub agent_bridge_offer_scope: AgentBridgeOfferScopeOwnerV1,
     /// 💡️ The one retained host-owned inference port, live only while its document's execution
@@ -73,7 +73,7 @@ pub struct DirectoryState {
     /// 🔐️ The hub workspace state behind the `/hub` overlay — hub book, session phase, space rows,
     /// roster and drafts. Target-neutral: the surface is the same retained tree on both arms, and
     /// only the transport underneath it is split.
-    pub hub_workspace: crate::hub_connection::HubWorkspaceState,
+    pub hub_workspace: semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::HubWorkspaceState,
     /// 🔐️ The sign-in whose network legs are in flight off the interaction state ([`ShellHubTask`]).
     pub hub_sign_in_task: Option<ShellHubTask<ShellHubSignInAnswer>>,
     /// 🏘️ The spaces read in flight, on the same kind of task.

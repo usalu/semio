@@ -1,13 +1,23 @@
-use super::super::fixture_mutations::demo::{DemoMutation, SetN};
-use super::super::tests::{DemoOneItemPreparationFactory, DemoSnapshot, demo_closable_store_owners};
-use super::*;
+use super::fixture_mutations::demo::{DemoMutation, SetN};
+use super::tests::{DemoOneItemPreparationFactory, DemoSnapshot, demo_closable_store_owners};
+use std::sync::Arc;
+use pack::snapshot::ArtifactDsl;
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
+use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DRAWING_ROLE, DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1, DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, DURABLE_OWNED_GROUP_JSON_MAX_DEPTH, DURABLE_OWNED_GROUP_JSON_MAX_ITEMS, DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1, DurableBoundOneItemOutcomeV1, DurableOwnedGroupDecisionError, DurableOwnedGroupJournalAdvanceV1, DurableOwnedGroupJournalCommitV1, DurableOwnedGroupJournalReceiptV1, DurableOwnedGroupJournalSinkV1, DurableOwnedGroupMapFrontiersV1, DurableOwnedGroupMapHandlesV1, DurableOwnedGroupMemberV1, DurableOwnedMapMemberAdmissionV1, DurableOwnedMapRecoveryAdvanceV1, DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedThreeStoreCommitPhaseV1, DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedThreeStoreMapAssemblyFailureV1, DurableOwnedThreeStoreMapAssemblyPhaseV1, DurableStorePreparedOutcomeV1, DurableStorePreparedOutcomesV1, DurableUnboundOneItemOutcomeV1, PARENT_RECOVERY_SCHEMA, PARENT_ROLE, VALUE_ROLE, close_journal_owner, parse_canonical_json_value, valid_identity, validate_json_budget};
+use semio_framework_value::{DslValue, ToValue as ValueToValue};
+use semio_framework_os_store_durable_group::{DurableOwnedGroupJournalRecordV1, DurableOwnedMapCommitOwnersV1, DurableOwnedMapRecoveryAdmissionV1, DurableOwnedMapRecoveryOwnersV1, DurableOwnedMapRecoveryRejectedV1, DurableOwnedMapRecoveryStartV1, DurableOwnedThreeMemberDecisionV1, DurableOwnedThreeStoreBoundV1, DurableOwnedThreeStoreMapAssemblyOwnersV1, DurableOwnedThreeStoreMapAssemblyV1, DurableOwnedThreeStorePreparedV1, DurableOwnedThreeStoreRecoveryV1, capture_store_owned_three_snapshot};
+use semio_framework_os_spr::{Edit, HybridLogicalTimestamp};
+use semio_framework_dsl_record::{FieldValue, Shape};
+use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackVerificationLevel, pack_rt};
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
-fn copy_grant(bytes: usize) -> crate::os_store::one_item::ArtifactStoreOneItemGrant {
-    crate::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
+fn copy_grant(bytes: usize) -> semio_framework_os_store_one_item::ArtifactStoreOneItemGrant {
+    semio_framework_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
 }
 
 fn hex(value: &str) -> Vec<u8> {
@@ -49,7 +59,7 @@ fn member(value: &serde_json::Value) -> DurableOwnedGroupMemberV1 {
 }
 
 fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_revision: [u8; 32], ordinal: u64) -> (ArtifactStoreOneItemPrepared<DslValue, String>, DurableStorePreparedOutcomeV1) {
-    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{role}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
+    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{role}"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 1_000 + ordinal, logical: ordinal + 1 };
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
         semio_framework_job::OperationId(100 + ordinal),
@@ -70,15 +80,15 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
         actor: Some(actor.clone()),
         forwards: vec![format!("{role}:forward")],
         inverse: vec![format!("{role}:inverse")].into(),
-        mutation_meta: vec![crate::os_spr::MutationMeta {
-            mutation_id: Some(crate::os_spr::MutationId(format!("{edit_id}#0"))),
+        mutation_meta: vec![semio_framework_os_spr::MutationMeta {
+            mutation_id: Some(semio_framework_os_spr::MutationId(format!("{edit_id}#0"))),
             dependencies: Vec::new(),
             base_version: generation,
-            author_id: Some(crate::os_spr::ActorId(actor)),
+            author_id: Some(semio_framework_os_spr::ActorId(actor)),
             timestamp: next_clock,
-            undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
+            undo_policy: semio_framework_os_spr::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
-            semantic_kind: Some(crate::os_spr::SchemaId(recovery_schema.into())),
+            semantic_kind: Some(semio_framework_os_spr::SchemaId(recovery_schema.into())),
             label: Some(format!("prepare {role}")),
             group_id: None,
             origin: Default::default(),
@@ -121,16 +131,16 @@ fn decision() -> DurableOwnedThreeMemberDecisionV1 {
 }
 
 async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<OwnerRef>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    let mut envelope = crate::os_store::document_materialize::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut envelope = semio_framework_os_store_document::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, crate::os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
+    let mut store = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, semio_framework_os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store
 }
 
 fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u64, next: i32) -> ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation> {
-    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
+    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 2_000 + ordinal, logical: ordinal + 1 };
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
         semio_framework_job::OperationId(200 + ordinal),
@@ -151,15 +161,15 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
         actor: Some(actor.clone()),
         forwards: vec![DemoMutation::SetN(SetN { n: next })],
         inverse: vec![DemoMutation::SetN(SetN { n: store.snapshot_ref().n.unwrap_or_default() })].into(),
-        mutation_meta: vec![crate::os_spr::MutationMeta {
-            mutation_id: Some(crate::os_spr::MutationId(format!("{edit_id}#0"))),
+        mutation_meta: vec![semio_framework_os_spr::MutationMeta {
+            mutation_id: Some(semio_framework_os_spr::MutationId(format!("{edit_id}#0"))),
             dependencies: Vec::new(),
             base_version: store.cursor.generation,
-            author_id: Some(crate::os_spr::ActorId(actor)),
+            author_id: Some(semio_framework_os_spr::ActorId(actor)),
             timestamp: next_clock,
-            undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
+            undo_policy: semio_framework_os_spr::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
-            semantic_kind: Some(crate::os_spr::SchemaId(format!("map-role-{ordinal}"))),
+            semantic_kind: Some(semio_framework_os_spr::SchemaId(format!("map-role-{ordinal}"))),
             label: Some(format!("durable map member {ordinal}")),
             group_id: None,
             origin: Default::default(),
@@ -185,10 +195,10 @@ async fn owned_three_stores() -> (ArtifactStore<DemoSnapshot, DemoMutation>, Art
 
 fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
     for _ in 0..4_096 {
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: 512, ..crate::os_store::component::tests::physical_test_close_grant() };
-        let step = crate::os_store::SpaceMember::close_owned_step(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: 512, ..semio_framework_value::testing::physical_test_close_grant() };
+        let step = semio_framework_os_store_space_member::lifted_store::SpaceMember::close_owned_step(store, grant).expect("durable group fixture Store closes under its bounded owner grant");
         if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
-            assert!(crate::os_store::SpaceMember::close_owned_terminal_is_empty(store));
+            assert!(semio_framework_os_store_space_member::lifted_store::SpaceMember::close_owned_terminal_is_empty(store));
             return;
         }
     }
@@ -198,15 +208,15 @@ fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutatio
 async fn assert_erased_snapshot_authority(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, expected: i32) {
     let generation = store.generation();
     let revision = store.content_revision();
-    let read = crate::os_store::SpaceMember::snapshot_read_erased(store).await.expect("erased group read publishes its selected authority");
+    let read = semio_framework_os_store_space_member::lifted_store::SpaceMember::snapshot_read_erased(store).await.expect("erased group read publishes its selected authority");
     assert_eq!(read.typed::<DemoSnapshot>().expect("erased group read retains the exact snapshot type").n, Some(expected));
     assert!(store.owners.snapshot_read_leases.authority_matches(generation, revision));
     let mut read = Some(read);
     let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: 4096, maximum_depth: 64 };
-    let (retirement, _) = crate::os_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
+    let (retirement, _) = semio_framework_os_store_space_member::lifted_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
     let mut retirement = retirement.expect("erased group read retirement is born under its funded grant");
     for _ in 0..64 {
-        if matches!(retirement.close_step(crate::os_store::component::tests::physical_test_close_grant()).expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+        if matches!(retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(retirement.terminal_is_empty());
             return;
         }
@@ -269,7 +279,7 @@ impl DurableOwnedGroupJournalSinkV1 for FakeJournalSink {
 }
 
 impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
-    fn advance(&mut self, grant: crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String> {
+    fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String> {
         if !grant.permits_one() {
             return Ok(DurableOwnedGroupJournalAdvanceV1::Pending);
         }
@@ -356,22 +366,22 @@ fn durable_journal_close_preserves_original_capacities_and_exact_receipts() {
         for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
             let Some(journal) = owner.as_ref() else { break; };
             let demand = if journal.terminal_is_empty() { RetirementDemand { release_bytes: std::mem::size_of_val(journal.as_ref()), depth: 1, ..Default::default() } } else { journal.retirement_demands(4096).unwrap() };
-            let grant = RetainedCloneGrant { maximum_copy_bytes: fixture["maximumBodyBytes"].as_u64().unwrap() as usize, ..crate::os_store::component::tests::physical_test_close_grant() };
-            let (quote, born, freed) = crate::test_allocation::observe_backing(|| journal.retirement_demands(grant.maximum_copy_bytes).unwrap());
+            let grant = RetainedCloneGrant { maximum_copy_bytes: fixture["maximumBodyBytes"].as_u64().unwrap() as usize, ..semio_framework_value::testing::physical_test_close_grant() };
+            let (quote, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| journal.retirement_demands(grant.maximum_copy_bytes).unwrap());
             assert_eq!((born, freed), (0, 0));
             for denial in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }] {
-                let (step, born, freed) = crate::test_allocation::observe_backing(|| close_journal_owner(&mut owner, denial).unwrap());
+                let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| close_journal_owner(&mut owner, denial).unwrap());
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!((born, freed), (0, 0));
                 assert_eq!(owner.as_ref().unwrap().as_ref() as *const dyn DurableOwnedGroupJournalCommitV1 as *const (), frame_pointer);
             }
             if demand.release_bytes != 0 {
-                let (step, born, freed) = crate::test_allocation::observe_backing(|| close_journal_owner(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }).unwrap());
+                let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| close_journal_owner(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }).unwrap());
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!((born, freed), (0, 0));
                 assert_eq!(owner.as_ref().unwrap().retirement_demands(grant.maximum_copy_bytes).unwrap(), quote);
             }
-            let (step, born, freed) = crate::test_allocation::observe_backing(|| close_journal_owner(&mut owner, grant).unwrap());
+            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| close_journal_owner(&mut owner, grant).unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!(born, 0);
             assert_eq!(freed, step.progress().released_bytes);
@@ -381,7 +391,7 @@ fn durable_journal_close_preserves_original_capacities_and_exact_receipts() {
         assert!(owner.is_none());
         assert_eq!(released, physical);
         assert_eq!(state.lock().unwrap().close_count, 1);
-        let (_, born, freed) = crate::test_allocation::observe_backing(|| drop(owner));
+        let (_, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner));
         assert_eq!((born, freed), (0, 0));
         println!("[DEBUG] durable journal case={} original-string-pointers={original:?} physical={physical} actual-release={released} zero/one-below/depth-refusal=0 new-birth=0 terminalDrop=0", row["id"]);
     }
@@ -394,7 +404,7 @@ fn map_member_admission(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordin
         semio_framework_job::OperationId(300 + ordinal),
         store.generation_now() + u64::from(stale),
         store.content_revision_now(),
-        semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0,
+        semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0,
         DemoMutation::SetN(SetN { n: next }),
     )
 }
@@ -411,9 +421,9 @@ fn map_assembly(
     let drawing_admission = map_member_admission(&drawing, 2, 11, stale_role == Some(DRAWING_ROLE));
     let value_admission = map_member_admission(&value, 3, 13, stale_role == Some(VALUE_ROLE));
     let factories = std::array::from_fn(|_| Arc::new(DemoOneItemPreparationFactory::admissible()));
-    let parent_factory: Arc<dyn crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[0].clone();
-    let drawing_factory: Arc<dyn crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[1].clone();
-    let value_factory: Arc<dyn crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[2].clone();
+    let parent_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[0].clone();
+    let drawing_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[1].clone();
+    let value_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[2].clone();
     (DurableOwnedThreeStoreMapAssemblyV1::new(parent, drawing, value, parent_admission, drawing_admission, value_admission, parent_factory, drawing_factory, value_factory, Box::new(FakeJournalSink { resolution, state })), factories)
 }
 
@@ -897,7 +907,7 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
                 rejected_partial_committed_root = true;
             }
             if !rejected_foreign_visibility {
-                let foreign_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+                let foreign_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
                 let original_visibility = std::mem::replace(&mut value.wire.durable_group_root.as_mut().expect("committed value root").visibility, foreign_owner.view());
                 assert!(capture_store_owned_three_snapshot(&parent, &drawing, &value).is_err());
                 value.wire.durable_group_root.as_mut().expect("committed value root").visibility = original_visibility;
@@ -1184,21 +1194,21 @@ fn durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_
 #[test]
 fn durable_decision_rejects_deflate_expansion_before_document_body_allocation() {
     let decision = decision();
-    let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<DurableOwnedThreeMemberDecisionV1 as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).unwrap();
+    let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<DurableOwnedThreeMemberDecisionV1 as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).unwrap();
     let mut expanded_record = decision.__dsl_to_record();
     expanded_record.fields.insert(u16::MAX, FieldValue::Bytes64(vec![0; DURABLE_OWNED_GROUP_EVENT_MAX_BYTES + 1]));
     let mut expanded_options = PackEncodeOptions::default();
     expanded_options.chunk_threshold = u64::MAX;
     expanded_options.frame_size = u64::MAX;
     let expanded_inner = pack_rt::encode_document(&DurableOwnedThreeMemberDecisionV1::__dsl_spec(), &expanded_record, &expanded_options).unwrap();
-    let expanded = crate::os_store::semio_format::wrap_binary(&envelope, &expanded_inner);
+    let expanded = semio_framework_os_semio::wrap_binary(&envelope, &expanded_inner);
     assert!(expanded.len() <= DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     assert_eq!(DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&expanded), Err(DurableOwnedGroupDecisionError::EventTooLarge));
 
     let mut framed_options = PackEncodeOptions::default();
     framed_options.frame_size = 64;
     let framed_inner = pack_rt::encode_document(&DurableOwnedThreeMemberDecisionV1::__dsl_spec(), &decision.__dsl_to_record(), &framed_options).unwrap();
-    let framed = crate::os_store::semio_format::wrap_binary(&envelope, &framed_inner);
+    let framed = semio_framework_os_semio::wrap_binary(&envelope, &framed_inner);
     assert!(framed.len() <= DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     assert_eq!(DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&framed), Err(DurableOwnedGroupDecisionError::NonCanonical));
 }
@@ -1221,7 +1231,7 @@ fn durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling() 
     let options = PackDecodeOptions {
         verification: PackVerificationLevel::Full,
         preserve_unknown: false,
-        limits: crate::os_pack::PackLimits {
+        limits: semio_framework_os_pack::PackLimits {
             max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
             max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
             max_symbols: 128,
@@ -1274,8 +1284,8 @@ fn durable_byte_carriers_preserve_octets_under_the_declared_ownership_ceiling() 
         }
         let unbound_pack = unbound.encode_pack();
         let bound_pack = bound.encode_pack();
-        let (decoded_unbound, unbound_requested) = crate::test_allocation::observe(|| DurableUnboundOneItemOutcomeV1::decode_pack_with(&unbound_pack, &options).unwrap());
-        let (decoded_bound, bound_requested) = crate::test_allocation::observe(|| DurableBoundOneItemOutcomeV1::decode_pack_with(&bound_pack, &options).unwrap());
+        let (decoded_unbound, unbound_requested) = semio_framework_trace_memory_testing::observe(|| DurableUnboundOneItemOutcomeV1::decode_pack_with(&unbound_pack, &options).unwrap());
+        let (decoded_bound, bound_requested) = semio_framework_trace_memory_testing::observe(|| DurableBoundOneItemOutcomeV1::decode_pack_with(&bound_pack, &options).unwrap());
         assert_eq!(decoded_unbound, unbound);
         assert_eq!(decoded_bound, bound);
         assert!(unbound_requested <= options.limits.max_total_alloc as usize);

@@ -1,6 +1,6 @@
 /** 🔣️ Literal shared Block transport fields with exact floating words. */
 import * as m from "../../🟦️.ts";
-import {binary64,parseBinary64,type Binary64} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 export type BlockJsonRow=Record<string,unknown>;
 export const reject=(why:string):never=>{throw new Error("Block transport "+why)};
 export const row=(v:unknown):BlockJsonRow=>v!==null&&typeof v==="object"&&!Array.isArray(v)?v as BlockJsonRow:reject("object required");

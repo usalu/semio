@@ -1,9 +1,9 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteText,artifactSqliteInteger,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{SqliteDatabase,SqliteRow,SqliteValue}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteText,artifactSqliteInteger,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type{SqliteDatabase,SqliteRow,SqliteValue}from"@semio-tech/framework/io/sqlite-snapshot";
 export const ISO16757_SQLITE_SCHEMA:string=sql;
 export type Iso16757SqliteText={locale:string;text:string};
 export type Iso16757SqliteNames={preferred:Iso16757SqliteText;shortName:string|null;alternatives:Iso16757SqliteText[]};

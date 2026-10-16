@@ -25,7 +25,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/A11yance/aria-query",
-      "rationale": "The ARIA role model the time-travel probe (`🧪️tests/🧪️time-travel`) checks the history panel, editor and finalize dialog against: unknown or unsupported `aria-*` attributes and roles fail the run."
+      "rationale": "The ARIA role model the time-travel probe (`⏪️time-travel/🧪️testing/♿️aria-oracle`) checks the history panel, editor and finalize dialog against: unknown or unsupported `aria-*` attributes and roles fail the run."
     },
     {
       "id": "dev-time-travel-dom-accessibility-api",
@@ -49,7 +49,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/eps1lon/dom-accessibility-api",
-      "rationale": "Computes the accessible name and description of every interactive history control in the time-travel probe (`🧪️tests/🧪️time-travel`) independently of the renderer's own labelling."
+      "rationale": "Computes the accessible name and description of every interactive history control in the time-travel probe (`⏪️time-travel/🧪️testing/♿️aria-oracle`) independently of the renderer's own labelling."
     }
   ],
   "noOracleDecisions": []

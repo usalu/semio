@@ -12,7 +12,7 @@ use super::*;
 /// ⬇️ The bytes are decided HERE, by the kernel contract both renderers answer to; only the
 /// presentation crosses to the page.
 #[cfg(target_arch = "wasm32")]
-pub(crate) fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
+pub fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     let bytes = match semio_framework::kernel::media_export_bytes(data, encoding) {
         Ok(bytes) => bytes,
         Err(error) => {
@@ -21,7 +21,7 @@ pub(crate) fn download_media_export(filename: &str, mime_type: &str, data: &str,
         }
     };
     let (filename, mime_type) = (filename.to_string(), mime_type.to_string());
-    crate::spawn_app_task(async move {
+    semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
         let length = bytes.len();
         match present_media_export_bytes(filename.clone(), mime_type, bytes).await {
             Ok(true) => debug_log(&format!("[TRACE] wgpu-shell download presented name={filename} bytes={length}")),
@@ -32,9 +32,9 @@ pub(crate) fn download_media_export(filename: &str, mime_type: &str, data: &str,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
+pub fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     let (filename, mime_type, data, encoding) = (filename.to_string(), mime_type.to_string(), data.to_string(), encoding.map(str::to_string));
-    ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, async move {
+    ShellPoolFuture::spawn(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Io, async move {
         download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref()).await;
     });
 }
@@ -55,41 +55,24 @@ async fn download_media_export_worker(filename: &str, mime_type: &str, data: &st
 
 /// 📦️ Presents accepted bytes without a base64 roundtrip; false means the user cancelled.
 #[cfg(target_arch = "wasm32")]
-pub(crate) async fn present_media_export_bytes(filename: String, mime_type: String, bytes: Vec<u8>) -> Result<bool, String> {
+pub async fn present_media_export_bytes(filename: String, mime_type: String, bytes: Vec<u8>) -> Result<bool, String> {
     present_media_export_bytes_cancellable(filename, mime_type, bytes, CancelToken::root_now()).await
-}
-
-#[cfg(target_arch = "wasm32")]
-pub(crate) async fn present_media_export_bytes_cancellable(filename: String, mime_type: String, bytes: Vec<u8>, cancel: CancelToken) -> Result<bool, String> {
-    if cancel.is_cancelled_now() { return Ok(false); }
-    let request = serde_json::json!({ "op": "download-media-export", "filename": filename, "mimeType": mime_type }).to_string();
-    host_io_call(&request, Some(&bytes)).await.map(|_| true)
 }
 
 /// 💾️ Writes accepted bytes only after the native save dialog returns a destination.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn present_media_export_bytes(filename: String, mime_type: String, bytes: Vec<u8>) -> Result<bool, String> {
+pub async fn present_media_export_bytes(filename: String, mime_type: String, bytes: Vec<u8>) -> Result<bool, String> {
     present_media_export_bytes_cancellable(filename, mime_type, bytes, CancelToken::root_now()).await
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn present_media_export_bytes_cancellable(filename: String, mime_type: String, bytes: Vec<u8>, cancel: CancelToken) -> Result<bool, String> {
-    if cancel.is_cancelled_now() { return Ok(false); }
-    let extension = std::path::Path::new(&filename).extension().and_then(|value| value.to_str()).unwrap_or_else(|| mime_type.rsplit_once('/').map(|(_, value)| value).unwrap_or("dat"));
-    let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(&filename, [extension])).await.into_iter().next() else { return Ok(false) };
-    if cancel.is_cancelled_now() { return Ok(false); }
-    std::fs::write(path, bytes).map_err(|error| error.to_string())?;
-    Ok(true)
 }
 
 //#region 📤️FileOpenImport
 /// 📥️ The verb an app declares to free an import a host stopped part-way (remodel's `importAbort {reason?}`) — React's
 /// `IMPORT_ABORT_ACTION_ID`: sent without a reason, a person's cancel, once a cancelled import handed the guest a chunk.
-pub(crate) const IMPORT_ABORT_ACTION_ID: &str = "importAbort";
+pub const IMPORT_ABORT_ACTION_ID: &str = "importAbort";
 
 /// 🗣️ One document-transfer outcome a person is told about — React's `DOCUMENT_TRANSFER_NOTICE_LABELS_V1`, by its code
 /// `shell.documentTransfer.<notice>`; `{file}` names the file.
-pub(super) fn import_transfer_notice(notice: &str, file: &str, locale: Locale) -> String {
+pub fn import_transfer_notice(notice: &str, file: &str, locale: Locale) -> String {
     let (en, de) = match notice {
         "import-cancelled" => ("Import of “{file}” cancelled.", "Import von „{file}“ abgebrochen."),
         _ => ("“{file}” could not be opened as a document.", "„{file}“ konnte nicht als Dokument geöffnet werden."),
@@ -104,12 +87,12 @@ pub(super) fn import_transfer_notice(notice: &str, file: &str, locale: Locale) -
 impl<'ctx> SessionCtx<'ctx> {
     /// 🛑️ A person's Cancel of one import: its chunks are dropped, an import that already handed the guest a chunk arms the
     /// app's `importAbort` when the app declares it, and the person is told — React's `importOpenedFilesV1` cancel.
-    pub(crate) fn cancel_import_transfer(&mut self, id: u64) -> bool {
+    pub fn cancel_import_transfer(&mut self, id: u64) -> bool {
         let Some(index) = self.opening.import_transfers.iter().position(|transfer| transfer.id == id) else { return false };
         let Some(transfer) = self.opening.import_transfers.remove(index) else { return false };
         let declares_abort = self.docs.session.as_ref().is_some_and(|session| session.app.actions.iter().any(|action| action.id == IMPORT_ABORT_ACTION_ID));
         if transfer.delivered > 0 && declares_abort {
-            self.settle.deferred_actions.push(ActionDescriptor { controller_id: transfer.controller_id.clone(), action: IMPORT_ABORT_ACTION_ID.into(), args: crate::action_args_json!({}) });
+            self.settle.deferred_actions.push(ActionDescriptor { controller_id: transfer.controller_id.clone(), action: IMPORT_ABORT_ACTION_ID.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({}) });
         }
         let text = import_transfer_notice("import-cancelled", &transfer.first_file, self.prefs.active_locale());
         self.chrome.show_transient_notice(text, semio_framework::Severity::Info, Some("shell.documentTransfer.import-cancelled"));

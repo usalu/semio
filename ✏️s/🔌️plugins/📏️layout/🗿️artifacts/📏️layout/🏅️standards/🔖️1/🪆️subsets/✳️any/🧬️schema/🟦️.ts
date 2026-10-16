@@ -1,11 +1,11 @@
 /** 🧬️ Canonical Layout document schema. */
-import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 export type { ArtifactChild, ArtifactLink };
-import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {parseSemioDrawingSnapshot,type SemioDrawingSnapshot} from '../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts';
-import{parseQuestionDictionary,type QuestionDictionary}from"../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🟦️.ts";
+import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "@semio-tech/framework/value/ieee754";
+import {embeddedChildSlotV1} from "@semio-tech/framework/io/ports";
+import{parseQuestionDictionary,type QuestionDictionary}from"@semio-tech/framework/value/dictionary";
 export{parseQuestionDictionary,type QuestionDictionary};
 
 export interface GridSettings { baselineGrid: Binary64; baselineOffset: Binary64; snapToBaseline: boolean }
@@ -27,7 +27,10 @@ export interface PageOverride { objectId: string; bounds: LayoutBounds | null; v
 export interface ParentPage { id: string; name: string; width: Binary64; height: Binary64; layerIds: string[]; layers: Layer[]; frames: Frame[] }
 export interface Page { id: string; name: string; spreadId: string; parentPageId: string | null; width: Binary64; height: Binary64; margins: PageMargins; columns: PageColumns; guides: LayoutRect[]; layerIds: string[]; layers: Layer[]; frames: Frame[]; overrides: PageOverride[] }
 export interface Spread { id: string; name: string; pageIds: string[] }
-export interface LayoutDrawingChild { handle: ArtifactChild; content: SemioDrawingSnapshot }
+/** 🖊️ Inline content of the background drawing child; the composition root binds its owner's codec to the slot. */
+export type LayoutDrawingContent = object;
+export const LAYOUT_BACKGROUND_DRAWING = embeddedChildSlotV1<LayoutDrawingContent>("layout.background-drawing");
+export interface LayoutDrawingChild { handle: ArtifactChild; content: LayoutDrawingContent }
 export interface LayoutArtifact {
   /** @state artifact */ schema: string;
   /** @state artifact */ name: string;
@@ -173,7 +176,7 @@ export function parseSpread(value: unknown, at = "$" ): Spread {
 }
 export function parseLayoutDrawingChild(value: unknown, at = "$" ): LayoutDrawingChild {
   const keys = ["handle", "content"], row = record(value, keys, keys, at), handle = parseArtifactChild(row.handle);
-  return { handle, content: parseSemioDrawingSnapshot(row.content, `${at}.content`) };
+  return { handle, content: LAYOUT_BACKGROUND_DRAWING.codec().parse(row.content, `${at}.content`) };
 }
 export function parseLayoutArtifact(value: unknown, at = "$" ): LayoutArtifact {
   const keys = ["schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFields", "backgroundDrawing", "referencedModel"];

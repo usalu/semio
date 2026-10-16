@@ -22,8 +22,8 @@ pub struct AgentBridgeOfferScopeV1 {
 /// listing is re-read every [`AGENT_BRIDGE_OFFER_SCOPE_REFRESH_MS`] while the target stands.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AgentBridgeOfferScopeOwnerV1 {
-    pub(crate) target: Option<(String, String)>,
-    pub(crate) scope: Option<AgentBridgeOfferScopeV1>,
+    pub target: Option<(String, String)>,
+    pub scope: Option<AgentBridgeOfferScopeV1>,
     next_listing_at_ms: f64,
     listing: bool,
 }
@@ -70,3 +70,10 @@ impl AgentBridgeOfferScopeOwnerV1 {
 //#endregion 🛰️AgentBridgeOfferScope
 //#endregion ShellChrome
 
+//#region ShellChrome
+//#region 🛰️AgentBridgeOfferScope
+/// ⏱️ How often a standing scope re-reads its delegations — the offer watcher's own maximum discovery interval
+/// (`BRIDGE_DISCOVERY_MAX_INTERVAL_MS`), so a revoked or expired delegation leaves the scope within one poll of it.
+pub const AGENT_BRIDGE_OFFER_SCOPE_REFRESH_MS: f64 = 30_000.0;
+//#endregion 🛰️AgentBridgeOfferScope
+//#endregion ShellChrome

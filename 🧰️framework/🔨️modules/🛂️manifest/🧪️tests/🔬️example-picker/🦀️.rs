@@ -1,6 +1,6 @@
 //! 📚️ The example-picker predicate, driven by the language-agnostic
 //! `🧫️fixtures/📚️example-picker.json` every implementation answers — the TypeScript twin
-//! `examplesForDialect` reads the SAME rows in `🔬️engine-contract/🟦️.ts`.
+//! `examplesForDialect` reads the SAME rows in `🔒️shell-option-locks/🟦️.ts`.
 
 use super::*;
 

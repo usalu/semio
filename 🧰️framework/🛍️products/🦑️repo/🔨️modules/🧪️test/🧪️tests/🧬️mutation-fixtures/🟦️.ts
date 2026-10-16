@@ -9,7 +9,7 @@ import htmlPairs from "../🧫️fixtures/🌐️html-source-pair/🔣️.json";
 
 import { parse, serialize } from "parse5";
 import { loadCatalogTaxonomy, semanticDescendantNodeRelativePath, semanticDirectoryKindId } from "../../../📚️library/🔍️discovery/🟦️.ts";
-import { verifyFixture } from "../../🟦️.ts";
+import { verifyFixture } from "../../🧷️fixture-evidence/🟦️.ts";
 import { inventoryTaxonomy } from "../../../📚️library/🧹️normalization/🟦️.ts";
 
 const taxonomy = testTaxonomy(repoRootFromHere());

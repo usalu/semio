@@ -8,7 +8,7 @@ use super::*;
 impl ChromeState {
     /// 🛑️ Sends one cooperative cancellation for the gateway-owned invocation id and leaves the
     /// row in `cancelling` until its real result arrives. A disconnected shell changes nothing.
-    pub(crate) fn cancel_agent_tool_call(&mut self, invocation_id: &str) -> bool {
+    pub fn cancel_agent_tool_call(&mut self, invocation_id: &str) -> bool {
         self.chrome_build.agent.cancel_tool_call(invocation_id)
     }
 
@@ -18,7 +18,7 @@ impl ChromeState {
     /// all: one mobile panel carries every tab instead. Read off the LOGICAL viewport width W1g
     /// established, never the physical one.
     pub fn mobile_panel_active(&self) -> bool {
-        self.screen_w <= crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX
+        self.screen_w <= semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX
     }
     //#endregion 🧭️PanelAnchorAccessors
 }

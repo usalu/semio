@@ -1,4 +1,4 @@
-import { interactivityDbIoCallerMigrationFailures } from "../../../../../../../📜️script.ts";
+import { interactivityDbIoCallerMigrationFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity db io caller migration policy assertions. */
 export function interactivityDbIoCallerMigrationSelfTests(): void {

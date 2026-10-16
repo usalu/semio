@@ -7,7 +7,7 @@ use super::*;
 //#region ShellChrome
 //#region 🔑️StorageKeys
 /// 🔑️ Byte-identical to `UI_COMPUTE_WORKER_COUNT_STORAGE_KEY` (`ui/js/react/index.tsx:2267`).
-pub(crate) const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY: &str = "ui.compute.workerCount";
+pub const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY: &str = "ui.compute.workerCount";
 
 //#endregion 🔑️StorageKeys
 //#region 🗄️PrefsStore
@@ -15,7 +15,7 @@ pub(crate) const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY: &str = "ui.compute.workerC
 /// [`prefs_get`]: React keeps `ui.compute.workerCount` and `ui.introduction.seen.<appId>` as their own
 /// flat entries and only `os.config.ui-preferences` inside `semio.os.config`'s `preferences` map, so a
 /// renderer that nested them would answer nothing to a profile React had written.
-pub(crate) fn stored_field_get(key: &str) -> Option<String> {
+pub fn stored_field_get(key: &str) -> Option<String> {
     if key.len() > SHELL_CHROME_IO_FIELD_BYTES {
         return None;
     }
@@ -23,7 +23,7 @@ pub(crate) fn stored_field_get(key: &str) -> Option<String> {
 }
 
 /// 🗝️ The writer twin of [`stored_field_get`].
-pub(crate) fn stored_field_set(key: &str, value: &str) {
+pub fn stored_field_set(key: &str, value: &str) {
     if key.len() <= SHELL_CHROME_IO_FIELD_BYTES && value.len() <= SHELL_CHROME_IO_FIELD_BYTES {
         raw_prefs_set(key, value);
     }
@@ -38,12 +38,12 @@ pub(crate) fn stored_field_set(key: &str, value: &str) {
 /// in practice (wasm32-unknown-unknown has no process env at runtime, so this is always empty
 /// there — kiosk/demo locking is a native `semio-wgpu-native` deployment concern).
 #[derive(Clone, Debug, Default)]
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 struct ShellPrefLocks {
-    pub(crate) appearance: Option<String>,
-    pub(crate) locale: Option<String>,
-    pub(crate) terminology: Option<String>,
-    pub(crate) theme_id: Option<String>,
+    pub appearance: Option<String>,
+    pub locale: Option<String>,
+    pub terminology: Option<String>,
+    pub theme_id: Option<String>,
 }
 
 /// 🔒️ Resolves one `SEMIO_LOCKED_*` lock through the BOOT DESCRIPTOR rather than the process env.
@@ -51,8 +51,8 @@ struct ShellPrefLocks {
 /// native deployment behaves exactly as before — and a BROWSER build, which has no process env at all
 /// and was therefore unlockable, now locks from `<meta name="semio-locked-*">`/the library door's
 /// `locks` option through the same one vocabulary React reads as `FrameworkOsLocks`.
-pub(crate) fn env_lock(name: &str) -> Option<String> {
-    let locks = crate::boot_locks();
+pub fn env_lock(name: &str) -> Option<String> {
+    let locks = semio_framework_os_renderer_wgpu_host_base::boot_locks();
     let value = match name {
         "SEMIO_LOCKED_APPEARANCE" => locks.appearance,
         "SEMIO_LOCKED_LOCALE" => locks.locale,
@@ -64,21 +64,17 @@ pub(crate) fn env_lock(name: &str) -> Option<String> {
     (!value.is_empty()).then_some(value)
 }
 
-#[cfg(test)]
-pub(super) fn shell_pref_locks() -> ShellPrefLocks {
+#[cfg(any(test, feature = "testkit"))]
+pub fn shell_pref_locks() -> ShellPrefLocks {
     ShellPrefLocks { appearance: env_lock("SEMIO_LOCKED_APPEARANCE"), locale: env_lock("SEMIO_LOCKED_LOCALE"), terminology: env_lock("SEMIO_LOCKED_TERMINOLOGY"), theme_id: env_lock("SEMIO_LOCKED_THEME") }
 }
 
 //#endregion 🔒️PrefLocks
 //#region 🎨️ThemeRegistry
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) static CHROME_PREFS: crate::element_contracts::WorkerCell<Option<ChromePrefsState>> = crate::element_contracts::WorkerCell::new(Default::default);
+pub static CHROME_PREFS: semio_framework_os_renderer_wgpu_contracts::WorkerCell<Option<ChromePrefsState>> = semio_framework_os_renderer_wgpu_contracts::WorkerCell::new(Default::default);
 
-pub(crate) fn default_compute_worker_count() -> u32 {
-    std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(1)
-}
-
-pub(super) fn project_chrome_prefs(preferences: UiPreferences, worker_count: u32) -> ChromePrefsState {
+pub fn project_chrome_prefs(preferences: UiPreferences, worker_count: u32) -> ChromePrefsState {
     let custom_themes = custom_themes_from(&preferences);
     let custom_drivers = preferences.custom_drivers;
     let ui_layout = match preferences.layout {
@@ -96,7 +92,7 @@ fn load_chrome_prefs() -> ChromePrefsState {
     project_chrome_prefs(read_ui_preferences(), worker_count)
 }
 
-pub(crate) fn with_chrome_prefs<R>(f: impl FnOnce(&mut ChromePrefsState) -> R) -> R {
+pub fn with_chrome_prefs<R>(f: impl FnOnce(&mut ChromePrefsState) -> R) -> R {
     CHROME_PREFS.with(|cell| {
         let mut guard = cell.borrow_mut();
         if guard.is_none() {
@@ -106,7 +102,7 @@ pub(crate) fn with_chrome_prefs<R>(f: impl FnOnce(&mut ChromePrefsState) -> R) -
     })
 }
 
-pub(crate) fn set_active_theme_id(id: &str) {
+pub fn set_active_theme_id(id: &str) {
     with_chrome_prefs(|prefs| prefs.theme_id = id.to_string());
 }
 
@@ -116,9 +112,9 @@ pub(crate) fn set_active_theme_id(id: &str) {
 //#endregion 🗣️ChromeI18n
 //#region 💾️PrefsSync
 #[derive(Clone, Debug, Default)]
-pub(super) struct UiPreferencesEventLog {
-    pub(crate) version: u8,
-    pub(crate) events: Vec<UiPreferencesConfigMutation>,
+pub struct UiPreferencesEventLog {
+    pub version: u8,
+    pub events: Vec<UiPreferencesConfigMutation>,
 }
 
 /// 🚫️ A stored preference log this renderer cannot read whole — unparsable, another version, or carrying an event
@@ -127,12 +123,12 @@ pub(super) struct UiPreferencesEventLog {
 /// events it did decode.
 #[derive(Clone, Debug)]
 struct UiPreferencesLogRefusal {
-    pub(crate) reason: &'static str,
-    pub(super) event_index: Option<usize>,
-    pub(super) readable: UiPreferencesEventLog,
+    pub reason: &'static str,
+    pub event_index: Option<usize>,
+    pub readable: UiPreferencesEventLog,
 }
 
-pub(super) fn decode_ui_preferences_event_log(raw: &str) -> Result<UiPreferencesEventLog, UiPreferencesLogRefusal> {
+pub fn decode_ui_preferences_event_log(raw: &str) -> Result<UiPreferencesEventLog, UiPreferencesLogRefusal> {
     let refuse = |reason: &'static str, event_index: Option<usize>, events: Vec<UiPreferencesConfigMutation>| UiPreferencesLogRefusal { reason, event_index, readable: UiPreferencesEventLog { version: 1, events } };
     let Ok(value) = serde_json::from_str::<Value>(raw) else {
         return Err(refuse("json", None, Vec::new()));
@@ -159,7 +155,7 @@ pub(super) fn decode_ui_preferences_event_log(raw: &str) -> Result<UiPreferences
     }
 }
 
-pub(super) fn encode_ui_preferences_event_log(log: &UiPreferencesEventLog) -> String {
+pub fn encode_ui_preferences_event_log(log: &UiPreferencesEventLog) -> String {
     let events: Vec<Value> = log.events.iter().map(|event| dsl_value_as_json(&semio_framework_value::ToValue::to_value(event))).collect();
     serde_json::json!({ "version": log.version, "events": events }).to_string()
 }
@@ -167,7 +163,7 @@ pub(super) fn encode_ui_preferences_event_log(log: &UiPreferencesEventLog) -> St
 /// ✍️ The ONE write rule over a stored preference log: an absent log is an empty one, a stored one is decoded
 /// whole or the write refuses (the stored text is never replaced by a log this renderer could not read); `append`
 /// adds this write's events, and a write that added none stores nothing.
-pub(super) fn ui_preferences_log_write(stored: Option<&str>, append: impl FnOnce(&mut UiPreferencesEventLog)) -> Result<Option<String>, UiPreferencesLogRefusal> {
+pub fn ui_preferences_log_write(stored: Option<&str>, append: impl FnOnce(&mut UiPreferencesEventLog)) -> Result<Option<String>, UiPreferencesLogRefusal> {
     let mut log = match stored {
         None => UiPreferencesEventLog { version: 1, events: Vec::new() },
         Some(raw) => decode_ui_preferences_event_log(raw)?,
@@ -179,7 +175,7 @@ pub(super) fn ui_preferences_log_write(stored: Option<&str>, append: impl FnOnce
 
 /// 💾️ Commits one preference write through [`ui_preferences_log_write`]: stored, or one refusal line and the stored
 /// log left exactly as it was.
-pub(crate) fn commit_ui_preferences_write(append: impl FnOnce(&mut UiPreferencesEventLog)) {
+pub fn commit_ui_preferences_write(append: impl FnOnce(&mut UiPreferencesEventLog)) {
     match ui_preferences_log_write(prefs_get(UI_PREFERENCES_CONFIG_SCHEMA).as_deref(), append) {
         Ok(Some(encoded)) => prefs_set(UI_PREFERENCES_CONFIG_SCHEMA, &encoded),
         Ok(None) => {}
@@ -195,7 +191,7 @@ fn read_ui_preferences_event_log() -> UiPreferencesEventLog {
     }
 }
 
-pub(crate) fn replay_ui_preferences(log: &UiPreferencesEventLog) -> UiPreferences {
+pub fn replay_ui_preferences(log: &UiPreferencesEventLog) -> UiPreferences {
     let mut preferences = UiPreferences::default();
     for mutation in &log.events {
         apply_ui_preferences_config_mutation(&mut preferences, mutation).expect("canonical OS UI-preferences mutation must apply");
@@ -203,7 +199,7 @@ pub(crate) fn replay_ui_preferences(log: &UiPreferencesEventLog) -> UiPreference
     preferences
 }
 
-pub(crate) fn read_ui_preferences() -> UiPreferences {
+pub fn read_ui_preferences() -> UiPreferences {
     replay_ui_preferences(&read_ui_preferences_event_log())
 }
 
@@ -217,22 +213,22 @@ pub(crate) fn read_ui_preferences() -> UiPreferences {
 /// [`🚪️StorageDoor`] seeds this isolate's store before the shell boots, this process's own term now
 /// answers on the browser too — the host term survives for the embeddable door and for a realm whose
 /// snapshot was refused.
-pub(crate) fn resolve_appearance_id(preferences: &UiPreferences) -> String {
-    env_lock("SEMIO_LOCKED_APPEARANCE").or_else(|| appearance_id(preferences.appearance)).or_else(|| crate::host_appearance_preference().map(ToOwned::to_owned)).unwrap_or_else(|| "system".to_string())
+pub fn resolve_appearance_id(preferences: &UiPreferences) -> String {
+    env_lock("SEMIO_LOCKED_APPEARANCE").or_else(|| appearance_id(preferences.appearance)).or_else(|| semio_framework_os_renderer_wgpu_host_base::host_appearance_preference().map(ToOwned::to_owned)).unwrap_or_else(|| "system".to_string())
 }
 
-pub(crate) fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences, selected: Locale) -> String {
+pub fn resolve_locale_id(lock: Option<String>, preferences: &UiPreferences, selected: Locale) -> String {
     lock.or_else(|| {
         preferences.locale.map(|locale| match locale {
             OsUiLocale::De => "de".to_string(),
             OsUiLocale::En => "en".to_string(),
         })
     })
-    .or_else(|| crate::host_locale().map(ToOwned::to_owned))
+    .or_else(|| semio_framework_os_renderer_wgpu_host_base::host_locale().map(ToOwned::to_owned))
     .unwrap_or_else(|| selected.as_str().to_string())
 }
 
-pub(crate) fn custom_themes_from(preferences: &UiPreferences) -> HashMap<String, String> {
+pub fn custom_themes_from(preferences: &UiPreferences) -> HashMap<String, String> {
     preferences
         .custom_themes
         .iter()
@@ -261,7 +257,7 @@ fn canonical_custom_themes(preferences: &ChromePrefsState) -> HashMap<String, Os
         .collect()
 }
 
-pub(crate) fn persist_ui_preferences(chrome: &ChromeState, prefs: &PrefsState, previous: Option<&UiPrefsSnapshot>) {
+pub fn persist_ui_preferences(chrome: &ChromeState, prefs: &PrefsState, previous: Option<&UiPrefsSnapshot>) {
     commit_ui_preferences_write(|log| {
         let changed = |current: &str, prior: fn(&UiPrefsSnapshot) -> &str| previous.is_none_or(|snapshot| current != prior(snapshot));
         if env_lock("SEMIO_LOCKED_APPEARANCE").is_none() && changed(&prefs.appearance_id, |snapshot| &snapshot.appearance_id) {
@@ -329,8 +325,8 @@ impl PrefsState {
     /// 💾️ Loads persisted uiPrefs into `self` exactly once per process, mirroring `os-shell.tsx`'s
     /// boot-time `locks.appearance ?? readStoredUiChromeAppearance()` fallback chain (`:862-868`).
     /// A locked pref (`SEMIO_LOCKED_*`) wins over storage, matching `resolveShellLocks`.
-    #[cfg(test)]
-    pub(super) fn load_ui_prefs_once(&mut self, chrome: &mut ChromeState) {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn load_ui_prefs_once(&mut self, chrome: &mut ChromeState) {
         if chrome.chrome_present.preferences_loaded {
             return;
         }
@@ -339,7 +335,7 @@ impl PrefsState {
         let preferences = read_ui_preferences();
         self.appearance_id = resolve_appearance_id(&preferences);
         self.locale_id = resolve_locale_id(locks.locale.clone(), &preferences, self.active_locale());
-        crate::interpreter::install_ui_engine_locale(self.active_locale());
+        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(self.active_locale());
         self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| self.active_terminology().as_str().to_string());
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         chrome.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
@@ -348,15 +344,15 @@ impl PrefsState {
             set_active_theme_id(locked_theme);
             chrome.chrome_build.preferences.theme_id = locked_theme.clone();
         }
-        chrome.chrome_present.last_synced_preferences = Some(UiPrefsSnapshot::capture(chrome, self));
+        chrome.chrome_present.last_synced_preferences = Some(capture_ui_prefs_snapshot(chrome, self));
     }
 
     /// 💾️ Writes any changed uiPrefs field to the store (skipping locked ones), mirroring
     /// `os-shell.tsx`'s persistence `useEffect` (`:3477-3491`): one combined-dependency effect that
     /// rewrites every non-locked pref whenever any of them changes, not a per-field diff.
-    #[cfg(test)]
-    pub(super) fn persist_ui_prefs_if_changed(&mut self, chrome: &mut ChromeState) {
-        let snapshot = UiPrefsSnapshot::capture(chrome, self);
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn persist_ui_prefs_if_changed(&mut self, chrome: &mut ChromeState) {
+        let snapshot = capture_ui_prefs_snapshot(chrome, self);
         if chrome.chrome_present.last_synced_preferences.as_ref() == Some(&snapshot) {
             return;
         }
@@ -369,4 +365,66 @@ impl PrefsState {
 //#endregion 💾️PrefsSync
 //#endregion ShellChrome
 
+/// 💾️ The preference values the persisted store mirrors: the appearance axes of the preferences component beside the theme, layout, drivers and keybindings the chrome carries.
+pub fn capture_ui_prefs_snapshot(chrome: &ChromeState, prefs: &PrefsState) -> UiPrefsSnapshot {
+    UiPrefsSnapshot {
+        appearance_id: prefs.appearance_id.clone(),
+        locale_id: prefs.locale_id.clone(),
+        terminology_id: prefs.terminology_id.clone(),
+        driver_id: prefs.driver_id.clone(),
+        theme_id: chrome.chrome_build.preferences.theme_id.clone(),
+        ui_layout: chrome.chrome_build.preferences.ui_layout.clone(),
+        custom_drivers: chrome.chrome_build.preferences.custom_drivers.clone(),
+        custom_themes: chrome.chrome_build.preferences.custom_themes.clone(),
+        keybinding_overrides: chrome.chrome_build.preferences.keybinding_overrides.clone(),
+        worker_count: chrome.chrome_build.preferences.worker_count,
+    }
+}
 
+//#region ShellChrome
+//#region 🎨️ThemeRegistry
+#[cfg(target_arch = "wasm32")]
+thread_local! {
+    pub static CHROME_PREFS: std::cell::RefCell<Option<ChromePrefsState>> = std::cell::RefCell::new(None);
+}
+//#endregion 🎨️ThemeRegistry
+//#endregion ShellChrome
+
+//#region ShellChrome
+//#region 💾️PrefsSync
+/// 🗣️ The ONE locale-resolution law, mirroring `🏛️ShellHost/🟦️.tsx`'s
+/// `locks?.locale ?? readUiPreferences(storage).locale ?? detectShellLocale(navigator.language)` term
+/// for term — a lock wins, then the persisted preference, then the host's own language read published
+/// through `semioWgpuSetHostLocale`, then the caller's already admitted locale when no preference source speaks.
+/// 🌐️ Admits the host selected language and terminology before shell construction ([`resolve_language_axes`] over the
+/// process's locks, its stored preferences and the host's language read).
+pub fn shell_language_axes() -> Result<(Locale, Terminology), String> {
+    resolve_language_axes(env_lock("SEMIO_LOCKED_LOCALE"), env_lock("SEMIO_LOCKED_TERMINOLOGY"), &read_ui_preferences(), semio_framework_os_renderer_wgpu_host_base::host_locale())
+}
+//#endregion 💾️PrefsSync
+//#endregion ShellChrome
+
+//#region ShellChrome
+//#region 🎨️ThemeRegistry
+#[cfg(all(any(test, feature = "testkit"), not(target_arch = "wasm32")))]
+pub fn set_active_ui_layout(layout: &str) {
+    let value = if layout == "tablet" { "tablet" } else { "desktop" };
+    with_chrome_prefs(|prefs| prefs.ui_layout = value.to_string());
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub fn custom_theme_ids() -> Vec<String> {
+    with_chrome_prefs(|prefs| prefs.custom_themes.keys().cloned().collect())
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub fn active_ui_layout() -> String {
+    with_chrome_prefs(|prefs| prefs.ui_layout.clone())
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub fn active_theme_id() -> String {
+    with_chrome_prefs(|prefs| prefs.theme_id.clone())
+}
+//#endregion 🎨️ThemeRegistry
+//#endregion ShellChrome

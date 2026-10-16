@@ -14,7 +14,7 @@ test("Semio text native admission corpus retains independent collection cardinal
 
 import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
-import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import{independentSqliteExtent as completeIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("Semio Text complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(completeSemanticContract["schemaBytes"]).toEqual(578);expect(completeSemanticContract["tableWidths"]).toEqual({"semio_text_document":2,"semio_text_run":5,"semio_text_mark":5});expect(completeSemanticContract["cases"]).toEqual([{"id":"full","rows":8,"valueBytes":257},{"id":"metadataRetainingEmpty","rows":1,"valueBytes":26}]);
  for(const item of completeSemanticContract.cases){const source=structuredClone(input);if(item.id==="metadataRetainingEmpty"){source.runs=[];}const database=await semioTextSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:3,maxColumns:5};expect(await semioTextSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await semioTextSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

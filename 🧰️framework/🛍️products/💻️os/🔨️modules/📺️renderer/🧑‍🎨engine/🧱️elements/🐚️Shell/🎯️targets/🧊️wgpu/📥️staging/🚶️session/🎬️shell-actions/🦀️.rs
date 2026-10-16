@@ -14,7 +14,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// whatever was open before. Best-effort: a read failure just leaves the projection empty (the
     /// same posture every other native exchange call in this file already takes on error — logged, not
     /// propagated, since a stale/absent history must never block opening a document).
-    pub(crate) async fn refresh_history_snapshot(&mut self) {
+    pub async fn refresh_history_snapshot(&mut self) {
         self.history.history_cursor = 0;
         self.history.history_entries.clear();
         self.history.history_current_checkpoint_id = None;
@@ -30,7 +30,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// history-edit session and waiting reprojection. `false` when no session's program could be asked. What a session
     /// start seeds from ([`Self::seed_history_snapshot`]) and what a lossy publication lane falls back to
     /// ([`Self::drain_operation_publications`]).
-    pub(crate) async fn reread_history_projection(&mut self) -> bool {
+    pub async fn reread_history_projection(&mut self) -> bool {
         let Some(session) = self.docs.session.as_ref() else { return false };
         let Some(plugin) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else { return false };
         match plugin.read_history(session.instance_id).await {
@@ -51,7 +51,7 @@ impl<'ctx> SessionCtx<'ctx> {
     ///
     /// ⚔️ A freshly attached document brings its own open conflicts with it — React seeds the
     /// Conflicts panel on the same session-start/switch edge; the `ReadConflicts` exchange is native-only.
-    pub(super) async fn seed_history_snapshot(&mut self) {
+    pub async fn seed_history_snapshot(&mut self) {
         if !self.reread_history_projection().await {
             return;
         }

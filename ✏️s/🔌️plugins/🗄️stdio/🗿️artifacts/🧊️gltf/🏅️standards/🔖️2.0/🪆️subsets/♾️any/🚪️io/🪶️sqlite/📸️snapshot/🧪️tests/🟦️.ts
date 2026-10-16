@@ -1,4 +1,4 @@
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import {type GltfJson} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";

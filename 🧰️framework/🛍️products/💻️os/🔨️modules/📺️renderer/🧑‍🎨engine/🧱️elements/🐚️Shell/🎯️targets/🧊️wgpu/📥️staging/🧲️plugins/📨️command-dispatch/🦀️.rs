@@ -9,7 +9,7 @@ impl PluginState {
     //#region 🔖️DirectoryAndIdentity
     //#region 💡️InferencePort
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn installed_document_http_port(&self, owner:&str, service_id:&str) -> Option<CompiledDocumentHttpPortV1> {
+    pub fn installed_document_http_port(&self, owner:&str, service_id:&str) -> Option<CompiledDocumentHttpPortV1> {
         let mut found=None;
         for plugin in &self.plugins {
             if plugin.plugin_id!=owner {continue;}
@@ -26,7 +26,7 @@ impl PluginState {
 
     //#endregion 💡️InferencePort
     //#endregion 🔖️DirectoryAndIdentity
-    pub(crate) fn project_extension_record(&mut self, record: ShellExtensionStoreRecord) -> Result<usize, String> {
+    pub fn project_extension_record(&mut self, record: ShellExtensionStoreRecord) -> Result<usize, String> {
         validate_extension_record(&record)?;
         if let Some(index) = self.extensions.iter().position(|entry| entry.record.extension_id == record.extension_id) {
             self.extensions[index].record = record;
@@ -40,10 +40,10 @@ impl PluginState {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(super) async fn load_extension_record(&mut self, record: ShellExtensionStoreRecord) -> Result<(), String> {
+    pub async fn load_extension_record(&mut self, record: ShellExtensionStoreRecord) -> Result<(), String> {
         let index = self.project_extension_record(record.clone())?;
         let record_json = serde_json::to_string(&record).map_err(|error| error.to_string())?;
-        match crate::program_bridge::install_js_extension(&record_json, &record.extension_id, &record.version).await {
+        match semio_framework_os_renderer_wgpu_program_bridge::install_js_extension(&record_json, &record.extension_id, &record.version).await {
             Ok(program) => {
                 let enabled = self.extensions[index].enabled;
                 self.plugins.retain(|entry| entry.plugin_id != record.extension_id);
@@ -63,7 +63,7 @@ impl PluginState {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) async fn refresh_extension_store(&mut self) -> Result<(), String> {
+    pub async fn refresh_extension_store(&mut self) -> Result<(), String> {
         let answer = extension_store_answer(serde_json::json!({ "op": "extension-store-list" })).await?;
         let records: Vec<ShellExtensionStoreRecord> = serde_json::from_value(answer.get("extensions").cloned().ok_or("extension store list missing extensions")?).map_err(|error| error.to_string())?;
         if records.len() > SHELL_EXTENSION_LEDGER_CAPACITY {
@@ -83,14 +83,14 @@ impl PluginState {
     /// off, the browser needs the frame Worker's own module door. A refusal here is not a phase: there
     /// is nothing in flight to report, and chrome must not show a cancellable install that never began.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn plugin_install_precondition(&self) -> Result<(), String> {
+    pub fn plugin_install_precondition(&self) -> Result<(), String> {
         plugin_modules_root_of(&self.plugins).map(|_| ()).ok_or_else(|| "plugin modules root is unavailable".to_string())
     }
 
     /// 🎯️ Browser twin of the native precondition — see that method's own doc.
     #[cfg(target_arch = "wasm32")]
-    pub(super) fn plugin_install_precondition(&self) -> Result<(), String> {
-        crate::program_bridge::js_plugin_install_door_available().then_some(()).ok_or_else(|| "this isolate installs no semioWgpuInstallPlugin door".to_string())
+    pub fn plugin_install_precondition(&self) -> Result<(), String> {
+        semio_framework_os_renderer_wgpu_program_bridge::js_plugin_install_door_available().then_some(()).ok_or_else(|| "this isolate installs no semioWgpuInstallPlugin door".to_string())
     }
 
     /// 📦️ The one step that differs per target: hand back a `ProgramBridgeEntry` for `plugin_id`.
@@ -99,17 +99,17 @@ impl PluginState {
     /// the SAME `pluginHandleForBridge` handle the boot plan's eager mount produces, because the wasm
     /// renderer cannot fetch a module itself.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) async fn acquire_plugin_program(&mut self, plugin_id: &str) -> Result<ProgramBridgeEntry, String> {
+    pub async fn acquire_plugin_program(&mut self, plugin_id: &str) -> Result<ProgramBridgeEntry, String> {
         let modules_root = plugin_modules_root_of(&self.plugins).ok_or_else(|| "plugin modules root is unavailable".to_string())?;
         let plugin_filter = self.plugin_filter.clone();
-        let entries = crate::program_bridge::load_wasm_plugins(&plugin_filter, &modules_root).await?;
+        let entries = semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins(&plugin_filter, &modules_root).await?;
         entries.into_iter().find(|entry| entry.plugin_id == plugin_id).ok_or_else(|| format!("native runtime manifest declares no module for {plugin_id}"))
     }
 
     /// 📦️ Browser twin of the native acquisition — see that method's own doc.
     #[cfg(target_arch = "wasm32")]
-    pub(super) async fn acquire_plugin_program(&mut self, plugin_id: &str) -> Result<ProgramBridgeEntry, String> {
-        crate::program_bridge::install_js_plugin(plugin_id).await
+    pub async fn acquire_plugin_program(&mut self, plugin_id: &str) -> Result<ProgramBridgeEntry, String> {
+        semio_framework_os_renderer_wgpu_program_bridge::install_js_plugin(plugin_id).await
     }
 
     /// 🎬️ Makes `plugin_id` resident, the wgpu twin of React's `installPlugin`
@@ -182,7 +182,7 @@ impl PluginState {
         if let Some(install) = self.plugin_install.as_ref() {
             install.cancel.cancel_now();
             #[cfg(target_arch = "wasm32")]
-            crate::program_bridge::cancel_js_plugin_install(&install.plugin_id);
+            semio_framework_os_renderer_wgpu_program_bridge::cancel_js_plugin_install(&install.plugin_id);
         }
     }
 
@@ -192,8 +192,8 @@ impl PluginState {
     /// owner is installed, so the relay below can hand both straight to [`Self::switch_to_app`].
     /// Both targets: the table is generated into this crate and the install is [`Self::install_plugin`],
     /// which O2 made target-neutral.
-    pub(super) async fn resolve_activation_owner_app(&mut self, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<(String, AppDefinition)> {
-        let owner = crate::program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, crate::program_bridge::plugin_artifact_kind_activations())?;
+    pub async fn resolve_activation_owner_app(&mut self, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<(String, AppDefinition)> {
+        let owner = semio_framework_os_renderer_wgpu_program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, semio_framework_os_renderer_wgpu_program_bridge::plugin_artifact_kind_activations())?;
         if let Err(error) = self.install_plugin(owner).await {
             debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install {owner}: {error}"));
             return None;
@@ -207,7 +207,7 @@ impl PluginState {
 //#endregion ShellActions
 
 #[cfg(target_arch = "wasm32")]
-pub(super) async fn extension_store_answer(request: serde_json::Value) -> Result<serde_json::Value, String> {
+pub async fn extension_store_answer(request: serde_json::Value) -> Result<serde_json::Value, String> {
     let answer = host_io_call(&request.to_string(), None).await?;
     let decoded: serde_json::Value = serde_json::from_str(&answer).map_err(|error| format!("extension store answer: {error}"))?;
     if let Some(error) = decoded.get("error").and_then(|value| value.as_str()) {
@@ -216,7 +216,7 @@ pub(super) async fn extension_store_answer(request: serde_json::Value) -> Result
     Ok(decoded)
 }
 
-pub(super) fn validate_extension_record(record: &ShellExtensionStoreRecord) -> Result<(), String> {
+pub fn validate_extension_record(record: &ShellExtensionStoreRecord) -> Result<(), String> {
     if record.extension_id.is_empty() || record.directory_name.is_empty() || record.version.is_empty() || record.extends_host.is_empty() || record.module_url.is_empty() || record.package_hash.is_empty() {
         return Err("extension store returned an incomplete record".into());
     }

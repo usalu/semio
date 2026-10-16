@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Format-neutral lifecycle for a truly incremental stdio media serializer"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

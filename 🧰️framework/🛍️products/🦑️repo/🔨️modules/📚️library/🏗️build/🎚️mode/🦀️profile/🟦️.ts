@@ -63,3 +63,8 @@ export function cargoProfileInvocationArgumentsV1(args:readonly string[],rendere
  for(let index=0;index<head.length;index++){const row=head[index]!;if(row==="--release"){if(profile||rendered.plan.profile!=="release")throw Error("Cargo profile conflicts with original consumed mode");profile=true;selected.push("--profile","release");continue;}if(row==="--profile"||row.startsWith("--profile=")){const value=row==="--profile"?head[++index]:row.slice(10);if(profile||value!==rendered.plan.profile)throw Error("Cargo profile conflicts with original consumed mode");profile=true;selected.push("--profile",value);continue;}selected.push(row);}
  if(!profile)selected.push("--profile",rendered.plan.profile);return appendCargoProfileSelectorsV1([...selected,...tail],rendered);
 }
+
+/** 📦️ Closes the concrete native artifact entry before paid store admission. */
+export function nativeArtifactCargoConsumptionV1(producer:unknown,operation="build"):CargoProfileConsumptionV1{if(validateJsonSchemaSubset(schema.definitions.NativeArtifactProducer,producer,schema).length)throw Error("Closed native artifact producer required");return cargoProfileCompilerConsumptionV1(producer as "artifact"|"descriptor-emitter",operation);}
+/** 🕸️ Closes the concrete browser package entry before paid store admission. */
+export function wasmPackageCargoConsumptionV1(producer:unknown):CargoProfileConsumptionV1{if(validateJsonSchemaSubset(schema.definitions.WasmPackageProducer,producer,schema).length)throw Error("Closed browser WASM package producer required");return cargoProfileCompilerConsumptionV1(producer as "browser-canvas"|"browser-module","build");}

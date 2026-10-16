@@ -10,7 +10,7 @@ impl PrefsState {
     //#region 📇️DirectoryLane
     /// 📣️ Refuses one guest `replayShellCommand` out loud: the shared vocabulary's warning notice in this shell's tongue,
     /// carrying the reason's fault code — React's `refuseReplay`.
-    pub(super) fn refuse_replay(&mut self, reason: ReplayRefusalReasonV1, chrome: &mut ChromeState) {
+    pub fn refuse_replay(&mut self, reason: ReplayRefusalReasonV1, chrome: &mut ChromeState) {
         let code = reason.code();
         chrome.show_transient_notice(reason.notice_text(&self.locale_id), semio_framework::Severity::Warning, Some(code.as_str()));
     }

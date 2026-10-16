@@ -1,4 +1,6 @@
-import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_FIND_ITEMS_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_WORLD3D_FILES, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_OS_SERVICES_FILE, policyReadRustPolicySource, interactivityMountedFrameTransactionFailures } from "../../../../../../../../📜️script.ts";
+import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_FIND_ITEMS_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_WORLD3D_FILES, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_OS_SERVICES_FILE } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
+import { policyReadRustPolicySource } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
+import { interactivityMountedFrameTransactionFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts";
 
 /** 🧪️ Executes interactivity mounted frame transaction policy assertions. */
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {

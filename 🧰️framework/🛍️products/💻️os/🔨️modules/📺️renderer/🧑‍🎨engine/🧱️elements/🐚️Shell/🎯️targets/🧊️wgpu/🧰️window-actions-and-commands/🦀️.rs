@@ -13,14 +13,6 @@ use super::*;
 
 //#region ⌨️ShellShortcutTable
 
-/// ⌨️ The shell verb a key event asks for with NO override applied — the default-table projection the
-/// shortcut LAWS assert against (production always resolves through `ShellState::shortcut_table`, so an
-/// override is never bypassed).
-#[cfg(test)]
-pub(crate) fn shell_shortcut_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
-    shell_shortcut_for_in(&shell_shortcut_table(&HashMap::new()), action, modifiers)
-}
-
 //#endregion ⌨️ShellShortcutTable
 
 

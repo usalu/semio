@@ -1,43 +1,51 @@
 //! 📬️ Pending artifact store and child group publications.
-use semio_framework::{kernel::{KernelMutation, UndoGroup}, Fault};
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
+use semio_framework::kernel::{KernelMutation, UndoGroup};
+use semio_framework::Fault;
 use semio_framework_value_derive::ToValue;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use crate::app_contract::ArtifactApp;
-use crate::app_emission::ChildEmit;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_emission::ChildEmit;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::tool_contract::ArtifactBoundedToolFault;
-use crate::tool_contract::TYPED_OPERATION_FAULT_BYTES;
-use crate::tool_contract::TypedOperationResultLane;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
+use semio_framework_plugin_decl_app::tool_contract::TYPED_OPERATION_FAULT_BYTES;
+use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
 
 
 
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum MountedTypedCommandFullOperationStage {
+pub enum MountedTypedCommandFullOperationStage {
     Worker,
     Publishing,
     AwaitingAck,
     Retiring,
 }
 
-pub(crate) enum PendingArtifactStorePublication<A: ArtifactApp> {
+#[doc(hidden)]
+pub enum PendingArtifactStorePublication<A: ArtifactApp> {
     Artifact(store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>),
     Config(store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Config, A::ConfigMutation>),
     Draft(store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Draft, A::DraftMutation>),
     Presence(store::ArtifactEphemeralOneItemPublication<A::Presence, A::PresenceMutation>),
     Transient(store::ArtifactEphemeralOneItemPublication<A::Transient, A::TransientMutation>),
-    WindowConfig(Box<dyn super::window_config::ErasedWindowConfigPublication>),
-    WindowTransient(Box<dyn super::window_transient::ErasedWindowTransientPublication>),
+    WindowConfig(Box<dyn semio_framework_plugin_window_config::ErasedWindowConfigPublication>),
+    WindowTransient(Box<dyn semio_framework_plugin_window_transient::window_transient::ErasedWindowTransientPublication>),
 }
 
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Eq, ToValue,semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct ChildPublicationResultV1 {
-    pub(crate) invocation_id: String,
-    pub(crate) committed_members: usize,
-    pub(crate) child_content_generation: u64,
+pub struct ChildPublicationResultV1 {
+    pub invocation_id: String,
+    pub committed_members: usize,
+    pub child_content_generation: u64,
 }
 
 /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): what ONE composed gesture's linearized
@@ -66,8 +74,9 @@ pub struct ComposedGestureResult {
     pub inverse_group: UndoGroup,
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum PendingChildGroupPublicationPhase {
+pub enum PendingChildGroupPublicationPhase {
     Ready,
     Dispatching,
     Committed,
@@ -76,27 +85,28 @@ pub(crate) enum PendingChildGroupPublicationPhase {
     Closing,
 }
 
-pub(crate) struct PendingChildGroupPublication<A: ArtifactApp> {
-    pub(crate) artifact_mutations: ManuallyDrop<Vec<A::Mutation>>,
-    pub(crate) child_emits: ManuallyDrop<Vec<ChildEmit>>,
-    pub(crate) transaction: ManuallyDrop<Option<protocol::TransactionRef>>,
-    pub(crate) receipt: ManuallyDrop<Option<ChildPublicationResultV1>>,
-    mutation_retirement: Option<ControlledRetirement<Vec<A::Mutation>>>,
+#[doc(hidden)]
+pub struct PendingChildGroupPublication<A: ArtifactApp> {
+    pub artifact_mutations: ManuallyDrop<Vec<A::Mutation>>,
+    pub child_emits: ManuallyDrop<Vec<ChildEmit>>,
+    pub transaction: ManuallyDrop<Option<protocol::TransactionRef>>,
+    pub receipt: ManuallyDrop<Option<ChildPublicationResultV1>>,
+    pub mutation_retirement: Option<ControlledRetirement<Vec<A::Mutation>>>,
     transaction_retirement: Option<ControlledRetirement<protocol::TransactionRef>>,
     receipt_retirement: Option<ControlledRetirement<ChildPublicationResultV1>>,
-    fault: Option<ArtifactBoundedToolFault>,
-    pub(crate) phase: PendingChildGroupPublicationPhase,
+    pub fault: Option<ArtifactBoundedToolFault>,
+    pub phase: PendingChildGroupPublicationPhase,
 }
 
 impl<A: ArtifactApp> PendingChildGroupPublication<A> {
-    pub(crate) fn new(artifact_mutations: Vec<A::Mutation>, child_emits: Vec<ChildEmit>, transaction: Option<protocol::TransactionRef>) -> Result<Self, Fault> {
+    pub fn new(artifact_mutations: Vec<A::Mutation>, child_emits: Vec<ChildEmit>, transaction: Option<protocol::TransactionRef>) -> Result<Self, Fault> {
         if child_emits.is_empty() {
             return Err(plugin_sdk_fault("retained child-group publication requires at least one exact child output"));
         }
         Ok(Self { artifact_mutations:ManuallyDrop::new(artifact_mutations), child_emits:ManuallyDrop::new(child_emits), transaction:ManuallyDrop::new(transaction), receipt:ManuallyDrop::new(None), mutation_retirement:None,transaction_retirement:None,receipt_retirement:None,fault:None,phase:PendingChildGroupPublicationPhase::Ready })
     }
 
-    pub(crate) fn begin_dispatch(&mut self) -> Result<(), Fault> {
+    pub fn begin_dispatch(&mut self) -> Result<(), Fault> {
         if self.phase != PendingChildGroupPublicationPhase::Ready {
             return Err(plugin_sdk_fault("retained child-group publication lost its single dispatch authority"));
         }
@@ -104,7 +114,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
         Ok(())
     }
 
-    pub(crate) fn commit(&mut self, receipt: ChildPublicationResultV1) -> Result<(), Fault> {
+    pub fn commit(&mut self, receipt: ChildPublicationResultV1) -> Result<(), Fault> {
         if self.phase != PendingChildGroupPublicationPhase::Dispatching || self.receipt.is_some() || self.fault.is_some() {
             return Err(plugin_sdk_fault("retained child-group publication attempted a duplicate commit"));
         }
@@ -113,21 +123,21 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
         Ok(())
     }
 
-    fn reject(&mut self, fault: &Fault) {
+    pub fn reject(&mut self, fault: &Fault) {
         self.fault = Some(ArtifactBoundedToolFault::from_fault(fault));
         self.phase = PendingChildGroupPublicationPhase::Faulted;
     }
 
-    pub(crate) fn reject_and_fault(&mut self, fault: &Fault) -> Fault {
+    pub fn reject_and_fault(&mut self, fault: &Fault) -> Fault {
         self.reject(fault);
         self.fault().expect("rejected child publication retains one bounded fault")
     }
 
-    pub(crate) fn fault(&self) -> Option<Fault> {
+    pub fn fault(&self) -> Option<Fault> {
         self.fault.as_ref().map(|fault| ArtifactBoundedToolFault { bytes: fault.bytes, len: fault.len }.into_fault())
     }
 
-    pub(crate) fn acknowledge(&mut self) -> bool {
+    pub fn acknowledge(&mut self) -> bool {
         if self.phase != PendingChildGroupPublicationPhase::Committed {
             return false;
         }
@@ -135,15 +145,15 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
         true
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.phase = PendingChildGroupPublicationPhase::Closing;
     }
 
-    fn controlled_demands<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn controlled_demands<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{
         if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending child depth overflow"))?})
     }
-    pub(crate) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(child)=self.child_emits.last(){let mut demand=child.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending child metadata depth overflow"))?;return Ok(demand);}
         if self.child_emits.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.child_emits.capacity()*size_of::<ChildEmit>(),depth:1,..Default::default()});}
         if let Some(owner)=self.mutation_retirement.as_ref(){return Self::controlled_demands(owner,body);}
@@ -156,41 +166,42 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
     fn controlled_step<T:semio_framework_value::retirement::RetireOwned>(slot:&mut Option<ControlledRetirement<T>>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
         let owner=slot.as_mut().expect("observed original child owner");
         if owner.terminal_is_empty(){slot.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original pending child owner")).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;
+        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original pending child owner")).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;
         Ok(PluginLifecycleStep::Progress(step.progress()))
     }
-    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
         let idle=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(idle));}
         if self.phase!=PendingChildGroupPublicationPhase::Closing{return Ok(PluginLifecycleStep::Blocked{reason:"original child publication is not admitted for closure"});}
-        let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;
+        let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(idle));}
         if let Some(child)=self.child_emits.last_mut(){
             if child.terminal_is_empty(){self.child_emits.pop();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
-            let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=child.close_one(child_grant).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant,step,child.terminal_is_empty(),"original pending child emit").map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;return Ok(PluginLifecycleStep::Progress(step.progress()));
+            let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=child.close_one(child_grant).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant,step,child.terminal_is_empty(),"original pending child emit").map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.child_emits.capacity()!=0{*self.child_emits=Vec::new();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));}
         if self.mutation_retirement.is_some(){return Self::controlled_step(&mut self.mutation_retirement,grant);}
         if self.artifact_mutations.capacity()!=0{
-            let original=std::mem::take(&mut*self.artifact_mutations);match ControlledRetirement::new(original){Ok(owner)=>self.mutation_retirement=Some(owner),Err((error,original))=>{*self.artifact_mutations=original;return Err(super::child_emit_preparation::retirement_refusal_fault(&error));}}
+            let original=std::mem::take(&mut*self.artifact_mutations);match ControlledRetirement::new(original){Ok(owner)=>self.mutation_retirement=Some(owner),Err((error,original))=>{*self.artifact_mutations=original;return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}}
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));
         }
         if self.transaction_retirement.is_some(){return Self::controlled_step(&mut self.transaction_retirement,grant);}
-        if let Some(original)=self.transaction.take(){match ControlledRetirement::new(original){Ok(owner)=>self.transaction_retirement=Some(owner),Err((error,original))=>{*self.transaction=Some(original);return Err(super::child_emit_preparation::retirement_refusal_fault(&error));}}return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
+        if let Some(original)=self.transaction.take(){match ControlledRetirement::new(original){Ok(owner)=>self.transaction_retirement=Some(owner),Err((error,original))=>{*self.transaction=Some(original);return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}}return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
         if self.receipt_retirement.is_some(){return Self::controlled_step(&mut self.receipt_retirement,grant);}
-        if let Some(original)=self.receipt.take(){match ControlledRetirement::new(original){Ok(owner)=>self.receipt_retirement=Some(owner),Err((error,original))=>{*self.receipt=Some(original);return Err(super::child_emit_preparation::retirement_refusal_fault(&error));}}return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
+        if let Some(original)=self.receipt.take(){match ControlledRetirement::new(original){Ok(owner)=>self.receipt_retirement=Some(owner),Err((error,original))=>{*self.receipt=Some(original);return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}}return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
         if self.fault.is_some(){self.fault=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
         Ok(PluginLifecycleStep::Complete(idle))
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.phase == PendingChildGroupPublicationPhase::Closing && self.artifact_mutations.is_empty() && self.artifact_mutations.capacity()==0&&self.child_emits.capacity()==0&&self.child_emits.is_empty()&&self.transaction.is_none()&&self.receipt.is_none()&&self.mutation_retirement.is_none()&&self.transaction_retirement.is_none()&&self.receipt_retirement.is_none()&&self.fault.is_none()
     }
 }
 
+#[doc(hidden)]
 #[cfg(test)]
-pub(crate) fn test_original_pending_child_group_closure<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
+pub fn test_original_pending_child_group_closure<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
     let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||PendingChildGroupPublication::<A>::new(original(),vec![ChildEmit::open("original","child",0)],Some(protocol::TransactionRef{id:"t".repeat(8192),tool:"original-tool".into()})).unwrap());
     let mut born=heap.requested_bytes;let mut released=heap.released_bytes;let pointer=owner.artifact_mutations.as_ptr();owner.begin_close();let mut turns=0;
     while !owner.terminal_is_empty(){
@@ -207,7 +218,7 @@ impl<A:ArtifactApp> Drop for PendingChildGroupPublication<A>{
 }
 
 impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
-    pub(crate) fn acknowledge(&mut self) -> bool {
+    pub fn acknowledge(&mut self) -> bool {
         match self {
             Self::Artifact(publication) => publication.acknowledge(),
             Self::Config(publication) => publication.acknowledge(),
@@ -219,7 +230,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         match self {
             Self::Artifact(publication) => publication.begin_close(),
             Self::Config(publication) => publication.begin_close(),
@@ -231,9 +242,9 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
-    pub(crate) fn frame_release_bytes(&self)->usize{match self{Self::WindowConfig(owner)=>size_of_val(&**owner),Self::WindowTransient(owner)=>size_of_val(&**owner),_=>0}}
+    pub fn frame_release_bytes(&self)->usize{match self{Self::WindowConfig(owner)=>size_of_val(&**owner),Self::WindowTransient(owner)=>size_of_val(&**owner),_=>0}}
 
-    pub(crate) fn retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>{
         match self {
             Self::Artifact(publication)=>publication.retirement_demands(body),
             Self::Config(publication)=>publication.retirement_demands(body),
@@ -245,7 +256,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
-    pub(crate) fn close_step(&mut self, grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+    pub fn close_step(&mut self, grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
         let one_item=store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth};
         match self {
             Self::Artifact(publication)=>publication.close_step(grant).map_err(|error|plugin_sdk_fault(error.into_message())),
@@ -258,7 +269,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         match self {
             Self::Artifact(publication) => publication.terminal_is_empty(),
             Self::Config(publication) => publication.terminal_is_empty(),
@@ -272,7 +283,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
 
     /// 🏷️ The one result lane this pending publication answers under, paired with the store label
     /// its own retirement faults are worded with.
-    pub(crate) fn lane(&self) -> (TypedOperationResultLane, &'static str) {
+    pub fn lane(&self) -> (TypedOperationResultLane, &'static str) {
         match self {
             Self::Artifact(_) => (TypedOperationResultLane::Artifact, "artifact-store"),
             Self::Config(_) => (TypedOperationResultLane::Config, "config-store"),
@@ -285,7 +296,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
     }
 
     /// ♻️ Whether the owning store already moved this publication into its retirement phase.
-    pub(crate) fn is_closing(&self) -> bool {
+    pub fn is_closing(&self) -> bool {
         let phase = match self {
             Self::Artifact(publication) => publication.phase(),
             Self::Config(publication) => publication.phase(),
@@ -299,7 +310,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
     }
 
     /// 💥️ The owning store's own rejection reason, for as long as the retirement still retains it.
-    pub(crate) fn fault(&self) -> Option<&str> {
+    pub fn fault(&self) -> Option<&str> {
         match self {
             Self::Artifact(publication) => publication.fault(),
             Self::Config(publication) => publication.fault(),
@@ -312,7 +323,7 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
     }
 
     /// 🚫️ Borrows the actual retained failure across the exact publication lane.
-    pub(crate) fn preparation_refusal(&self) -> Option<&ValueError> {
+    pub fn preparation_refusal(&self) -> Option<&ValueError> {
         match self {
             Self::Artifact(publication) => publication.preparation_refusal(),
             Self::Config(publication) => publication.preparation_refusal(),
@@ -362,19 +373,22 @@ enum PendingArtifactStorePublicationRetirement {
 }
 
 /// 🧮️ Prices the original native Arc frame without creating a replacement ownership wrapper.
-pub(crate) fn original_reserved_arc_frame_bytes<T>()->usize{std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("original reserved Arc layout").0.pad_to_align().size()}
+#[doc(hidden)]
+pub fn original_reserved_arc_frame_bytes<T>()->usize{std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("original reserved Arc layout").0.pad_to_align().size()}
 
 /// 🧾️ Copies a bounded original fault while the checked-out descriptor keeps the native payload immovable.
-pub(crate) struct MountedWorkerFaultCapture {
-    pub(crate) original: usize,
-    pub(crate) expected: usize,
-    pub(crate) page: usize,
-    pub(crate) offset: usize,
-    pub(crate) bounded: ArtifactBoundedToolFault,
+#[doc(hidden)]
+pub struct MountedWorkerFaultCapture {
+    pub original: usize,
+    pub expected: usize,
+    pub page: usize,
+    pub offset: usize,
+    pub bounded: ArtifactBoundedToolFault,
 }
 
 /// 🧮️ Reports the next original copy or metadata unit without creating a replacement fault.
-pub(crate) fn original_fault_capture_demands(capture:&Option<MountedWorkerFaultCapture>,detail:&semio_framework_job::RetainedJobPayload)->Result<RetirementDemand,ValueError> {
+#[doc(hidden)]
+pub fn original_fault_capture_demands(capture:&Option<MountedWorkerFaultCapture>,detail:&semio_framework_job::RetainedJobPayload)->Result<RetirementDemand,ValueError> {
     if detail.len()>TYPED_OPERATION_FAULT_BYTES||capture.as_ref().is_some_and(|owner|owner.original!=detail as*const _ as usize||owner.expected!=detail.len()){
         return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"bounded fault capture requires its same authored native extent"));
     }
@@ -383,7 +397,8 @@ pub(crate) fn original_fault_capture_demands(capture:&Option<MountedWorkerFaultC
 }
 
 /// 🧾️ Yields one paid original payload copy before the separate inline custody transfer.
-pub(crate) fn advance_original_fault_capture(capture:&mut Option<MountedWorkerFaultCapture>,detail:&semio_framework_job::RetainedJobPayload,recipient:&mut Option<ArtifactBoundedToolFault>,grant:RetainedCloneGrant)->PluginLifecycleStep {
+#[doc(hidden)]
+pub fn advance_original_fault_capture(capture:&mut Option<MountedWorkerFaultCapture>,detail:&semio_framework_job::RetainedJobPayload,recipient:&mut Option<ArtifactBoundedToolFault>,grant:RetainedCloneGrant)->PluginLifecycleStep {
     let idle=RetainedCloneProgress::default();
     let demand=match original_fault_capture_demands(capture,detail){Ok(demand)=>demand,Err(_)=>return PluginLifecycleStep::Blocked{reason:"original bounded fault quote refused its native payload"}};
     if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes{return PluginLifecycleStep::Progress(idle);}
@@ -413,3 +428,6 @@ pub(crate) fn advance_original_fault_capture(capture:&mut Option<MountedWorkerFa
     }
     PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..idle})
 }
+
+#[path = "🤝️group/🦀️.rs"]
+pub mod group;

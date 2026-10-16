@@ -11,7 +11,7 @@ impl OpeningState {
     /// 🛰️ One bounded offer-scope turn on the directory pump: follows sign-in and the space the shell is in, re-reads this
     /// human's own live delegations when due (one `GET /auth/agent-delegations`, [`AgentBridgeOfferScopeOwnerV1`]) and
     /// publishes the scope for the page realm.
-    pub(crate) async fn pump_agent_bridge_offer_scope(&mut self, directory: &mut DirectoryState) {
+    pub async fn pump_agent_bridge_offer_scope(&mut self, directory: &mut DirectoryState) {
         let target = directory.identity.as_ref().zip(self.open_space_id.as_ref()).filter(|(_, space_id)| !space_id.is_empty()).map(|(identity, space_id)| (identity.hub_base_url.trim_end_matches('/').to_string(), space_id.clone()));
         if let Some(due) = directory.agent_bridge_offer_scope.observe(target, chrome_now_ms()) {
             let principals = match directory.directory_client.clone() {

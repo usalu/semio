@@ -1,6 +1,6 @@
 /** 📸️ Persisted Note projection uses the same field parsers and nested domain types. */
 import { parseNoteRecord, noteDocumentFields, type NoteBlockNode, type NoteImageAsset, type ArtifactLink } from "../🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
 export type { NoteBlockNode, NoteImageAsset, ArtifactLink } from "../🟦️.ts";
 export interface NoteSnapshot {
   /** 🧬️ @state artifact */

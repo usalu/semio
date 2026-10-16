@@ -19,12 +19,12 @@ export async function testFlowRetainedReceipt():Promise<void>{
   for(const axis of fixture.axes){const invalid={...row.progress};delete invalid[axis];assert.equal(validate(invalid),false);assertions++;}
   assert.equal(validate({...row.progress,depth:1}),false);assertions++;
   const reference=new BigUint64Array(fixture.axes.map((axis:string)=>BigInt(row.progress[axis])));const memory=new WebAssembly.Memory({initial:2});const bridge=new MockFlowBridge(memory);const scheduled:(()=>void)[]=[];let terminal=false;let queries=0;
-  const exports={...bridge.exports,flow_bridge_poll(){terminal=row.terminal;return row.length;},flow_bridge_step_progress(axis:number){queries++;return reference[axis];},flow_bridge_terminal_is_empty(){return Number(terminal);}};
-  const host=createFlowHost({exports,memory,schedule:(step:()=>void)=>scheduled.push(step)});const close=host.close();const outcome=close.then(()=>({failed:false,error:undefined}),error=>({failed:true,error}));assert.equal(scheduled.length,1);scheduled.shift()!();
+  const exports={...bridge.exports,flow_bridge_poll(){terminal=row.terminal;return row.length;},flow_bridge_step_progress(axis:number){queries++;const value=reference[axis];if(value===undefined)throw Error("Retained progress axis outside fixture");return value;},flow_bridge_terminal_is_empty(){return Number(terminal);}};
+  const host=createFlowHost({exports,memory,schedule:(step:()=>void)=>scheduled.push(step)});const close=host.close();const outcome=close.then(()=>({failed:false,error:undefined}),(error:unknown)=>({failed:true,error}));assert.equal(scheduled.length,1);scheduled.shift()!();
   assert.deepEqual(host.stepProgress(),row.progress);assert.equal(queries,4);assertions+=2;
   if(row.length===0){terminal=true;scheduled.shift()!();}
   const result=await outcome;assert.equal(result.failed,row.length<0&&!row.terminal);assertions++;
-  if(result.failed){assert.deepEqual(result.error.retainedProgress,row.progress);assertions++;}
+  if(result.failed){assert.ok(result.error!==null&&typeof result.error==="object"&&"retainedProgress" in result.error);assert.deepEqual(result.error.retainedProgress,row.progress);assertions++;}
   const runtimeMemory=new WebAssembly.Memory({initial:2});const runtimeBridge=new MockFlowBridge(runtimeMemory);const runtime=await createFlowBrowserRuntime({source:runtimeBridge.exports});assert.deepEqual(runtime.stepProgress(),{copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0});await runtime.close();assertions++;
  }
  const protocol=["🦀️.rs","🌉️bridge/🦀️.rs"].map((file)=>readFileSync(new URL(`../../📡️protocol/${file}`,import.meta.url),"utf8")).join("\n");

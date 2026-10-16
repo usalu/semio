@@ -35,7 +35,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// round that owes no render. This used to be an unconditional whole-shell refresh — the
     /// dominant half of the 116-of-137 `patched=0` renders per converging edit
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7).
-    pub(super) async fn settle_ui_chain(&mut self) -> Result<(), String> {
+    pub async fn settle_ui_chain(&mut self) -> Result<(), String> {
         for round in 0..SHELL_SETTLE_ROUNDS {
             let worked = self.drain_deferred_actions().await?;
             if worked == 0 {
@@ -70,7 +70,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// `applyHostEffects` logs a dropped dispatch and carries on, and this loop runs inside
     /// `settle_boot`, where a propagated error aborted the whole boot
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub(super) async fn drain_deferred_actions(&mut self) -> Result<usize, String> {
+    pub async fn drain_deferred_actions(&mut self) -> Result<usize, String> {
         self.as_window_actions().arm_window_activation_note();
         self.windows.arm_window_blur_host_event(&mut self.settle, &self.plugins, &self.docs);
         self.as_window_actions().arm_host_window_blur();
@@ -135,7 +135,7 @@ impl<'ctx> PointerCtx<'ctx> {
         let parked = false;
         let armed_work = !self.settle.deferred_actions.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty();
         let computing = self.surfaces.live_compute_surfaces().any(|(surface_id, _)| !self.settle.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
-        self.opening.icon_export.as_ref().is_some_and(icon_export::IconExportBatch::running) || crate::interpreter::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
+        self.opening.icon_export.as_ref().is_some_and(icon_export::IconExportBatch::running) || semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
     }
 
     /// 🫀️ ONE settle step, and the whole of what the frame loop asks of this shell per frame.
@@ -169,7 +169,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// 🪟️ The first body of a newly created window is a prerequisite for its own journal note.
     /// Once a cohort refresh releases any ready peer, that peer dispatches before the next retry
     /// refresh; an unrelated refusing body cannot head-of-line block its acknowledged transfer.
-    pub(crate) async fn settle_pump_step_inner(&mut self) -> ShellSettleStep {
+    pub async fn settle_pump_step_inner(&mut self) -> ShellSettleStep {
         self.settle.settle_pump.steps = self.settle.settle_pump.steps.saturating_add(1);
         if self.docs.session.is_none() {
             self.settle.settle_pump.owed = false;
@@ -208,7 +208,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// whole refresh ran inside one step: every read held the frame build — 3.5 s per full refresh of a
     /// block2d session in a debug build, then still ~0.75 s for the three section reads alone (ticket
     /// 26/09/23 slice WG8).
-    pub(super) async fn advance_owed_refresh(&mut self) {
+    pub async fn advance_owed_refresh(&mut self) {
         if let Some(rendering) = self.settle.settle_pump.rendering.as_ref() {
             let Some(rendered) = rendering.take() else { return };
             self.settle.settle_pump.rendering = None;
@@ -253,7 +253,7 @@ impl<'ctx> PointerCtx<'ctx> {
         self.settle.settle_pump.rendering = Some(ShellDetached::spawn(render_refresh_detached(program, session.instance_id, jobs, sections, panel_view, view_state)));
     }
 
-    pub(crate) async fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
+    pub async fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
         let node_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".node.").map(|(_, node_id)| node_id.to_string())));
         let edge_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".edge.").map(|(_, edge_id)| edge_id.to_string())));
         let ContextMenuSurfaceResolution { surface_id, kind, hits, selection: selection_groups, text: text_context } = self.input.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref(), &self.surfaces);
@@ -382,13 +382,13 @@ impl<'ctx> PointerCtx<'ctx> {
             return;
         }
         if action == ui_wgpu::wgpu::KeyAction::Escape {
-            if crate::scenes::cancel_canvas_interactions(input) {
-                if let Some((window_id, pointer_id)) = crate::interpreter::retained_any_pointer_capture() {
-                    crate::interpreter::dispatch_ui_pointer_event(&window_id, pointer_id, ui_wgpu::wgpu::UiEvent::PointerCancel, input);
+            if semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_interactions(input) {
+                if let Some((window_id, pointer_id)) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_any_pointer_capture() {
+                    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, ui_wgpu::wgpu::UiEvent::PointerCancel, input);
                 }
                 return;
             }
-            if crate::scenes::cancel_scene_list_transfer() {
+            if semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer() {
                 self.input.chrome_pointer_owner = None;
                 return;
             }
@@ -461,7 +461,7 @@ impl<'ctx> PointerCtx<'ctx> {
                     self.settle.deferred_actions.push(ActionDescriptor {
                         controller_id: "framework.sync".into(),
                         action: "attach".into(),
-                        args: crate::action_args_json!({
+                        args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({
                             "path": self.sync.sync_card_draft,
                             "kind": self.sync.sync_card_kind,
                         }),
@@ -489,7 +489,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 ui_wgpu::wgpu::KeyAction::Enter => {
                     let message = self.sync.checkin_dialog_draft.clone().unwrap_or_default();
                     self.sync.checkin_dialog_draft = None;
-                    self.settle.deferred_actions.push(ActionDescriptor { controller_id: "framework.checkin".into(), action: "submit".into(), args: crate::action_args_json!({ "message": message }) });
+                    self.settle.deferred_actions.push(ActionDescriptor { controller_id: "framework.checkin".into(), action: "submit".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "message": message }) });
                     return;
                 }
                 ui_wgpu::wgpu::KeyAction::Char(key) => {
@@ -731,9 +731,9 @@ impl<'ctx> PointerCtx<'ctx> {
         if idle {
             if let Some((surface, node)) = self.as_session().retained_keyboard_focus() {
                 debug_log(&format!("[TRACE] wgpu-shell key routing surface={surface} node={node:?} action={action:?}"));
-                let focused_select = crate::interpreter::retained_node_is_select(&surface, node);
+                let focused_select = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_is_select(&surface, node);
                 if let Some(event) = ui_event_from_key_action(&action, modifiers, focused_select) {
-                    let commands = crate::interpreter::dispatch_ui_event(&surface, event, input);
+                    let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, event, input);
                     self.chrome.chrome_build.note_content_focus_commands(&commands);
                     return Ok(());
                 }
@@ -749,7 +749,7 @@ impl<'ctx> PointerCtx<'ctx> {
             let armed_tool = self.docs.session.as_ref().and_then(|session| session.view_state.active_tool_id.clone()).is_some_and(|tool_id| !tool_id.is_empty());
             if armed_tool {
                 let controller_id = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: crate::action_args_json!({ "toolId": "" }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "toolId": "" }) }).await?;
                 return Ok(());
             }
         }
@@ -782,7 +782,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// ⌨️ Moves keyboard focus one stop along the ring: onto a chrome control (the accessibility focus the
     /// platform adapter and the mirror set, painted as the focus ring) or onto a dock window (the active
     /// window, whose own content focus takes the keyboard again).
-    pub(super) fn advance_keyboard_ring(&mut self, forward: bool, input: &mut InputState<ActionDescriptor>) {
+    pub fn advance_keyboard_ring(&mut self, forward: bool, input: &mut InputState<ActionDescriptor>) {
         let ring = self.dock.keyboard_ring(&self.chrome);
         if ring.is_empty() {
             return;
@@ -825,7 +825,7 @@ impl<'ctx> PointerCtx<'ctx> {
 /// content (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 ///
 /// `Self`-less so its law drives the real body without a `ShellState` fixture.
-pub(crate) fn content_is_editing(focused_id: Option<&str>, sync_card_open: bool) -> bool {
+pub fn content_is_editing(focused_id: Option<&str>, sync_card_open: bool) -> bool {
     focused_id.is_some_and(|id| !SHELL_OVERLAY_INPUT_IDS.contains(&id)) || sync_card_open
 }
 
@@ -839,7 +839,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// 🏁️ A working producer this shell has no window body to render is a producer it cannot
     /// fund at all, so it stands down instead of asking the frame loop for a step per frame it
     /// has no way to spend.
-    pub(super) async fn settle_pump_cross(&mut self) -> ShellSettleStep {
+    pub async fn settle_pump_cross(&mut self) -> ShellSettleStep {
         let live: Vec<(String, World3dComputeStatus)> = self.surfaces.live_compute_surfaces().collect();
         if live.is_empty() {
             self.settle.settle_pump.watches.clear();
@@ -896,7 +896,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// the wgpu twin of React's `dispatchInvokeExtensionEffect(..., publish)` callback, which ends in
     /// `applyHostEffects(response.requestedEffects, ...)`.
     #[cfg(target_arch = "wasm32")]
-    pub(super) async fn run_extension_invocation(&mut self, invocation: PendingExtensionInvocation) {
+    pub async fn run_extension_invocation(&mut self, invocation: PendingExtensionInvocation) {
         let Some(session) = self.docs.session.clone() else { return };
         let Some(plugin) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
         let PendingExtensionInvocation { req, extension_id, capability, request_json } = invocation;
@@ -916,17 +916,17 @@ impl<'ctx> PointerCtx<'ctx> {
         }
     }
 
-    pub(crate) async fn dispatch_widget_drag_values(&mut self, input: &InputState<ActionDescriptor>) -> Result<(), String> {
+    pub async fn dispatch_widget_drag_values(&mut self, input: &InputState<ActionDescriptor>) -> Result<(), String> {
         let Some(id) = input.drag.target_id.as_deref() else {
             return Ok(());
         };
         if let Some(value) = self.input.widget_maps.slider_live_values.get(id).copied() {
             if let Some(meta) = self.input.widget_maps.slider_metas.get(id).cloned() {
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: crate::action_args_json!({ "value": value }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
             }
         } else if let Some(value) = self.input.widget_maps.ring_live_values.get(id).copied() {
             if let Some(meta) = self.input.widget_maps.ring_metas.get(id).cloned() {
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: crate::action_args_json!({ "value": value }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
             }
         }
         Ok(())
@@ -940,7 +940,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// parse at all: the guest sees NO commit rather than an invented number, exactly as the
     /// primitive's own doc comment specifies. The caret still blurs either way, because the
     /// gesture is over whichever answer the constraint gave.
-    pub(crate) async fn commit_focused_input(&mut self, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+    pub async fn commit_focused_input(&mut self, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
         let Some(id) = input.focused_id.clone() else {
             return Ok(());
         };
@@ -948,7 +948,7 @@ impl<'ctx> PointerCtx<'ctx> {
             let base = id.trim_end_matches(".input");
             if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
                 let parsed = input.text_view().parse::<f64>().unwrap_or(meta.value);
-                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: crate::action_args_json!({ "value": parsed }) }).await?;
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": parsed }) }).await?;
                 input.blur_input();
                 return Ok(());
             }
@@ -964,40 +964,40 @@ impl<'ctx> PointerCtx<'ctx> {
         Ok(())
     }
 
-    pub(crate) async fn finish_tree_drag(&mut self, x: f32, y: f32, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+    pub async fn finish_tree_drag(&mut self, x: f32, y: f32, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
         let Some(drag) = self.input.tree_drag.take() else {
             return Ok(());
         };
         if self.input.finish_canvas2d_catalogue_drop(x, y, &drag.drag_data, input) {
-            crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             return Ok(());
         }
         let surfaces = self.surfaces.node_graph_states.iter().map(|(id, surface)| (id.as_str(), surface.bounds, surface.controller_id.as_str())).collect::<Vec<_>>();
-        if let Some(action) = crate::engine_canvas::node_graph_flow_widget_drop_action(x, y, &drag.drag_data, &surfaces) {
-            crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+        if let Some(action) = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_flow_widget_drop_action(x, y, &drag.drag_data, &surfaces) {
+            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             self.as_actions().dispatch_action(action).await?;
             return Ok(());
         }
         if let Some(action) = self.surfaces.world3d_catalogue_drop_action(x, y, &drag.drag_data) {
-            crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             self.as_actions().dispatch_action(action).await?;
             return Ok(());
         }
-        if let Some(action) = crate::engine_canvas::node_graph_catalogue_drop_action(x, y, &drag.drag_data, &surfaces) {
-            crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+        if let Some(action) = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_catalogue_drop_action(x, y, &drag.drag_data, &surfaces) {
+            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
             self.surfaces.clear_world3d_catalogue_drop_previews();
             self.as_actions().dispatch_action(action).await?;
             return Ok(());
         }
-        crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+        semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
         self.surfaces.clear_world3d_catalogue_drop_previews();
         Ok(())
     }
 
-    pub(crate) async fn select_panel_tab(&mut self, anchor: PanelAnchor, tab_id: &str) -> Result<(), String> {
+    pub async fn select_panel_tab(&mut self, anchor: PanelAnchor, tab_id: &str) -> Result<(), String> {
         let was_visible = self.dock.anchor_open(anchor);
         let was_path = self.dock.anchor_state(anchor).path.first().cloned();
         let outcome = self.as_actions().select_panel_tab_step(anchor, tab_id).await;
@@ -1075,7 +1075,7 @@ impl<'ctx> PointerCtx<'ctx> {
             self.as_actions().dispatch_action(ActionDescriptor {
                 controller_id,
                 action: "setMediaNodeSelection".into(),
-                args: crate::action_args_json!({
+                args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({
                     "surfaceId": item.surface_id,
                     "nodeIds": [item.node_id],
                 }),
@@ -1101,7 +1101,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// 🧯️ Packet W1j: React raises this through `showTransientNotice(..., "info",
     /// KEYBINDING_UNOWNED_CODE)`, not through a persistent error line — an unowned chord is a
     /// momentary "nothing here answers that", which is exactly what the banner is for.
-    pub(super) async fn dispatch_app_keybinding(&mut self, descriptor: ActionDescriptor) -> Result<bool, String> {
+    pub async fn dispatch_app_keybinding(&mut self, descriptor: ActionDescriptor) -> Result<bool, String> {
         let Some(session) = self.docs.session.clone() else {
             return Ok(false);
         };
@@ -1155,7 +1155,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// every route into the path (a press, a restored arrangement, a tour step) ends at the same place.
     /// A path that selects no tool leaf is left alone rather than deactivating, so browsing another
     /// category keeps the armed tool live exactly as React's "skip while not the active root" rule does.
-    pub(crate) async fn arm_tool_for_panel_tab(&mut self, path: &[String]) -> Result<(), String> {
+    pub async fn arm_tool_for_panel_tab(&mut self, path: &[String]) -> Result<(), String> {
         let Some(tool_id) = path.last().and_then(|id| id.strip_prefix(FRAMEWORK_TOOL_PANEL_TAB_PREFIX)).map(ToOwned::to_owned) else {
             return Ok(());
         };
@@ -1165,11 +1165,11 @@ impl<'ctx> PointerCtx<'ctx> {
         if self.docs.session.as_ref().and_then(|session| session.view_state.active_tool_id.as_deref()) == Some(tool_id.as_str()) {
             return Ok(());
         }
-        self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: crate::action_args_json!({ "toolId": tool_id }) }).await
+        self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveTool".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "toolId": tool_id }) }).await
     }
 
     /// ⌨️ Applies the shell verbs that need the async funnel — the other half of the same table.
-    pub(super) async fn apply_async_shell_shortcut(&mut self, shortcut: ShellShortcut) -> Result<bool, String> {
+    pub async fn apply_async_shell_shortcut(&mut self, shortcut: ShellShortcut) -> Result<bool, String> {
         match shortcut {
             ShellShortcut::ModeStep(step) => {
                 self.as_window_actions().apply_mode_step(step).await?;

@@ -5799,6 +5799,7 @@ dependencies = [
  "semio-framework-pack-record",
  "semio-framework-pack-record-schema",
  "semio-framework-replication-codec",
+ "semio-framework-replication-wire-core",
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",

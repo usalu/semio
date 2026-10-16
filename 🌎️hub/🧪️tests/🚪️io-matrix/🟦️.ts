@@ -1,3 +1,6 @@
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 /** 🚪️ Export and import through the served `s` React shell, per kind, as a user drives them (acceptance 1.7), plus the
  * live half of command reachability (1.8): every verb that was `BatchOnlyPendingRewrite` must dispatch from its rail row.
  *
@@ -538,6 +541,8 @@ async function seatFirstExample(page: Page): Promise<string> {
 //#region 🔖️Matrix
 /** 🎛️ One run. */
 export type IoMatrixOptions = Readonly<{
+  invocation:ScriptInvocation;
+  phaseControl:ResourceLeaseControl;
   baseUrl: string;
   hubUrl: string | null;
   email: string | null;
@@ -661,6 +666,8 @@ async function driveProgram(page: Page, recorders: Recorders, key: string, plugi
 /** 🚪️ Runs the matrix and returns its report; the report is rewritten after every row, so a cancelled or crashed run keeps
  * every finished row and `resume` continues from them. Cancellation (the signal) ends the run after the current row. */
 export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): Promise<IoMatrixReport> {
+  requireIssuedResourceControlInvocationV1(options.phaseControl,options.invocation);
+  if(options.signal!==options.phaseControl.signal||readNativeCallerAuthorityV1(options.invocation.capabilities).repositoryRoot!==repoRoot)throw Error("Actual I/O matrix workspace and phase signal required");
   const pins = readIoMatrixPins();
   const matrixPins = readMatrixPins();
   const outDir = join(options.outDir, options.tag);
@@ -736,7 +743,7 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
       }
     } else {
       if (options.email === null || options.password === null) throw new Error("--hub needs OS_HUB_PROBE_EMAIL and OS_HUB_PROBE_PASSWORD in the environment");
-      const sweep: HubDocumentSweepOptions = { baseUrl: options.baseUrl, locale: options.locale === "de" ? "de" : "en", email: options.email, password: options.password, spaceName: options.spaceName, kinds: [], sagaMs: 300_000, puzzleSagaMs: 900_000, reopen: false, cancel: null, profileDir: "", outDir, signal: options.signal };
+      const sweep: HubDocumentSweepOptions = { invocation: options.invocation, phaseControl: options.phaseControl, baseUrl: options.baseUrl, locale: options.locale === "de" ? "de" : "en", email: options.email, password: options.password, spaceName: options.spaceName, kinds: [], sagaMs: 300_000, puzzleSagaMs: 900_000, reopen: false, cancel: null, profileDir: "", outDir, signal: options.signal };
       const probeRow: HubSweepRow = { kindId: "-", plugin: "-", pass: false, faults: [], notices: [] };
       const blocked = await openSweepSpace(page, sweep, probeRow);
       if (blocked) throw new Error(blocked);
@@ -827,16 +834,14 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
  * `io-matrix.json`, `table.md`, every downloaded file and one screenshot per row under `<out>/<tag>/`, publishes the
  * ONE `io-matrix` acceptance record (the kinds' export/import column and the live command-reachability column; `fail` when
  * either fails) and exits non-zero unless it passes. */
-export async function runIoMatrixCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
+export async function runIoMatrixCli(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
+  if(readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot!==repoRoot)throw Error("Actual I/O matrix workspace required");
   const serveUrl = flagValue(segments, "--serve");
   if (!serveUrl) throw new Error("usage: io-matrix --serve <url> [--hub <url>] [--locale en|de] [--tag <t>] [--only …] [--skip …] [--space <name>] [--resume] [--install-budget-ms <n>] [--out <dir>] [--headed]");
   const hubUrl = flagValue(segments, "--hub") ?? null;
   const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
   const tag = flagValue(segments, "--tag") ?? `${hubUrl === null ? "local" : "hub"}-${locale}`;
-  const controller = new AbortController();
-  const cancel = (): void => controller.abort();
-  process.once("SIGINT", cancel);
-  process.once("SIGTERM", cancel);
   const startedAt = new Date();
   const blockedWithoutCredentials = hubUrl !== null && (!process.env.OS_HUB_PROBE_EMAIL || !process.env.OS_HUB_PROBE_PASSWORD);
   await withAcceptanceRecord(repoRoot, "io-matrix", async () => {
@@ -845,10 +850,10 @@ export async function runIoMatrixCli(repoRoot: string, defaultOutDir: string, se
       process.exitCode = 1;
       return;
     }
-    await withDevServe(repoRoot, "io-matrix", { serveUrl, hubUrl: hubUrl ?? undefined, locale, signal: controller.signal, startedAt }, async (baseUrl) => {
+    await withDevServe(repoRoot, "io-matrix", { serveUrl, hubUrl: hubUrl ?? undefined, locale, signal: phaseControl.signal, startedAt }, async (baseUrl) => {
       const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
       const report = await runIoMatrix(repoRoot, {
-        baseUrl,
+        invocation,phaseControl,baseUrl,
         hubUrl,
         email: process.env.OS_HUB_PROBE_EMAIL ?? null,
         password: process.env.OS_HUB_PROBE_PASSWORD ?? null,
@@ -861,7 +866,7 @@ export async function runIoMatrixCli(repoRoot: string, defaultOutDir: string, se
         outDir,
         headed: segments.includes("--headed"),
         installBudgetMs: Number(flagValue(segments, "--install-budget-ms") ?? 600_000),
-        signal: controller.signal,
+        signal: phaseControl.signal,
       });
       writeFileSync(join(outDir, tag, "table.md"), ioMatrixTable(report));
       const pinned = report.rows.filter((row) => row.pinned);
@@ -893,7 +898,5 @@ export async function runIoMatrixCli(repoRoot: string, defaultOutDir: string, se
       if (status !== "pass") process.exitCode = 1;
     });
   });
-  process.removeListener("SIGINT", cancel);
-  process.removeListener("SIGTERM", cancel);
 }
 //#endregion 🔖️Matrix

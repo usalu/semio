@@ -6,27 +6,15 @@ use super::*;
 
 //#region ActionPanelAndUtilities
 //#region 🎬️WindowActionsAndSearchPanes
-/// 🎬️ The retained engine surface one window instance's ACTIONS pane body paints into — React's
-/// top-left `Pane` (`🪟️Window/🟦️.tsx:379`), whose body is `<Engagement/>` followed by the
-/// `WindowActionPane` tree. Keyed like the Measures overlay: the window instance, then the reserved
-/// section body key, so it can never collide with an app-authored surface.
-pub(crate) fn window_actions_surface_id(window_id: &str) -> String {
-    format!("{window_id}/{}", semio_framework::UiRefreshSection::Engagements.body_key())
-}
-
-/// 🔎️ The retained engine surface one window instance's SEARCH pane body paints into.
-pub(crate) fn window_search_surface_id(window_id: &str) -> String {
-    format!("{window_id}/{WINDOW_SEARCH_BODY_KEY}")
-}
 
 /// 📐️ React's `PANE_DEFAULT_SIZE` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:9912`) — every `Pane` that
 /// declares no `size` opens 300 logical px wide, which both these bodies do.
-pub(crate) const WINDOW_PANE_BODY_WIDTH_PX: f32 = 300.0;
+pub const WINDOW_PANE_BODY_WIDTH_PX: f32 = 300.0;
 
 /// 🚦️ React's `FRAMEWORK_RESERVED_ACTION_IDS` (`🛠️ShellHelpers/🟦️.tsx:308`) — the framework's OWN
 /// verbs, which an armed utility never gates: their chords keep firing while a brush owns the
 /// pointer, so a pane row that refused them at the same moment would contradict its own keybinding.
-pub(crate) const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 22] = [
+pub const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 22] = [
     "undo",
     "redo",
     "commitCheckpoint",
@@ -102,7 +90,7 @@ fn engagement_control_label(control: &ui_wgpu::wgpu::WindowEngagementControl) ->
 /// takes the whole orb list on one element — so the ring projects as a container under React's ring
 /// id holding one orb node per option, each carrying the orb id React exposes as `data-orb-id` and
 /// each dispatching the same `onOrbSelect` verb with its own `id`.
-pub(crate) fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_de: bool) -> Vec<UiNode> {
+pub fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_de: bool) -> Vec<UiNode> {
     use ui_wgpu::wgpu::WindowEngagementControl as Control;
     let inert = || ActionDescriptor { controller_id: "framework".into(), action: String::new(), args: None };
     let with_id = |action: &Option<ActionDescriptor>, option_id: &str| -> Option<ActionDescriptor> {
@@ -247,8 +235,8 @@ pub(crate) fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementC
 /// `action.<actionId>.arg.<argId>` and the editor inside it carries the bare `def.id`
 /// (`renderStagedArgControl`'s `fieldId = field?.id ?? def.id`, `🛠️ShellHelpers/🟦️.tsx:3869`), which
 /// is also why the two never collide on one published surface key.
-pub(crate) fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
-    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: crate::action_args_json!({ "window": window_id.to_string(), "action": action_id.to_string(), "arg": arg.id.clone() }) };
+pub fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
+    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action_id.to_string(), "arg": arg.id.clone() }) };
     staged_arg_row(format!("action.{action_id}.arg.{}", arg.id), &arg.id, arg, value, &stage, selection, terminology, locale)
 }
 
@@ -281,7 +269,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// ⚡️ React renders that section's own `actions` — Execute and Reset — in the form header's
     /// action row; a `TreeSection` carries no action row on this renderer, so the pair follows
     /// the form as its own band, keeping React's two ids and their order.
-    pub(crate) fn build_window_actions_ui(&self, window_id: &str) -> Option<UiNode> {
+    pub fn build_window_actions_ui(&self, window_id: &str) -> Option<UiNode> {
         let session = self.docs.session.as_ref()?;
         let is_de = self.prefs.locale_id == "de";
         let terminology = self.prefs.active_terminology();
@@ -361,7 +349,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                     let disabled = gated && !FRAMEWORK_RESERVED_ACTION_IDS.contains(&action.id.as_str());
                     let open = expanded.as_deref() == Some(action.id.as_str());
                     let dispatch = if staged {
-                        ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: crate::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) }
+                        ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) }
                     } else {
                         ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.id.clone(), args: None }
                     };
@@ -422,7 +410,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                 id: Some(semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "action", action.id.as_str(), "execute"])),
                 icon_id: IconName::Check,
                 label: Label::data(shell_chrome_string("common.execute", is_de)),
-                action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedAction".into(), args: crate::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedAction".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
                 style: None,
                 presence: UiPresence { state: if gated || missing { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
@@ -431,7 +419,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                 id: Some(semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "action", action.id.as_str(), "reset"])),
                 icon_id: IconName::Undo,
                 label: Label::data(shell_chrome_string("common.reset", is_de)),
-                action: ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: crate::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) },
                 style: None,
                 presence: UiPresence { state: if gated { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
@@ -445,7 +433,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// Measures overlay's own pass and through the same revision-keyed ingress, so an unchanged body
     /// pays nothing. A window whose body fails to project keeps no document and reports a surface
     /// fault rather than blanking the refresh.
-    pub(crate) fn refresh_window_action_panes(&mut self, windows: &[String], faults: &mut Vec<(String, String, crate::program_bridge::ProgramFault)>) -> Result<(), String> {
+    pub fn refresh_window_action_panes(&mut self, windows: &[String], faults: &mut Vec<(String, String, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault)>) -> Result<(), String> {
         let stale: Vec<String> = self.docs.window_actions_documents.keys().chain(self.docs.window_search_documents.keys()).filter(|window_id| !windows.contains(window_id)).cloned().collect();
         for window_id in stale.into_iter().chain(windows.iter().cloned()) {
             let previous = self.docs.window_actions_documents.remove(&window_id);
@@ -487,7 +475,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// arg-carrying row ("Move…") toggled its expansion and its staged form — the argument fields, Execute, Reset — never
     /// reached the canvas or the mirror (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F17). The ingress is
     /// revision-keyed, so an unchanged body costs nothing.
-    pub(crate) fn republish_window_action_panes(&mut self) -> Result<(), String> {
+    pub fn republish_window_action_panes(&mut self) -> Result<(), String> {
         let windows: Vec<String> = self.dock.dock.window_instances().into_iter().map(|(window_id, _)| window_id).collect();
         let mut faults = Vec::new();
         self.refresh_window_action_panes(&windows, &mut faults)?;
@@ -500,7 +488,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
 }
 
 /// 🧭️ Parses `dock.tab.{path}.{window}.{action}` into `(path, window_id)`.
-pub(crate) fn parse_dock_tab_action_id<'a>(control_id: &'a str, action: &str) -> Option<(Vec<usize>, &'a str)> {
+pub fn parse_dock_tab_action_id<'a>(control_id: &'a str, action: &str) -> Option<(Vec<usize>, &'a str)> {
     let rest = control_id.strip_prefix("dock.tab.")?;
     let rest = rest.strip_suffix(&format!(".{action}"))?;
     let (path_str_value, window_id) = rest.split_once('.')?;
@@ -509,14 +497,14 @@ pub(crate) fn parse_dock_tab_action_id<'a>(control_id: &'a str, action: &str) ->
 
 /// 📐️ The Actions pane's box inside a window body — React's `top-left` `anchorPositionStyle` at
 /// the pane inset, [`WINDOW_PANE_BODY_WIDTH_PX`] wide, growing DOWN from under its own chip row.
-pub(crate) fn window_actions_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
+pub fn window_actions_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
     let top = body.y + theme.panel_inset + theme.control_height + theme.gap_standard;
     Rect::new(body.x + theme.panel_inset, top, WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0)), height.min((body.y + body.h - theme.panel_inset - top).max(0.0)))
 }
 
 /// 📐️ The Search pane's box — React's `top-middle` anchor: centred on the body's own width, the
 /// same 300 px, under its own chip row.
-pub(crate) fn window_search_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
+pub fn window_search_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
     let width = WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0));
     let top = body.y + theme.panel_inset + theme.control_height + theme.gap_standard;
     Rect::new(body.x + (body.w - width) * 0.5, top, width, height.min((body.y + body.h - theme.panel_inset - top).max(0.0)))
@@ -529,7 +517,7 @@ pub(crate) fn window_search_rect(theme: &Theme, body: Rect, height: f32) -> Rect
 /// changed, non-empty value. A change that crosses a session INSTANCE is a MOUNT, not an activation:
 /// the successor's landing window is picked by the switch itself, so the witness is re-seeded in
 /// silence and a role switch journals no activation (React's own `role-viewer` journals none either).
-pub(crate) fn window_activation_is_user_v1(noted: Option<&(u32, String)>, instance_id: u32, active_window_id: &str) -> bool {
+pub fn window_activation_is_user_v1(noted: Option<&(u32, String)>, instance_id: u32, active_window_id: &str) -> bool {
     !active_window_id.is_empty() && noted.is_some_and(|(noted_instance, noted_window)| *noted_instance == instance_id && noted_window != active_window_id)
 }
 
@@ -550,7 +538,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// Armed rather than dispatched, because every activation site is a chrome-walk or pointer arm
     /// that must not own a guest round trip; `drain_deferred_actions` takes it on the same lane every
     /// other deferred action crosses, which is also the lane the chrome ledger taps.
-    pub(crate) fn arm_window_activation_note(&mut self) {
+    pub fn arm_window_activation_note(&mut self) {
         let Some(instance_id) = self.docs.session.as_ref().map(|session| session.instance_id) else {
             return;
         };
@@ -572,7 +560,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// 🫥️ Takes a pending host window blur ([`note_host_window_blur`]): every World3d surface hears a `Blur` cancel (a live
     /// gumball that streamed or an open paint stroke aborts with zero trace), and `hostEvent{windowId, kind: blur}` is armed for
     /// the pane holding the activation, so its program ends an open gesture there. `true` when one was pending.
-    pub(crate) fn arm_host_window_blur(&mut self) -> bool {
+    pub fn arm_host_window_blur(&mut self) -> bool {
         if !std::mem::take(&mut *HOST_WINDOW_BLUR_PENDING.borrow_mut()) {
             return false;
         }
@@ -596,14 +584,14 @@ impl<'ctx> WindowActionsCtx<'ctx> {
 //#region ⌨️WindowScope
 /// 🪟️ A live window instance of the active mode, with the kind whose declaration owns its verbs.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct WindowScopeInstanceV1 {
+pub struct WindowScopeInstanceV1 {
     pub id: String,
     pub window_kind_id: String,
 }
 
 /// ⌨️ Where an app-wide chord lands — twin of React's `WindowScopeTargetKindV1`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum WindowScopeTargetKindV1 {
+pub enum WindowScopeTargetKindV1 {
     Focused,
     Owner,
     Unowned,
@@ -612,10 +600,10 @@ pub(crate) enum WindowScopeTargetKindV1 {
 /// 🚦️ The hint the user SEES when a chord's verb is owned by no window of the active mode — twin of
 /// `KEYBINDING_UNOWNED_LABEL`. No default language: `locale` picks, and only an unknown locale falls
 /// back to English, which is the one case where a choice has not been made.
-pub(crate) const KEYBINDING_UNOWNED_LABEL_EN: &str = "not available in this mode";
+pub const KEYBINDING_UNOWNED_LABEL_EN: &str = "not available in this mode";
 
-pub(crate) const KEYBINDING_UNOWNED_LABEL_DE: &str = "in diesem Modus nicht verfügbar";
+pub const KEYBINDING_UNOWNED_LABEL_DE: &str = "in diesem Modus nicht verfügbar";
 
-pub(crate) const KEYBINDING_UNOWNED_CODE: &str = "shell.window-scope.unowned-chord";
+pub const KEYBINDING_UNOWNED_CODE: &str = "shell.window-scope.unowned-chord";
 //#endregion ⌨️WindowScope
 //#endregion ActionPanelAndUtilities

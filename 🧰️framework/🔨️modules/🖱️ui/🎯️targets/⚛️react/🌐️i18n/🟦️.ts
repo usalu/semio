@@ -9,7 +9,9 @@
 
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
-import { createBrowserStoragePort, ephemeralSet, type ShellLocale, type StoragePort } from "@semio-tech/framework";
+import { createBrowserStoragePort, type StoragePort } from "../../../🔨️modules/🗄️storage-port/🟦️.ts";
+import { ephemeralSet } from "../../../../🫧️transient/🟦️.ts";
+import { type ShellLocale } from "@semio-tech/framework";
 import { resolveUiLabel, type DeepUiTranslationKeys, type UiI18nPort, type UiLabelPair, type UiLabelValue, type UiTranslationKey, type UiLocale, type UiRegisteredTranslationKey, type UiRibbonParentEntries, type UiTranslateFn, type UiTranslationSchema } from "../../../🧱️elements/📚️I18n/🟦️.tsx";
 
 export { resolveUiLabel };

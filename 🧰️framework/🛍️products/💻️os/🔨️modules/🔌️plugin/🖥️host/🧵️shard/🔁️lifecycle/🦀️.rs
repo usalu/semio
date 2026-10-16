@@ -3,7 +3,7 @@ use std::num::NonZeroU64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ShardActorAllocation {
-    actor: ActorId,
+    pub actor: ActorId,
     registration: NonZeroU64,
 }
 
@@ -30,7 +30,7 @@ pub struct ShardRegistrationRejected {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum LifecycleRetry {
+pub enum LifecycleRetry {
     None,
     YieldPeer,
     Ready,
@@ -48,7 +48,7 @@ pub(super) struct AdmittedAuthority {
 }
 
 impl DeferredAuthority {
-    pub(super) fn actor(&self) -> u64 {
+    pub fn actor(&self) -> u64 {
         match self {
             Self::Register { actor } | Self::Unregister { actor } => actor.0,
             Self::Event { actor, .. } | Self::JobStep { actor, .. } | Self::JobReplay { actor, .. } | Self::Suspend { actor, .. } | Self::Resume { actor, .. } => *actor,
@@ -72,7 +72,7 @@ impl AdmittedAuthority {
 }
 
 impl ShardLoop {
-    pub(super) fn current_allocation(&self, actor: u64) -> Option<ShardActorAllocation> {
+    pub fn current_allocation(&self, actor: u64) -> Option<ShardActorAllocation> {
         self.allocations.get(&actor).copied()
     }
 
@@ -116,7 +116,7 @@ impl ShardLoop {
         }
     }
 
-    pub(super) fn has_lifecycle_retry(&self) -> bool {
+    pub fn has_lifecycle_retry(&self) -> bool {
         [&self.pending_interactive, &self.pending_background].into_iter().any(|ring| (0..ring.len).any(|index| ring.get(index).is_some_and(AdmittedAuthority::retries)))
     }
 
@@ -151,7 +151,7 @@ impl ShardLoop {
         Some(first)
     }
 
-    pub(super) fn select_pending_authority(&mut self) -> Option<AdmittedAuthority> {
+    pub fn select_pending_authority(&mut self) -> Option<AdmittedAuthority> {
         let revocation = [&self.pending_interactive, &self.pending_background].into_iter().enumerate().find_map(|(lane, ring)| {
             (0..ring.len)
                 .find(|index| {
@@ -189,6 +189,3 @@ impl ShardLoop {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔁️lifecycle/🦀️.rs"]
-mod tests;

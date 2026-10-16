@@ -1,5 +1,5 @@
-import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
+import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ Fem2d snapshot schema — artifact-lane fields only. */
 
 //#region 🔖️Entities

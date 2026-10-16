@@ -44,14 +44,12 @@
     {
       "mode": "prototype",
       "nativeProfile": "prototype",
-      "wasmProfile": "wasm-prototype",
       "configuration": "Debug",
       "optLevel": "0"
     },
     {
       "mode": "release",
       "nativeProfile": "release",
-      "wasmProfile": "wasm-release",
       "configuration": "Release",
       "optLevel": "3"
     }

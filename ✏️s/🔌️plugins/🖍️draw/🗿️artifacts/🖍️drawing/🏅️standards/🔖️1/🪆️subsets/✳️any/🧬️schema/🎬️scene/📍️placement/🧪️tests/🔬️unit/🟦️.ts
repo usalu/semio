@@ -8,7 +8,7 @@ import schema from "../../🧬️schema/🔣️.json";
 import sources from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
 import {DrawingScenePlacementJob} from "../../🟦️.ts";
 import type {DrawingSceneSource} from "../../../📋️prepare/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 const lift=(value:any):any=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,lift(item)])):value;
 const limits={maxNodes:1024,maxDepth:32,maxSegments:65536,maxReferences:32768,maxSourceBytes:268439552},algorithms={maxWork:1e9,booleans:{tolerance:.001,epsilon:1e-8,maxDepth:32,maxReferences:32768,maxEdges:65536,maxParameters:262144,maxAtomicEdges:65536,maxSegments:65536,maxRetainedSegments:262144,maxWork:1e9},trace:{maxPixels:16777216,maxAdmittedPixels:67108864,maxSourceBytes:268439552,maxEdges:65536,maxSegments:65536,maxRetainedSegments:65536,maxWork:1e9}};
 const source=(row:typeof rows[number]):DrawingSceneSource=>{const fixture="source"in row?sources.find(source=>source.name===row.source)!.document:null,layers=lift(fixture?.layers??("roots"in row?row.roots:[])),assets=fixture?.assets??("assets"in row?row.assets:{});return{layers,assets,rootVisible:index=>row.selected.includes(layers[index]!.id)}as DrawingSceneSource;};

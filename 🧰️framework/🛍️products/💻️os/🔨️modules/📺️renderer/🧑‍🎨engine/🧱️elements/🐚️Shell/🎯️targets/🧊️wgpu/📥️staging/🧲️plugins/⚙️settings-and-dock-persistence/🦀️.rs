@@ -8,18 +8,18 @@ use super::*;
 impl PluginState {
     /// 🛍️ Installs the cached catalogue on every node-graph surface whose engine host does not
     /// already carry it — the wgpu twin of React's `AppCatalogueContext` provider.
-    pub(crate) fn publish_app_catalogue(&self, surfaces: &SurfaceState) {
+    pub fn publish_app_catalogue(&self, surfaces: &SurfaceState) {
         if self.app_catalogue_json.is_empty() {
             return;
         }
         for (host_id, _) in surfaces.node_graph_states.iter() {
-            crate::engine_canvas::node_graph_set_catalogue_json(host_id, &self.app_catalogue_json);
+            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_set_catalogue_json(host_id, &self.app_catalogue_json);
         }
     }
 
     /// 👁️✏️ `(dialect, role, pinned value, options)` per opening pairing the loaded manifests declare —
     /// React's `defaultAppsRows` memo over `AppRouter.entriesFor` plus the persisted `OpeningPreferences`.
-    pub(super) fn default_app_rows(&self) -> Vec<(String, String, String, Vec<(String, String)>)> {
+    pub fn default_app_rows(&self) -> Vec<(String, String, String, Vec<(String, String)>)> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let mut dialects: Vec<String> = Vec::new();
@@ -56,10 +56,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// extensions excluded — they nest under their host) and every plugin id the generated activation catalogue claims
     /// (`available`) — the same table [`ShellState::install_plugin`]'s lazy install reads, which is what makes `Install` a real
     /// verb rather than a decoration. Sorted and unique.
-    pub(crate) fn marketplace_roster(&self) -> Vec<String> {
+    pub fn marketplace_roster(&self) -> Vec<String> {
         let extension_ids: Vec<&str> = self.extensions.iter().map(|entry| entry.record.extension_id.as_str()).collect();
         let mut ids: Vec<String> = self.plugins.iter().filter(|entry| !extension_ids.contains(&entry.plugin_id.as_str())).map(|entry| entry.plugin_id.clone()).collect();
-        for (_, plugin_id) in crate::program_bridge::plugin_artifact_kind_activations().iter() {
+        for (_, plugin_id) in semio_framework_os_renderer_wgpu_program_bridge::plugin_artifact_kind_activations().iter() {
             if !ids.iter().any(|id| id.as_str() == *plugin_id) {
                 ids.push((*plugin_id).to_string());
             }

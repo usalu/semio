@@ -6,8 +6,8 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import type {VcsSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as owner from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
+import type {ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 type Snapshot=Omit<VcsSnapshot,"counter">&{counter:bigint};
 const own=owner as unknown as {VCS_SQLITE_SCHEMA:string;vcsSnapshotToSqliteDatabase:(snapshot:Snapshot,options?:ArtifactSqliteOptions)=>Promise<SqliteDatabase>;vcsSnapshotFromSqliteDatabase:(database:SqliteDatabase,options?:ArtifactSqliteOptions)=>Promise<Snapshot>};
 const snapshot=():Snapshot=>({...fixture.snapshot,counter:BigInt(fixture.snapshot.counter),tags:[...fixture.snapshot.tags]});
@@ -56,8 +56,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {vcsSnapshotToSqliteDatabase as normSemanticProject,vcsSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("VCS complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(normSemanticContract["schemaBytes"]).toEqual(420);expect(normSemanticContract["tableWidths"]).toEqual({"vcs_document":6,"vcs_tag":4});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":7,"valueBytes":250},{"id":"emptyTags","rows":1,"valueBytes":72}]);
  for(const item of normSemanticContract.cases){const source=snapshot();if(item.id==="emptyTags"){source.tags=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:2,maxColumns:6};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);

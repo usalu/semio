@@ -19,7 +19,7 @@ fn utility_node_contains(nodes: &[UtilityNode], target_id: &str) -> bool {
 /// 🧰️ Ancestor `Collection` ids (root → immediate parent) that must be expanded for `target_id` to be
 /// visible in the footer utility bar — empty when `target_id` isn't nested in any collection (already
 /// visible) or doesn't exist. Pure so it's independently testable from the frame-reveal wiring.
-pub(crate) fn utility_collection_path_to_id(nodes: &[UtilityNode], target_id: &str) -> Vec<String> {
+pub fn utility_collection_path_to_id(nodes: &[UtilityNode], target_id: &str) -> Vec<String> {
     for node in nodes {
         if let UtilityNode::Collection { id, children, .. } = node {
             if utility_node_contains(children, target_id) {

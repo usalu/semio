@@ -1,5 +1,5 @@
 /** 🧬️ Raster diff schema — sparse field delta over the artifact. */
-import {inverse} from "../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
+import {inverse} from "@semio-tech/framework/pixels/compositing";
 import {
   parseRasterArtifact,
   parseSemioImageSnapshot,

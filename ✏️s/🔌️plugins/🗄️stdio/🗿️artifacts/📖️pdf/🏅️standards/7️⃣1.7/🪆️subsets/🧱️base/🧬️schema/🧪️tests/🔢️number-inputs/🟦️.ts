@@ -2,8 +2,8 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import {mutationInputDefs} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
-import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
+import {mutationInputDefs} from "@semio-tech/framework/manifest";
+import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import fixture from "../../../🧪️tests/🧫️fixtures/🧪️tests/🔢️number-inputs/🔣️.json";
 const root=resolve(import.meta.dir,"../..");
 function bits(number:number){const data=new DataView(new ArrayBuffer(8));data.setFloat64(0,number,false);return data.getBigUint64(0,false).toString(16).padStart(16,"0");}

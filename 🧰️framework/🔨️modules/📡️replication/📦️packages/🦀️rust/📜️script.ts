@@ -15,6 +15,7 @@ import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/
 import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import assert from "node:assert/strict";
+import{unsignedLebOracleV1}from"../../../🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
@@ -207,7 +208,7 @@ export class RetainedVerificationScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("retained-verification-check accepts only --oracle-only");
     const { default: crc } = await import("crc-32/crc32c.js");
     const { inflateRawSync } = await import("node:zlib");
-    const leb = await import("@webassemblyjs/leb128");
+    const leb = unsignedLebOracleV1();
     const owner = join(this.root, "../../📐️format/🔎️verification");
     const fixture: RetainedVerificationFixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
@@ -220,7 +221,7 @@ export class RetainedVerificationScript extends BundleScript {
     assert.equal(header.toString("hex"), fixture.headerHex);
     const frame = (kind: number, flags: number, payload: Buffer): Buffer => {
       const body = Buffer.concat([Buffer.from([kind, flags]), payload]);
-      const size = Buffer.from(leb.encodeU32(body.length)); const tail = Buffer.alloc(8);
+      const size = Buffer.from(leb.encodeUnsigned32(body.length)); const tail = Buffer.alloc(8);
       tail.writeUInt32LE(checksum(body)); tail.writeUInt32LE(size.length + body.length + 8, 4);
       return Buffer.concat([size, body, tail]);
     };
@@ -267,7 +268,7 @@ export class RetainedVerificationScript extends BundleScript {
       else if (row.operation === "record-limit") limits.records = row.value;
       else if (row.operation === "file-limit") limits.fileBytes = row.value;
       else {
-        const offset = row.operation === "commit-xor" ? 94 + row.offset : row.operation === "second-commit-xor" ? 183 + row.offset : row.offset; mutated[offset] ^= row.value;
+        const offset = row.operation === "commit-xor" ? 94 + row.offset : row.operation === "second-commit-xor" ? 183 + row.offset : row.offset; const original=mutated[offset];if(original===undefined)throw Error("Existing corruption target byte required");mutated[offset]=original^row.value;
         if (row.repairCrc) {
           if (row.operation === "header-xor") mutated.writeUInt32LE(checksum(mutated.subarray(0, 20)), 20);
           else if (row.operation === "second-commit-xor") mutated.writeUInt32LE(checksum(mutated.subarray(181, 247)), 247);
@@ -285,7 +286,7 @@ export class RetainedVerificationScript extends BundleScript {
       const committed = Buffer.concat([header, encoded, frame(12, 2, payload)]);
       if (row.error === null) {
         const raw = Buffer.from(row.rawHex, "hex"); assert.deepEqual(inflateRawSync(stored), raw);
-        assert.deepEqual(rawLength, Buffer.from(leb.encodeU32(raw.length)));
+        assert.deepEqual(rawLength, Buffer.from(leb.encodeUnsigned32(raw.length)));
         assert.deepEqual(inspect(committed), { end: committed.length, sequence: 1, frames: 2, tail: 0 });
       } else assert.throws(() => inspect(committed), new RegExp(`^Error: ${row.error}$`), row.id);
     }
@@ -309,7 +310,7 @@ class RetainedRecordObservationScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("retained-record-observation-check accepts only --oracle-only");
     const { default: crc } = await import("crc-32/crc32c.js");
-    const leb = await import("@webassemblyjs/leb128");
+    const leb = unsignedLebOracleV1();
     const owner = join(this.root, "../../📐️format/🔎️verification/🧾️record");
     const fixture: RetainedRecordFixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const ids = new Set<string>(); let observed = 0;
@@ -317,14 +318,14 @@ class RetainedRecordObservationScript extends BundleScript {
     for (const row of fixture.cases) {
       assert(!ids.has(row.id)); ids.add(row.id);
       const body = Buffer.concat([Buffer.from([row.kind, row.flags]), Buffer.from(row.rawHex, "hex"), Buffer.from(row.payloadHex, "hex"), Buffer.alloc(row.repeat, 97)]);
-      const length = Buffer.from(leb.encodeU32(body.length)); const tail = Buffer.alloc(8); tail.writeUInt32LE((checksum(body) ^ Number(row.corruptCrc)) >>> 0); tail.writeUInt32LE(length.length + body.length + 8, 4);
+      const length = Buffer.from(leb.encodeUnsigned32(body.length)); const tail = Buffer.alloc(8); tail.writeUInt32LE((checksum(body) ^ Number(row.corruptCrc)) >>> 0); tail.writeUInt32LE(length.length + body.length + 8, 4);
       const bytes = Buffer.concat([Buffer.from(fixture.headerHex, "hex"), length, body, tail]);
       const bodyStart = 32 + length.length; const payloadEnd = bodyStart + body.length;
       assert(row.at <= bytes.length); let readyAt = bodyStart + 2; let rawBytes: number | null = null;
       if (row.flags & 1) {
         const raw = Buffer.from(row.rawHex, "hex"); let value = 0n;
         for (let index = 0; index < raw.length; index++) value |= BigInt(raw[index]! & 127) << BigInt(7 * index);
-        rawBytes = Number(value); assert.deepEqual(raw, Buffer.from(leb.encodeU32(rawBytes))); readyAt += raw.length;
+        rawBytes = Number(value); assert.deepEqual(raw, Buffer.from(leb.encodeUnsigned32(rawBytes))); readyAt += raw.length;
       }
       let error: string | null = null;
       if (row.at >= bodyStart + 2 && ((row.flags & ~31) !== 0 || Boolean(row.flags & 1) !== Boolean(row.flags & 28))) error = "frame";

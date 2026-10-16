@@ -11,32 +11,11 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import {
-  buildCliTreeArgs,
-  buildEntityEmojiPattern,
-  buildEntityIdRegex,
-  ENTITY_EMOJIS,
-  ENTITY_ID_REGEX,
-  extractLeadingEmoji,
-  extractRepoResult,
-  FilterTreeDataProvider,
-  FilterTreeItem,
-  hasRepoAccess,
-  invalidateTreeNodeCache,
-  MonorepoTreeDataProvider,
-  MonorepoTreeItem,
-  parseRepoEvents,
-  parseUri,
-  resolveRepoBinaryPath,
-  RepoEvent,
-  slugify,
-  TicketData,
-  TicketInteraction,
-  treeNodeContextValue,
-  TreeNodeData,
-  treeNodeDisplayLabel,
-  treeNodeToItem,
-} from "../../📦️packages/🟦️typescript/🟦️";
+import { buildCliTreeArgs, FilterTreeDataProvider, FilterTreeItem, MonorepoTreeDataProvider, MonorepoTreeItem, treeNodeToItem } from "../../🌳️tree-providers/🟦️.ts";
+import { buildEntityEmojiPattern, buildEntityIdRegex, ENTITY_EMOJIS, ENTITY_ID_REGEX } from "../../🌪️entity-emoji-registry/🟦️.ts";
+import { extractLeadingEmoji, invalidateTreeNodeCache, parseUri, slugify, treeNodeContextValue, TreeNodeData, treeNodeDisplayLabel } from "../../🏬️uri-resolution/🟦️.ts";
+import { extractRepoResult, hasRepoAccess, parseRepoEvents, resolveRepoBinaryPath } from "../../🎼️utilities/🟦️.ts";
+import { RepoEvent, TicketData, TicketInteraction } from "../../⚙️data-models/🟦️.ts";
 
 // #endregion 🔌️Adapters
 

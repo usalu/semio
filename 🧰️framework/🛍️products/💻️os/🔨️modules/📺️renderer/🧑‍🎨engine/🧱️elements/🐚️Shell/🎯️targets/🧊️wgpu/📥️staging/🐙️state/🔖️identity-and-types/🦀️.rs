@@ -10,7 +10,7 @@ use super::*;
 /// `ShellState::new`. Process id + boot-time millis is deliberately simple (CLAUDE.md: concise code,
 /// no cryptographic uniqueness need) — collisions would require two `semio-wgpu-native` processes
 /// booting the same pid at the same millisecond, which the OS itself already rules out.
-pub(crate) fn mint_shell_session_id() -> String {
+pub fn mint_shell_session_id() -> String {
     format!("wgpu-{}", semio_framework_os_kernel::os_identity::time_ordered_id())
 }
 
@@ -20,9 +20,9 @@ pub(crate) fn mint_shell_session_id() -> String {
 /// worked from React's shell until AU3 separated the two. A declared origin that is not a bare
 /// scheme+authority is refused rather than trimmed, and an undeclared hub falls back to the request
 /// base url the directory client already uses.
-pub(crate) fn shell_hub_bootstrap_origin() -> String {
+pub fn shell_hub_bootstrap_origin() -> String {
     let declared = shell_directory_request_base_url();
-    crate::hub_sign_in::parse_hub_origin(&declared).unwrap_or(declared)
+    semio_framework_os_renderer_wgpu_hub_contracts::hub_sign_in::parse_hub_origin(&declared).unwrap_or(declared)
 }
 
 /// 🌐️ The native directory client's network byte budget per minute. It carries the largest bounded answer the
@@ -30,13 +30,13 @@ pub(crate) fn shell_hub_bootstrap_origin() -> String {
 /// 64 MiB) — twice over: at the old 10 MB a 17.7 MB block component was refused mid-body
 /// (`os.directory-client exhausted its network_bytes_per_min budget`, gate run 23 on hub 7800 B2).
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) const SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE: u64 = 2 * semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
+pub const SHELL_DIRECTORY_NETWORK_BYTES_PER_MINUTE: u64 = 2 * semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
 
 //#endregion 🔖️IdentityPure
 //#region ShellTypes
 /// 🪪️ React's `InputOriginV1` values this target can mint — a CONTROL press, and a pointer/camera
 /// stream an engine surface derived from raw input (`🏛️ShellHost/🎯️input-ledger/🟦️.ts`).
-pub(crate) const SHELL_DISPATCH_ORIGIN_USER: &str = "user";
+pub const SHELL_DISPATCH_ORIGIN_USER: &str = "user";
 
 //#endregion ShellTypes
 

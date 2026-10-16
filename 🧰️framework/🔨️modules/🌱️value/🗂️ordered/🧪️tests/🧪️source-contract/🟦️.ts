@@ -8,9 +8,10 @@ const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️ordered-map.js
 
 
 assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
-const key = (value: any): string => value.prefix.repeat(value.repetitions) + value.suffix;
+const key = (value: {readonly prefix:string;readonly repetitions:number;readonly suffix:string}): string => value.prefix.repeat(value.repetitions) + value.suffix;
+function orderedJsonOracle(value:Readonly<Record<string,unknown>>):string{const result:unknown=Reflect.apply(stableStringify,undefined,[value,{cmp:(a:{readonly key:string},b:{readonly key:string})=>Buffer.compare(Buffer.from(a.key),Buffer.from(b.key))}]);if(typeof result!=="string")throw Error("Independent ordered JSON string required");return result;}
 for (const row of fixture.cases) {
-  const oracle = new Map<string, string>();
+  const oracle = new Map<string, unknown>();
   for (const operation of row.operations) {
     if (operation.op === "set") oracle.set(key(operation.key), operation.value);
     else oracle.delete(key(operation.key));
@@ -18,7 +19,7 @@ for (const row of fixture.cases) {
   const entries = [...oracle].sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
   assert.deepEqual(entries, row.expected.map((entry: any) => [key(entry.key), entry.value]));
   assert.deepEqual(JSON.parse(JSON.stringify(Object.fromEntries(entries))), Object.fromEntries(entries));
-  const thirdParty = stableStringify(Object.fromEntries(oracle), { cmp: (a, b) => Buffer.compare(Buffer.from(a.key), Buffer.from(b.key)) });
+  const thirdParty = orderedJsonOracle(Object.fromEntries(oracle));
   assert.equal(thirdParty, `{${entries.map(([key, value]) => `${JSON.stringify(key)}:${JSON.stringify(value)}`).join(",")}}`);
 }
 for (const row of fixture.lookupCases) {
@@ -78,3 +79,5 @@ assert(!validateSet(["text", 1]));
 assert.equal(stableStringify(orderedSet), JSON.stringify(setFixture.expectedValues));
 
 //#endregion 🧺️SetContract
+
+console.log("[DEBUG] ordered map Source corpus retains byte-order JSON oracle through checked existing package adapter");

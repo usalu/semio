@@ -14,7 +14,7 @@ use super::*;
 /// chunkCount}` per chunk, and a plugin could satisfy only one of them. An unchunked import also asks
 /// the fixed guest heap for a contiguous block the size of the whole file
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(super) fn file_open_import_actions(controller_id: &str, import_action: &str, opened: Vec<OpenedFile>, multiple: bool, retained_args: Option<&semio_framework::DslValue>) -> Vec<ActionDescriptor> {
+pub fn file_open_import_actions(controller_id: &str, import_action: &str, opened: Vec<OpenedFile>, multiple: bool, retained_args: Option<&semio_framework::DslValue>) -> Vec<ActionDescriptor> {
     let total = opened.len();
     let mut actions = Vec::new();
     for (index, file) in opened.into_iter().enumerate() {
@@ -28,19 +28,19 @@ pub(super) fn file_open_import_actions(controller_id: &str, import_action: &str,
 }
 
 /// 🛑️ The shell verb a Task Manager row's Cancel sends (`{transfer}` on the `framework` controller).
-pub(crate) const IMPORT_TRANSFER_CANCEL_ACTION: &str = "cancelImportTransfer";
+pub const IMPORT_TRANSFER_CANCEL_ACTION: &str = "cancelImportTransfer";
 
 /// 🎞️ What one transfer moves into the guest: a picked document's chunks, or the frames one decoded video yields
 /// (`RequestMediaFrames`: one `frameAction` per sampled frame, then its `doneAction` — or its one `fallbackAction`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum TransferLane {
+pub enum TransferLane {
     DocumentImport,
     VideoFrames,
 }
 
 impl TransferLane {
     /// 🏷️ The lane a Task Manager row names.
-    pub(crate) fn label(self, de: bool) -> &'static str {
+    pub fn label(self, de: bool) -> &'static str {
         match self {
             Self::DocumentImport => shell_chrome_string("taskManager.documentImport", de),
             Self::VideoFrames => shell_chrome_string("taskManager.videoFrames", de),
@@ -52,7 +52,7 @@ impl TransferLane {
 /// Task Manager lists it with its progress and a Cancel, and a cancelled transfer that already handed the guest a chunk or a
 /// frame is freed by the app's `importAbort`, so its open import transaction leaves zero trace.
 #[derive(Clone, Debug)]
-pub(crate) struct ImportTransfer {
+pub struct ImportTransfer {
     pub id: u64,
     pub file: String,
     pub first_file: String,
@@ -67,7 +67,7 @@ pub(crate) struct ImportTransfer {
 impl OpeningState {
     /// 📥️ Starts a picked-file import as an [`ImportTransfer`] the drain steps; an empty pick starts nothing. `true` when one
     /// started.
-    pub(crate) fn begin_import_transfer(&mut self, picked: PickedImport, docs: &DocumentState) -> bool {
+    pub fn begin_import_transfer(&mut self, picked: PickedImport, docs: &DocumentState) -> bool {
         let PickedImport { controller_id, import_action, opened, args, multiple } = picked;
         let Some(first_file) = opened.first().map(|file| file.name.clone()) else { return false };
         let file = opened.iter().map(|file| file.name.as_str()).collect::<Vec<_>>().join(", ");
@@ -80,13 +80,13 @@ impl OpeningState {
     /// lane — the host cancel `RequestMediaFrames` lacked: listed with its progress and a Cancel, stepped within the same
     /// turn budget as an import, and a cancelled stream that already handed the guest a frame is freed by the app's
     /// `importAbort`, so its open import transaction (design §15) leaves zero trace. An empty answer starts nothing.
-    pub(crate) fn begin_media_frames_transfer(&mut self, controller_id: String, frames: Vec<ActionDescriptor>, docs: &DocumentState) -> bool {
+    pub fn begin_media_frames_transfer(&mut self, controller_id: String, frames: Vec<ActionDescriptor>, docs: &DocumentState) -> bool {
         let Some(file) = frames.first().map(|frame| frame.args.as_ref().and_then(|args| args.get("name")).and_then(semio_framework::DslValue::as_str).unwrap_or("video").to_string()) else { return false };
         self.queue_transfer(TransferLane::VideoFrames, file.clone(), file, controller_id, frames.into(), docs)
     }
 
     /// 🧾️ Queues one transfer behind the running ones under a fresh id, owned by the session's plugin.
-    pub(super) fn queue_transfer(&mut self, lane: TransferLane, file: String, first_file: String, controller_id: String, chunks: VecDeque<ActionDescriptor>, docs: &DocumentState) -> bool {
+    pub fn queue_transfer(&mut self, lane: TransferLane, file: String, first_file: String, controller_id: String, chunks: VecDeque<ActionDescriptor>, docs: &DocumentState) -> bool {
         let owner = docs.session.as_ref().map(|session| session.plugin_id.clone()).unwrap_or_default();
         let id = self.import_transfer_next;
         self.import_transfer_next = self.import_transfer_next.wrapping_add(1).max(1);
@@ -97,7 +97,7 @@ impl OpeningState {
     /// 🧵️ The Task Manager's running-tasks section — React's `TaskManagerTasksPanel` over `documentTransferTasksV1`: per import
     /// its title, lane, owner and state, a progress bar of the chunks delivered, and "Cancel <file>"; "No task is running."
     /// while none runs.
-    pub(crate) fn import_task_nodes(&self, prefs: &PrefsState) -> UiNode {
+    pub fn import_task_nodes(&self, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let pick = |en: &str, de: &str| if is_de { de.to_string() } else { en.to_string() };
         let mut children = vec![settings_text_row(shell_chrome_string("taskManager.runningTasks", is_de))];
@@ -120,7 +120,7 @@ impl OpeningState {
                 id: Some(format!("os.task-manager.cancel.{task}")),
                 icon_id: IconName::Square,
                 label: Label::data(if is_de { format!("{} abbrechen", transfer.file) } else { format!("Cancel {}", transfer.file) }),
-                action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(), args: crate::action_args_json!({ "transfer": transfer.id }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "transfer": transfer.id }) },
                 style: None,
                 presence: UiPresence::default(),
                 menu: None,
@@ -132,7 +132,7 @@ impl OpeningState {
 
 /// 📤️ Opens the native file picker; one entry per selected file, in selection order.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
+pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
     use std::fs as system_fs;
     let extensions: Vec<String> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.').map(str::to_string)).collect();
     let paths = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open(extensions.clone(), multiple)).await;
@@ -153,7 +153,7 @@ pub(crate) async fn request_file_open(accept: &str, read_as: Option<&str>, multi
 /// 📤️ Opens the browser file picker through the page-owned door; one entry per selected file, in
 /// selection order, EMPTY on cancel or on a refusal (which is logged, never swallowed).
 #[cfg(target_arch = "wasm32")]
-pub(crate) async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
+pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
     let request = serde_json::json!({ "op": "request-file-open", "accept": accept, "readAs": read_as, "multiple": multiple }).to_string();
     let answer = match host_io_call(&request, None).await {
         Ok(answer) => answer,
@@ -178,3 +178,19 @@ pub(crate) async fn request_file_open(accept: &str, read_as: Option<&str>, multi
 
 //#endregion 📤️FileOpenImport
 
+#[cfg(target_arch = "wasm32")]
+pub async fn present_media_export_bytes_cancellable(filename: String, mime_type: String, bytes: Vec<u8>, cancel: CancelToken) -> Result<bool, String> {
+    if cancel.is_cancelled_now() { return Ok(false); }
+    let request = serde_json::json!({ "op": "download-media-export", "filename": filename, "mimeType": mime_type }).to_string();
+    host_io_call(&request, Some(&bytes)).await.map(|_| true)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn present_media_export_bytes_cancellable(filename: String, mime_type: String, bytes: Vec<u8>, cancel: CancelToken) -> Result<bool, String> {
+    if cancel.is_cancelled_now() { return Ok(false); }
+    let extension = std::path::Path::new(&filename).extension().and_then(|value| value.to_str()).unwrap_or_else(|| mime_type.rsplit_once('/').map(|(_, value)| value).unwrap_or("dat"));
+    let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(&filename, [extension])).await.into_iter().next() else { return Ok(false) };
+    if cancel.is_cancelled_now() { return Ok(false); }
+    std::fs::write(path, bytes).map_err(|error| error.to_string())?;
+    Ok(true)
+}

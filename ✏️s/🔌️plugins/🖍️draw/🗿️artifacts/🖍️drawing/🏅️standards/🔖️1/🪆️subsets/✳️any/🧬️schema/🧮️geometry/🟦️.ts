@@ -1,5 +1,5 @@
 /** 📐️ Affine geometry twin, sharing the language-neutral extrema fixtures with Rust. */
-import type { PathSegment } from "../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import type { PathSegment } from "@semio-tech/framework/2d";
 export type Matrix = [number, number, number, number, number, number];
 export type Point = [number, number];
 export function multiply(a: Matrix, b: Matrix): Matrix {

@@ -48,7 +48,7 @@ test("bucket tolerance rejects values outside 0..255",()=>{
 });
 
 import selections from "../🧫️fixtures/🎯️pixel-selection/🔣️.json";
-import { parsePixelLayerSelectionV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
+import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selection";
 for(const row of selections.cases)test(`completed selection: ${row.name}`,async()=>{
   const value={...config("#2878dc",1),paintTarget:row.selection.target,pixelSelection:row.selection};
   expect(validate(value)).toBe(true);
@@ -69,8 +69,8 @@ test("completed selection rejects malformed coverage and incompatible paint targ
   expect(parseRasterConfig(config("#2878dc",1)).pixelSelection).toBeUndefined();
 });
 
-import {PAINT2D_SCENE_LANES,paint2dSceneFromLanes,type Paint2dScene} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
-import sceneContract from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json";
+import {PAINT2D_SCENE_LANES,paint2dSceneFromLanes,type Paint2dScene} from "@semio-tech/framework/ui/scene";
+import { scenePaint2dSceneLanesFixture as sceneContract } from "@semio-tech/framework/ui/scene/testing";
 
 test("completed selection survives the shared optional scene carrier",()=>{
   expect(PAINT2D_SCENE_LANES).toEqual(sceneContract.lanes);

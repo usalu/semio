@@ -1,7 +1,7 @@
 /** 🫳️ Explicit DWG row ownership and bounded ordered relationship reconstruction. */
-import { artifactSqliteTables,artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import { type SqliteDatabase,type SqliteRow } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { artifactSqliteTables,artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import { type SqliteDatabase,type SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 import { DwgNumberRow } from "../🔢️number/🟦️.ts";
 
 export class DwgReader{

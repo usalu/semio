@@ -1,8 +1,8 @@
 /** 🌊️ Named native flow nodes and directed port relationships with exact positions. */
 import type {SemioFlowSnapshot,FlowNode,FlowEdge,FlowParam} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_FLOW_SQLITE_SCHEMA=`CREATE TABLE semio_flow_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_flow_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_flow_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, kind TEXT NOT NULL, label TEXT NOT NULL, position_x REAL, position_y REAL, position_x_ieee754_bits INTEGER, position_x_numeric_class TEXT, position_y_ieee754_bits INTEGER, position_y_numeric_class TEXT);
 CREATE TABLE semio_flow_parameter (id INTEGER PRIMARY KEY, node_id INTEGER NOT NULL REFERENCES semio_flow_node(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), parameter_key TEXT NOT NULL, parameter_value TEXT NOT NULL);

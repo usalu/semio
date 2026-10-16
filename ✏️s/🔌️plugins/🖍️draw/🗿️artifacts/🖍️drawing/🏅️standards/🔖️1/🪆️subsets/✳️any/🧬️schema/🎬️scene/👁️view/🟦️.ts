@@ -2,7 +2,7 @@
 import type {DocumentScenePlan,DocumentSceneNode} from "../📋️prepare/🟦️.ts";
 import {sceneSelectionRelation} from "../📋️prepare/🟦️.ts";
 import type {RasterSceneGroup} from "../📷️raster/🟦️.ts";
-import type {PathSegment} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import type {PathSegment} from "@semio-tech/framework/2d";
 import type {Fill} from "../../🎨️fill/🟦️.ts";
 import type {PathRasterStroke} from "../../🧮️geometry/📷️raster/🟦️.ts";
 import {multiply,segmentBounds,type Matrix,type Point} from "../../🧮️geometry/🟦️.ts";

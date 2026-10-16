@@ -10,8 +10,8 @@ import {
   IMPORT_CHUNK_BYTES,
   importChunkArguments,
   importPayloadChunks,
-  type ImportChunk,
-} from "../../🟦️.ts";
+  type ImportChunk
+} from "../../🗄️file-open-import/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../../../⏱️trace/🧮️memory/🟦️.ts";
 import { wireEffectToFriendly } from "../../../🎭️actor/🖼️wire-turn/🟦️.ts";
 

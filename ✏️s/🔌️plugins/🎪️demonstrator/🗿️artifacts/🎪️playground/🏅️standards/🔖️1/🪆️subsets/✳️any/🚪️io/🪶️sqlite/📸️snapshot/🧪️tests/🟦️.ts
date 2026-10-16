@@ -14,9 +14,9 @@ import { parsePlaygroundInferenceText } from "../../../📝️text/💡️infere
 import { parsePlaygroundMutationsText } from "../../../📝️text/🧬️mutations/🟦️.ts";
 import diffSchema from "../../../../🧬️schema/🔺️diff/🔣️.json";
 import inferenceSchema from "../../../../🧬️schema/💡️inferences/🔣️.json";
-import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type { ArtifactSqliteOptions } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
+import type { ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 const sql = readFileSync(new URL("../🗄️.sql", import.meta.url), "utf8");
 const validate = new Ajv({ strict: false }).compile(schema);

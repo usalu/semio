@@ -1,5 +1,5 @@
 /** 🔢️ Borrowed numeric meaning leaves the owned primitive lexeme unchanged. */
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 /** 🧮️ RFC syntax and its optional finite binary64 query representation. */
 export interface JsonNumberMeaning{readonly valid:boolean;readonly numeric:number|null}
 /** 🔬️ Classify an authored number string with bounded cancellation and no copying. */

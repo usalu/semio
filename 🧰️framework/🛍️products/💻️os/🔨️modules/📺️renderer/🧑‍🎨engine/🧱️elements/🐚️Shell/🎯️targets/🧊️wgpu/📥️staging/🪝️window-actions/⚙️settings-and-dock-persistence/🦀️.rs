@@ -40,7 +40,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §C).
     /// Parked, never opened here: a picker ends on a user gesture and this funnel is a
     /// plain `fn`; `drain_deferred_actions` owns the `&mut self` the pick needs.
-    pub(crate) fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::Effect>) {
+    pub fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::Effect>) {
         for effect in effects {
             match effect {
                 semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => {
@@ -63,7 +63,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                             #[cfg(not(target_arch = "wasm32"))]
                             self.settle.submit_shell_io_future(async move { ShellIoCompletion::Program(plugin.load_app_document_pack(instance_id, &pack, &spr).await) });
                             #[cfg(target_arch = "wasm32")]
-                            crate::spawn_app_task(async move {
+                            semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
                                 if let Err(error) = plugin.load_app_document_pack(instance_id, &pack, &spr).await { debug_log(&format!("[TRACE] wgpu shell loadDocument effect failed: {error}")); }
                             });
                         }

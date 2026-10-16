@@ -146,5 +146,32 @@
         "files": []
       }
     ]
-  }
+  },
+  "sourceReceiptAdmission": {
+    "operations": [
+      "sourceClosureTaskEnvironments",
+      "sourceClosureReceiptHolds"
+    ],
+    "namespaces": [
+      {},
+      {
+        "SEMIO_NX_NATIVE_GRAPH_DIRECTORY": "/forged",
+        "SEMIO_NX_GRAPH_STORAGE": "/forged"
+      }
+    ],
+    "expectedReads": 0,
+    "error": "Original live native graph namespace required"
+  },
+  "sourceReceiptConsumers": [
+    {
+      "file": "dist/src/hasher/native-task-hasher-impl.js",
+      "name": "sourceClosureTaskEnvironments",
+      "calls": 1
+    },
+    {
+      "file": "dist/src/tasks-runner/cache.js",
+      "name": "sourceClosureReceiptHolds",
+      "calls": 3
+    }
+  ]
 }

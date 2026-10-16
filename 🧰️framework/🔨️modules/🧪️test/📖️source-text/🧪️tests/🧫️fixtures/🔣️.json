@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "root": "🧰️framework",
+  "accepted": [
+    "🔨️modules/🌱️value/🧬️schema/🔣️.json",
+    "🔨️modules/🚪️io/🧬️schema/🔣️.json",
+    "🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
+    "📦️packages/🟦️typescript/package.json",
+    "🔨️modules/🧪️test/📖️source-text"
+  ],
+  "refused": [
+    { "id": "empty", "path": "" },
+    { "id": "absolute", "path": "/etc/hosts" },
+    { "id": "parent-segment", "path": "🔨️modules/../../README.md" },
+    { "id": "leading-parent", "path": "../🌎️hub/package.json" },
+    { "id": "current-segment", "path": "🔨️modules/./🌱️value" },
+    { "id": "empty-segment", "path": "🔨️modules//🌱️value" },
+    { "id": "backslash", "path": "🔨️modules\\🌱️value" },
+    { "id": "trailing-slash", "path": "🔨️modules/" },
+    { "id": "nul", "path": "🔨️modules/\u0000" }
+  ],
+  "json": { "path": "📦️packages/🟦️typescript/package.json", "field": "name", "value": "@semio-tech/framework" }
+}

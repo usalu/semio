@@ -1,0 +1,84 @@
+{
+  "$id": "semio:nx:source-input-data:v1",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumTasks": 4096,
+        "maximumInstructionsPerTask": 65536,
+        "maximumInstructions": 262144,
+        "maximumEnvironmentRows": 4096,
+        "maximumEnvironmentEntriesPerTask": 2048,
+        "maximumEnvironmentEntries": 262144,
+        "maximumReceiptEntries": 16384,
+        "maximumTaskNameBytes": 1024,
+        "maximumInstructionBytes": 8192,
+        "maximumEnvironmentNameBytes": 1024,
+        "maximumEnvironmentValueBytes": 65536,
+        "maximumAggregateBytes": 33554432,
+        "maximumOutputEnvironmentEntriesPerTask": 67584,
+        "maximumOutputEnvironmentEntries": 524288,
+        "maximumOutputBytes": 100663296
+      }
+    },
+    "Plans": {
+      "type": "object",
+      "maxProperties": 4096,
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024,
+        "not": {
+          "const": "__proto__"
+        }
+      },
+      "additionalProperties": {
+        "type": "array",
+        "maxItems": 65536,
+        "items": {
+          "type": "string",
+          "maxLength": 8192
+        }
+      }
+    },
+    "Environments": {
+      "type": "object",
+      "maxProperties": 4096,
+      "additionalProperties": {
+        "type": "object",
+        "maxProperties": 2048,
+        "propertyNames": {
+          "maxLength": 1024
+        },
+        "additionalProperties": {
+          "type": "string",
+          "maxLength": 65536
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "values"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "values": {
+          "type": "object",
+          "maxProperties": 16384,
+          "propertyNames": {
+            "pattern": "^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

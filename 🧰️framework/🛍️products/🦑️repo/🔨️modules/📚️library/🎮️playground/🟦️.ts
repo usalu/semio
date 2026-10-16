@@ -4,7 +4,7 @@ import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
  * `📦️packages/🟦️typescript/🟦️.ts` so a consumer that only needs a port (the styling package's dev
  * servers, and through them `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery`
  * taxonomy walk into its module graph. */
-import { ephemeralBox } from "../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🫧️transient/🟦️.ts";
+import { ephemeralBox } from "../../../../../🔨️modules/🫧️transient/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { declaredWorkspaces, getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";

@@ -2,8 +2,8 @@
 /** 📕️ XLSX literal package and XML relations. */
 import sql from "./🗄️.sql" with {type:"text"};
 import type {XlsxSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteValueBudget,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteValueBudget,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 import{projectXmlDocuments,reconstructXmlDocuments,measureXmlDocuments,type XmlSqliteTables}from"../../../../../../../../📰️xml/🟦️.ts";
 import{measureOpcPackage,projectOpcPackage,reconstructOpcPackage,type OpcSqliteTables}from"../../../../../../../../🎒️zip/📦️opc/🪶️sqlite/🟦️.ts";
 export const XLSX_SQLITE_SCHEMA:string=sql;

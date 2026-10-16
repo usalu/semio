@@ -9,7 +9,7 @@ use super::*;
 /// 📚️ One row of the open `playground.navbar.fixture` dropdown. `control_id` is what the click
 /// handler's `shell.example.<id>` arm already dispatches `setActiveExample` for.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ShellExampleRow {
+pub struct ShellExampleRow {
     pub control_id: String,
     pub label: String,
     pub selected: bool,
@@ -18,14 +18,14 @@ pub(crate) struct ShellExampleRow {
 /// 📚️ The example rows one surface offers, by DIALECT — `manifest::examples_for_app` is THE
 /// predicate, shared with React's `examplesForApp` and pinned by
 /// `🛂️manifest/🧫️fixtures/📚️example-picker.json`. Viewers additionally declare the example-switch action.
-pub(crate) fn shell_offered_examples<'a>(examples: &'a [semio_framework::manifest::ExampleDefinition], app: &AppDefinition) -> Vec<&'a semio_framework::manifest::ExampleDefinition> {
+pub fn shell_offered_examples<'a>(examples: &'a [semio_framework::manifest::ExampleDefinition], app: &AppDefinition) -> Vec<&'a semio_framework::manifest::ExampleDefinition> {
     if app.role != semio_framework::AppRole::Editor && !app.actions.iter().chain(app.window_kinds.iter().flat_map(|kind| kind.actions.iter())).any(|action| action.id == "setActiveExample") {
         return Vec::new();
     }
     semio_framework::manifest::examples_for_app(examples, app)
 }
 
-pub(crate) fn shell_example_rows(examples: &[semio_framework::manifest::ExampleDefinition], app: &AppDefinition, active_example_id: Option<&str>, terminology: Terminology, locale: Locale) -> Vec<ShellExampleRow> {
+pub fn shell_example_rows(examples: &[semio_framework::manifest::ExampleDefinition], app: &AppDefinition, active_example_id: Option<&str>, terminology: Terminology, locale: Locale) -> Vec<ShellExampleRow> {
     shell_offered_examples(examples, app)
         .into_iter()
         .map(|example| ShellExampleRow { control_id: format!("shell.example.{}", example.id), label: example.label.resolve(terminology, locale).to_string(), selected: active_example_id == Some(example.id.as_str()) })
@@ -44,7 +44,7 @@ pub(crate) fn shell_example_rows(examples: &[semio_framework::manifest::ExampleD
 /// (`leaf("orthographic", "Orthographic", …)`) rather than resolving a `LocalizedLabel`, so
 /// translating them here would make the two shells read differently for the same row.
 #[derive(Clone, Copy)]
-pub(crate) struct WorldProjectionTemplate {
+pub struct WorldProjectionTemplate {
     pub id: &'static str,
     pub label: &'static str,
     pub icon_id: &'static str,
@@ -55,7 +55,7 @@ pub(crate) struct WorldProjectionTemplate {
 
 impl WorldProjectionTemplate {
     /// 📐️ React's complete template spec for a newly opened pane.
-    pub(crate) fn spec(self) -> Viewport3dProjectionSpec {
+    pub fn spec(self) -> Viewport3dProjectionSpec {
         let orientation = match self.mode {
             Viewport3dProjectionMode::Orthographic {} => Viewport3dProjectionOrientation::Cardinal { view: Viewport3dOrthographicView::Plan },
             Viewport3dProjectionMode::Axonometric { .. } => Viewport3dProjectionOrientation::Corner { quadrant: Viewport3dAxonometricQuadrant::Ne, hemisphere: Some(Viewport3dAxonometricHemisphere::Upper) },
@@ -68,7 +68,7 @@ impl WorldProjectionTemplate {
 }
 
 /// 🔀️ React's projection taxonomy, depth-first, branch before its own leaves.
-pub(crate) const WORLD_PROJECTION_TEMPLATES: &[WorldProjectionTemplate] = &[
+pub const WORLD_PROJECTION_TEMPLATES: &[WorldProjectionTemplate] = &[
     WorldProjectionTemplate { id: "parallel", label: "Parallel", icon_id: "projection-parallel", depth: 0, mode: Viewport3dProjectionMode::Orthographic {} },
     WorldProjectionTemplate { id: "orthographic", label: "Orthographic", icon_id: "projection-orthographic", depth: 1, mode: Viewport3dProjectionMode::Orthographic {} },
     WorldProjectionTemplate { id: "axonometric", label: "Axonometric", icon_id: "projection-axonometric", depth: 1, mode: Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Isometric, angle_a: 30.0, angle_b: 30.0 } },

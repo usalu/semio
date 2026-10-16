@@ -69,7 +69,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             if self.input.chrome_pointer_owner == Some(pointer_id) {
                 self.input.chrome_pointer_owner = None;
             }
-            let retained_canvas_drag = crate::interpreter::active_retained_drag_sessions().into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME));
+            let retained_canvas_drag = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions().into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(semio_framework_os_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME));
             if let Some((tab_id, from_anchor)) = self.dock.dock_tab_drag.take() {
                 self.finish_dock_tab_drag(&tab_id, from_anchor, x, y, theme);
             }
@@ -90,14 +90,14 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                         input.blur_input();
                         self.input.accessibility_focused_control_id = None;
                     }
-                    crate::scenes::cancel_scene_list_transfer();
+                    semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer();
                     return dock_drop_result;
                 }
                 if ShellPaletteKind::from_close_id(&control_id).is_some() {
                     if same_control && button == 0 {
                         self.commands.close_command_palette(input, &mut self.input);
                     }
-                    crate::scenes::cancel_scene_list_transfer();
+                    semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer();
                     return dock_drop_result;
                 }
                 if let Some(window_id) = dock_tab_select_window_id(&control_id).filter(|_| same_control) {
@@ -134,7 +134,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     }
                 }
             }
-            let captured_release = crate::interpreter::retained_pointer_capture_window(pointer_id).and_then(|window_id| self.input.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
+            let captured_release = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(pointer_id).and_then(|window_id| self.input.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
             let retained_release = input
                 .hit_at(x, y)
                 .cloned()
@@ -151,7 +151,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     self.as_pointer().route_retained_pointer_press(&captured_window, captured_body, x, y, false, button, HitKind::ComponentScene, None, pointer_id, input).await?;
                 }
             }
-            crate::scenes::cancel_scene_list_transfer();
+            semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer();
             return dock_drop_result;
         }
         if button == 2 {
@@ -346,7 +346,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                         ({ let __arg0 = ActionDescriptor {
                             controller_id: self.docs.session.as_ref().map(|s| s.app.controller_id.clone()).unwrap_or_default(),
                             action: "selectRows".into(),
-                            args: crate::action_args_json!({ "surfaceId": surface_id, "ids": ids }),
+                            args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "surfaceId": surface_id, "ids": ids }),
                         }; self.as_actions().dispatch_action(__arg0) })
                         .await?;
                         return Ok(());
@@ -368,7 +368,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     }
 
     //#region 🎯️RetainedPointerRouting
-    pub(super) fn candidate_input_geometry(&mut self, theme: &Theme) -> PresentedInputGeometry {
+    pub fn candidate_input_geometry(&mut self, theme: &Theme) -> PresentedInputGeometry {
         let body = self.as_session().body_rect(theme);
         let panel_rects = PanelAnchor::ALL.into_iter().filter(|anchor| self.dock.anchor_open(*anchor)).map(|anchor| self.anchor_rect(anchor, body, theme)).collect();
         let active_owner = self.docs.session.as_ref().and_then(|session| self.docs.media_owner_for_session(session));
@@ -384,7 +384,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             retained_body_rects: self.input.retained_body_rects_staging.clone(),
             media_owners,
             media_blocked,
-            retained_surfaces: crate::interpreter::staged_retained_clock_surfaces(),
+            retained_surfaces: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::staged_retained_clock_surfaces(),
             dock_canvas_bounds: self.dock.dock_canvas_bounds,
             dock_axis_separator: self.dock.dock_axis_separator,
             dock_drop_tab_bars: self.dock.dock_drop_tab_bars.clone(),
@@ -399,25 +399,25 @@ impl<'ctx> ChromeViewCtx<'ctx> {
 
     /// 🎞️ Seals the hit, owner, widget-binding and geometry candidates minted by one completed
     /// chrome walk. They remain non-interactive until the matching GPU packet is acknowledged.
-    pub(crate) fn seal_presented_input_candidate(&mut self, theme: &Theme) -> Result<PresentedInputCandidateWitness, &'static str> {
+    pub fn seal_presented_input_candidate(&mut self, theme: &Theme) -> Result<PresentedInputCandidateWitness, &'static str> {
         let epoch = self.input.next_presented_input_epoch.ok_or("presented input candidate generation exhausted")?;
         self.input.next_presented_input_epoch = epoch.checked_add(1);
         let witness = PresentedInputCandidateWitness(epoch);
         self.input.presented_input_geometry_staging = self.candidate_input_geometry(theme);
         self.input.presented_input_candidate = Some(witness);
-        if !crate::interpreter::seal_presented_input_candidate(witness.0) {
+        if !semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::seal_presented_input_candidate(witness.0) {
             self.input.presented_input_candidate = None;
             return Err("retained presented input candidate could not be sealed");
         }
-        crate::scenes::seal_host_temporal_candidates(witness.0);
-        crate::scenes::seal_table_stepper_accessibility_candidates(witness.0);
-        crate::scenes::seal_table_editable_text_accessibility_candidates(witness.0);
-        crate::scenes::seal_table_button_accessibility_candidates(witness.0);
-        crate::scenes::seal_vfs_accessibility_candidates(witness.0);
-        crate::scenes::seal_block_list_accessibility_candidates(witness.0);
-        crate::scenes::seal_event_feed_accessibility_candidates(witness.0);
-        crate::scenes::seal_world3d_accessibility_candidates(witness.0);
-        crate::scenes::seal_graph_timeline_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_host_temporal_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_table_stepper_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_table_editable_text_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_table_button_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_vfs_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_block_list_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_event_feed_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_world3d_accessibility_candidates(witness.0);
+        semio_framework_os_renderer_wgpu_scene_feeds::seal_graph_timeline_accessibility_candidates(witness.0);
         Ok(witness)
     }
     //#endregion 🎯️RetainedPointerRouting

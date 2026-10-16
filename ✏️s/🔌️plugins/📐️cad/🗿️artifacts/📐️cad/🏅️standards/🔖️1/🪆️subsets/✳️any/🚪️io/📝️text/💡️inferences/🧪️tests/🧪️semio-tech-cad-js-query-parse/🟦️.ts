@@ -5,7 +5,7 @@ import type { FaceRef, ShellRef, SolidRef } from "../../../../../../../../../../
 import type { InferencesTestDependencies } from "../../🟦️.ts";
 import type { Model, ObjectRef, SelectionTarget, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import type { SpatialKernel } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import type { Vec3 } from "@semio-tech/framework-3d-js";
+import type { Vec3 } from "@semio-tech/framework/3d";
 
 type TestSource = { readonly url: string };
 

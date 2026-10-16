@@ -53,7 +53,9 @@ import {
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals } from "@semio-tech/framework-replication";
 import { applyUiPatch, emptyUiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
 import { retainedUiIntakeStepCeiling } from "../📃️UiDocumentStore/📥️intake/🟦️.ts";
-import { ActivationRegistry, createTurnOutcomeBroadcast, fetchDescriptorManifest } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
+import { createTurnOutcomeBroadcast } from "../../../../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts";
+import { fetchDescriptorManifest } from "../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
 // #region 🔌️Adapters
 import {
   assertShardJspiAvailable,
@@ -351,7 +353,8 @@ export {
   resolveDescriptorBeforeRuntime
 } from "./🧩️module-loader/🟦️.ts";
 
-export { fetchDescriptorManifest, type PluginDispatchHintV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+export { fetchDescriptorManifest } from "../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
+export { type PluginDispatchHintV1 } from "../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
 export type { PluginRegistryEntry } from "@semio-tech/framework";
 export { SHARD_LIVENESS_POLICY } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 export { beginPluginLoadV1, endPluginLoadV1, notePluginLoadProgress, notePluginLoadProgressForInFlightV1, pluginLoadProgressAt, pluginLoadRemainingMs, pluginLoadsInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1, PLUGIN_LOAD_CEILING_MS, PLUGIN_LOAD_IDLE_TIMEOUT_MS } from "./🫀️load-progress/🟦️.ts";
@@ -367,7 +370,7 @@ function pluginRuntimeTestDependenciesV1() {
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;
 
 if (import.meta.vitest) {
-  const { registerTests1 } = await import("../../🧪️tests/🔌️plugin-runtime/🟦️.tsx");
-  await registerTests1(import.meta.vitest, pluginRuntimeTestDependenciesV1(), { url: import.meta.url });
+  const { registerPluginRuntimeTests } = await import("../../🧪️tests/🔌️plugin-runtime/🟦️.tsx");
+  await registerPluginRuntimeTests(import.meta.vitest, pluginRuntimeTestDependenciesV1(), { url: import.meta.url });
 }
 //#endregion 🔖️DependencyOrderedBoot

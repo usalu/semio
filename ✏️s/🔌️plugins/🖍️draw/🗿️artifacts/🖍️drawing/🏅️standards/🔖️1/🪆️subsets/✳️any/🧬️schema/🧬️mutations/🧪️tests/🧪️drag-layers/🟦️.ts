@@ -1,6 +1,6 @@
 /** 🧪️ Ajv (third-party oracle) and the hand-written `dragLayers` parser agree on the committed fixture and on every hostile variant. */
 import { expect, test } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import schema from "../../../../../🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🧬️schema/🔣️.json";
 import mutation from "../../../../../🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🦠️mutation/🔣️.json";
 import { parseDragLayers } from "../../../../../🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🦠️mutation/🟦️.ts";

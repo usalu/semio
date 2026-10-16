@@ -5,7 +5,7 @@ import { process3dSnapshotToSqliteDatabase } from "../../🟦️.ts";
 import corpus from "../🧫️fixtures/🔣️.json";
 import cohort from "../🧫️fixtures/🚦️public/🔣️.json";
 import sql from "../../🗄️.sql" with { type: "text" };
-import metadata from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql" with { type: "text" };
+import { sqliteSnapshotMetadataSql as metadata } from "@semio-tech/framework/io/sqlite-snapshot/schema";
 
 /** 🧫️ Creates the actual Source owner without a native carrier or inferred model. */
 export function process3dSqliteFixture(hex: string): Process3dSnapshot {

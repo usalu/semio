@@ -54,7 +54,7 @@ export const TURN_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 
 /** 🩺️ The query parameter a stamped worker url carries the resolved preference on. 🪞️ The same
  * name `🎭️actor/🩺️diagnostics/🟦️.ts`'s `SHARD_WORKER_DIAGNOSTICS_PARAM` stamps shard workers with
- * (`🔬️engine-contract/🟦️.ts` asserts the two spell it the same); restated here because that module
+ * (`🛡️runtime-admission/🟦️.ts` asserts the two spell it the same); restated here because that module
  * reads `localStorage` and this one is bundled into the frame worker, which reads none. It is the only
  * channel that exists before the worker's first message, and the frame worker needs it that early: the
  * per-frame `[TRACE]` dumps inside the renderer wasm are armed before the first frame is built. */

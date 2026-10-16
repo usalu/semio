@@ -3,7 +3,7 @@
 //! fixture lists is accepted or refused exactly as the fixture says.
 //!
 //! The oracle is `🧫️fixtures/🔌️port-types/🔣️.json` — not this file and not the TypeScript twin
-//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`),
+//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔎️renderer-twins/🟦️.ts`),
 //! which answers the same rows over the same declared types. A drift on either side fails on both.
 //!
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.

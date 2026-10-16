@@ -2066,7 +2066,7 @@ class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
           package: "semio-framework-os-kernel",
           target: { kind: "lib" },
           cargoArgs: ["--features", "sync"],
-          laws: ["os_store::sync::tests::document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages"],
+          laws: ["os_store::component::sync_tests::document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages"],
         },
       ],progress(event) {
         console.log(`document-opening-attempt-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -2525,6 +2525,8 @@ class MemberDialectCheckScript extends BundleScript {
     testMemberDialectFixture();
     const { testFixtureProjectionRetirement } = await import("../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts");
     testFixtureProjectionRetirement();
+    const { testOwnedDocumentClosureOracle } = await import("../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🟦️.ts");
+    testOwnedDocumentClosureOracle();
     const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: segments, groups: [
         {
           package: "semio-framework-schema",

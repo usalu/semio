@@ -1,8 +1,8 @@
 /** 🖐️ Explicit complete Block5d entity projection and same-caller restoration. */
 import type * as m from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {ValueError,sqliteOperation,sqliteValueByteLength,type SqliteDatabase,type SqliteValue,type SqliteOperation} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {ValueError,sqliteOperation,sqliteValueByteLength,type SqliteDatabase,type SqliteValue,type SqliteOperation} from "@semio-tech/framework/io/sqlite-snapshot";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 import * as p from "../../../../../../../../../🧬️schema/🧱️shared/🪶️sqlite/🟦️.ts";
 import {BLOCK5D_SQLITE_SCHEMA as SQL} from "./🗄️schema/🟦️.ts";
 type Cells=readonly SqliteValue[];

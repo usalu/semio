@@ -12,6 +12,15 @@ export interface BrowserGeometrySession {
   terminal_is_empty(): boolean;
   free(): void;
 }
+/** 🧬️ Requires the complete current browser session before adopting generated bindings. */
+export function requireBrowserGeometrySessionV1(value:unknown):BrowserGeometrySession {
+  if(!isBrowserGeometrySessionV1(value))throw Error("geometry.current-browser-binding-required: regenerate and qualify the complete session binding");
+  return value;
+}
+function isBrowserGeometrySessionV1(value:unknown):value is BrowserGeometrySession {
+  if(value===null||typeof value!=="object")return false;
+  return ["brep_invoke","begin_close","close_step","next_close_copy_byte_demand","next_close_capacity_byte_demand","next_close_release_byte_demand","next_close_depth_demand","cancel_close","resume_close","terminal_is_empty","free"].every(name=>typeof Reflect.get(value,name)==="function");
+}
 export interface GeometryCloseReceipt { phase:"blocked" | "pending" | "complete"; items:number; copyBytes:number; capacityBytes:number; releaseBytes:number; }
 export interface GeometryCloseOptions { maximumItems?:number; maximumCopyBytes?:number; maximumCapacityBytes?:number; maximumReleaseBytes?:number; maximumDepth?:number; cancelled?:() => boolean; onProgress?:(receipt:GeometryCloseReceipt) => void; }
 async function initializeBindings() {
@@ -24,7 +33,7 @@ async function initializeBindings() {
 let initializedBindings:ReturnType<typeof initializeBindings> | undefined;
 async function openSession(): Promise<BrowserGeometrySession> {
   const bindings = await (initializedBindings ??= initializeBindings());
-  return new bindings.BrowserSession();
+  return requireBrowserGeometrySessionV1(new bindings.BrowserSession());
 }
 export class SemioGeometrySession {
   private readonly session:Promise<BrowserGeometrySession>;

@@ -5,7 +5,7 @@ import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type Binary64,t
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfColorSpace,readPdfColorSpace,writePdfFunction,readPdfFunction } from "../../🌈️color/🟦️.ts";
 import { writePdfOperations,readPdfOperations } from "../../🖋️content/🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 function cells(value:readonly Binary64[]|null|undefined,width:number):(Binary64|null)[]{if(value==null)return Array(width).fill(null);if(value.length!==width)throw new Error("PDF tuple has a different native width");return [...value];}
 function tuple(reader:PdfReader,table:string,row:SqliteRow,start:number,width:number):Binary64[]|null{const present=!reader.isNull(table,row,start);const result:Binary64[]=[];for(let column=start;column<start+width;column++){if(reader.isNull(table,row,column)===present)throw new Error("PDF optional tuple must be entirely present or absent");if(present)result.push(reader.real(table,row,column));}return present?result:null;}

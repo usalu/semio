@@ -1,6 +1,6 @@
 /** 🧱️ Complete shared Block document fields mirror the adjacent native authority. */
 import * as p from "./📐️scalar/🟦️.ts";
-import type {Binary64} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 export type {BlockVector3,BlockVector4} from "./📐️scalar/🟦️.ts";
 export interface BlockKindIdentity{id:string;name:string;label:string;variant:string|null;description:string;icon:string|null;unit:string|null}
 export interface BlockAttribute{key:string;value:string;definition:string|null}

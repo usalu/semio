@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🔺️ Grid2dDiff schema — real facet mirror of the Rust `🦀️.rs` sibling: scalars are optional absolute values, every list carries removed keys,
  * added rows (landing at their canonical position) and per-row field patches — never a whole row or list copy. Cell rows are keyed `"<x>,<y>"`. */
 import type { Grid2dSnapshot, WfcAdjacencyRule2d, WfcCell2d, WfcPinnedCell2d, WfcTile2d } from "../📸️snapshot/🟦️.ts";

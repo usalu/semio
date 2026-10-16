@@ -1,9 +1,9 @@
 /** 🏢️ Authored BIM parameters projected into individually named semantic entities. */
 import type * as domain from "../../../🧬️schema/🟦️.ts";
 import type {ModelSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteDatabase,SqliteRow,SqliteValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteDatabase,SqliteRow,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import {BIM_MODEL_SQLITE_SCHEMA} from "./🗄️schema/🟦️.ts";
 type Cells=readonly SqliteValue[];
 type ObjectValue=Record<string,unknown>;

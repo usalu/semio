@@ -2,7 +2,7 @@
 import * as React from "react";
 import {act,render} from "@testing-library/react";
 import {expect,it} from "vitest";
-import {createMemoryStoragePort} from "@semio-tech/framework";
+import { createMemoryStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { Window, uiSpacingPx } from "../../🎯️targets/⚛️react/🟦️.tsx";
 import { Pane, PaneHost } from "../../🧱️elements/📌️WindowPane/🟦️.tsx";
 import { publishShellChromePanelBox } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";

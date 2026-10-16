@@ -1,4 +1,4 @@
-import { interactivityDbIoFailures, interactivityDbIoCursorCallerFailures } from "../../../../../../../../📜️script.ts";
+import { interactivityDbIoFailures, interactivityDbIoCursorCallerFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity db io policy assertions. */
 export function interactivityDbIoSelfTests(): void {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scopeContributionsJson } from "../../🟦️.ts";
+import { scopeContributionsJson } from "../../🧾️contributions-json/🟦️.ts";
 import { dialectFromLegacyExampleAppId, examplesForApp, normalizeManifestExampleRow, normalizeManifestExamples, type PluginManifest } from "../../../🛂️manifest/🟦️.ts";
 import fixture from "../🧫️fixtures/🔬️scope-contributions/🔣️.json";
 

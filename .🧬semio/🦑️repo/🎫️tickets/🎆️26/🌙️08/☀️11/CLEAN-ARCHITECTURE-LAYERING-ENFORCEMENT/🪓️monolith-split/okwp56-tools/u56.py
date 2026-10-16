@@ -53,6 +53,10 @@ def main():
         OVERLAY.update(d['out'])
         union.FOLD.update({os.path.relpath(k, R): os.path.relpath(v, R) for k, v in d.get('fold', {}).items()})
     extra_touched.extend(git_touched())
+    _m = C.build()[1]
+    for _k in C.ALL_KEYS:
+        _tf = C.node_abs(_k, _m) + '/🧪️tests/🔬️unit/🦀️.rs'
+        if os.path.exists(_tf): extra_touched.append(os.path.relpath(_tf, R))
     for k in crates:
         if k in union.NODES or k in okreal.REAL: continue
         union.NODES[k] = os.path.relpath(model[k]['node'], union.M_REL)

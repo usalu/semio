@@ -2,8 +2,8 @@
 import sql from "./🗄️.sql" with {type:"text"};
 /** 🎞️ Individually authored GIF87a logical screen, palette and image relations. */
 import type { GifSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteBoolean,artifactSqliteOrderedRows,artifactSqliteText,type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteBoolean,artifactSqliteOrderedRows,artifactSqliteText,type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import { gifInteger,gifFlag,gifUnsigned,gifEntities,gifSingletons,gifGroups,gifWritePalette,gifReadPalette,gifReadPixels } from "../../../../../../🪶️sqlite/🟦️.ts";
 export const GIF87_SQLITE_SCHEMA:string=sql;
 

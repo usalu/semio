@@ -7,7 +7,7 @@ import { runRepositoryCommand } from "../../../🧰️framework/🛍️products/
 /** 🧪️ Executes the composition laws with the repository's owned command runner. */
 class CompositionTestScript extends BundleScript {
   async run(): Promise<void> {
-    const tests = ["🔱️trinity-graph-child/🟦️.ts", "🌀️procedural-formats/🧪️laws/🟦️.ts", "🖨️raster-decoded-image/🟦️.ts"].map((file) => join(import.meta.dir, file));
+    const tests = ["🔱️trinity-graph-child/🟦️.ts", "🌀️procedural-formats/🧪️laws/🟦️.ts", "🖨️raster-decoded-image/🟦️.ts", "📏️layout-drawing/🪶️sqlite/🟦️.ts", "📏️layout-drawing/🪪️document/🟦️.ts"].map((file) => join(import.meta.dir, file));
     await runRepositoryCommand(this.invocation, process.execPath, ["test", ...tests], this.repoRoot, "plugin-composition", { version: 1, maximumElapsedMilliseconds: 0, output: null });
   }
 }

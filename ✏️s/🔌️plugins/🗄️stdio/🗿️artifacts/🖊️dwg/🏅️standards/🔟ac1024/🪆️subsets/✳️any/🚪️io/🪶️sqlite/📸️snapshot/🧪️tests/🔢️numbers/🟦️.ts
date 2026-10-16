@@ -1,8 +1,8 @@
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
 import fixture from "../🧫️fixtures/🔢️numbers/🔣️.json";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase,type SqliteRow } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import { exportSqliteDatabase,importSqliteDatabase,type SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 import { DwgNumberRow,encodeDwgNumberCells,dwgUnsignedWords } from "../../🔢️number/🟦️.ts";
 
 test("DWG authored numeric classes preserve native identities through independent SQLite",async()=>{

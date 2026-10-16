@@ -1,0 +1,15 @@
+import fs from "node:fs";
+import path from "node:path";
+const [orig, listFile, label] = process.argv.slice(2);
+const files = fs.readFileSync(listFile, "utf8").split("\n").filter(Boolean);
+const skip = (l) => { const t = l.trim(); return t === "" || /^\/\/\s*#(end)?region/.test(t) || /^(import|export)\b.*\bfrom\b/.test(t) || /^\} from "/.test(t) || /^\/\/\/ <reference/.test(t); };
+const bag = (text) => { const m = new Map(); for (const l of text.split("\n")) { if (skip(l)) continue; const k = l.trim().replace(/^export /, ""); m.set(k, (m.get(k) ?? 0) + 1); } return m; };
+const a = bag(fs.readFileSync(orig, "utf8"));
+const b = new Map();
+for (const f of files) for (const [k, v] of bag(fs.readFileSync(f, "utf8"))) b.set(k, (b.get(k) ?? 0) + v);
+const only = (x, y) => [...x].filter(([k, v]) => (y.get(k) ?? 0) < v).map(([k, v]) => [v - (y.get(k) ?? 0), k]);
+const lost = only(a, b), gained = only(b, a);
+const tot = (m) => [...m.values()].reduce((s, v) => s + v, 0);
+console.log(label, "orig lines", tot(a), "tree lines", tot(b), "lost", lost.reduce((s, [n]) => s + n, 0), "gained", gained.reduce((s, [n]) => s + n, 0));
+for (const [n, k] of lost.slice(0, 400)) console.log("  LOST", n, k.slice(0, 160));
+for (const [n, k] of gained.slice(0, 40)) console.log("  GAINED", n, k.slice(0, 160));

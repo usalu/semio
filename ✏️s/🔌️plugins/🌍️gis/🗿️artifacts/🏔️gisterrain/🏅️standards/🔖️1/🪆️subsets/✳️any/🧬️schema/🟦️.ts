@@ -1,10 +1,10 @@
 /** 🏔️ Terrain document data and exact durable mesh child identity. */
-import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-import { type Binary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary64 } from "@semio-tech/framework/value/ieee754";
 import {parseImportedMap,type ImportedMap} from "./🗺️imported-map/🟦️.ts";
 export {parseImportedMap} from "./🗺️imported-map/🟦️.ts";
 export type {ImportedMap,ImportedFeature} from "./🗺️imported-map/🟦️.ts";

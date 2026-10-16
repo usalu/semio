@@ -40,6 +40,18 @@ class Rewriter:
 
     def crate_of_file(self, f): return self.plan.file_crate.get(f)
 
+    shim_heads = True
+
+    def shim_head_module(self, m, cur_crate):
+        """a module name that reaches this file through a glob and is only used as a path head: a glob-shim module, or a file module that moved to another crate"""
+        if self.is_glob_shim(m): return True
+        return m.key == m.file and self.plan.file_crate.get(m.file) not in (None, cur_crate)
+
+    @staticmethod
+    def is_glob_shim(m):
+        """an inline module that only re-exports other crates through globs: `pub mod replay { pub use a::*; pub use b::c::*; }`"""
+        return m.key != m.file and not m.defs and not m.children and bool(m.globs) and not m.uses
+
     def post_path(self, r, cur_crate, ctx_file, commit=True):
         """-> (text, info) for a resolved path result r; None when it cannot be expressed"""
         if r.kind == 'extern':
@@ -180,6 +192,16 @@ class Rewriter:
                 before2 = toks[sig[k - 2]][1] if k >= 2 else ''
                 if prevtok not in ('.', '$', "'") and not (prevtok == ':' and before2 == ':'):
                     cm = cur_mod().children.get(tx)
+                    if cm is None and cur_crate != KERNEL and self.shim_heads:
+                        lk = ns.lookup(cur_mod(), tx)
+                        if lk is not None and lk.kind == 'mod' and not lk.rest and self.shim_head_module(lk.mod, cur_crate):
+                            segs = [tx]; j = k + 1; last = k
+                            while j + 2 <= n - 1 and toks[sig[j]][1] == ':' and toks[sig[j + 1]][1] == ':' and toks[sig[j + 2]][0] == 'id':
+                                segs.append(toks[sig[j + 2]][1]); last = j + 2; j += 3
+                            new = self.rewrite_path(segs, cur_mod(), cur_crate, relative_ok, file_label)
+                            if new is not None:
+                                edits.append((toks[sig[k]][2], toks[sig[last]][3], new))
+                            k = last + 1; continue
                     if cm is not None and cm.key == cm.file:
                         cc = self.plan.file_crate.get(cm.file)
                         if cc is not None and (cc != cur_crate or not self._in_place):
@@ -338,7 +360,7 @@ class Rewriter:
                 changed = True; self.rep.dropped_imports.append((file_label, '::'.join(segs))); continue
             text, info = self.post_path(r, cur_crate, file_label, commit=False)
             if text is not None and self.upward(text, info, cur_crate) and is_pub and ctx.file == self.plan.root_file.get(cur_crate):
-                changed = True; self.rep.shim_extra[ctx.file].append('pub use ' + '::'.join(segs) + (' as ' + alias if alias else '') + ';'); continue
+                changed = True; self.rep.shim_extra[ctx.file].append('pub use ' + text + (' as ' + alias if alias else '') + ';'); continue
             if text is not None and self.upward(text, info, cur_crate) and unused:
                 changed = True; self.rep.dropped_imports.append((file_label, '::'.join(segs) + ' [upward]')); continue
             if text is not None and self.upward(text, info, cur_crate) and local is not None and not is_pub and local not in body_only:
@@ -449,6 +471,7 @@ class Rewriter:
             if not (nm[0].isupper() or nm in self._lower_hits(src, nm)): continue
             r = ns.lookup(tmod, nm)
             if r is None: continue
+            if self.shim_heads and r.kind == 'mod' and not r.rest and self.shim_head_module(r.mod, cur_crate) and nm not in self._non_head_uses(src, nm): continue
             if r.kind == ns.EXTERN_GLOB:
                 cand = ns.disambiguate(r)
                 if not cand: continue
@@ -470,6 +493,14 @@ class Rewriter:
             leaves.append((np_, None if np_[-1] == nm else nm, False)); names.append(nm)
         self.rep.glob_expanded.append((file_label, [n for n in names]))
         return leaves
+
+    def _non_head_uses(self, src, nm):
+        """{nm} when the identifier occurs anywhere but as the head of a `nm::...` path (a bare use of a module name)"""
+        for m in re.finditer(r'(?<![\w.:])' + re.escape(nm) + r'\b(?!\s*::)', src):
+            line_start = src.rfind('\n', 0, m.start()) + 1
+            if src[line_start:m.start()].lstrip().startswith(('//', 'use ', 'pub use ')): continue
+            return {nm}
+        return set()
 
     def _lower_hits(self, src, nm):
         return {nm} if re.search(r'(?<![\w.])' + re.escape(nm) + r'\s*(\(|!|::)', src) else set()

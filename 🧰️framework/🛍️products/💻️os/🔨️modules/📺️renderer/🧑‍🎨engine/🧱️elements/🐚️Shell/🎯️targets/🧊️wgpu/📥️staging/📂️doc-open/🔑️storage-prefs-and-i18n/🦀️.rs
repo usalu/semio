@@ -7,10 +7,17 @@ use super::*;
 //#region ShellChrome
 //#region 🛰️AgentBridgeOfferScope
 /// 📤️ Publishes the shell's scope for the page realm's offer watcher.
-pub(crate) fn publish_agent_bridge_offer_scope(json: String) {
+pub fn publish_agent_bridge_offer_scope(json: String) {
     PUBLISHED_AGENT_BRIDGE_OFFER_SCOPE.with(|slot| *slot.borrow_mut() = json);
 }
 
 //#endregion 🛰️AgentBridgeOfferScope
 //#endregion ShellChrome
 
+//#region ShellChrome
+//#region 🛰️AgentBridgeOfferScope
+thread_local! {
+    pub static PUBLISHED_AGENT_BRIDGE_OFFER_SCOPE: std::cell::RefCell<String> = std::cell::RefCell::new("null".to_string());
+}
+//#endregion 🛰️AgentBridgeOfferScope
+//#endregion ShellChrome

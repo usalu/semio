@@ -1,14 +1,15 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { parseProgramArtifact } from "../../🟦️.ts";
 import {programArtifactFromJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {programDiffFromJson} from "../../../🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
 import { parseProgramSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseProgramDiff } from "../../🔺️diff/🟦️.ts";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 type JsonObject = Record<string, any>;
 
@@ -57,8 +58,8 @@ export function testProgramDocumentContract(): void {
   const artifactSchema = readJson(join(schemaRoot, "🔣️.json"));
   const snapshotSchema = readJson(join(schemaRoot, "📸️snapshot/🔣️.json"));
   const diffSchema = readJson(join(schemaRoot, "🔺️diff/🔣️.json"));
-  const childSchema = readJson(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"));
-  const ioSchema = readJson(join(repoRoot, "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json"));
+  const childSchema = readJson(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"));
+  const ioSchema = readJson(frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"));
   const validateArtifact = compile(artifactSchema, [childSchema, ioSchema]);
   const validateSnapshot = compile(snapshotSchema, [childSchema, ioSchema]);
   const validateDiff = compile(diffSchema, [artifactSchema, childSchema, ioSchema]);

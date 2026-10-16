@@ -1,0 +1,39 @@
+{
+  "why": "The acyclic partition of the instance use-case crates (PLAN-PLUGIN-CRATES.md 7.5, RESULT-PLUGIN-WP7.md 2.2), written once and read by two implementations: this closed corpus and the Rust staging sources it is checked against. A crate may call only crates of a lower rank; the bridges listed are exactly the `as_<crate>()` and `<crate>_ref()` calls of the sources.",
+  "crates": [
+    { "key": "instance-render", "snake": "render", "ctx": "RenderCtx", "ref": "RenderRef", "files": ["🧵️instance/🖼️render"] },
+    { "key": "instance-dispatch", "snake": "dispatch", "ctx": "DispatchCtx", "ref": null, "files": ["🧵️instance/📨️dispatch"] },
+    { "key": "instance-typed-ops", "snake": "typed", "ctx": "TypedCtx", "ref": null, "files": ["🧵️instance/🧾️typed-operations"] },
+    { "key": "time-travel-turns", "snake": "time_travel", "ctx": "TimeTravelCtx", "ref": "TimeTravelRef", "files": ["⏪️time-travel/🧵️instance"] },
+    { "key": "tool-run-turns", "snake": "tool_run", "ctx": "ToolRunCtx", "ref": "ToolRunRef", "files": ["⏯️tool-run/🧵️instance"] },
+    { "key": "instance-commands", "snake": "command", "ctx": "CommandCtx", "ref": null, "files": ["🧵️instance/🧷️command-routes"] },
+    { "key": "instance-ladders", "snake": "ladder", "ctx": "LadderCtx", "ref": "LadderRef", "files": ["🪜️maintenance-ladder"] }
+  ],
+  "rank": ["instance-render", "instance-dispatch", "instance-typed-ops", "time-travel-turns", "tool-run-turns", "instance-commands", "instance-ladders"],
+  "bridges": [
+    ["instance-dispatch", "instance-render"],
+    ["instance-typed-ops", "instance-render"],
+    ["instance-typed-ops", "instance-dispatch"],
+    ["time-travel-turns", "instance-render"],
+    ["time-travel-turns", "instance-dispatch"],
+    ["tool-run-turns", "instance-render"],
+    ["instance-commands", "instance-render"],
+    ["instance-commands", "instance-dispatch"],
+    ["instance-commands", "instance-typed-ops"],
+    ["instance-commands", "time-travel-turns"],
+    ["instance-ladders", "instance-render"],
+    ["instance-ladders", "instance-typed-ops"],
+    ["instance-ladders", "time-travel-turns"],
+    ["instance-ladders", "tool-run-turns"]
+  ],
+  "composerFiles": [
+    "🧵️instance/🦀️.rs",
+    "🧵️instance/📥️staging/🏗️ctx-builders/🦀️.rs",
+    "🧵️instance/📥️staging/🧬️composer-api/🦀️.rs",
+    "🧵️instance/📥️staging/📨️dispatch/🦀️.rs",
+    "🧵️instance/📥️staging/🔒️close-ladder/🦀️.rs",
+    "🧵️instance/📥️staging/🚪️ingress/🦀️.rs",
+    "🧵️instance/📥️staging/🪜️maintenance-ladder/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🦀️.rs"
+  ]
+}

@@ -221,7 +221,7 @@ fn the_lod_deflection_ladder_is_shared_and_monotone() {
 
 /// 📜️ The SHARED, language-neutral status-timeline fixture — the very rows the wgpu shell's Rust law
 /// (`🔬️wgpu-shell-chrome-parity`) and the TypeScript `world3dComputeStatusV1` twin
-/// (`🔬️engine-contract`) answer. This law closes the third side of the triangle: that the PRODUCER
+/// (`🔎️renderer-twins`) answer. This law closes the third side of the triangle: that the PRODUCER
 /// actually emits a timeline of that shape, which is the half neither renderer can assert.
 const SURFACE_CONTROLS_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json");
 

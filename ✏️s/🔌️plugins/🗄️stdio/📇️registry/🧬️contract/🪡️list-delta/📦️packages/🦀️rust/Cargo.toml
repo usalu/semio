@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Wire types of the stdio positional list deltas"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

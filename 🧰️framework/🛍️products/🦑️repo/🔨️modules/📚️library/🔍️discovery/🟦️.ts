@@ -14,7 +14,7 @@ export { declaredComponentDeploymentDirectoryV1 } from "../📇️catalog/🚚�
 
 //#region 🔌️Adapters
 import { cargoWorkspaceDeclaresMemberV1, cargoRepositoryPackages } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
-import { ephemeralBox, ephemeralMap } from "../../../../../🔨️modules/🎠️kernel/🫧️transient/🟦️.ts";
+import { ephemeralBox, ephemeralMap } from "../../../../../🔨️modules/🫧️transient/🟦️.ts";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync, statSync } from "node:fs";

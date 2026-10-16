@@ -1,8 +1,8 @@
 /** 🏛️ Explicit spatial hierarchy, placed elements and typed model property relationships. */
 import type {SemioModelSnapshot,SpatialNode,SpatialKind,SemioModelElement,ElementClass,GeometryRef,PropertySet,PsetValue,ModelRelation,RelationKind,SemioTransform} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_MODEL_SQLITE_SCHEMA=`CREATE TABLE semio_model_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_model_entity (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_model_document(id), kind TEXT NOT NULL CHECK (kind IN ('spatial','element')), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL);
 CREATE TABLE semio_model_spatial (id INTEGER PRIMARY KEY REFERENCES semio_model_entity(id), kind TEXT NOT NULL CHECK (kind IN ('site','building','storey','space')), name TEXT NOT NULL, parent_id INTEGER REFERENCES semio_model_spatial(id));

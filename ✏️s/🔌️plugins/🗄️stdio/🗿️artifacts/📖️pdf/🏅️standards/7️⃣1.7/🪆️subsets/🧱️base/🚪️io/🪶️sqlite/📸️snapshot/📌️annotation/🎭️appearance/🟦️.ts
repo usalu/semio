@@ -1,7 +1,7 @@
 /** 🎭️ Handwritten annotation appearance ownership and complete border geometry. */
 import type { PdfAppearanceEntry,PdfAppearance,PdfBorderStyle } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection,PdfReader,pdfBoolean,type Binary64 } from "../../🧩️entity/🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 /** 🎭️ Project a single form or an ordered appearance-state dictionary. */
 export async function writePdfAppearanceEntry(out:PdfProjection,value:PdfAppearanceEntry):Promise<bigint>{switch(value.kind){case "single":return out.insert("pdf_appearance_entry",[value.kind,value.form]);case "states":{const key=await out.insert("pdf_appearance_entry",[value.kind,null]);out.checkRowsAdditional(value.states.length);for(const[ordinal,state]of value.states.entries())await out.insert("pdf_appearance_state",[key,BigInt(ordinal),state.state,state.form]);return key;}default:throw new Error("Unknown PDF appearance entry");}}

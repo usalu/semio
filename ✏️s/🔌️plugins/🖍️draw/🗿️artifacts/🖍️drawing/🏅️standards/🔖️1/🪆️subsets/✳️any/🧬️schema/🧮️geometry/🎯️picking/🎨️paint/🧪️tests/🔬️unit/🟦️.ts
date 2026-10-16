@@ -12,12 +12,12 @@ import vectorRows from "../../../../../../🧪️tests/🧫️fixtures/🎬️sc
 import {DocumentVectorJob} from "../../../../../🎬️scene/📋️prepare/🟦️.ts";
 import type {DrawingArtifact} from "../../../../../🟦️.ts";
 import {ScenePlanCloseJob} from "../../../../../🎬️scene/🧹️retire/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import {PaintedPathHitJob,type PaintedPathQuery} from "../../🟦️.ts";
 import type {PathGeometrySegment} from "../../../../../🟦️.ts";
 const progressValid=new Ajv({strict:true}).compile(schema.$defs.PaintedPathQueryProgress),hitValid=new Ajv({strict:true}).compile(schema.$defs.PaintedPathQueryHit);
-import {PathFlattenJob} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts";
-import {StrokeOutlineJob} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts";
+import {PathFlattenJob} from "@semio-tech/framework/2d/path/flatten";
+import {StrokeOutlineJob} from "@semio-tech/framework/2d/path/stroke";
 test("painted query uses real stroke regions under every grant",async()=>{
  let comparisons=0;
  for(const row of cases)for(const grant of [1,7,4096]){

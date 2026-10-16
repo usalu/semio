@@ -144,7 +144,7 @@ impl AppRuntime {
     /// ♻️ Retires the registry the PREVIOUS build left staged, one entry per boundary
     /// step. The pointer's own authority is the last COMPLETE frame's buffer, which this
     /// never touches — see `ui_wgpu::wgpu::HitRegistry`.
-    pub(crate) fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &FrameDirectives, cursor: &mut FrameBuildCursor, context: &mut semio_framework_job::StepContext<'_>) -> FrameBuildBoundaryStep {
+    pub fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &FrameDirectives, cursor: &mut FrameBuildCursor, context: &mut semio_framework_job::StepContext<'_>) -> FrameBuildBoundaryStep {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
                 let grant = context.retained_grant();
@@ -215,7 +215,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ThemeResolve;
             }
             FrameBuildPhase::ThemeResolve => {
-                self.theme = shell::resolve_theme_for_ids(self.shell.chrome.active_theme_id_for_frame(), &self.shell.prefs.appearance_id);
+                self.theme = semio_framework_os_renderer_wgpu_shell_docs::resolve_theme_for_ids(self.shell.chrome.active_theme_id_for_frame(), &self.shell.prefs.appearance_id);
                 cursor.phase = FrameBuildPhase::ThemeAppearance;
             }
             FrameBuildPhase::ThemeAppearance => {
@@ -244,14 +244,14 @@ impl AppRuntime {
             FrameBuildPhase::WheelDeadline => {
                 if build_directives.wheel_zoom_deadline_cleared && self.wheel_zoom_deadline_ms > 0.0 && app_now_ms() >= self.wheel_zoom_deadline_ms {
                     self.wheel_zoom_deadline_ms = 0.0;
-                    engine_canvas::node_graph_clear_wheel_zoom_active();
+                    semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_wheel_zoom_active();
                 }
                 cursor.phase = FrameBuildPhase::RetainedClock;
             }
             FrameBuildPhase::RetainedClock => {
                 if let Some((window_id, surface)) = self.shell.input.retained_clock_surface(cursor.retained_clock_index).map(|(id, surface)| (id.to_owned(), surface)) {
                     cursor.retained_clock_index += 1;
-                    if let Some(step) = crate::interpreter::advance_retained_window_clock(&window_id, surface, &mut self.input) {
+                    if let Some(step) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::advance_retained_window_clock(&window_id, surface, &mut self.input) {
                         if let Some(deadline) = step.next_deadline {
                             cursor.retained_clock_deadline = Some(cursor.retained_clock_deadline.map_or(deadline, |current| current.min(deadline)));
                         }
@@ -330,7 +330,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::Tutorial => {
                 let wall_now_ms = app_now_ms();
-                crate::shell::WindowActionsCtx::of(&mut self.shell).tutorial_tick(wall_now_ms);
+                semio_framework_os_renderer_wgpu_shell_window_actions::WindowActionsCtx::of(&mut self.shell).tutorial_tick(wall_now_ms);
                 if let Some(runtime) = handle.upgrade().map(RuntimeMailbox) {
                     let deadline = semio_framework_job::default_now_us().and_then(|now| self.shell.surfaces.next_chrome_deadline(now as f64 / 1_000_000.0, wall_now_ms, &self.shell.chrome, &self.shell.tutorial));
                     runtime.publish_shell_clock_deadline(deadline);
@@ -341,7 +341,7 @@ impl AppRuntime {
                 match cursor.engine_packets.prepare_step(context) { Ok(true) => cursor.phase = FrameBuildPhase::EngineResources, Ok(false) => return FrameBuildBoundaryStep::Pending, Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure) }
             }
             FrameBuildPhase::EngineResources => {
-                let resources=cursor.engine_resources.get_or_insert_with(engine_canvas::EngineCanvasBuildContext::default);
+                let resources=cursor.engine_resources.get_or_insert_with(semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasBuildContext::default);
                 match resources.prepare_step(context){Ok(true)=>cursor.phase=FrameBuildPhase::WorldResources,Ok(false)=>return FrameBuildBoundaryStep::Pending,Err(failure)=>return FrameBuildBoundaryStep::CloseFailure(failure)}
             }
             FrameBuildPhase::WorldResources => {
@@ -362,14 +362,14 @@ impl AppRuntime {
                 let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
                 let Some(interaction) = interaction.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost interaction state") };
                 let Some(world_resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") };
-                let complete=match crate::shell::PanelsViewCtx::of(&mut interaction.shell).render_chrome_step(&mut cursor.chrome,draw,overlay,atlas,icons,&mut interaction.input,&interaction.theme,world_resources,context){Ok(complete)=>complete,Err(failure)=>return FrameBuildBoundaryStep::CloseFailure(failure)};
+                let complete=match semio_framework_os_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut interaction.shell).render_chrome_step(&mut cursor.chrome,draw,overlay,atlas,icons,&mut interaction.input,&interaction.theme,world_resources,context){Ok(complete)=>complete,Err(failure)=>return FrameBuildBoundaryStep::CloseFailure(failure)};
                 if complete {
-                    let input_candidate = match crate::shell::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&interaction.theme) {
+                    let input_candidate = match semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&interaction.theme) {
                         Ok(witness) => witness,
                         Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                     };
                     cursor.input_candidate = Some(input_candidate);
-                    crate::shell::SessionCtx::of(&mut interaction.shell).sync_engine_surface_states();
+                    semio_framework_os_renderer_wgpu_shell_session::SessionCtx::of(&mut interaction.shell).sync_engine_surface_states();
                     cursor.phase = FrameBuildPhase::JobProgressTake;
                 }
             }
@@ -429,7 +429,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::EngineTransfer => {
                 let Some(resources) = cursor.engine_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame transfer lost engine resources") };
-                if !engine_canvas::stage_engine_packet_step(resources) {
+                if !semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::stage_engine_packet_step(resources) {
                     return FrameBuildBoundaryStep::Pending;
                 }
                 match resources.take_packet_step() {
@@ -499,7 +499,7 @@ impl AppRuntime {
     /// `📓️wgpu-deferred-action-commit-2026-09-13.md` closes; a `frame input action`
     /// now always has one of these behind it, however many builds were superseded in
     /// between.
-    pub(crate) fn frame_after_input_step(&mut self, runtime: &AppMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor, context: &mut semio_framework_job::StepContext<'_>) -> FrameFinishBoundaryStep {
+    pub fn frame_after_input_step(&mut self, runtime: &AppMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor, context: &mut semio_framework_job::StepContext<'_>) -> FrameFinishBoundaryStep {
         let cancel = context.cancel_token();
         match cursor.phase {
             FrameFinishPhase::Inputs => {
@@ -509,7 +509,7 @@ impl AppRuntime {
             FrameFinishPhase::Deferred => {
                 cursor.flush_tutorial = !self.shell.tutorial.tutorial_pending_document_ops.is_empty();
                 cursor.shell_maintenance = self.shell.surfaces.chrome_maintenance_pending(&self.shell.chrome);
-                cursor.settle = crate::shell::PointerCtx::of(&mut self.shell).settle_pump_pending();
+                cursor.settle = semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut self.shell).settle_pump_pending();
                 cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= SHELL_SYNC_PUMP_INTERVAL_MS;
                 if cursor.pump_sync {
                     self.last_sync_pump_ms = app_now_ms();
@@ -603,7 +603,7 @@ impl AppRuntime {
                         .filter(|target| target.kind == ui_wgpu::wgpu::SurfaceKind::NodeGraph)
                         .and_then(|target| {
                             self.shell.surfaces.node_graph_states.get(&target.host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                                engine_canvas::node_graph_connection_cursor_active(
+                                semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_connection_cursor_active(
                                     &target.host_id,
                                     f64::from(self.last_pointer_x - surface.bounds.x),
                                     f64::from(self.last_pointer_y - surface.bounds.y),
@@ -620,7 +620,7 @@ impl AppRuntime {
             }
             FrameFinishPhase::Draw => {
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame draw transfer lost resource input") };
-                input.time_seconds = crate::deadlines::ui_animation_seconds(semio_framework_job::default_now_us());
+                input.time_seconds = semio_framework_os_renderer_wgpu_host_plumbing::deadlines::ui_animation_seconds(semio_framework_job::default_now_us());
                 cursor.phase = FrameFinishPhase::Overlay;
             }
             FrameFinishPhase::Overlay => {
@@ -695,7 +695,7 @@ impl AppRuntime {
 
 /// 🎥️ Advances camera residency after snapshot sealing. Frame construction precedes this phase, so
 /// the pending witness deliberately schedules one more build when this step applies a new orbit.
-pub(crate) fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world::world::World3dState) {
+pub fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world::world::World3dState) {
     let _ = step_world3d_camera_fit(state);
 }
 
@@ -710,7 +710,7 @@ pub(crate) fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world:
 /// the preview sat at `apply=true state-meshes=2 draws=0` with no further evidence for 95 s
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Every terminal step is reported, and a `Pending` one
 /// every `WORLD3D_INGEST_TRACE_STRIDE` frames.
-pub(crate) fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3dState, stage: &str) {
+pub fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::world::World3dState, stage: &str) {
     const WORLD3D_INGEST_TRACE_STRIDE: u32 = 512;
     static STEPS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     if !infinite_world::world::world3d_cursor_work_pending(state) {
@@ -740,7 +740,7 @@ pub(crate) fn world3d_ingest_trace(surface_id: &str, state: &infinite_world::wor
 /// its transition ladder (`Pick[Hover …]` → `Plan[0/1 Camera]` → …), which is what a step that
 /// faults or never terminates has to be read off. A stride line on top catches a spin whose
 /// census is constant.
-pub(crate) fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::World3dState, generation: u64, outcome: Option<WorldInteractionAuthorityStep>) {
+pub fn world3d_interaction_trace(surface_id: &str, state: &infinite_world::world::World3dState, generation: u64, outcome: Option<WorldInteractionAuthorityStep>) {
     const WORLD3D_INTERACTION_STUCK_STRIDE: u64 = 4096;
     static ENTERED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
     static PENDING: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
@@ -772,6 +772,6 @@ pub(crate) fn world3d_interaction_trace(surface_id: &str, state: &infinite_world
 
 //#region 🖼️IconAtlasRuntime
 thread_local! {
-    pub(crate) static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
+    pub static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
 }
 //#endregion 🖼️IconAtlasRuntime

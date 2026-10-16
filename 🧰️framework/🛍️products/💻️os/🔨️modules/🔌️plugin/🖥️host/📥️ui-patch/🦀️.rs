@@ -93,7 +93,7 @@ fn patch(value: wit_ui::UiPatch, expected_instance: u32) -> Result<UiPatch, Stri
 ///
 /// 🐛️ Until 2026-09-15 this admitted exactly one patch per turn and dropped the rest on the floor
 /// (`emitted.into_iter().chain(returned).next()`), which is why the count cap above it could not move.
-pub(super) fn wit_ui_patches_to_kernel(expected_instance: u32, max_patch_bytes: u32, emitted: Vec<wit_ui::UiPatch>, returned: Vec<wit_ui::UiPatch>, receipt: Option<ActorUiPatchReceipt>) -> Result<UiTurnPatches, String> {
+pub fn wit_ui_patches_to_kernel(expected_instance: u32, max_patch_bytes: u32, emitted: Vec<wit_ui::UiPatch>, returned: Vec<wit_ui::UiPatch>, receipt: Option<ActorUiPatchReceipt>) -> Result<UiTurnPatches, String> {
     let count = emitted.len().checked_add(returned.len()).ok_or_else(|| "ui patch count overflow".to_string())?;
     ActorUiPatchReceipt::validate_pairing(receipt, count).map_err(|error| error.to_string())?;
     if receipt.is_some_and(|receipt| receipt.lifetime.instance_id != expected_instance) {

@@ -1,9 +1,9 @@
 /** 📑️ Handwritten document block collections, formatting and named style/image relationships. */
 import type {SemioDocumentSnapshot,DocBlock,DocRun,DocStyle,DocImage,DocListItem,DocTableRow} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow,SqliteValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type {SqliteDatabase,SqliteRow,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_DOCUMENT_SQLITE_SCHEMA=`CREATE TABLE semio_document_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_collection_id INTEGER NOT NULL REFERENCES semio_document_collection(id));
 CREATE TABLE semio_document_style (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, name TEXT NOT NULL, based_on_id INTEGER REFERENCES semio_document_style(id));
 CREATE TABLE semio_document_image (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_document_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, mime TEXT NOT NULL, bytes BLOB NOT NULL);

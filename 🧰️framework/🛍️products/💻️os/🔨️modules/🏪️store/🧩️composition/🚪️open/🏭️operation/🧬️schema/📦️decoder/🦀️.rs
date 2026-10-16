@@ -1,5 +1,5 @@
 //! 📦️ The selected codec decodes the original request-owned Pack into its actual typed snapshot.
-use crate::os_pack::PackError;
+use semio_framework_os_pack::PackError;
 use pack::snapshot::ArtifactPack;
 use std::marker::PhantomData;
 

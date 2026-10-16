@@ -4,8 +4,7 @@
 // Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-RENDERER-WGPU-CRATES.md, section 10.3).
 
 #[cfg(test)]
-#[path="../../../../../🧪️tests/🎟️original-turn/🦀️.rs"]
-mod fixture_original_turn;
+use semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn;
 
 #[cfg(test)]
 include!("../../../../../🧪️tests/🧊️wgpu-renderer-standalone/🦀️.rs");
@@ -16,33 +15,16 @@ include!("../../../../../🧪️tests/🐕️wgpu-present-stall-watch/🦀️.rs
 #[path = "../../../../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod interpreter;
 
-#[path = "../../🛎️frame-actions/🦀️.rs"]
-mod frame_actions;
-pub(crate) use frame_actions::*;
 
-#[path = "../../🎨️presentation-raster/🦀️.rs"]
-mod presentation_raster;
-pub(crate) use presentation_raster::*;
+pub(crate) use semio_framework_os_renderer_wgpu_runtime_mailbox::*;
 
-#[path = "../../📮️mailbox-impl/🦀️.rs"]
-mod mailbox_impl;
-pub(crate) use mailbox_impl::*;
 
-#[path = "../../🧾️frame-build/🦀️.rs"]
-mod frame_build;
-pub(crate) use frame_build::*;
 
-#[path = "../../🖥️frame-presentation/🦀️.rs"]
-mod frame_presentation;
-pub(crate) use frame_presentation::*;
+pub(crate) use semio_framework_os_renderer_wgpu_frame_presentation::*;
 
-#[path = "../../🧠️app-runtime/🦀️.rs"]
-mod app_runtime;
-pub(crate) use app_runtime::*;
+pub(crate) use semio_framework_os_renderer_wgpu_app_runtime::*;
 
-#[path = "../../🔬️native-socket-probe/🦀️.rs"]
-mod native_socket_probe;
-pub use native_socket_probe::*;
+pub(crate) use semio_framework_os_renderer_wgpu_native_probe::*;
 
 //#region 🔖️AsyncBoundaryTests
 #[cfg(test)]
@@ -83,22 +65,48 @@ mod wheel_application_point_tests;
 use semio_framework_os_renderer_wgpu_host_plumbing::{browser_original_output, deadlines, input_wire, render_snapshot, surface_lane};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_renderer_wgpu_host_plumbing::native_caller;
-#[path = "../../../🏠️os-host/🦀️.rs"]
-mod os_host;
+pub(crate) use semio_framework_os_renderer_wgpu_host_winit::*;
 // 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the `InteractiveJob` seam for the
 // slice of `AppRuntime::frame()` that genuinely is `Send`-safe today — see that file's own module
 // docstring for exactly what moves and, more importantly, what still cannot.
-#[path = "../../../🧵️frame-job/🦀️.rs"]
-mod frame_job;
-#[path = "../../../../../🪙️authority/🖼️frame/🦀️.rs"]
-mod frame_authority;
+pub(crate) use semio_framework_os_renderer_wgpu_frame_job::*;
 #[cfg(target_arch = "wasm32")]
-#[path = "../../../🌐️browser-worker/🦀️.rs"]
-mod browser_worker;
-#[path = "../../../🪟️winit-app/🦀️.rs"]
-mod winit_app;
+pub(crate) use semio_framework_os_renderer_wgpu_browser_worker::*;
 //#endregion 🔖️OsHostDecomposition
 
+//#region 🧵️FrameCoreTestHosts
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/📥️enqueue/🦀️.rs"]
+mod runtime_publication_tests_host;
+//#endregion 🧵️FrameCoreTestHosts
+//#region 🧵️FrameCoreTestHosts
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🔬️wgpu-frame-job-unit/🦀️.rs"]
+mod tests_host;
+#[cfg(test)]
+#[path = "../../../🧵️frame-job/📬️outcome/🧪️tests/🦀️.rs"]
+mod original_outcome_tests_host;
+//#endregion 🧵️FrameCoreTestHosts
+//#region 🧵️FrameCoreTestHosts
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🪶️sqlite/🧪️tests/🦀️.rs"]
+mod native_socket_sqlite_tests_host;
+//#endregion 🧵️FrameCoreTestHosts
+//#region 🧵️FrameCoreTestHosts
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🔬️wgpu-winit-app-p3c/🦀️.rs"]
+mod p3c_tests_host;
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🔬️wgpu-winit-app-callback-latency/🦀️.rs"]
+mod callback_latency_tests_host;
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🔢️frame-generation-hold/🦀️.rs"]
+mod frame_generation_hold_tests_host;
+//#endregion 🧵️FrameCoreTestHosts
+//#region 🧵️FrameCoreOsHostTestHost
+#[cfg(test)]
+include!("../../../../../🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs");
+//#endregion 🧵️FrameCoreOsHostTestHost
 //#region 🧷️InterpreterTestHosts
 // 🧪️ Test hosts of the interpreter laws that name the monolith (scenes, engine canvas, the frame fixtures): the `ui-engine` crates are built with their `testkit` feature in this test unit, and the law files keep the namespace they were written against.
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -109,3 +117,5 @@ mod interpreter_command_wiring_host;
 #[path = "🧪️test-hosts/🔎️interpreter-introspection/🦀️.rs"]
 mod interpreter_introspection_host;
 //#endregion 🧷️InterpreterTestHosts
+pub(crate) use semio_framework_os_renderer_wgpu_frame_actions::*;
+pub(crate) use semio_framework_os_renderer_wgpu_frame_transaction::*;

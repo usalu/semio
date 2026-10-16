@@ -1,9 +1,9 @@
 /** 🖼️ TIFF's authored directories, canonical chunk storage, and exact scalar domains. */
 import type {TiffSnapshot,TiffValues,TiffFieldType,TiffTag,TiffSampleBlock} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseTiffFieldType,validateTiffSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteCheckpoint,artifactSqliteValueBudget,artifactSqliteValueByteLengthControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary32,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {sqliteOperation,exportSqliteDatabase,importSqliteDatabase,sqliteValueByteLength,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteCheckpoint,artifactSqliteValueBudget,artifactSqliteValueByteLengthControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary32,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {sqliteOperation,exportSqliteDatabase,importSqliteDatabase,sqliteValueByteLength,type SqliteDatabase,type SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 📤️ Writes the TIFF projection and physical file under one cumulative operation. */
 export async function tiffSnapshotToSqliteFile(snapshot:TiffSnapshot,options:ArtifactSqliteOptions={}):Promise<Uint8Array>{const operation=sqliteOperation(options);return exportSqliteDatabase(await tiffSnapshotToSqliteDatabase(snapshot,operation),operation);}

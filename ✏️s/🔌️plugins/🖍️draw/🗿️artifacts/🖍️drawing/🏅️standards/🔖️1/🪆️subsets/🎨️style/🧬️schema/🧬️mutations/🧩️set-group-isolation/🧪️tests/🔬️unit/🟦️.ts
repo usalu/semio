@@ -1,8 +1,8 @@
 /** 🧩️ Shared isolation mutation contract checked against Immer and Ajv. */
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import {expect,test} from "bun:test";
 import {produce} from "immer";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import {applyGroupIsolationEdit} from "../../🦠️mutation/🟦️.ts";
 import {inverse} from "../../↩️inverse/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";

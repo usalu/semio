@@ -42,7 +42,7 @@ import {
 import { type Anchor, resolveTranslationLabel, uiI18n, type UiTranslationKey } from "@semio-tech/ui-react";
 import { useCallback, useEffect, useState } from "react";
 import type { SelectionMode } from "../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
-import { mediaExportBytes } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { mediaExportBytes } from "../../../../../../../../🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts";
 import { wireMediaExportEncoding } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { causalOrderKeyV1, type InputProvenanceV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { type ActiveSession, type LoadedProgramState, type UIHistory } from "../../🐚️Shell/🟦️.tsx";

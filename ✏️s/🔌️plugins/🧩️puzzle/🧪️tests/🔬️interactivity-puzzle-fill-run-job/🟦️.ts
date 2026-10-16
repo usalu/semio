@@ -1,4 +1,4 @@
-import { interactivityPuzzleFillRunJobFailures, type InteractivityPuzzleFillSources } from "../../../../../📜️script.ts";
+import { interactivityPuzzleFillRunJobFailures, type InteractivityPuzzleFillSources } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 
 /** 🧫️ A contract-conforming miniature of puzzle 3d fill as a framework tool run (`📋️tool-run-contract.md` §2.4, §3.7, §5 wave 1); shared with the trace self-test. */
 export const PUZZLE_FILL_TOOL_RUN_FIXTURE: InteractivityPuzzleFillSources = {

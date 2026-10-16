@@ -1,4 +1,4 @@
-import { drawingTextFallbackExtent } from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🟦️.ts";
+import { drawingTextFallbackExtent } from "@semio-tech/framework/2d/text";
 /** 📷️ Visible world bounds shared by Drawing surfaces. */
 import { segmentBounds,type Matrix,type Point } from "../🟦️.ts";
 import type { DrawingArtboard,PathGeometrySegment } from "../../🟦️.ts";

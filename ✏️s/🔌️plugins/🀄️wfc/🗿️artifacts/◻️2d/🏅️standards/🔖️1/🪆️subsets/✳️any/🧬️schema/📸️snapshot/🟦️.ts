@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 // 🌊️ WFC 2D snapshot — the TypeScript twin of `🦀️.rs`, ported field by field from the Rust records
 // (never generated). The JSON Schema leaf beside this file is normative; this mirrors it.
 

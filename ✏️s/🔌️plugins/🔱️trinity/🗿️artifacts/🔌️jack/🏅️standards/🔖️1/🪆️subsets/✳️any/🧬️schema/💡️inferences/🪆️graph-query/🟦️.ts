@@ -2,7 +2,7 @@
 import type {JackArtifact} from "../../🟦️.ts";
 import type {ArtifactChild} from "./../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import type {JackFlatPositionUv} from "../🟦️.ts";
-import {ValueError} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "@semio-tech/framework/value/refusal";
 export type {ArtifactChild};
 export interface JackGraphEndpoint {readonly id:string;readonly source:string;readonly target:string}
 export interface JackGraphQuery {

@@ -5,7 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox, ephemeralSet } from "@semio-tech/framework";
+import { ephemeralBox, ephemeralSet } from "../../../🫧️transient/🟦️.ts";
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";

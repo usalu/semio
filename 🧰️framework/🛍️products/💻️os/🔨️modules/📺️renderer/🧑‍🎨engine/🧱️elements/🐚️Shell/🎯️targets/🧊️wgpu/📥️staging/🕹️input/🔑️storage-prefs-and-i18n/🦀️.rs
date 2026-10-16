@@ -9,7 +9,7 @@ use super::*;
 /// 🆔️ The tour as ONE dialog-level surface in the chrome census. React's `UIIntroduction` renders its
 /// veil and card as several `[data-level="dialog"]` nodes (one of them anonymous), which is a DOM
 /// composition, not a behaviour — a probe compares dialog PRESENCE, so one row states it.
-pub(crate) const UI_INTRODUCTION_DIALOG_ELEMENT_ID: &str = "ui.introduction";
+pub const UI_INTRODUCTION_DIALOG_ELEMENT_ID: &str = "ui.introduction";
 
 //#endregion 🔑️StorageKeys
 //#endregion ShellChrome

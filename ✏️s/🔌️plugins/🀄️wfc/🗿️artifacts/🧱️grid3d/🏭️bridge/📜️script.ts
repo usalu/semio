@@ -4,7 +4,7 @@ import {join} from "node:path";
 import {runRepositoryMutationBridgeScriptV1} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🟦️.ts";
 import {runRepositoryCargoCommandV1} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import {getWorkspaceRoot} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import {receiveScriptProcessInvocation} from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import collector from "./🔣️collector.json" with {type:"json"};
 const packageRoot=join(import.meta.dir,"📦️packages/🦀️rust"),binary="semio-wfc-grid3d-mutation-bridge";
 if(process.argv[2]==="check"){

@@ -1,5 +1,5 @@
 import * as artifactSqlite0 from "../🟦️.ts";
-import binary64Schema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
+import { valueSchema as binary64Schema } from "@semio-tech/framework/value/schema";
 /** 🧊️ Actual native Puzzle3d fields share independent neutral scalar and owning parser laws. */
 import {expect,test} from 'bun:test';
 import {fileURLToPath} from 'node:url';
@@ -12,8 +12,8 @@ import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts"
 
 import {Database} from 'bun:sqlite';
 import {PUZZLE3D_SQLITE_SCHEMA} from "../🗄️schema/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
+import type {ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 function specimen(bits:bigint):snapshot.Puzzle3dSnapshot {
  const word={bits};
  const kind:snapshot.Puzzle3dCatalogObjectKind={id:'',name:'',label:'',description:'',icon:'',image:'',unit:'',abstract:false,baseKinds:['',''],representations:[{id:'',name:'',url:'',mime:'',tags:['',''],lod:null,description:''}],vortices:[{id:'',name:'',label:'',description:'',icon:'',vortexKind:null,point:[word,word,word],direction:[word,word,word],t:word,mandatory:false,radius:null}],attributes:[{id:'',key:'',value:'',definition:null}],authors:[{id:'',name:'',email:'',role:null,rank:-2147483648}]};

@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Shared schema, assembly, and native codec contract for stdio artifacts"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

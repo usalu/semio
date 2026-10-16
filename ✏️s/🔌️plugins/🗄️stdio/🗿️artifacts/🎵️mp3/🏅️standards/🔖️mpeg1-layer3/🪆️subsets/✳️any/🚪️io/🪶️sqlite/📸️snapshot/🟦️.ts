@@ -1,6 +1,6 @@
 import {parseMp3Snapshot,parseId3Frame,parseId3v1Tag,type Mp3Snapshot,type Id3Content,type Id3Frame,type Mp3Frame,type Mp3FrameHeader} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 /** 🏛️ Authored ID3 and MPEG frame entity declarations. */
 export const MP3_SQLITE_SCHEMA=String.raw`CREATE TABLE mp3_document(id INTEGER PRIMARY KEY CHECK(id=1),schema TEXT NOT NULL);
 CREATE TABLE mp3_id3v2_tag(id INTEGER PRIMARY KEY REFERENCES mp3_document(id) CHECK(id=1));

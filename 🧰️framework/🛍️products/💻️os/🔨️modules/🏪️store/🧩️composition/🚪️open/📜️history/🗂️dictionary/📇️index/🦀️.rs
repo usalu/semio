@@ -30,31 +30,31 @@ struct Delta {
 
 /// 🧱️ At most one fixed page is allocated by append; failed deltas remain private until close.
 pub(super) struct RetainedDictionaryIndex {
-    pages: ManuallyDrop<[Option<Box<[DictionaryRange; PAGE_ENTRIES]>>; MAXIMUM_PAGES]>,
-    allocated: usize,
+    pub pages: ManuallyDrop<[Option<Box<[DictionaryRange; PAGE_ENTRIES]>>; MAXIMUM_PAGES]>,
+    pub allocated: usize,
     visible: usize,
-    dictionary_bytes: u64,
+    pub dictionary_bytes: u64,
     maximum_entries: usize,
-    maximum_bytes: u64,
-    verified_end: u64,
+    pub maximum_bytes: u64,
+    pub verified_end: u64,
     last_end: u64,
-    delta: Option<Delta>,
-    diagnostic: Option<DictionaryIndexError>,
-    closing: bool,
+    pub delta: Option<Delta>,
+    pub diagnostic: Option<DictionaryIndexError>,
+    pub closing: bool,
 }
 
 impl RetainedDictionaryIndex {
-    pub(super) fn new(verified_end: u64, maximum_entries: usize, maximum_bytes: u64) -> Result<Self, DictionaryIndexError> {
+    pub fn new(verified_end: u64, maximum_entries: usize, maximum_bytes: u64) -> Result<Self, DictionaryIndexError> {
         if maximum_entries > PAGE_ENTRIES * MAXIMUM_PAGES || maximum_bytes > 1_048_576 {
             return Err(DictionaryIndexError::Capacity);
         }
         Ok(Self { pages: ManuallyDrop::new(std::array::from_fn(|_| None)), allocated: 0, visible: 0, dictionary_bytes: 0, maximum_entries, maximum_bytes, verified_end, last_end: 0, delta: None, diagnostic: None, closing: false })
     }
 
-    fn reject<T>(&mut self, diagnostic: DictionaryIndexError) -> Result<T, DictionaryIndexError> {
+    pub fn reject<T>(&mut self, diagnostic: DictionaryIndexError) -> Result<T, DictionaryIndexError> {
         Err(*self.diagnostic.get_or_insert(diagnostic))
     }
-    fn check(&self) -> Result<(), DictionaryIndexError> {
+    pub fn check(&self) -> Result<(), DictionaryIndexError> {
         if self.closing {
             return Err(DictionaryIndexError::State);
         }
@@ -76,7 +76,7 @@ impl RetainedDictionaryIndex {
         Ok(())
     }
 
-    pub(super) fn append(&mut self, range: DictionaryRange) -> Result<(), DictionaryIndexError> {
+    pub fn append(&mut self, range: DictionaryRange) -> Result<(), DictionaryIndexError> {
         self.check()?;
         let Some(delta) = self.delta else {
             return self.reject(DictionaryIndexError::State);
@@ -122,17 +122,17 @@ impl RetainedDictionaryIndex {
     pub(super) fn reject_record(&mut self) {
         self.diagnostic.get_or_insert(DictionaryIndexError::Malformed);
     }
-    pub(super) fn visible_entries(&self) -> usize {
+    pub fn visible_entries(&self) -> usize {
         self.visible
     }
-    pub(super) fn allocated_pages(&self) -> usize {
+    pub fn allocated_pages(&self) -> usize {
         self.allocated
     }
-    pub(super) fn dictionary_bytes(&self) -> u64 {
+    pub fn dictionary_bytes(&self) -> u64 {
         self.dictionary_bytes
     }
 
-    pub(super) fn lookup(&self, index: usize) -> Result<DictionaryRange, DictionaryIndexError> {
+    pub fn lookup(&self, index: usize) -> Result<DictionaryRange, DictionaryIndexError> {
         self.check()?;
         if index >= self.visible {
             return Err(DictionaryIndexError::Malformed);
@@ -140,12 +140,12 @@ impl RetainedDictionaryIndex {
         Ok(self.pages[index / PAGE_ENTRIES].as_ref().ok_or(DictionaryIndexError::State)?[index % PAGE_ENTRIES])
     }
 
-    pub(super) fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-    pub(super) fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
-    pub(super) fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.allocated == 0 { 0 } else { PAGE_BYTES }) }
-    pub(super) fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
+    pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
+    pub fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
+    pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.allocated == 0 { 0 } else { PAGE_BYTES }) }
+    pub fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -160,7 +160,7 @@ impl RetainedDictionaryIndex {
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: PAGE_BYTES, ..empty }))
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.closing && self.allocated == 0 && self.delta.is_none()
     }
 }

@@ -71,7 +71,7 @@ test("mutation catalogs resolve only explicitly registered same-artifact and sam
 test("mutation vector discovery audits exact grouped owners and declared scenario names across catalogs", () => {
   const contract = fixture.mutationCatalogSourceOwnership, sourceRoot = `${contract.source}/🧬️schema/🧬️mutations`;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [sourceRoot]: contract.domains }, mutationCatalogSourceOwners: { [contract.catalog]: contract.source } };
-  const source = readFileSync(resolve(root, "../../../🧪️test/🟦️.ts"), "utf8");
+  const source = readFileSync(resolve(root, "../../../🧪️test/📃️case-contract/🟦️.ts"), "utf8");
   const syntax = ts.createSourceFile("test.ts", source, ts.ScriptTarget.Latest, true);
   const definition = syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === "mutationVectorRegistryBreaches")!;
   const camera = { mutationId: "create-camera", sourceMutationDirectoryName: "🌱️create", mutationDirectoryName: "🌱️create", scenarios: [{ id: "applied", directoryName: "✅️applied" }] };

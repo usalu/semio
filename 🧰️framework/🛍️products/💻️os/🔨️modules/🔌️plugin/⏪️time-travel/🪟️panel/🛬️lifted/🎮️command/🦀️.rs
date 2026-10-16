@@ -1,7 +1,20 @@
 //! 🎮️ Lift file: 1 item(s), about 218 lines, of `🎮️command/🦀️.rs` that belong to crate `time-travel-panel` (WP5).
 //!
 //! WP3 owns the source file and cuts the items here (ui_history_panel); WP5 wires this file with one `mod` line in the crate root. Until `time-travel-panel` exists, the source module re-exports the items with `pub use`.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_ui_contract::{BuiltNode, *};
+use semio_framework_plugin_decl_views::history_view::{CommandView, HistoryCommandFilter, HistoryView};
+use semio_framework_plugin_command::{FRAMEWORK_CHECKIN_CONTROLLER_ID, history_panel_alternative_row, history_panel_icon_id, history_panel_mutation_row, history_panel_unavailable_row, uncommitted_command_count};
+use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_framework_plugin_command::lifted_command::{HistoryMutationPages, TimeTravelPanel, history_mutation_entry};
+use semio_framework::{IconName, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, ViewModel};
+use semio_framework_ui_locale::{Locale, Terminology};
+use semio_framework_plugin_window_kits_rich::tree_kit::{TreeWindows, tree_window_indexed_item, tree_window_section};
+use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
+use semio_framework_plugin_window_kits_rich::table_kit::{row_action, row_target};
+use crate::tool_jobs_time_travel as time_travel;
+use crate::command_history::lifted_panel::ui_history_panel;
+use semio_framework_plugin_window_transient::{ui_label, ui_text};
 
 /// 🕰️ Builds the framework's history panel body from a `HistoryView` as a pure side-panel
 /// `Tree` (same shape as Document/Catalogue): an Actions section (undo/redo/checkpoint/alternative +

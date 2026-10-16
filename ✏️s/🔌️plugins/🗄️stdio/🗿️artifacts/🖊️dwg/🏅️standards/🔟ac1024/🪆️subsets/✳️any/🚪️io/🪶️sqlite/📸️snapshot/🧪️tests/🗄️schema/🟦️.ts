@@ -1,7 +1,7 @@
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import { parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("DWG embeds all 277 exact authored domain tables and independent SQLite accepts them",async()=>{
   const domains=["📄️document","🔧️header","✏️drawing","🗃️tables","📐️entities","📦️objects","🔗️associativity","🧮️evaluation","🧩️blocks","🎬️actions","🖌️styles/👁️visual","🖌️styles/🧱️material","🖌️styles/🗃️table","📃️layout","🖌️styles/↗️mleader","📏️constraints"];

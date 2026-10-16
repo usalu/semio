@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralMap } from "../../../../../../../🔨️modules/🎠️kernel/🫧️transient/🟦️.ts";
+import { ephemeralMap } from "../../../../../../../🔨️modules/🫧️transient/🟦️.ts";
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 // #endregion 🔌️Adapters

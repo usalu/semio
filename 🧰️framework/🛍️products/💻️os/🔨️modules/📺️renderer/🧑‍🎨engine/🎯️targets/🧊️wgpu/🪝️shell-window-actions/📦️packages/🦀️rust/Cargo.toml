@@ -21,9 +21,16 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit", "semio-framework-os-renderer-wgpu-shell-async/testkit", "semio-framework-os-renderer-wgpu-shell-chrome-state/testkit", "semio-framework-os-renderer-wgpu-shell-docs/testkit", "semio-framework-os-renderer-wgpu-shell-history/testkit", "semio-framework-os-renderer-wgpu-shell-input/testkit", "semio-framework-os-renderer-wgpu-shell-prefs/testkit", "semio-framework-os-renderer-wgpu-shell-session/testkit", "semio-framework-os-renderer-wgpu-shell-state/testkit", "semio-framework-os-renderer-wgpu-shell-surfaces/testkit", "semio-framework-os-renderer-wgpu-shell-sync/testkit", "semio-framework-os-renderer-wgpu-shell-windows/testkit"]
+
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-dock = { path = "../../../🛰️dock/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-engine-registry = { path = "../../../🗺️engine-registry/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-engine-text = { path = "../../../✍️engine-text/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-chrome-state = { path = "../../../🎚️shell-chrome-state/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-commands = { path = "../../../🎹️shell-commands/📦️packages/🦀️rust" }

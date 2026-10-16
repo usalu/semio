@@ -8,8 +8,9 @@
  * @see ../🟦️.tsx — the barrel that re-exports this module
  */
 
-import { createBrowserStoragePort, ephemeralBox, ephemeralMap, type StoragePort } from "@semio-tech/framework";
+import { createBrowserStoragePort, type StoragePort } from "../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { clearStylingAppearanceRoot, setStylingAppearanceRoot, stylingAppearanceRootElement, subscribeStylingAppearanceRoot } from "@semio-tech/ui-styling";
+import { ephemeralBox, ephemeralMap } from "../../../../🫧️transient/🟦️.ts";
 import { availableViewportHeightPx, type ElementsSurfaceDevice } from "../../../📱️device/🟦️.ts";
 import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
 import { readStoredUiDriver, setUiDriverProvider, type UiDriver, type UiDriverReveal } from "../../../🧱️elements/🚗️UiDriver/🟦️.tsx";

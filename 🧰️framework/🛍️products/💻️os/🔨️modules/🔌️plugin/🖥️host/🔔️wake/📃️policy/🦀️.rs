@@ -1,7 +1,7 @@
 //! 🎟️ Genuine embedding configuration declares independent full policies and finite original operation currency.
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use semio_framework_value_derive::{FromValue,ToValue};
-use super::super::GuestRelayWakeReceiptReceiver;
+use crate::GuestRelayWakeReceiptReceiver;
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
 #[serde(deny_unknown_fields)]
 pub struct GuestRelayDriverPolicy{pub root:super::GuestRelayRootPolicy,pub admission:RetainedCloneGrant,pub drive:RetainedCloneGrant,pub wake:RetainedCloneGrant,pub operation:RetainedCloneGrant}
@@ -26,7 +26,7 @@ pub(super) fn intersect(a:RetainedCloneGrant,b:RetainedCloneGrant)->RetainedClon
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 
 /// 🏦️ Supplies wake turns from one genuine finite driver treasury and acknowledges their exact original return.
-pub struct GuestRelayWakeDriver{original:semio_framework_value::retirement::controlled::RetainedOwnerGate<WakeDriverState>}
+pub struct GuestRelayWakeDriver{pub original:semio_framework_value::retirement::controlled::RetainedOwnerGate<WakeDriverState>}
 enum DriverCheckout{Context{slot:usize,generation:u64,turn:GuestRelayDriverTurnGrant},Wake{slot:usize,generation:u64,turn:GuestRelayDriverTurnGrant},Actor{input:semio_framework_actor::RetainedTurnInput,turn:GuestRelayDriverTurnGrant,budget:semio_framework::kernel::Budget}}
 struct WakeDriverState{treasury:GuestRelayDriverTreasury,checkout:Option<DriverCheckout>,root:super::GuestRelayOriginalRoot,actor_returned:Option<semio_framework_actor::RetainedTurnReceipt>,cancelled:Box<dyn Fn()->bool+Send+Sync>}
 impl GuestRelayWakeDriver{
@@ -66,7 +66,7 @@ impl GuestRelayWakeDriver{
 }
 impl GuestRelayWakeReceiptReceiver for GuestRelayWakeDriver{
  fn checkout(&self,slot:usize,generation:u64)->Result<Option<super::GuestRelayWakeTurnGrant>,ValueError>{let Ok(mut original)=self.original.try_lock()else{return Ok(None)};if original.checkout.is_some(){return Ok(None)}let Some(turn)=original.treasury.begin_turn()?else{return Ok(None)};original.checkout=Some(DriverCheckout::Wake{slot,generation,turn});Ok(Some(super::GuestRelayWakeTurnGrant{epoch:turn.epoch,grant:turn.grant}))}
- fn collect(&self,receipt:&super::super::GuestRelayWakeReceipt)->Result<bool,ValueError>{
+ fn collect(&self,receipt:&crate::GuestRelayWakeReceipt)->Result<bool,ValueError>{
   let Ok(mut original)=self.original.try_lock()else{return Ok(false)};let Some(DriverCheckout::Wake{slot,generation,turn})=original.checkout.as_ref()else{return Err(refusal("original production wake receipt has no treasury checkout"))};let slot=*slot;let generation=*generation;let turn=*turn;let grant=receipt.grant;
   if receipt.slot!=slot||receipt.generation!=generation||receipt.epoch!=turn.epoch||intersect(grant,turn.grant)!=grant||!receipt.progress.fits(grant){return Err(refusal("original production wake receipt does not match its held treasury authority"))}
   original.treasury.return_turn(turn,receipt.progress)?;original.checkout=None;Ok(true)

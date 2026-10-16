@@ -1,8 +1,8 @@
 /** 🔣️ Physical member JSON representation. */
-import type{Binary32} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{IntrinsicValue}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-import{parseSchemaRecord}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import{decodeIntrinsicJson}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️json/🟦️.ts";
+import type{Binary32} from "@semio-tech/framework/value/ieee754";
+import type{IntrinsicValue}from"@semio-tech/framework/value/schema/intrinsic";
+import{parseSchemaRecord}from"@semio-tech/framework/schema/record";
+import{decodeIntrinsicJson}from"@semio-tech/framework/value/schema/intrinsic/json";
 import {parseLowpolyMeshState,type LowpolyMeshState} from "../../../../../🧬️schema/🕸️mesh/🟦️.ts";
 function array(value:unknown):unknown[]{if(!Array.isArray(value))throw Error("Lowpoly mesh requires ordered arrays");return value;}
 function jsonWord(source:unknown):Binary32{if(typeof source!=="string"||!/^[0-9a-f]{8}$/.test(source))throw Error("Lowpoly mesh JSON requires an exact binary32 word");return{bits:parseInt(source,16)};}

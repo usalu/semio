@@ -5,7 +5,7 @@ import sharp from "sharp";
 import {mergeDownPlan} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {RasterStackJob,type RasterStackLayer} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts";
+import {RasterStackJob,type RasterStackLayer} from "@semio-tech/framework/pixels/compositing/layers";
 const images=Object.fromEntries(Object.entries(fixture.images).map(([key,image])=>[key,{...image,pixels:Uint8Array.from(image.pixels)}]));
 function composite(layers:RasterStackLayer[]){const job=new RasterStackJob({layers,images});while(!job.advance(1).done){}return job.result();}
 for(const row of fixture.cases)test(row.name,async()=>{

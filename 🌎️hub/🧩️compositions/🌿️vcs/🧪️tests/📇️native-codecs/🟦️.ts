@@ -62,6 +62,8 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
     if (bytes.length !== row.protocolBytes || nodeHash !== row.protocolSha256 || webHash !== nodeHash || /^0{64}$/u.test(nodeHash)) throw new Error(`VCS protocol receipt mismatch ${row.factoryId}`);
     if (row.kind !== `s.${fixture.pluginId}.${row.extension}` || row.capability !== `${row.kind}.codec.document` || row.factoryId !== `${fixture.pluginId}.${row.extension}.v1` || row.schema !== `${fixture.pluginId}.${row.extension}`) throw new Error("VCS receipt canonical owner mismatch");
   }
+  const literalReceipt=fixture.receipts[0];
+  if(!literalReceipt)throw Error("VCS literal receipt missing");
   const hostileVectors = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📇️native-codecs/🔣️.json"), "utf8")) as { readonly hostile: readonly string[] };
   const expected = new Map(fixture.receipts.map((row: any) => [row.factoryId, JSON.stringify(row)]));
   const admitted = (candidate: any): boolean => candidate.pluginId === "vcs" && candidate.packageId === "semio:vcs" && candidate.packageVersion === version && candidate.receipts.length === 1
@@ -70,22 +72,24 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   if (!admitted(fixture)) throw new Error("literal VCS closure was denied");
   for (const hostile of hostileVectors.hostile) {
     const candidate = structuredClone(fixture);
+    const receipt=candidate.receipts[0];
+    if(!receipt)throw Error("VCS hostile seed receipt missing");
     switch (hostile) {
       case "missing": candidate.receipts.pop(); break;
-      case "duplicate": candidate.receipts.push(structuredClone(candidate.receipts[0])); break;
+      case "duplicate": candidate.receipts.push(structuredClone(receipt)); break;
       case "foreign-package": candidate.packageId = "semio:stdio"; break;
       case "wrong-version": candidate.packageVersion = "0.2.0"; break;
-      case "bare-kind": candidate.receipts[0].kind = "vcs.vcs"; break;
-      case "legacy-kind": candidate.receipts[0].kind = "vcs.document"; break;
-      case "legacy-schema": candidate.receipts[0].schema = "vcs.document"; break;
-      case "wrong-extension": candidate.receipts[0].extension = "vcsdocument"; break;
-      case "zero-hash": candidate.receipts[0].protocolSha256 = "00".repeat(32); break;
+      case "bare-kind": receipt.kind = "vcs.vcs"; break;
+      case "legacy-kind": receipt.kind = "vcs.document"; break;
+      case "legacy-schema": receipt.schema = "vcs.document"; break;
+      case "wrong-extension": receipt.extension = "vcsdocument"; break;
+      case "zero-hash": receipt.protocolSha256 = "00".repeat(32); break;
       default: throw new Error(`unknown VCS hostile closure ${hostile}`);
     }
     if (admitted(candidate)) throw new Error(`VCS hostile closure admitted ${hostile}`);
   }
   const source = readFileSync(join(root, "🦀️.rs"), "utf8");
-  if (!source.includes(`include_bytes!("../../../../${fixture.receipts[0].protocolPath}")`) || source.includes("vcs.document")) throw new Error("VCS receipt module does not pin its exact protocol bytes without the retired kind");
+  if (!source.includes(`include_bytes!("../../../../${literalReceipt.protocolPath}")`) || source.includes("vcs.document")) throw new Error("VCS receipt module does not pin its exact protocol bytes without the retired kind");
   const appBase = join(repoRoot, "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
   const config = readFileSync(join(appBase, "🎚️config/🦀️.rs"), "utf8");
   const presence = readFileSync(join(appBase, "👥️presence/🦀️.rs"), "utf8");
@@ -101,7 +105,7 @@ export class NativeCodecCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveVcsNativeCodecReceipts(this.repoRoot);
     if (process.argv.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_codecs" }, laws: ["vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution", "vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(this.repoRoot, process.env.SEMIO_TEST_ARTIFACT_DIR) : undefined, progress(event) { console.log(`vcs-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{ package: "semio-hub-vcs", target: { kind: "test", name: "native_codecs" }, laws: ["vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution", "vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind"] }], progress(event) { console.log(`vcs-native-codecs ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`vcs-native-codec-receipt: ${JSON.stringify(receipt)}`);
     console.log("vcs-native-codec-check: exact=1 literal-codecs=1; no hub catalog activation, provider link or client mount");
   }

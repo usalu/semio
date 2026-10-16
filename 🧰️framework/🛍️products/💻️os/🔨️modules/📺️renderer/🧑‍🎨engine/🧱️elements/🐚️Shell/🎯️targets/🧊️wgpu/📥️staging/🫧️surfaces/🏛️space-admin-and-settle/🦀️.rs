@@ -24,11 +24,11 @@ pub enum ShellSettleStep {
 
 /// ⏳️ One live producer's progress witness, as the pump watches it across frames.
 #[derive(Default)]
-pub(crate) struct ShellSettleWatch {
-    pub(crate) signature: String,
-    pub(super) stalled_steps: u32,
-    pub(super) terminal_drives: u32,
-    pub(crate) standing: bool,
+pub struct ShellSettleWatch {
+    pub signature: String,
+    pub stalled_steps: u32,
+    pub terminal_drives: u32,
+    pub standing: bool,
 }
 
 /// 🫀️ The shell's half of the runtime-owned settle pump — the wgpu twin of React's
@@ -54,12 +54,12 @@ pub(crate) struct ShellSettleWatch {
 ///   gesture measured to unblock it (§7.1 of the same report).
 #[derive(Default)]
 pub struct ShellSettlePump {
-    pub(crate) owed: bool,
-    pub(crate) steps: u64,
-    pub(crate) crossings: u64,
-    pub(crate) traced: Option<ShellSettleStep>,
-    pub(crate) watches: HashMap<String, ShellSettleWatch>,
-    pub(crate) rendering: Option<ShellDetached<ShellRenderedRefresh>>,
+    pub owed: bool,
+    pub steps: u64,
+    pub crossings: u64,
+    pub traced: Option<ShellSettleStep>,
+    pub watches: HashMap<String, ShellSettleWatch>,
+    pub rendering: Option<ShellDetached<ShellRenderedRefresh>>,
 }
 
 //#endregion ShellTypes

@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { parsePdfSnapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PDF14_SQLITE_SCHEMA, pdf14SnapshotToSqliteDatabase, pdf14SnapshotFromSqliteDatabase } from "../🟦️.ts";
-import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("PDF1.4 complete concrete backing contract keeps all page words and literal text", async () => {
   const plan = await Bun.file(new URL("🧫️fixtures/🔢ieee.json", import.meta.url)).json();

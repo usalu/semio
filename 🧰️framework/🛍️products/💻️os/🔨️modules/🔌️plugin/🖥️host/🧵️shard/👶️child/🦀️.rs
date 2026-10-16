@@ -18,9 +18,10 @@
 
 use semio_framework::kernel::Budget;
 use semio_framework_actor::ActorId;
-use semio_framework_plugin_host::process_transport::StdioTransport;
-use semio_framework_plugin_host::shard::{ShardLoop, ShardTransports};
-use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageHash, PackageId, PackageRef};
+use semio_framework_plugin_host_guest_runtime::{GuestRuntime, GuestRuntimes, PackageRef};
+use semio_framework_plugin_host_process_transport::StdioTransport;
+use semio_framework_plugin_host_shard::{ShardLoop, ShardTransports, native_identity_issuer};
+use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use std::sync::Arc;
 use std::time::Duration;
@@ -84,7 +85,7 @@ fn main() {
     let policy_text=std::fs::read_to_string(identity_policy_arg).unwrap_or_else(|error|{eprintln!("[semio-shard] identity policy read failed: {error}");std::process::exit(2)});
     let policy=serde_json::from_str(&policy_text).unwrap_or_else(|error|{eprintln!("[semio-shard] identity policy rejected: {error}");std::process::exit(2)});
     let alive=transport.identity_liveness();
-    let identity=semio_framework_plugin_host::shard::native_identity_issuer(policy,move |_|{let original=Arc::clone(&alive);Box::new(move |_|original.load(std::sync::atomic::Ordering::SeqCst))});
+    let identity=native_identity_issuer(policy,move |_|{let original=Arc::clone(&alive);Box::new(move |_|original.load(std::sync::atomic::Ordering::SeqCst))});
     let mut shard = semio_framework_async::block_on(ShardLoop::new(Arc::clone(&runtime), ShardTransports::Stdio(transport),identity));
     if let Err(rejected) = shard.register(ActorId(actor_id), instance) {
         semio_framework_async::block_on(runtime.drop_instance(rejected.instance));

@@ -1,5 +1,5 @@
 /** 🗺️ Complete map document with independently persisted child envelopes. */
-import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseGisMapFeature, type GisMapFeature } from "./📍️feature/🟦️.ts";
 export { parseGisMapFeature } from "./📍️feature/🟦️.ts";

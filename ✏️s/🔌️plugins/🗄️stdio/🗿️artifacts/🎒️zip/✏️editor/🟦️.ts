@@ -1,7 +1,7 @@
 /** 🎒️ Canonical archive text edits shared by both ZIP dialects. */
 import commandSchema from "./🎮️commands/✏️set-node/🔣️schema.json";
 import checkpointSchema from "./🧵️retained/🔣️schema.json";
-import { blake3Hex } from "../../../../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
 import type { ZipSnapshot } from "../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import type { ZipMutation } from "../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🟦️.ts";
 

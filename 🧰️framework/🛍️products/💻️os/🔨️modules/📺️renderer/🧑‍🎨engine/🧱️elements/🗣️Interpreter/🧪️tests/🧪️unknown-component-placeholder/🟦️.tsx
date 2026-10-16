@@ -1,13 +1,13 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore"> & Pick<typeof import("../../🟦️.tsx"), "UiNodeView" | "accessibilityAriaProps"> & Pick<typeof import("react"), "Profiler">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView"> & Pick<typeof import("../../📐️layout-accessibility/🟦️.tsx"), "accessibilityAriaProps"> & Pick<typeof import("react"), "Profiler">, source: TestSource): Promise<void> {
   const { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps } = dependencies;
   type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").AccessibilitySpec;
   type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").Component;
   type PatchRejection = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").PatchRejection;
   type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").StyleSpec;
   type UiDocumentLimits = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiDocumentLimits;
-  type UiInterpreterContext = import("../../🟦️.tsx").UiInterpreterContext;
+  type UiInterpreterContext = import("../../🧷️interpreter-context/🟦️.ts").UiInterpreterContext;
   type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
   type UiPatch = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiPatch;
   type UiSnapshot = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiSnapshot;

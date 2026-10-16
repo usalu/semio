@@ -8,7 +8,7 @@ use super::*;
 /// is prose rather than a chip label: the introduction card's body paragraphs, which React renders as
 /// `<p class="whitespace-pre-line">` inside a `max-w-sm` box and therefore wraps. `rect` is the flow
 /// box — its own top, not a baseline.
-pub(crate) fn chrome_text_wrapped_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, rect: Rect, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
+pub fn chrome_text_wrapped_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, rect: Rect, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
     match paint_retained_glyph_step_flowed(text, rect, size, color, RetainedTextFlow::Wrap, atlas, target, cursor) {
         RetainedGlyphStep::Pending => Ok(false),
         RetainedGlyphStep::Complete => {
@@ -34,7 +34,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// ⏪️ After the pane's own chips, an open history-edit session adds its time-travel indicator
     /// ([`Self::paint_window_time_travel_indicator_step`]).
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    pub(crate) fn paint_window_pane_chips_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
+    pub fn paint_window_pane_chips_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
         if !surface_fits_overlay(theme, window_rect) {
             return true;
         }

@@ -1,7 +1,7 @@
 /** 🎨️ Borrowed path admission and painted winding use the renderer's geometry kernels. */
-import {PathFlattenJob,type FlatContour} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts";
-import {StrokeOutlineJob,type StrokeGeometryStyle} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {PathFlattenJob,type FlatContour} from "@semio-tech/framework/2d/path/flatten";
+import {StrokeOutlineJob,type StrokeGeometryStyle} from "@semio-tech/framework/2d/path/stroke";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
 import type {PathGeometrySegment} from "../../../🟦️.ts";
 import type {DocumentSceneNode} from "../../../🎬️scene/📋️prepare/🟦️.ts";
 type Point=readonly [number,number];

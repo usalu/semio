@@ -3,7 +3,7 @@
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, PluginAssemblyError, VcsArtifactApp, ViewerApp};
+use semio_framework_plugin::{EditorApp, ExecutionMode, NeedsLabel, Plugin, PluginApp, PluginAssemblyError, PluginBuilder, VcsArtifactApp, ViewerApp};
 
 //#region 🗃️Apps
 // 🗃️ Closed runtime app fleet for the energy plugin's model surfaces. Both surfaces run over stdio's
@@ -37,7 +37,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// calls `self.try_build()`, so both are functionally identical, but `try_build` is the semantically
 /// honest choice now that this plugin carries real document apps).
 pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
-    Plugin::<EnergyApps>::builder("energy")
+    PluginBuilder::<NeedsLabel, EnergyApps>::new("energy")
         .label("Energy")
         .version("0.1.0")
         .package_id("semio:energy")

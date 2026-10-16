@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "runtime",
+          "mode",
+          "expected"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "reader",
+              "writer",
+              "opened-waiter",
+              "idle-recreate",
+              "cancel-waiter",
+              "cleanup-undefined",
+              "cleanup-frozen",
+              "claim-reader",
+              "node-retirement"
+            ]
+          },
+          "runtime": {
+            "enum": [
+              "bun",
+              "node"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "shared",
+              "exclusive"
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "gateBusy",
+              "activeRetired",
+              "settledRetired",
+              "primary",
+              "cleanup"
+            ],
+            "properties": {
+              "gateBusy": {
+                "type": "boolean"
+              },
+              "activeRetired": {
+                "enum": [
+                  0,
+                  null
+                ]
+              },
+              "settledRetired": {
+                "const": 1
+              },
+              "primary": {
+                "enum": [
+                  null,
+                  "undefined",
+                  "frozen"
+                ]
+              },
+              "cleanup": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

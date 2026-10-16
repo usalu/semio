@@ -279,7 +279,7 @@ async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifac
  let mut mounted=mounted_rejection(app,pending);
  let mut turns=0;
  for _ in 0..8192{
-  app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect("publication pauses until retained outcome delivery");
+  app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect("publication pauses until retained outcome delivery");
   if !mounted.pending_publication_outcome.pending()&&mounted.pending_artifact_publication.is_none(){break;}
   assert!(mounted.result_page.is_none(),"no premature terminal while original publication body or frame remains");
   let demand=mounted.granted_retirement_demands(512).expect("actual frontier quote");
@@ -303,7 +303,7 @@ async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifac
   assert!(mounted.terminal_fault.is_none()&&mounted.result_page.is_none(),"window transient retains its deliberate lenient policy");
   mounted.stage=crate::store_publication::MountedTypedCommandFullOperationStage::Retiring;
  }else{
-  app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect("one final fault after physical retirement");
+  app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect("one final fault after physical retirement");
   let page=mounted.take_result_page().expect("single final fault");
   assert_eq!(page.lane,crate::tool_contract::TypedOperationResultLane::Fault);
   let fault=crate::tool_contract::decode_typed_operation_fault_page(page.bytes());
@@ -657,7 +657,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         stage: crate::store_publication::MountedTypedCommandFullOperationStage::Publishing,
     };
     for attempt in 0..3 {
-        let refused = app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect_err("a misaddressed window transient is refused");
+        let refused = app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).expect_err("a misaddressed window transient is refused");
         assert_eq!(refused.code.0, "window-transient.address", "attempt {attempt}: the refusal is the registry's typed fault");
         let Some(crate::tool_contract::ArtifactToolCompletionValue::Emit(Ok(_), ephemeral)) = mounted.publication.as_ref() else { panic!("the emit stays installed") };
         assert_eq!(ephemeral.window_transient.iter().map(WindowTransientMutation::window_id).collect::<Vec<_>>(), ["publication-retirement-window-right"], "attempt {attempt}: the refused mutation is kept, never dropped");

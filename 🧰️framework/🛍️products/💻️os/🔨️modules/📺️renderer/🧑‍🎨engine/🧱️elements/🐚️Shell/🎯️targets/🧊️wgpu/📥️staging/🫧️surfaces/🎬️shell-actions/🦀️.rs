@@ -7,7 +7,7 @@ use super::*;
 //#region ShellActions
 impl SurfaceState {
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn schedule_sync_path_pick(&mut self, pick: impl std::future::Future<Output = Option<String>> + Send + 'static, settle: &mut SettleState) {
+    pub fn schedule_sync_path_pick(&mut self, pick: impl std::future::Future<Output = Option<String>> + Send + 'static, settle: &mut SettleState) {
         settle.submit_shell_io_future(async move {
             let Some(path) = pick.await else { return ShellIoCompletion::Finished };
             ShellIoCompletion::Actions(vec![ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: Some(semio_framework::dsl_value!({ "path": path })) }])

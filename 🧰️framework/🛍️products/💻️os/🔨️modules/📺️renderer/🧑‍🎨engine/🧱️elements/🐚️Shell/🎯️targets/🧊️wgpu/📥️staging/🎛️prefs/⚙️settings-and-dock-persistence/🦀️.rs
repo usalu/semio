@@ -7,16 +7,16 @@ use super::*;
 //#region ShellLifecycle
 impl PrefsState {
     /// 🚗️ The document edited by General: the live draft, else the selected custom or builtin.
-    pub(crate) fn driver_document(&self, chrome: &ChromeState) -> OsUiDriver {
+    pub fn driver_document(&self, chrome: &ChromeState) -> OsUiDriver {
         self.driver_draft.clone().unwrap_or_else(|| resolve_ui_driver_document(&self.driver_id, &chrome.chrome_build.preferences.custom_drivers))
     }
 
-    pub(crate) fn clear_driver_draft(&mut self, chrome: &mut ChromeState) {
+    pub fn clear_driver_draft(&mut self, chrome: &mut ChromeState) {
         self.driver_draft = None;
         chrome.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &chrome.chrome_build.preferences.custom_drivers);
     }
 
-    pub(crate) fn set_driver_field(&mut self, key: &str, value: &str, chrome: &mut ChromeState) -> bool {
+    pub fn set_driver_field(&mut self, key: &str, value: &str, chrome: &mut ChromeState) -> bool {
         if !valid_ui_driver_axis_value(key, value) {
             return false;
         }
@@ -32,7 +32,7 @@ impl PrefsState {
         true
     }
 
-    pub(super) fn build_settings_driver_editor(&self, is_de: bool, chrome: &ChromeState) -> UiTreeSectionNode {
+    pub fn build_settings_driver_editor(&self, is_de: bool, chrome: &ChromeState) -> UiTreeSectionNode {
         let driver = self.driver_document(chrome);
         let fallback = builtin_ui_driver_document("default");
         let mut items = Vec::new();
@@ -44,7 +44,7 @@ impl PrefsState {
                 value,
                 options.iter().map(|(value, key)| ((*value).to_string(), shell_chrome_string(*key, is_de).to_string())).collect(),
                 "setDriverField",
-                crate::action_args_json!({ "key": *key }),
+                semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "key": *key }),
             ));
         }
         items.push(UiTreeItemNode {
@@ -95,7 +95,7 @@ impl PrefsState {
                     id: Some("framework.settings.driver.delete".into()),
                     icon_id: IconName::Trash2,
                     label: Label::data(shell_chrome_string("settings.driver.delete", is_de)),
-                    action: ActionDescriptor { controller_id: "framework".into(), action: "deleteDriver".into(), args: crate::action_args_json!({ "value": self.driver_id.clone() }) },
+                    action: ActionDescriptor { controller_id: "framework".into(), action: "deleteDriver".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": self.driver_id.clone() }) },
                     style: None,
                     presence: UiPresence::default(),
                     menu: None,
@@ -109,7 +109,7 @@ impl PrefsState {
 
     /// 🚗️ Every selectable driver id with its display label — the two built-ins plus whatever the
     /// preferences carry, React's `uiDriverList = [...builtinUiDrivers(), ...customDrivers]`.
-    pub(crate) fn driver_rows(&self, chrome: &ChromeState) -> Vec<(String, String)> {
+    pub fn driver_rows(&self, chrome: &ChromeState) -> Vec<(String, String)> {
         let is_de = self.locale_id == "de";
         let mut rows = vec![("default".to_string(), shell_chrome_string("settings.driver.default", is_de).to_string()), ("compact".to_string(), shell_chrome_string("settings.driver.compact", is_de).to_string())];
         for (id, driver) in &chrome.chrome_build.preferences.custom_drivers {
@@ -124,7 +124,7 @@ impl PrefsState {
     /// `buildSettingsDefaultAppsTree`: one row per (dialect × role) the loaded plugins can open, whose
     /// `Select` pins that pairing's default app (`"none"` clears it, React's `DEFAULT_APP_NONE_VALUE`),
     /// value encoded as `"<pluginId> <appId>"` exactly like React's `encodeDefaultAppValue`.
-    pub(crate) fn build_settings_default_apps_ui(&self, plugins: &PluginState) -> UiNode {
+    pub fn build_settings_default_apps_ui(&self, plugins: &PluginState) -> UiNode {
         let is_de = self.locale_id == "de";
         let rows = plugins.default_app_rows();
         if rows.is_empty() {
@@ -146,7 +146,7 @@ impl PrefsState {
             .map(|(dialect, role, value, options)| {
                 let mut choices = vec![(DEFAULT_APP_NONE_VALUE.to_string(), shell_chrome_string("settings.defaultApps.none", is_de).to_string())];
                 choices.extend(options);
-                settings_select_row_with(&format!("framework.settings.defaultApps.{dialect}.{role}"), &format!("{dialect} — {role}"), &value, choices, "setDefaultApp", crate::action_args_json!({ "row": format!("{dialect}/{role}") }))
+                settings_select_row_with(&format!("framework.settings.defaultApps.{dialect}.{role}"), &format!("{dialect} — {role}"), &value, choices, "setDefaultApp", semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "row": format!("{dialect}/{role}") }))
             })
             .collect();
         UiNode::Stack(UiStackNode {
@@ -175,7 +175,7 @@ impl PrefsState {
     /// `Toolbar` of `Button`s so schema `rowCount` stays one. The selected row also owns a
     /// semantic DiffView Surface in its explicit detail relation; the empty local snapshot still
     /// produces React's additions-only preview of the incoming/degraded side.
-    pub(crate) fn build_settings_conflicts_ui(&self) -> UiNode {
+    pub fn build_settings_conflicts_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
         if self.open_conflicts.is_empty() {
             return display_panel_body(
@@ -212,7 +212,7 @@ impl PrefsState {
                     id: format!("{row_id}.{suffix}"),
                     label: Label::data(shell_chrome_string(label_key, is_de)),
                     icon_id: Some(icon),
-                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "resolveConflict".into(), args: crate::action_args_json!({ "conflictId": conflict.id.clone(), "accept": accept }) }),
+                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "resolveConflict".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "conflictId": conflict.id.clone(), "accept": accept }) }),
                     ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
                 };
                 UiTreeItemNode {
@@ -220,7 +220,7 @@ impl PrefsState {
                     label: Label::data(format!("{kind} \u{2014} {} \u{2014} {}", conflict.code, conflict.message)),
                     icon_id: Some(IconName::TriangleAlert),
                     default_open: None,
-                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "selectConflict".into(), args: crate::action_args_json!({ "conflictId": conflict.id.clone() }) }),
+                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "selectConflict".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "conflictId": conflict.id.clone() }) }),
                     items: Some(vec![verb("accept", "conflict.accept", IconName::Check, true), verb("discard", "conflict.discard", IconName::X, false)]),
                     detail,
                     presence: UiPresence { selected, ..UiPresence::default() },
@@ -247,10 +247,10 @@ impl PrefsState {
     /// general, theme, keybindings, default-apps, conflicts. The theme leaf is omitted outright when
     /// the boot descriptor locks the theme id — React's `locks.themeId` render gate, which removes the
     /// tab rather than disabling it.
-    pub(crate) fn framework_settings_tabs(&self) -> Vec<DockTabNode> {
+    pub fn framework_settings_tabs(&self) -> Vec<DockTabNode> {
         let is_de = self.locale_id == "de";
         let mut tabs = vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, shell_chrome_string("settings.tab.general", is_de), "settings-2", 0)];
-        if crate::boot_locks().theme_id.is_empty() {
+        if semio_framework_os_renderer_wgpu_host_base::boot_locks().theme_id.is_empty() {
             tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_THEME_TAB_ID, shell_chrome_string("settings.tab.theme", is_de), "paintbrush", 1));
         }
         tabs.push(DockTabNode::leaf(FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, shell_chrome_string("settings.tab.keybindings", is_de), "circle-dot", 2));

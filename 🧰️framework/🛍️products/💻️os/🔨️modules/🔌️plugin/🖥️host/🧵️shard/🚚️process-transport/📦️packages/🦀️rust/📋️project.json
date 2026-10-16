@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-plugin-host-process-transport-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

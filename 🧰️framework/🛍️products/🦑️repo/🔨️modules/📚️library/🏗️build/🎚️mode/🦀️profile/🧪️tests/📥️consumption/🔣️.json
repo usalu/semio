@@ -2056,5 +2056,91 @@
       "head": [],
       "accept": false
     }
+  ],
+  "recheckCapacityOwners": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+      "function": "configurationOperationV1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "function": "withCargoWorkspaceSelectionV1"
+    }
+  ],
+  "entryProducers": [
+    {
+      "entry": "NativeArtifactProducer",
+      "producer": "artifact",
+      "accept": true
+    },
+    {
+      "entry": "NativeArtifactProducer",
+      "producer": "descriptor-emitter",
+      "accept": true
+    },
+    {
+      "entry": "NativeArtifactProducer",
+      "producer": "wasm-component",
+      "accept": false
+    },
+    {
+      "entry": "NativeArtifactProducer",
+      "producer": "browser-canvas",
+      "accept": false
+    },
+    {
+      "entry": "NativeArtifactProducer",
+      "producer": "browser-module",
+      "accept": false
+    },
+    {
+      "entry": "NativeArtifactProducer",
+      "producer": "unknown",
+      "accept": false
+    },
+    {
+      "entry": "WasmPackageProducer",
+      "producer": "artifact",
+      "accept": false
+    },
+    {
+      "entry": "WasmPackageProducer",
+      "producer": "descriptor-emitter",
+      "accept": false
+    },
+    {
+      "entry": "WasmPackageProducer",
+      "producer": "wasm-component",
+      "accept": false
+    },
+    {
+      "entry": "WasmPackageProducer",
+      "producer": "browser-canvas",
+      "accept": true
+    },
+    {
+      "entry": "WasmPackageProducer",
+      "producer": "browser-module",
+      "accept": true
+    },
+    {
+      "entry": "WasmPackageProducer",
+      "producer": "unknown",
+      "accept": false
+    }
+  ],
+  "explicitPlanModes": [
+    {
+      "function": "componentPassPlanV1",
+      "modeIndex": 2
+    },
+    {
+      "function": "nativeBuildPipelinePlanV1",
+      "modeIndex": 2
+    }
+  ],
+  "currentModeFixtures": [
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🧫️fixtures/🏗️native/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🧫️fixtures/🔣️.json"
   ]
 }

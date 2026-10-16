@@ -1,7 +1,7 @@
 //! 🏭️ The owned selected child producer retains the actual member snapshot and catalog capabilities.
 use super::{DocumentStoreOwners,DocumentStoreOwnersAdmissionError};
-use crate::os_store::MemberSnapshotOpenOperation;
-use crate::os_spr::Mutation;
+use crate::lifted_operation::MemberSnapshotOpenOperation;
+use semio_framework_os_spr::Mutation;
 use semio_framework_value::{ToValue,FromValue,ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress};
 

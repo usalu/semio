@@ -8,7 +8,7 @@ import selections from "../🧫️fixtures/🎯️selection/🔣️.json";
 import {produce} from "immer";
 import type {DrawingArtifact} from "../../../../../🧬️schema/🟦️.ts";
 import type {DrawingMutation} from "../../../../../🧬️schema/🧬️mutations/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 
 function lift(value:unknown):unknown {
  if(typeof value==="number")return binary64(value);

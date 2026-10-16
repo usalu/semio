@@ -1,4 +1,4 @@
-import {base64StandardDecodeControlled} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
+import {base64StandardDecodeControlled} from "@semio-tech/framework/io/base64";
 import {parseChangeWidgetInput} from "../../../🚪️io/📝️text/🧬️mutations/🎛️change-widget-input/🦠️mutation/🟦️.ts";
 import type {Widget} from "../../../🧬️schema/🟦️.ts";
 import {parsePolygonMesh} from "@semio-tech/framework/mesh/polygon";

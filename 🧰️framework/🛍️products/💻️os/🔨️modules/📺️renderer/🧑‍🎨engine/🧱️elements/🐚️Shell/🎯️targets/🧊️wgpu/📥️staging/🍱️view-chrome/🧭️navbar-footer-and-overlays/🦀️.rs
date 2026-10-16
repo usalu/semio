@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellChrome
 impl<'ctx> ChromeViewCtx<'ctx> {
-    pub(crate) fn render_navbar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+    pub fn render_navbar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
         let btn_h = theme.control_height;
         let btn_y = (theme.navbar_height - btn_h) * 0.5;
         let mobile = self.chrome.mobile_panel_active();
@@ -159,7 +159,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 cursor.phase = if mobile { 7 } else { 4 };
             }
             4 => {
-                let rows = if crate::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
+                let rows = if semio_framework_os_renderer_wgpu_host_base::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
                 let controls: Vec<ShellNavbarControl> = shell_example_control(&rows, matches!(&self.input.overlay_state, OverlayState::Dropdown(id) if id == "example"), self.prefs.locale_id == "de").into_iter().collect();
                 if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
                     return false;
@@ -338,7 +338,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     ///   (`🌐️World3dHost/🟦️.tsx`'s `WorldComputeStatusPane` does exactly the same in React).
     ///
     /// Framing the flow graph is an app-declared action (`zoomToFlow`), not shell overlay chrome.
-    pub(super) fn surface_overlay_controls(&mut self, theme: &Theme) -> Vec<(ShellNavbarControl, [f32; 2])> {
+    pub fn surface_overlay_controls(&mut self, theme: &Theme) -> Vec<(ShellNavbarControl, [f32; 2])> {
         let graphs: Vec<(&str, Rect)> = self.surfaces.node_graph_states.iter().map(|(surface_id, surface)| (surface_id.as_str(), surface.bounds)).collect();
         let worlds = self.surfaces.world3d_status_rows();
         let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
@@ -349,7 +349,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// windows out in — the wgpu twin of React's `publishShellChromePanelBox`. A panel paints over the
     /// whole body (`render_panel_step` runs after `plan_dock_windows` over the same rect), so this is the
     /// one publication a surface's overlay row reserves against (`chrome_panel_safe_area`).
-    pub(super) fn open_floating_panel_rects(&mut self, theme: &Theme) -> Vec<Rect> {
+    pub fn open_floating_panel_rects(&mut self, theme: &Theme) -> Vec<Rect> {
         let body = self.as_session().body_rect(theme);
         self.dock.open_anchors().into_iter().map(|anchor| self.anchor_rect(anchor, body, theme)).collect()
     }
@@ -358,7 +358,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// `WorldComputeStatusPane` (`🌐️World3dHost/🟦️.tsx`): the producer's own phase label in the
     /// reader's language, its `unitsDone/unitsTotal` count and the fraction the bar fills to, painted
     /// exactly while the scene's own status document is unsettled.
-    pub(super) fn surface_status_pills(&mut self, theme: &Theme) -> Vec<(World3dStatusPill, Rect)> {
+    pub fn surface_status_pills(&mut self, theme: &Theme) -> Vec<(World3dStatusPill, Rect)> {
         let worlds = self.surfaces.world3d_status_rows();
         let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
         let pills = surface_status_pills_for(&worlds, &self.open_floating_panel_rects(theme), theme, self.prefs.locale_id == "de");
@@ -395,7 +395,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// before `retained_chrome_group_item_width` measures the label, or the chip would lay out
     /// narrower than the text it paints.
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn render_navbar_cluster_step(
+    pub fn render_navbar_cluster_step(
         &mut self,
         cursor: &mut ShellChromeChildCursor,
         draw: &mut DrawList,
@@ -437,7 +437,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         false
     }
 
-    pub(crate) fn render_tutorial_bar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+    pub fn render_tutorial_bar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
         let Some(runtime) = self.tutorial.tutorial.as_ref() else { return true };
         let mode = runtime.mode;
         let playhead_ms = runtime.playhead_ms;
@@ -589,7 +589,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         false
     }
 
-    pub(crate) fn render_context_menu_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, viewport_w: f32, viewport_h: f32) -> bool {
+    pub fn render_context_menu_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, viewport_w: f32, viewport_h: f32) -> bool {
         let Some(menu) = self.input.context_menu.as_ref() else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
@@ -671,7 +671,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// React's `useControlTooltipText` returns `undefined` before it composes any text, so the
     /// hint never mounts. The armed hover is dropped too, so flipping the driver back does not
     /// reveal a tooltip whose dwell ran while it was suppressed.
-    pub(super) fn render_chrome_tooltip_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+    pub fn render_chrome_tooltip_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         if self.chrome.chrome_build.dialog_open() {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
@@ -742,8 +742,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// the right, a hairline under it — over whichever anchor currently shows the `framework.chat`
     /// tab. Packet W1j; React mounts the same pair as `AgentChatPanel`'s own header row. The
     /// transcript below it is still host-gapped (see `💬️AgentChatPanel/🎯️targets/🧊️wgpu`).
-    pub(crate) fn render_agent_chat_header_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect) -> bool {
-        use crate::agent_chat_panel as chat;
+    pub fn render_agent_chat_header_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect) -> bool {
+                use semio_framework_os_renderer_wgpu_agent_elements::agent_chat_panel as chat;
         let Some(anchor) = PanelAnchor::ALL.into_iter().find(|anchor| self.dock.anchor_open(*anchor) && self.dock.anchor_state(*anchor).active_tab() == Some(chat::AGENT_CHAT_PANEL_ID)) else {
             return true;
         };
@@ -759,7 +759,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 let (value, x, max_w, size, color, y) = match cursor.scalar {
                     2 => (plan.title.clone(), plan.header.x + theme.padding_standard, (plan.dot.x - plan.header.x - theme.padding_standard * 2.0).max(1.0), theme.font_size_body, theme.text, baseline),
                     3 => {
-                        let x = plan.dot.x + crate::agent_presence::AGENT_PRESENCE_DOT_PX + crate::agent_presence::AGENT_PRESENCE_GAP_PX;
+                        let x = plan.dot.x + semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_DOT_PX + semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_GAP_PX;
                         (plan.status_text.clone(), x, (plan.header.x + plan.header.w - theme.padding_standard - x).max(1.0), theme.font_size_small, theme.text_muted, baseline)
                     }
                     _ => (
@@ -782,8 +782,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             }
             5 => {
                 let hit = Rect::new(plan.dot.x, plan.header.y, (plan.header.x + plan.header.w - plan.dot.x).max(1.0), plan.header.h);
-                self.chrome.chrome_build.tooltip_titles.insert(crate::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string(), crate::agent_presence::agent_presence_status_label(locale));
-                input.register_hit(HitTarget { rect: hit, event: None, control_id: Some(crate::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                self.chrome.chrome_build.tooltip_titles.insert(semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string(), semio_framework_os_renderer_wgpu_agent_elements::agent_presence::agent_presence_status_label(locale));
+                input.register_hit(HitTarget { rect: hit, event: None, control_id: Some(semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AGENT_PRESENCE_CONTROL_ID.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
             }
             _ => return true,
         }
@@ -793,7 +793,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
 
     /// 🧯️ Paints the one live transient notice, top-centre at `navbar_height + 8px`, and expires it
     /// at the 4 s deadline. Packet W1j — React's only non-fatal surfacing channel, ported.
-    pub(crate) fn render_transient_notice_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+    pub fn render_transient_notice_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
         if !self.chrome.chrome_build.expire_transient_notice(chrome_now_ms()) {
             return true;
         }
@@ -845,7 +845,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// open that vanished after 4 s is exactly the "explains itself" property
     /// [`ShellPluginInstallPhase::Failed`] carries its message for. A running install's control is a
     /// real cancel ([`ShellState::cancel_plugin_install`]), not a dismiss.
-    pub(crate) fn render_plugin_install_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+    pub fn render_plugin_install_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
         let Some(install) = self.plugins.plugin_install.as_ref() else { return true };
         let is_de = self.prefs.locale_id == "de";
         let running = matches!(install.phase, ShellPluginInstallPhase::Resolving | ShellPluginInstallPhase::Loading);
@@ -893,7 +893,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// 🚪️ Paints the frame-pumped document open's band: which app, which phase, the step and the time
     /// it has taken, and the control that stops it. A settled `Cancelled`/`Failed` record stays until the
     /// user closes it, exactly like the plugin-install band above it.
-    pub(crate) fn render_document_opening_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+    pub fn render_document_opening_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
         let Some(opening) = self.opening.document_opening.as_ref() else { return true };
         let is_de = self.prefs.locale_id == "de";
         let action_label = shell_chrome_string(if opening.running() { "document.open.cancel" } else { "common.close" }, is_de);

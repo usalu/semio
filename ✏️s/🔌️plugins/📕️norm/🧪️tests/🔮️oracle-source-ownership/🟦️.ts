@@ -6,10 +6,13 @@ import { tmpdir } from "node:os";
 import { basename, delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadCatalogTaxonomy, semanticDirectoryKindId, implementationLeafBasenameFinding } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { buildCasePlan, loadOracleRegistry, oracleHostPackagesFor, testProjectName } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts";
-import { parseFeature } from "../../../../../🧰️framework/🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
+import { buildCasePlan } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎬️execution-plan/🟦️.ts";
+import { loadOracleRegistry, oracleHostPackagesFor } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🤝️contributions/🟦️.ts";
+import { testProjectName } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧭️case-discovery/🟦️.ts";
+import { parseFeature } from "@semio-tech/framework/test/gherkin";
 import { oracleHostPython, pythonHostArguments } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts";
 import control from "../🧫️fixtures/🔮️oracle-source-ownership/🔣️.json";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
@@ -96,8 +99,8 @@ describe("Norm oracle source ownership", () => {
   }, 30000);
 
   test("registered execution targets include the manifest, engine and every dynamic adapter", () => {
-    const projectPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json";
-    const project = JSON.parse(read(projectPath));
+    const projectPath = frameworkSourcePath("🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json");
+    const project = JSON.parse(readFileSync(projectPath, "utf8"));
     expect(project.namedInputs.normOracleSources?.slice().sort()).toEqual(normSources);
     for (const target of ["test-oracle", "test-parity", "test"]) expect(project.targets[target].inputs).toContain("normOracleSources");
     const local = JSON.parse(read(`${control.plugin}/📦️packages/🟦️typescript/📋️project.json`));

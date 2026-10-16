@@ -2,7 +2,31 @@
 //!
 //! Cut by WP5; WP3 wires this file with one `mod` line in the crate root at the flip. Until `command` exists, `⏪️time-travel/🦀️.rs` mounts it as a child module and re-exports it with `pub use`.
 
-use super::*;
+use semio_framework::{ActionArgDef, AppRole, ArgPresentation, ArgSchema, FaultFrom, TreeWindowRequest, mutation_input_defs, registered_input_schema_document};
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use store::{ArtifactStore, Mutation, MutationDiff};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use semio_framework_plugin_decl_views::history_view::{CommandView, MutationView};
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::{HISTORY_ROW_OPERATION_PREVIEW, history_intent_label_of, history_leaf_row_label};
+use semio_framework::kernel::{HistoryMutationEntry, HistoryMutationMessage, HistoryTimeTravel, HybridLogicalTimestamp};
+#[cfg(test)]
+use semio_framework_os_kernel::HistoryPageStack;
+use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use protocol::{OpBinary, OpText};
+use semio_framework_time_travel::{TimeTravelLabel, TimeTravelRefusal, TimeTravelReview, TimeTravelStage};
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_ui_contract::*;
 
 //#region 🔖️Limits
 /// ✏️ Mutation rows one history row carries: the first ones, then every one with messages or a supersession.
@@ -138,14 +162,16 @@ pub struct TimeTravelListItem {
 //#endregion 🔖️Pointer
 
 //#region 🔖️Driver
-pub(crate) fn time_travel_arg_text<'a>(args: Option<&'a DslValue>, key: &str) -> Option<&'a str> {
+#[doc(hidden)]
+pub fn time_travel_arg_text<'a>(args: Option<&'a DslValue>, key: &str) -> Option<&'a str> {
     args?.get(key)?.as_str()
 }
 
 /// 🪨️ Whether the store's supersede law admits withdrawing `operation` (`store::os_store::replay::admit_replacement`, the one law every
 /// authoring, ingest, load and fold site reads): what a mutation row offers its Withdraw by and what a row's Withdraw
 /// opens by (design §22.1). A withdrawal names no schema, so the law is asked with none.
-pub(crate) fn time_travel_admits_withdrawal<P, Mu>(operation: &Mu) -> bool
+#[doc(hidden)]
+pub fn time_travel_admits_withdrawal<P, Mu>(operation: &Mu) -> bool
 where
     Mu: ::protocol::Mutation<P> + ::protocol::OpBinary,
 {
@@ -162,7 +188,8 @@ thread_local! {
 /// mutation whose inputs are all hidden is not editable, it keeps Withdraw): an input that is not hidden — an object one
 /// through its fields ([`time_travel_input_rows`]). A schema that cannot be read answers `true` and is not remembered:
 /// its editor opens naming why (the referenced documents may register later).
-pub(crate) fn time_travel_schema_shows_inputs(schema: &'static str) -> bool {
+#[doc(hidden)]
+pub fn time_travel_schema_shows_inputs(schema: &'static str) -> bool {
     fn shown(input: &ActionArgDef) -> bool {
         input.presentation != Some(ArgPresentation::Hidden) && !matches!(&input.schema, ArgSchema::Object { fields } if !fields.is_empty() && !fields.iter().any(shown))
     }
@@ -178,7 +205,8 @@ pub(crate) fn time_travel_schema_shows_inputs(schema: &'static str) -> bool {
 
 /// 🏷️ The history label of one document operation in every shell locale: its leaf's `SemanticMutation::label` — never the
 /// operation's text line (design §16.2).
-pub(crate) fn time_travel_mutation_label<A: ArtifactApp>(op: &A::Mutation) -> LocalizedLabel {
+#[doc(hidden)]
+pub fn time_travel_mutation_label<A: ArtifactApp>(op: &A::Mutation) -> LocalizedLabel {
     protocol::SemanticMutation::<A::Snapshot>::label(op)
 }
 
@@ -188,7 +216,8 @@ pub(crate) fn time_travel_mutation_label<A: ArtifactApp>(op: &A::Mutation) -> Lo
 /// previous projection, is reused for an operation that was not superseded) with their durable outcome. `superseded`
 /// and `withdrawn` read the store's effective supersession: an input restored to its original (the undo of a history
 /// edit) is not superseded.
-pub(crate) fn history_mutation_views<A: ArtifactApp>(ops: &[&store::AppliedMutation<'_, A::Mutation>], outcomes: &HashMap<&str, &protocol::MutationReplayOutcome>, labelled: &HashMap<&str, &MutationView>) -> Vec<MutationView> {
+#[doc(hidden)]
+pub fn history_mutation_views<A: ArtifactApp>(ops: &[&store::AppliedMutation<'_, A::Mutation>], outcomes: &HashMap<&str, &protocol::MutationReplayOutcome>, labelled: &HashMap<&str, &MutationView>) -> Vec<MutationView> {
     history_mutation_views_of::<A::Snapshot, A::Mutation>(ops, outcomes, labelled, time_travel_mutation_label::<A>, A::ROLE == AppRole::Viewer, None)
 }
 
@@ -213,7 +242,8 @@ where
 /// 🔢️ Which operations of an edit of `len` operations one history row projects (audit W2A-11): the first
 /// [`HISTORY_ROW_MUTATION_ROWS`], then at most as many later `flagged` ones (index and worst severity — `None` for a
 /// supersession without an outcome), the most severe first and the earliest among equals, all back in op order.
-pub(crate) fn history_projected_operations(len: usize, flagged: impl IntoIterator<Item = (usize, Option<semio_framework_diagnostic::Severity>)>) -> Vec<usize> {
+#[doc(hidden)]
+pub fn history_projected_operations(len: usize, flagged: impl IntoIterator<Item = (usize, Option<semio_framework_diagnostic::Severity>)>) -> Vec<usize> {
     let mut later: Vec<(usize, Option<semio_framework_diagnostic::Severity>)> = flagged.into_iter().filter(|(index, _)| *index >= HISTORY_ROW_MUTATION_ROWS && *index < len).collect();
     later.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
     later.truncate(HISTORY_ROW_MUTATION_ROWS);
@@ -229,7 +259,8 @@ pub(crate) fn history_projected_operations(len: usize, flagged: impl IntoIterato
 /// store's supersede law for an operation that is not withdrawn yet ([`time_travel_admits_withdrawal`]); an operation
 /// of a cross-document unit (`AppliedMutation::unit`) is neither — it takes no supersession in one document alone; a
 /// `viewer` edits and withdraws nothing.
-pub(crate) fn history_mutation_view_of<P, Mu>(
+#[doc(hidden)]
+pub fn history_mutation_view_of<P, Mu>(
     op: &store::AppliedMutation<'_, Mu>,
     outcome: Option<&protocol::MutationReplayOutcome>,
     labelled: &HashMap<&str, &MutationView>,
@@ -351,7 +382,8 @@ pub struct MemberEditHistory {
 /// 🔭️ Reads the edits of one member store into [`MemberEditHistory`] rows — every edit, or only the `wanted` ones, each
 /// read as one applied-edit slice (O(that edit), design §20.14); a mutation that was not superseded reuses its label from
 /// `labelled`, the previous projection.
-pub(crate) struct MemberHistoryVisitor<'a, 'b> {
+#[doc(hidden)]
+pub struct MemberHistoryVisitor<'a, 'b> {
     pub store: String,
     pub labelled: &'a HashMap<&'b str, &'b MutationView>,
     pub viewer: bool,
@@ -410,7 +442,8 @@ impl store::MemberStoreVisitor for MemberHistoryVisitor<'_, '_> {
 /// 📖️ Reads every mutation row (uncapped, unlabelled by any previous projection) of the `wanted` edits one member store holds,
 /// each edit's rows in op order — what a member-only history row's window pages past its projection (audit W2A-11); O(those
 /// edits).
-pub(crate) struct MemberMutationPageVisitor<'a> {
+#[doc(hidden)]
+pub struct MemberMutationPageVisitor<'a> {
     pub store: String,
     pub wanted: &'a [String],
     pub viewer: bool,
@@ -453,15 +486,17 @@ pub(crate) struct MemberBackfillGroup {
 /// 🧾️ How a reload backfills composed-member edits (design §12): the edits of a transaction that also landed a parent
 /// edit join that parent's row (`attached`, keyed by the parent edit id); every other unlogged edit forms a row of its
 /// own transaction (`groups`, in moment order).
+#[doc(hidden)]
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct MemberBackfill {
+pub struct MemberBackfill {
     pub attached: HashMap<String, Vec<String>>,
     pub groups: Vec<MemberBackfillGroup>,
 }
 
 /// 🧾️ The [`MemberBackfill`] of `histories` given the edit ids rows already carry (`logged`) and the parent edit each
 /// unlogged parent transaction landed (`parent_transactions`, transaction id → parent edit id).
-pub(crate) fn member_backfill(histories: impl IntoIterator<Item = MemberEditHistory>, logged: &HashSet<&str>, parent_transactions: &HashMap<String, String>) -> MemberBackfill {
+#[doc(hidden)]
+pub fn member_backfill(histories: impl IntoIterator<Item = MemberEditHistory>, logged: &HashSet<&str>, parent_transactions: &HashMap<String, String>) -> MemberBackfill {
     let mut unlogged: Vec<MemberEditHistory> = histories.into_iter().filter(|history| !logged.contains(history.edit_id.as_str())).collect();
     unlogged.sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap_or(std::cmp::Ordering::Equal).then_with(|| a.edit_id.cmp(&b.edit_id)));
     let mut backfill = MemberBackfill::default();
@@ -493,8 +528,9 @@ const HISTORY_STAMP_TAIL: usize = 8;
 /// checkpoint, the tops of its applied and redo stacks and the operation count of its applied top. The transition log is not
 /// among them: an undo or redo is a `Revert`/`Reinstate` transition the stacks already show, and a history edit is a supersede
 /// record the history view's own stamp counts.
+#[doc(hidden)]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct HistoryStoreStamp {
+pub struct HistoryStoreStamp {
     pub generation: u64,
     pub revision: [u8; 32],
     pub edits: usize,
@@ -510,7 +546,8 @@ pub(crate) struct HistoryStoreStamp {
 }
 
 /// 🧭️ The [`HistoryStoreStamp`] of `store`: O(1) plus one lookup of the applied top from the ledger's tail.
-pub(crate) fn history_store_stamp<P, Mu>(store: &ArtifactStore<P, Mu>) -> HistoryStoreStamp
+#[doc(hidden)]
+pub fn history_store_stamp<P, Mu>(store: &ArtifactStore<P, Mu>) -> HistoryStoreStamp
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
@@ -557,7 +594,8 @@ fn history_stamp_moved(moved: usize, from: &[String], from_after: &[String], to:
 /// top (its row may have grown, and a composed member row reads its member's top); an undone tail of at most
 /// [`HISTORY_STAMP_TAIL`] edits with the top it uncovered. `None` for anything else — a replay, a checkout, a history edit, a
 /// checkpoint, a load — and the history view rebuilds (design §20.14).
-pub(crate) fn history_store_change(previous: &HistoryStoreStamp, current: &HistoryStoreStamp, applied: &dsl::HistoryPageStack<String>) -> Option<Vec<(String, Option<usize>)>> {
+#[doc(hidden)]
+pub fn history_store_change(previous: &HistoryStoreStamp, current: &HistoryStoreStamp, applied: &dsl::HistoryPageStack<String>) -> Option<Vec<(String, Option<usize>)>> {
     if (previous.generation, previous.revision) == (current.generation, current.revision) {
         return Some(Vec::new());
     }
@@ -586,15 +624,17 @@ pub(crate) fn history_store_change(previous: &HistoryStoreStamp, current: &Histo
 /// 🧾️ One member ledger as the command-log backfill reads it: its length and last edit id and, against the length and last
 /// id a backfill mark recorded, the ids of every edit after them — `None` when that prefix no longer stands (or none was
 /// recorded) and the backfill reads the whole history.
+#[doc(hidden)]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct MemberLedgerTail {
+pub struct MemberLedgerTail {
     pub len: usize,
     pub last: Option<String>,
     pub fresh: Option<Vec<String>>,
 }
 
 /// 🧾️ Reads one member store's [`MemberLedgerTail`] past `known` (a recorded length and last id): O(new edits).
-pub(crate) struct MemberLedgerTailVisitor<'a> {
+#[doc(hidden)]
+pub struct MemberLedgerTailVisitor<'a> {
     pub known: Option<(usize, Option<&'a str>)>,
 }
 
@@ -618,7 +658,8 @@ impl store::MemberStoreVisitor for MemberLedgerTailVisitor<'_> {
 }
 
 /// 🧭️ Reads one member store's [`HistoryStoreStamp`] and, against its `previous` stamp, the edits the change touched.
-pub(crate) struct MemberHistoryStampVisitor<'a> {
+#[doc(hidden)]
+pub struct MemberHistoryStampVisitor<'a> {
     pub previous: Option<&'a HistoryStoreStamp>,
 }
 
@@ -640,8 +681,9 @@ impl store::MemberStoreVisitor for MemberHistoryStampVisitor<'_> {
 
 //#region 🔖️Panel
 /// 💬️ The framework's history-panel copy, EN and DE, no default locale.
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum HistoryPanelText {
+pub enum HistoryPanelText {
     Actions,
     Commands,
     Undo,
@@ -696,7 +738,7 @@ pub(crate) enum HistoryPanelText {
 }
 
 impl HistoryPanelText {
-    pub(crate) fn text(self, locale: Locale) -> &'static str {
+    pub fn text(self, locale: Locale) -> &'static str {
         match locale {
             Locale::En => match self {
                 Self::Actions => "Actions",
@@ -809,7 +851,8 @@ impl HistoryPanelText {
 }
 
 /// 🚦️ A severity's word, EN and DE; a reader hears it, colour is never its only carrier.
-pub(crate) fn history_severity_text(level: semio_framework_diagnostic::Severity, locale: Locale) -> &'static str {
+#[doc(hidden)]
+pub fn history_severity_text(level: semio_framework_diagnostic::Severity, locale: Locale) -> &'static str {
     match (locale, level) {
         (Locale::En, semio_framework_diagnostic::Severity::Info) => "Info",
         (Locale::En, semio_framework_diagnostic::Severity::Warning) => "Warning",
@@ -825,7 +868,8 @@ pub(crate) fn history_severity_text(level: semio_framework_diagnostic::Severity,
 /// 🏷️ An outcome code's words, EN and DE, never the code itself: a frozen `mutation.*` outcome code's short words, else the
 /// framework's placeholder-free notice of the code (`kernel::history_notice`, `kernel::framework_fault_notice`), else the
 /// generic "could not apply" words.
-pub(crate) fn history_code_text(code: &str, locale: Locale) -> &'static str {
+#[doc(hidden)]
+pub fn history_code_text(code: &str, locale: Locale) -> &'static str {
     let known = match code {
         "mutation.target-missing" => Some(("Target missing", "Ziel fehlt")),
         "mutation.target-referenced" => Some(("Target still referenced", "Ziel wird noch referenziert")),
@@ -850,7 +894,8 @@ pub(crate) fn history_code_text(code: &str, locale: Locale) -> &'static str {
 }
 
 /// 🎨️ The tone and icon of a severity (none: applied cleanly).
-pub(crate) fn history_severity_tone(level: Option<semio_framework_diagnostic::Severity>) -> (Tone, &'static str) {
+#[doc(hidden)]
+pub fn history_severity_tone(level: Option<semio_framework_diagnostic::Severity>) -> (Tone, &'static str) {
     match level {
         None => (Tone::Success, "check"),
         Some(semio_framework_diagnostic::Severity::Info) => (Tone::Info, "info"),
@@ -862,7 +907,8 @@ pub(crate) fn history_severity_tone(level: Option<semio_framework_diagnostic::Se
 
 /// 📝️ One line naming a mutation's state and its first message: severity word, then the localized code; editing
 /// states lead.
-pub(crate) fn history_mutation_description(entry: &HistoryMutationEntry, locale: Locale) -> String {
+#[doc(hidden)]
+pub fn history_mutation_description(entry: &HistoryMutationEntry, locale: Locale) -> String {
     let mut parts: Vec<&str> = Vec::new();
     if entry.pending {
         parts.push(HistoryPanelText::Pending.text(locale));

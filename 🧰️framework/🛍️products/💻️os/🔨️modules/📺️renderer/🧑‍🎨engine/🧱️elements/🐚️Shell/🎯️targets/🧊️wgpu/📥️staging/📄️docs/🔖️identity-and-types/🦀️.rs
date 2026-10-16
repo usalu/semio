@@ -4,36 +4,36 @@
 
 use super::*;
 
-pub(crate) const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
+pub const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
 
-pub(super) const COMPOSE_WINDOW_TEMPLATE_MIME: &str = "application/x-compose-window-template";
+pub const COMPOSE_WINDOW_TEMPLATE_MIME: &str = "application/x-compose-window-template";
 
-pub(crate) const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
+pub const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct WindowTemplateDragPayload {
-    pub(crate) window_kind_id: String,
+pub struct WindowTemplateDragPayload {
+    pub window_kind_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) template_id: Option<String>,
+    pub template_id: Option<String>,
 }
 
-pub(crate) fn window_template_drag_data(window_kind_id: &str, template_id: Option<&str>) -> HashMap<String, String> {
+pub fn window_template_drag_data(window_kind_id: &str, template_id: Option<&str>) -> HashMap<String, String> {
     let payload = WindowTemplateDragPayload { window_kind_id: window_kind_id.to_string(), template_id: template_id.map(str::to_string) };
     HashMap::from([(COMPOSE_WINDOW_TEMPLATE_MIME.to_string(), serde_json::to_string(&payload).expect("window template payload is infallible"))])
 }
 
-pub(crate) const FRAMEWORK_CHAT_PANEL_ID: &str = "framework.chat";
+pub const FRAMEWORK_CHAT_PANEL_ID: &str = "framework.chat";
 
 /// 🔄️ Byte-identical to React's `frameworkSyncTab` leaf id (`🏛️ShellHost/🟦️.tsx`'s `"s-sync-status"`),
 /// the same id the footer check-in pill already registers.
-pub(crate) const FRAMEWORK_SYNC_PANEL_TAB_ID: &str = "s-sync-status";
+pub const FRAMEWORK_SYNC_PANEL_TAB_ID: &str = "s-sync-status";
 
 /// 🧵️ Byte-identical to React's Task Manager panel and row-action controller id.
-pub(crate) const FRAMEWORK_TASK_MANAGER_PANEL_ID: &str = "os.task-manager";
+pub const FRAMEWORK_TASK_MANAGER_PANEL_ID: &str = "os.task-manager";
 
 /// 🛍️ Byte-identical to React's `FRAMEWORK_MARKETPLACE_TAB_ID` — the bottom-right Marketplace leaf.
-pub(crate) const FRAMEWORK_MARKETPLACE_TAB_ID: &str = "framework.marketplace";
+pub const FRAMEWORK_MARKETPLACE_TAB_ID: &str = "framework.marketplace";
 
 #[derive(Clone, Debug)]
 pub struct SearchPaletteItem {
@@ -83,3 +83,9 @@ pub struct SpacePanelState {
 
 //#endregion ShellTypes
 
+/// 🛠️ One mode tool's leaf id under the Tool branch — React's `tool.<id>` (`🛠️ShellHelpers/🟦️.tsx`'s
+/// `buildToolTabs`/`toolIdFromPanelTabId`). The leaf tab IS the activation control.
+pub const FRAMEWORK_TOOL_PANEL_TAB_PREFIX: &str = "tool.";
+
+/// 🎛️ One command category's leaf id under the Command branch — React's `command.category.<id>`.
+pub const FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX: &str = "command.category.";

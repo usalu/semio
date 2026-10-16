@@ -1,4 +1,4 @@
-import { interactivityArtifactHistoryFailures } from "../../../../../../../📜️script.ts";
+import { interactivityArtifactHistoryFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity artifact history policy assertions. */
 export function interactivityArtifactHistorySelfTests(): void {

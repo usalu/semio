@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { validateJsonSchemaSubset } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/framework/schema";
 import schema from "../🧪️testing/📥️source/🧬️schema/🔣️.json";
 import { inspectLayoutMediaAdoptionSourceV1, type LayoutMediaAdoptionSourceV1, type LayoutMediaSourceInputsV1 as Source } from "../🧪️testing/📥️source/🟦️.ts";
 import corpus from "./🧫️fixtures/🔣️.json";

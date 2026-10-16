@@ -31,6 +31,7 @@ pub use semio_framework_io_base64::Base64ControlError;
 pub use semio_framework_io_base64::Base64Error;
 pub use semio_framework_io_base64::Base64Phase;
 pub use semio_framework_io_base64::Base64Progress;
+#[cfg(feature = "deflate")]
 pub use semio_framework_deflate::DeflateMeasure;
 pub use semio_framework_mutation_diff::DiffAlgebra;
 pub use semio_framework_mutation_diff::MutationApplyError;
@@ -39,6 +40,7 @@ pub use semio_framework_mutation_diff::MutationDiff;
 pub use semio_framework_pack_error::PackRefusal;
 pub use semio_framework_replication_error::ProtocolError;
 pub use semio_framework_replication_crypto::RecordHasher;
+#[cfg(feature = "deflate")]
 pub use semio_framework_deflate::RetainedInflateCloseStep;
 pub use semio_framework_replication_crypto::SignatureVerifier;
 pub use semio_framework_replication_crypto::Signer;
@@ -84,8 +86,10 @@ pub mod codec {
     pub use semio_framework_io_base64::Base64Error;
     pub use semio_framework_io_base64::Base64Phase;
     pub use semio_framework_io_base64::Base64Progress;
+    #[cfg(feature = "deflate")]
     pub use semio_framework_deflate::DeflateMeasure;
     pub use semio_framework_pack_error::PackRefusal;
+    #[cfg(feature = "deflate")]
     pub use semio_framework_deflate::RetainedInflateCloseStep;
     pub use semio_framework_io_base64::base64_standard_decode;
     pub use semio_framework_io_base64::base64_standard_decode_controlled;

@@ -1,4 +1,4 @@
-import { inspectRustCompileReferences } from "../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences } from "@semio-tech/framework/compiler/syntax/rust";
 import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";

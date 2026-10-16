@@ -1,46 +1,61 @@
 //! 🔄️ Lift file: the generic bounded full-operation job, its phase and its tool job factory, of `🧵️retained-command/🔄️full-operation/🦀️.rs` that belong to crate `job` (WP3).
 //!
 //! WP3 owns both crates: `QualifiedBoundedFirstStepProof::admits` names the factory type, and the factory's `ToolJobFactory` impl names the job, so the three items move down together from `retained-command` to `job` (the plan moved the 16-line factory alone, which would have left its impl naming a `retained-command` type). Until `job` is carved, the source module re-exports them with `pub use`.
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolCompletion, BOUNDED_FIRST_STEP_FACTORY, ToolOwnerWitness};
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+#[cfg(test)]
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::Fault;
+use semio_framework_plugin_decl_views::history_view::HistoryView;
+use semio_framework_plugin_decl_views::{InteractionHoverState, PeerPresenceRoot};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use store::Mutation;
+use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_plugin_ownership::bounded_ownership::{plugin_text_close, plugin_text_retirement_demand};
 
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum TypedCommandFullOperationPhase {
+pub enum TypedCommandFullOperationPhase {
     Prepare,
     Reducer,
     Fault,
 }
 
-pub(crate) struct TypedCommandFullOperationJob<A: ArtifactApp> {
-    pub(crate) operation: Option<semio_framework_job::Operation>,
-    pub(crate) parent_document_id: Option<String>,
-    pub(crate) command: Option<std::sync::Arc<A::Command>>,
-    pub(crate) snapshot: Option<std::sync::Arc<A::Snapshot>>,
-    pub(crate) config: Option<std::sync::Arc<A::Config>>,
-    pub(crate) history: Option<std::sync::Arc<HistoryView>>,
-    pub(crate) children: Option<std::sync::Arc<ChildContentView>>,
-    pub(crate) draft: Option<std::sync::Arc<A::Draft>>,
-    pub(crate) interaction_state: Option<std::sync::Arc<protocol::InteractionState>>,
-    pub(crate) interaction_hover: Option<std::sync::Arc<InteractionHoverState>>,
-    pub(crate) peer_presence: Option<std::sync::Arc<PeerPresenceRoot>>,
-    pub(crate) presence_local: Option<store::os_store::snapshot_read::SnapshotRead<A::Presence>>,
-    pub(crate) presence_peers: Option<std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>>,
-    pub(crate) transient: Option<std::sync::Arc<A::Transient>>,
-    pub(crate) contract: semio_framework::ToolExecutionContract,
-    pub(crate) decoded_items: usize,
-    pub(crate) phase: TypedCommandFullOperationPhase,
-    pub(crate) prepare_cursor: u8,
-    pub(crate) reducer_cursor: u8,
-    pub(crate) output: Option<ArtifactToolCompletion<A>>,
-    pub(crate) state: [u8; 3],
-    pub(crate) fault_message: &'static [u8],
-    pub(crate) pending: Option<crate::tool_contract::ReservedOutcomeKind>,
-    pub(crate) outcomes: crate::tool_contract::ReservedJobOutcomes,
-    pub(crate) closing: bool,
+#[doc(hidden)]
+pub struct TypedCommandFullOperationJob<A: ArtifactApp> {
+    pub operation: Option<semio_framework_job::Operation>,
+    pub parent_document_id: Option<String>,
+    pub command: Option<std::sync::Arc<A::Command>>,
+    pub snapshot: Option<std::sync::Arc<A::Snapshot>>,
+    pub config: Option<std::sync::Arc<A::Config>>,
+    pub history: Option<std::sync::Arc<HistoryView>>,
+    pub children: Option<std::sync::Arc<ChildContentView>>,
+    pub draft: Option<std::sync::Arc<A::Draft>>,
+    pub interaction_state: Option<std::sync::Arc<protocol::InteractionState>>,
+    pub interaction_hover: Option<std::sync::Arc<InteractionHoverState>>,
+    pub peer_presence: Option<std::sync::Arc<PeerPresenceRoot>>,
+    pub presence_local: Option<store::os_store::snapshot_read::SnapshotRead<A::Presence>>,
+    pub presence_peers: Option<std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>>,
+    pub transient: Option<std::sync::Arc<A::Transient>>,
+    pub contract: semio_framework::ToolExecutionContract,
+    pub decoded_items: usize,
+    pub phase: TypedCommandFullOperationPhase,
+    pub prepare_cursor: u8,
+    pub reducer_cursor: u8,
+    pub output: Option<ArtifactToolCompletion<A>>,
+    pub state: [u8; 3],
+    pub fault_message: &'static [u8],
+    pub pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
+    pub outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+    pub closing: bool,
 }
 
 impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
     /// 📏️ The next close turn: the parent id text, else one retained alias per turn.
-    fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
         if !self.outcomes.terminal_is_empty() { return self.outcomes.close_demands(); }
         Ok(self.owner_close_demand())
     }
@@ -55,21 +70,21 @@ impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
         if retained||self.operation.is_some()||!self.closing||self.pending.is_some() { item } else { RetirementDemand::default() }
     }
 
-    pub(crate) fn checkpoint(&mut self) {
+    pub fn checkpoint(&mut self) {
         self.state = [self.phase as u8, self.prepare_cursor, self.reducer_cursor];
-        self.pending = Some(crate::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: u64::from(self.prepare_cursor).saturating_add(u64::from(self.reducer_cursor)) });
+        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: u64::from(self.prepare_cursor).saturating_add(u64::from(self.reducer_cursor)) });
     }
 
-    pub(crate) fn fault(&mut self, message: &'static [u8]) {
+    pub fn fault(&mut self, message: &'static [u8]) {
         self.phase = TypedCommandFullOperationPhase::Fault;
         self.fault_message = message;
-        self.pending = Some(crate::tool_contract::ReservedOutcomeKind::Fault);
+        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault);
     }
 }
 
 impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        use crate::tool_contract::ReservedOutcomeKind;
+        use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
@@ -207,15 +222,16 @@ impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
     }
 }
 
-pub(crate) struct TypedCommandFullOperationJobFactory<A: ArtifactApp> {
-    pub(crate) keys: Vec<semio_framework::ToolFactoryKey>,
-    pub(crate) payload_schema_id: String,
-    pub(crate) proof: QualifiedBoundedFirstStepProof,
-    pub(crate) marker: std::marker::PhantomData<fn() -> A>,
+#[doc(hidden)]
+pub struct TypedCommandFullOperationJobFactory<A: ArtifactApp> {
+    pub keys: Vec<semio_framework::ToolFactoryKey>,
+    pub payload_schema_id: String,
+    pub proof: QualifiedBoundedFirstStepProof,
+    pub marker: std::marker::PhantomData<fn() -> A>,
 }
 
 impl<A: ArtifactApp> TypedCommandFullOperationJobFactory<A> {
-    pub(crate) fn from_proof(proof: QualifiedBoundedFirstStepProof) -> Option<Self> {
+    pub fn from_proof(proof: QualifiedBoundedFirstStepProof) -> Option<Self> {
         if proof.owner != ToolOwnerWitness::of::<A>() || proof.row.owner != proof.owner || proof.row.factory != BOUNDED_FIRST_STEP_FACTORY || proof.row.factory_type_id.is_some() || proof.row.factory_type_name.is_some() {
             return None;
         }

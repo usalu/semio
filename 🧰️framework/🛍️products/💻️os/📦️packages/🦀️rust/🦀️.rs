@@ -107,8 +107,13 @@ pub mod os_store {
     // — and the module would then fail to resolve `tokio`. Excluding it here matches what the feature's
     // own docstring already states: WASI-P2 guest plugins never link the sync actor's transport.
     #[cfg(all(feature = "sync", not(all(target_arch = "wasm32", target_env = "p2"))))]
-    #[path = "../../🔨️modules/🏪️store/🔄️sync/🦀️.rs"]
-    pub mod sync;
+    pub mod sync {
+        pub use semio_framework_os_store_sync::*;
+        #[cfg(not(target_arch = "wasm32"))]
+        pub use semio_framework_os_store_sync_native::*;
+        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+        pub use semio_framework_os_store_sync_wasm::*;
+    }
 
     // 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; `👷️worker/🦀️.rs` is an
     // unconditional `wasm_bindgen` Web Worker `postMessage` bridge with no internal target split of

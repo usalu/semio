@@ -1,7 +1,31 @@
 //! ⏳️ Local operation status and exact cancellation controls shared by artifact editors.
 use crate::app_views::CANCEL_TYPED_OPERATION_ACTION_ID;
 use crate::app_views::ArtifactOperationProgress;
-use super::*;
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_ui_contract::{BuiltNode, *};
+use semio_framework_value::DslValue;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::{Fault, FaultFrom};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_ui_locale::{Locale, Terminology};
+use store::{Mutation, MutationDiff};
+use protocol::{OpBinary, OpText};
+#[cfg(test)]
+use crate::plugin_app::PluginApp;
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_framework_plugin_interaction::{UiAssemblyResult, ui_assembly_error};
+use semio_framework::kernel::UiDirtyScope;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use serde_json::Value;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
 
 pub fn decode_operation_cancellation(value: &DslValue) -> Option<(u64, u64)> {
     let DslValue::Object(fields) = value else { return None };

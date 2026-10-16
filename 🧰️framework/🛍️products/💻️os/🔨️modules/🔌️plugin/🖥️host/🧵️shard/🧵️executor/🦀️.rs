@@ -22,8 +22,8 @@
 //! forwarder thread necessary in the first place (`💻️os/🖥️host/🎠️activation/🦀️.rs`'s deleted
 //! `semio-os-host-kernel-shard-forward-*` threads) no longer exists.
 
-use super::{AdmissionLimit, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};
-use crate::{GuestInstance, GuestRuntime, GuestRuntimes};
+use semio_framework_plugin_host_shard::{AdmissionLimit, SharedThreadTransport, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};
+use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_actor::{ActorId, Lane as ActorLane, ShardTransport, ThreadTransport};
 use semio_framework_async::{Job as PoolJob, Lane as PoolLane, WorkerPool, WorkerSubmitErrorKind};
 use std::collections::VecDeque;
@@ -33,29 +33,6 @@ use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, PoisonError, Weak};
 use std::task::{Context, Poll, Wake, Waker};
 use std::time::{Duration, Instant};
-
-/// 🔌️ Local newtype so [`ShardExecutor::new`] can hand [`ShardLoop::new`] an `Arc<ThreadTransport>`
-/// as a [`super::ShardTransports::SharedThread`] variant while the executor ALSO keeps its own
-/// [`ThreadTransport`] end (the mirror of the one wrapped here) to inject frames and drain outcomes —
-/// `impl ShardTransport for Arc<ThreadTransport>` directly would hit `E0117` (neither type is local
-/// to this crate; `🧵️shard/🦀️.rs`'s own `LoopbackProbe` doc comment already names this same
-/// orphan-rule constraint for `Arc<LoopbackTransport>`).
-pub struct SharedThreadTransport(Arc<ThreadTransport>);
-
-impl ShardTransport for SharedThreadTransport {
-    async fn send(&self, bytes: &[u8]) {
-        self.0.send(bytes).await;
-    }
-    async fn recv(&self) -> Option<Vec<u8>> {
-        self.0.try_recv_now()
-    }
-    async fn heartbeat(&self) -> u64 {
-        self.0.heartbeat().await
-    }
-    async fn kill(&self) {
-        self.0.kill().await;
-    }
-}
 
 //#region ⚖️LanePriority
 /// ⚖️ `ActorLane` (0=Interactive .. 3=Maintenance) collapsed to a `WorkerPool::submit` priority rank
@@ -102,7 +79,7 @@ impl OutcomeSink {
         Arc::new(OutcomeSink { queue: Mutex::new(VecDeque::new()), ready: Condvar::new() })
     }
 
-    fn push(&self, outcome: ShardOutcome) {
+    pub fn push(&self, outcome: ShardOutcome) {
         let mut queue = self.queue.lock().unwrap_or_else(PoisonError::into_inner);
         queue.push_back(outcome);
         drop(queue);
@@ -160,7 +137,7 @@ pub struct ShardExecutor {
     /// unseen work" signal (monotonic, so a concurrent bump is never lost the way a plain flag could
     /// be); [`Self::pending_lane_rank`] below is a separate, best-effort PRIORITY hint layered on top,
     /// not a substitute for this counter.
-    epoch: AtomicU64,
+    pub epoch: AtomicU64,
     consumed_epoch: AtomicU64,
     /// ⚖️ The lowest (most urgent) [`lane_rank`] seen since the last time a pump job actually started
     /// — [`NO_LANE`] if nothing has arrived. Purely a submission-priority hint: a rare race can leave
@@ -200,8 +177,8 @@ struct ShardExecutorState {
 
 #[must_use]
 pub enum RegistrationAdmission {
-    Admitted(super::ShardActorAllocation),
-    Refused(super::ShardRegistrationRejected),
+    Admitted(semio_framework_plugin_host_shard::ShardActorAllocation),
+    Refused(semio_framework_plugin_host_shard::ShardRegistrationRejected),
     Stopped,
     Rejected { actor: ActorId, instance: GuestInstance, limit: AdmissionLimit },
 }
@@ -299,7 +276,7 @@ impl ShardExecutor {
     /// `RegisterRequest`/ack rendezvous, there is no interleaving to close here at all), and returns
     /// an `Arc` (needed so [`ShardExecutor::schedule`] can hand `WorkerPool::submit` a strong
     /// self-reference for its job closure).
-    pub async fn new(pool: Arc<WorkerPool>, runtime: Arc<GuestRuntimes>, initial: Vec<(ActorId, GuestInstance)>, outcomes: Arc<OutcomeSink>,identity:super::OriginalShardIdentityIssuer) -> Arc<ShardExecutor> {
+    pub async fn new(pool: Arc<WorkerPool>, runtime: Arc<GuestRuntimes>, initial: Vec<(ActorId, GuestInstance)>, outcomes: Arc<OutcomeSink>,identity:semio_framework_plugin_host_shard::identity::OriginalShardIdentityIssuer) -> Arc<ShardExecutor> {
         let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
         let mut shard = ShardLoop::new(runtime, ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side))),identity).await;
         for (actor, instance) in initial {
@@ -341,7 +318,7 @@ impl ShardExecutor {
         let receive = {
             let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
             if self.closed.load(Ordering::Acquire) || self.ingress_state.load(Ordering::Acquire) != 0 || self.pool.is_shutdown() {
-                return RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped,identity_refusal:None });
+                return RegistrationAdmission::Refused(semio_framework_plugin_host_shard::ShardRegistrationRejected { actor, instance, reason: semio_framework_plugin_host_shard::ShardRegistrationReason::Stopped,identity_refusal:None });
             }
             if let Some(shard) = state.shard.as_mut() {
                 return match shard.register(actor, instance) {
@@ -567,7 +544,7 @@ impl ShardExecutor {
             let Some((_, (actor, instance, reply))) = owner else { break };
             let unclaimed = match reply {
                 Some(reply) => {
-                    let refusal = RegistrationAdmission::Refused(super::ShardRegistrationRejected { actor, instance, reason: super::ShardRegistrationReason::Stopped,identity_refusal:None });
+                    let refusal = RegistrationAdmission::Refused(semio_framework_plugin_host_shard::ShardRegistrationRejected { actor, instance, reason: semio_framework_plugin_host_shard::ShardRegistrationReason::Stopped,identity_refusal:None });
                     match reply.send(refusal) {
                         Ok(()) => None,
                         Err(RegistrationAdmission::Refused(owner)) => Some(owner.instance),

@@ -275,8 +275,7 @@ function evaluateParityExpect(predicate: ProbeExpectPredicate, reactDump: Parity
 async function runParityProbe(reactPage: import("playwright").Page, wgpuPage: import("playwright").Page, steps: readonly ProbeStep[]): Promise<ProbeRunResult> {
   const results: ProbeStepResult[] = [];
   let halted = false;
-  for (let index = 0; index < steps.length; index++) {
-    const step = steps[index];
+  for (const [index, step] of steps.entries()) {
     if (halted) {
       results.push({ index, step, status: "SKIP" });
       continue;

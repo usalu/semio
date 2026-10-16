@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🧫️history-patch/🔣️.json";
 import schema from "../../🧬️schema/🔣️history-patch/🔣️.json";
-import { historyEntryKey, type HistoryPatch } from "../../🟦️.ts";
+import { historyEntryKey, type HistoryPatch } from "../../🕰️history/🟦️.ts";
 
 type ValidCase = { readonly id: string; readonly patch: HistoryPatch; readonly keys: readonly string[] };
 type InvalidCase = { readonly id: string; readonly patch: unknown; readonly reason: string };

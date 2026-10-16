@@ -1,4 +1,4 @@
-import { interactivityIsRuntimeSource } from "../../../../../../../../📜️script.ts";
+import { interactivityIsRuntimeSource } from "../../../⚖️laws/🔬️interactivity-audit/🔎️scan/🟦️.ts";
 
 /** 🧪️Proves runtime discovery admits authored product roots and rejects repo-local scratch/archive roots. */
 export function interactivityRuntimeSourceSelfTests(): void {

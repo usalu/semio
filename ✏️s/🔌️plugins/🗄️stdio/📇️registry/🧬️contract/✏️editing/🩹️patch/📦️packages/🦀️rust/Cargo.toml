@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Snapshot patch wire, application, inversion and input schemas of the stdio editors"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

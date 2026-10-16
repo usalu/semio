@@ -1,4 +1,4 @@
-import { parseViewport3dOrbit, type Viewport3dOrbit } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
+import { parseViewport3dOrbit, type Viewport3dOrbit } from "@semio-tech/framework/ui/viewport/3d/schema";
 
 /** 🧬️ Remodeling model-window layer visibility. */
 export interface RemodelingLayerVisibility {

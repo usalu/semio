@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellInput
 impl ShellChromeBuildState {
-    pub(crate) fn content_has_focus(&self, window_id: &str) -> bool {
+    pub fn content_has_focus(&self, window_id: &str) -> bool {
         self.content_focus_node(window_id).is_some()
     }
 
@@ -17,11 +17,11 @@ impl ShellChromeBuildState {
         self.content_focus.get(window_id).and_then(Option::as_ref).map(|focus| focus.node)
     }
 
-    pub(crate) fn note_content_focus_commands(&mut self, commands: &[ui_wgpu::wgpu::UiCommand]) {
+    pub fn note_content_focus_commands(&mut self, commands: &[ui_wgpu::wgpu::UiCommand]) {
         for command in commands {
             if let ui_wgpu::wgpu::UiCommand::FocusChanged { window_id, node } = command {
                 debug_log(&format!("[TRACE] wgpu-shell content focus window={window_id} node={node:?}"));
-                let focus = node.and_then(|node| crate::interpreter::retained_node_focus_identity(window_id, node).map(|(key, kind)| RetainedContentFocus { node, key, kind }));
+                let focus = node.and_then(|node| semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_focus_identity(window_id, node).map(|(key, kind)| RetainedContentFocus { node, key, kind }));
                 if focus.is_some() {
                     if let Some(previous) = self.focused_retained_surface.replace(window_id.clone()).filter(|previous| previous != window_id) {
                         self.content_focus.insert(previous, None);
@@ -34,14 +34,14 @@ impl ShellChromeBuildState {
         }
     }
 
-    pub(crate) fn clear_content_focus(&mut self, surface: &str) {
+    pub fn clear_content_focus(&mut self, surface: &str) {
         self.content_focus.remove(surface);
         if self.focused_retained_surface.as_deref() == Some(surface) {
             self.focused_retained_surface = None;
         }
     }
 
-    pub(super) fn clear_sibling_pane_focus(&mut self, surface: &str) {
+    pub fn clear_sibling_pane_focus(&mut self, surface: &str) {
         let owner = window_pane_owner(surface).unwrap_or(surface);
         for sibling in [owner.to_string(), window_measures_surface_id(owner), window_actions_surface_id(owner), window_search_surface_id(owner), window_projection_surface_id(owner)] {
             if sibling != surface {

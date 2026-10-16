@@ -1,5 +1,5 @@
 import * as artifactSqlite0 from "../🟦️.ts";
-import binary64Schema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
+import { valueSchema as binary64Schema } from "@semio-tech/framework/value/schema";
 /** 🧱️ Exact Block5d canonical parent laws share independent neutral primitive evidence. */
 import {expect,test} from 'bun:test';
 import Ajv from 'ajv';
@@ -33,7 +33,7 @@ test('SQLite Block5d public provider must retain the complete every-entity paren
  const value=snapshot.parseBlock5dSnapshot(specimen(BigInt('0x'+laws.binary64Bits[0]!)));expect(await restore!(await project!(value))).toEqual(value);
 });
 
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 async function oracle(value:snapshot.Block5dSnapshot):Promise<Database>{return Database.deserialize(await exportSqliteDatabase(await artifactSqlite0.block5dSnapshotToSqliteDatabase(value)))}
 for(const raw of laws.binary64Bits)test('SQLite Block5d independent SQLite reserialization exact word '+raw,async()=>{
@@ -165,8 +165,8 @@ test('SQLite shared Block3d canonical child identities preserve native UTF-8 dom
 
 import callerLedger from "./🧫️fixtures/💰️caller/🔣️.json";
 
-import {sqliteOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {NativeDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {sqliteOperation} from "@semio-tech/framework/io/sqlite-snapshot";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 test('Block5d closed supplied caller ledger contract has independent exact octet backing',()=>{
  expect(callerLedger["version"]).toEqual(1);expect(callerLedger["ledgerRole"]).toEqual("the supplied SQLite operation owns all concrete child byte backing; retirement does not refund");expect(callerLedger["byteBacking"]).toEqual([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63]);expect(callerLedger["exactBytes"]).toEqual(64);expect(callerLedger["oneByteShort"]).toEqual(63);expect(callerLedger["twoCallBytes"]).toEqual(128);expect(callerLedger["repeat"]).toEqual(512);expect(callerLedger["minimumInterior"]).toEqual(256);expect(callerLedger["requiredKind"]).toEqual("canceled");expect(callerLedger["literal"]).toEqual("owned\u0000引用😀");expect(callerLedger["optionalPaths"]).toEqual([["partKind","variant"],["partKind","icon"],["partKind","unit"],["attributes",0,"definition"],["authors",0,"email"],["part2d","shape"],["part2d","radius"],["part2d","width"],["part2d","height"],["part2d","color"],["part2d","iconKind"],["part3d","orientation"],["part3d","scale"],["representations",0,"meshUrl"],["representations",0,"lod"],["representations",0,"attributes",0,"definition"]]);
  expect(Buffer.from(callerLedger.byteBacking).length).toBe(callerLedger.exactBytes);

@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
 import type{Din16798Snapshot,Din16798Zone,Din16798VentSystem}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 
 export type Din16798SqliteZone=Omit<Din16798Zone,"floorAreaM2"|"tOpWinterC"|"tOpSummerC"|"airSpeedMS"|"clothingClo"|"metabolicRateMet"|"rhPercent"|"outdoorAirSuppliedM3H"|"co2Ppm"|"illuminanceLx"|"noiseDb"|"turbulenceIntensityPercent">&{floorAreaM2:Binary64;tOpWinterC:Binary64;tOpSummerC:Binary64;airSpeedMS:Binary64;clothingClo:Binary64;metabolicRateMet:Binary64;rhPercent:Binary64;outdoorAirSuppliedM3H:Binary64;co2Ppm:Binary64;illuminanceLx:Binary64;noiseDb:Binary64;turbulenceIntensityPercent:Binary64};
 export type Din16798SqliteVentSystem=Omit<Din16798VentSystem,"sfpWM3S"|"heatRecoveryEta"|"humidificationRequiredKgH"|"humidificationProvidedKgH"|"fanQVM3S"|"fanTRunH"|"ductTestPressurePa"|"ductLeakageM3SM2"|"designAirflowM3H">&{sfpWM3S:Binary64;heatRecoveryEta:Binary64;humidificationRequiredKgH:Binary64;humidificationProvidedKgH:Binary64;fanQVM3S:Binary64;fanTRunH:Binary64;ductTestPressurePa:Binary64;ductLeakageM3SM2:Binary64;designAirflowM3H:Binary64};

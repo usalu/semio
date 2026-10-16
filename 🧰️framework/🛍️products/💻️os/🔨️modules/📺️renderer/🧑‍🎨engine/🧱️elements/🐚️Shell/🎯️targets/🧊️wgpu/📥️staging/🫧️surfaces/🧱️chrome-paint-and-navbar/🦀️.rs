@@ -17,7 +17,7 @@ use super::*;
 /// never picks a default language — an absent pair falls back to the shell's own bilingual
 /// `common.loading`, exactly as React's pane does.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct World3dComputeStatus {
+pub struct World3dComputeStatus {
     pub computing: bool,
     pub phase: String,
     pub phase_label: Option<(String, String)>,
@@ -69,7 +69,7 @@ fn world3d_status_label(value: Option<&Value>) -> Option<(String, String)> {
 
 /// ⏳️ The ONE reader of `World3dScene.statusJson` on this target — the Rust twin of
 /// `world3dComputeStatusV1`, answering the same shared `🛑️surface-controls/🔣️.json` fixture.
-pub(crate) fn world3d_compute_status(status_json: Option<&str>) -> World3dComputeStatus {
+pub fn world3d_compute_status(status_json: Option<&str>) -> World3dComputeStatus {
     let Some(raw) = status_json.filter(|json| !json.is_empty()) else {
         return World3dComputeStatus::default();
     };
@@ -109,20 +109,20 @@ pub(crate) fn world3d_compute_status(status_json: Option<&str>) -> World3dComput
 //#endregion 🔀️ChromeParity
 //#region 🪟️WindowPaneChrome
 impl SurfaceState {
-    pub(crate) fn world3d_host_id_for_window(&self, window_id: &str) -> Option<&str> {
+    pub fn world3d_host_id_for_window(&self, window_id: &str) -> Option<&str> {
         self.world3d_window_ids.iter().find_map(|(host_id, owner_window_id)| (owner_window_id == window_id).then_some(host_id.as_str()))
     }
 
-    pub(crate) fn world3d_state_for_window(&self, window_id: &str) -> Option<&World3dState> {
+    pub fn world3d_state_for_window(&self, window_id: &str) -> Option<&World3dState> {
         self.world3d_states.get(self.world3d_host_id_for_window(window_id)?)
     }
 
-    pub(crate) fn world3d_state_for_window_mut(&mut self, window_id: &str) -> Option<&mut World3dState> {
+    pub fn world3d_state_for_window_mut(&mut self, window_id: &str) -> Option<&mut World3dState> {
         let host_id = self.world3d_host_id_for_window(window_id)?.to_string();
         self.world3d_states.get_mut(&host_id)
     }
 
-    pub(crate) fn engine_host_id_for_window(&self, window_id: &str) -> Option<&str> {
+    pub fn engine_host_id_for_window(&self, window_id: &str) -> Option<&str> {
         self.world3d_host_id_for_window(window_id)
             .or_else(|| self.node_graph_states.iter().find_map(|(host_id, surface)| (surface.window_id == window_id).then_some(host_id.as_str())))
             .or_else(|| self.tiled_map_states.iter().find_map(|(host_id, surface)| (surface.window_id == window_id).then_some(host_id.as_str())))

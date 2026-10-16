@@ -8,7 +8,7 @@ use super::*;
 impl SyncState {
     /// 🔄️ The retained body behind the always-present Sync leaf. Its three choice actions are the
     /// existing `framework.sync` controller routes; the body only projects that authority into the dock.
-    pub(crate) fn build_sync_attach_ui(&self, prefs: &PrefsState) -> UiNode {
+    pub fn build_sync_attach_ui(&self, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let active_kind = self.sync_backbone_uri.as_deref().and_then(|uri| {
             if uri.starts_with("file://") {
@@ -53,7 +53,7 @@ impl SyncState {
                 precision: None,
                 snaps: Vec::new(),
                 on_change: ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: None },
-                on_submit: Some(ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: crate::action_args_json!({ "kind": kind }) }),
+                on_submit: Some(ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "kind": kind }) }),
                 on_abort: None,
                 on_repeat_last: None,
                 presence: UiPresence::default(),
@@ -75,7 +75,7 @@ impl SyncState {
                 id: Some("framework.sync.attach".into()),
                 icon_id: IconName::from("link"),
                 label: Label::data(shell_chrome_string("sync.attach", is_de)),
-                action: ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: crate::action_args_json!({ "kind": kind }) },
+                action: ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "kind": kind }) },
                 style: None,
                 presence: UiPresence { state: if self.sync_card_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,

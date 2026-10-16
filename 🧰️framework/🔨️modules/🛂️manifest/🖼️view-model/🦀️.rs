@@ -366,7 +366,7 @@ pub fn public_invocation_char_cost(character: char) -> usize {
 /// [`public_invocation_char_cost`] measures it, split only on character boundaries.
 ///
 /// The twin of `publicInvocationStringPages` in `🛠️ShellHelpers/🟦️.tsx`; the two must cut the same
-/// payload identically, which `🔬️engine-contract/🟦️.ts` and this module's own capacity law pin.
+/// payload identically, which `🪝️extension-invocation/🟦️.ts` and this module's own capacity law pin.
 /// An empty input yields one empty page, so a producer always sends at least one addressed page.
 pub fn public_invocation_string_pages(text: &str) -> Vec<String> {
     let mut pages = Vec::new();

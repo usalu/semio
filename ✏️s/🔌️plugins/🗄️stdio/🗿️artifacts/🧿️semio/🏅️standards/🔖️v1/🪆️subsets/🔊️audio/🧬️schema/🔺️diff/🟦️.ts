@@ -1,6 +1,6 @@
 /** 🔊️ The actual native sparse channel/sample/tag diff with owned binary32 words. */
 import type {SemioAudioSnapshot,SemioAudioChannel,SemioAudioTag,SemioAudioFormat} from "../📸️snapshot/🟦️.ts";
-import {parseBinary32} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary32} from "@semio-tech/framework/value/ieee754";
 export interface IndexedTripleDiff<D,T>{removed:number[];modified:{index:number;diff:D}[];added:{index:number;item:T}[]}
 export interface SemioAudioChannelDiff{samples?:SemioAudioChannel["samples"]}
 export type SemioAudioChannelsDiff=IndexedTripleDiff<SemioAudioChannelDiff,SemioAudioChannel>;

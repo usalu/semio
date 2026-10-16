@@ -15,9 +15,14 @@ const declarationUrl = new URL("../🤖️generated/🟦️.d.ts", import.meta.u
 export function flowBrowserDeclaration(): string {
   const contract: Contract = JSON.parse(readFileSync(FLOW_WASM_ABI_URL, "utf8"));
   const record = (fields: Field[]) => `{ ${fields.map((field) => `readonly ${field.name}${field.type === "optional-utf8" ? "?" : ""}: ${fieldTypes[field.type]}`).join("; ")} }`;
+  const fieldsFor = (name: string): Field[] => {
+    const fields = contract.arguments[name];
+    if (fields === undefined) throw Error(`Flow ABI arguments missing: ${name}`);
+    return fields;
+  };
   const names = Object.keys(contract.operations).filter((name) => !excluded.has(name));
   const methods = names.flatMap((name) => {
-    const fields = contract.arguments[name];
+    const fields = fieldsFor(name);
     const parameters = fields.map((field, index) => `${field.name}${field.type === "optional-utf8" && fields.slice(index).every((value) => value.type === "optional-utf8") ? "?" : ""}: ${fieldTypes[field.type]}`).join(", ");
     const positional = `  ${name}(${parameters}): FlowTask<unknown>;`;
     return fields.length ? [positional, `  ${name}(args: ${record(fields)}): FlowTask<unknown>;`] : [positional];
@@ -39,11 +44,9 @@ export interface FlowWasmExports {
 }
 export interface FlowFeatures {
   readonly lifetime: { readonly session: FlowHandle; close(): Promise<void>; terminalIsEmpty(): boolean; };
-${["document", "interaction", "editing", "surface", "drawing"].map((group, index) => {
-  const boundaries = [[1, 25], [25, 50], [50, 75], [75, 99], [99, undefined]] as const;
-  const [start, end] = boundaries[index];
+${([["document", 1, 25], ["interaction", 25, 50], ["editing", 50, 75], ["surface", 75, 99], ["drawing", 99, undefined]] satisfies readonly (readonly [string, number, number | undefined])[]).map(([group, start, end]: readonly [string, number, number | undefined]) => {
   const groupNames = Object.keys(contract.operations).slice(start, end);
-  return `  readonly ${group}: { ${groupNames.map((name) => { const fields = contract.arguments[name]; return `${name}(${fields.length ? `args${fields.every((field) => field.type === "optional-utf8") ? "?" : ""}: ${record(fields)}` : ""}): FlowTask<unknown>`; }).join("; ")} };`;
+  return `  readonly ${group}: { ${groupNames.map((name) => { const fields = fieldsFor(name); return `${name}(${fields.length ? `args${fields.every((field) => field.type === "optional-utf8") ? "?" : ""}: ${record(fields)}` : ""}): FlowTask<unknown>`; }).join("; ")} };`;
 }).join("\n")}
 }
 export interface FlowRetainedProgress { readonly copiedItems:number; readonly copiedBytes:number; readonly retainedCapacityBytes:number; readonly releasedBytes:number; }

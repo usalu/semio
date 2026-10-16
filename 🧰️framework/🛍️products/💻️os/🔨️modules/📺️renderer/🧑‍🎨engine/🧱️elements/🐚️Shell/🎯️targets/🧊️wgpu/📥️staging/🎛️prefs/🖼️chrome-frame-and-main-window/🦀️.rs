@@ -18,15 +18,15 @@ impl PrefsState {
     /// t≈9 s to t≈45 s, and the concrete-forest GLB that becomes resident at t≈12 s could never reach
     /// a presented packet (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c). Maintenance is
     /// pressure-driven: no pressure, no checkout.
-    pub(super) fn request_chrome_preferences_persist(&mut self, chrome: &mut ChromeState) {
-        if chrome.chrome_present.last_synced_preferences.as_ref() != Some(&UiPrefsSnapshot::capture(chrome, self)) {
+    pub fn request_chrome_preferences_persist(&mut self, chrome: &mut ChromeState) {
+        if chrome.chrome_present.last_synced_preferences.as_ref() != Some(&capture_ui_prefs_snapshot(chrome, self)) {
             chrome.chrome_present.maintenance.persist_requested = true;
         }
     }
 
-    pub(super) fn advance_chrome_preferences_persist_step(&mut self, chrome: &mut ChromeState) {
+    pub fn advance_chrome_preferences_persist_step(&mut self, chrome: &mut ChromeState) {
         let phase = chrome.chrome_present.maintenance.persist_phase;
-        let snapshot = UiPrefsSnapshot::capture(chrome, self);
+        let snapshot = capture_ui_prefs_snapshot(chrome, self);
         match phase {
             0 if chrome.chrome_present.last_synced_preferences.as_ref() != Some(&snapshot) => {
                 persist_ui_preferences(chrome, self, chrome.chrome_present.last_synced_preferences.as_ref());
@@ -45,7 +45,7 @@ impl PrefsState {
         chrome.chrome_present.maintenance.persist_phase = phase.saturating_add(1);
     }
 
-    pub(crate) fn fullscreen_item_width(&self, atlas: &mut FontAtlas, theme: &Theme, chrome: &ChromeState) -> f32 {
+    pub fn fullscreen_item_width(&self, atlas: &mut FontAtlas, theme: &Theme, chrome: &ChromeState) -> f32 {
         let is_de = self.locale_id == "de";
         let item = ChromeGroupItem {
             control_id: "ui.fullscreen.toggle",

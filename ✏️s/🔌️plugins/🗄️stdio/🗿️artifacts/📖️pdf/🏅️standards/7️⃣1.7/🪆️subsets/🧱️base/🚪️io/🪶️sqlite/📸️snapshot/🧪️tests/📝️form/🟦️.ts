@@ -6,7 +6,7 @@ import { PdfProjection,PdfReader } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { pdfAnnotationNumberColumns } from "../../📌️annotation/🔢️number/🟦️.ts";
 import { writePdfAcroForm,readPdfAcroForm,writePdfOptionalContent,readPdfOptionalContent } from "../../📝️form/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import type { PdfFormField } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { parsePdfFormField,parsePdfOptionalContent } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 

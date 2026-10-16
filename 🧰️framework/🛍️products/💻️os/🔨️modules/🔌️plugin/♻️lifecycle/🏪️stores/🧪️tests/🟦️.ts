@@ -21,7 +21,7 @@ test('eight store stages preserve original body, separate frame and each denied 
 });
 test('global close advances authentic store authorities and never reports an unproven terminal',()=>{
  const host=familyText();
- const frontier=readFileSync(join(import.meta.dir,'../🦀️.rs'),'utf8');
+ const frontier=familyText();
  const ladder=familyText();
  expect(ladder).toContain('self.close_owned_stores_step(grant)');expect(ladder).toContain('self.close_owned_stores_demands(body)');expect(host).toContain('self.close_ladder_step(grant)');
  expect(frontier).toContain('self.close_owned_stage += 1');expect(frontier).toContain('terminal_frame_release_bytes');

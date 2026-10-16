@@ -4,21 +4,24 @@ import fixture from "../🧫️fixtures/🏷️session-lifetime/🔣️.json";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
 import retirementFixture from "../🧫️fixtures/🧹️retirement/🔣️.json";
-import { SemioGeometrySession } from "../../🟦️.ts";
+import { SemioGeometrySession, requireBrowserGeometrySessionV1 } from "../../🟦️.ts";
 export async function browserSessionLaws(): Promise<void> {
   const validate = new Ajv({ strict:true,allErrors:true }).addKeyword("x-semio-formats").addSchema(schema).getSchema(`${schema.$id}#/$defs/SemioGeometryCloseReceiptV1`)!;
-  const sessions = [new SemioGeometrySession(), new SemioGeometrySession()];
+  const sessions = [new SemioGeometrySession(), new SemioGeometrySession()] as const;
+  const [firstBox,secondBox]=fixture.independentBoxes;
+  assert(firstBox&&secondBox,"two independent box fixtures required");
   let failure:unknown;
   try {
     for (const method of ["exportStep","importStep"]) await assert.rejects(sessions[0].invoke(method,{}),/unknown/);
     for (const [index, session] of sessions.entries()) {
       const box = fixture.independentBoxes[index];
+      assert(box,"independent box fixture required");
       const { handle } = await session.invoke<{ handle: string }>("box", box);
       const { value } = await session.invoke<{ value: number }>("volume", { shape:handle });
       assert.equal(value, box.volume);
     }
     await assert.rejects(sessions[0].close({ cancelled:() => true }),/geometry.close-cancelled/);
-    await assert.rejects(sessions[0].invoke("box",fixture.independentBoxes[0]),/geometry.session-closed/);
+    await assert.rejects(sessions[0].invoke("box",firstBox),/geometry.session-closed/);
     let turns = 0;
     await sessions[0].close({ maximumItems:retirementFixture.closeGrant.items, onProgress:receipt => {
       assert(validate(receipt),JSON.stringify(validate.errors));
@@ -26,11 +29,11 @@ export async function browserSessionLaws(): Promise<void> {
     } });
     assert(turns > 1);
     await sessions[0].close();
-    await assert.rejects(sessions[0].invoke("box", fixture.independentBoxes[0]), /geometry.session-closed/);
-    const { handle } = await sessions[1].invoke<{ handle: string }>("box", fixture.independentBoxes[1]);
-    assert.equal((await sessions[1].invoke<{ value: number }>("volume", { shape:handle })).value, fixture.independentBoxes[1].volume);
+    await assert.rejects(sessions[0].invoke("box", firstBox), /geometry.session-closed/);
+    const { handle } = await sessions[1].invoke<{ handle: string }>("box", secondBox);
+    assert.equal((await sessions[1].invoke<{ value: number }>("volume", { shape:handle })).value, secondBox.volume);
     const { BrowserSession } = await import("../../📦️packages/🦀️rust/🕸️bindings/semio_session.js");
-    const native = new BrowserSession();
+    const native = requireBrowserGeometrySessionV1(new BrowserSession());
     const created = JSON.parse(native.brep_invoke("box",JSON.stringify(retirementFixture.box))) as { handle:string };
     for (const grant of retirementFixture.grants.slice(0,2)) {
       const receipt = JSON.parse(native.close_step(grant.items,grant.copyBytes,grant.capacityBytes,grant.releaseBytes,grant.depth));

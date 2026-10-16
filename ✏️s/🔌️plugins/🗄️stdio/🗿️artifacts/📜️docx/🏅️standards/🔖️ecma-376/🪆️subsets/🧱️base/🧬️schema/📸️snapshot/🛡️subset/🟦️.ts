@@ -1,8 +1,8 @@
 /** 🛡️ Literal namespace entities and relationships establish exact DOCX profiles. */
 import type{DocxSnapshot,XmlDocument,XmlNode,XmlAttr}from"../🟦️.ts";
 import{materializeRetainedXmlDocument}from"../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import {NativeDecodeControl,type NativeDecodeProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {textUtf8ByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts";
+import {NativeDecodeControl,type NativeDecodeProgress} from "@semio-tech/framework/value/decode";
+import {textUtf8ByteLength} from "@semio-tech/framework/value/text";
 export interface DocxProfileOptions{readonly maximumBytes?:number;readonly signal?:AbortSignal;readonly onProgress?:(progress:NativeDecodeProgress)=>void}
 export interface DocxProfileDiagnostic{readonly code:string;readonly severity:"error"|"warning";readonly message:string}
 const STRICT="http://purl.oclc.org/ooxml/wordprocessingml/main",TRANS="http://schemas.openxmlformats.org/wordprocessingml/2006/main",STRICT_REL="http://purl.oclc.org/ooxml/officeDocument/relationships",TRANS_REL="http://schemas.openxmlformats.org/officeDocument/2006/relationships",VML="urn:schemas-microsoft-com:vml",MC="http://schemas.openxmlformats.org/markup-compatibility/2006";

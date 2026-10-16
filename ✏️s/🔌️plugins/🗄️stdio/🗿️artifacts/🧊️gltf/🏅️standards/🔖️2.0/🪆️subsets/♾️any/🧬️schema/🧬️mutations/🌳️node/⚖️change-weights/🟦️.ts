@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 /** ⚖️ `change-node-morph-weights` wire twin: the flat `Apply` payload `GltfChangeNodeMorphWeightsPayload` and the phase wire `ChangeNodeMorphWeightsMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireArray, gltfWireIndex, gltfWireNumber, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";

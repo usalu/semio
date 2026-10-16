@@ -5,7 +5,7 @@
 use super::*;
 
 //#region ShellTypes
-pub(super) const SHELL_EXTENSION_LEDGER_CAPACITY: usize = 256;
+pub const SHELL_EXTENSION_LEDGER_CAPACITY: usize = 256;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -33,7 +33,7 @@ pub struct ShellExtensionProjection {
     pub record: ShellExtensionStoreRecord,
     pub enabled: bool,
     pub load_status: ShellExtensionLoadStatus,
-    pub(super) program: Option<ProgramBridgeEntry>,
+    pub program: Option<ProgramBridgeEntry>,
 }
 
 //#endregion ShellTypes

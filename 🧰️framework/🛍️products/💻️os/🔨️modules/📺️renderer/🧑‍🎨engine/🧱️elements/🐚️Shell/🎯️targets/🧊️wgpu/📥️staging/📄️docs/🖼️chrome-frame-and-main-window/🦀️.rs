@@ -8,7 +8,7 @@ use super::*;
 impl DocumentState {
     /// 🎓️ Coalesces one bounded introduction lookup for the shared I/O lane, against the BRAND-SCOPED
     /// key (see [`Self::introduction_seen_key`]).
-    pub(crate) fn request_introduction_read(&mut self, chrome: &mut ChromeState) {
+    pub fn request_introduction_read(&mut self, chrome: &mut ChromeState) {
         if chrome.chrome_present.maintenance.introduction_read.is_some() {
             return;
         }
@@ -26,9 +26,9 @@ impl DocumentState {
     /// and nothing else (`📓️w1d` gap 1), so on `aggregator` (6023/6123) it wrote
     /// `ui.introduction.seen.<appId>` where React writes `ui.introduction.seen.<brandId>:<appId>` — the
     /// one concretely demonstrated brand divergence (`📓️w5a-browser-prefs-persistence.md` §7.1).
-    pub(crate) fn introduction_seen_key(&self) -> Option<String> {
+    pub fn introduction_seen_key(&self) -> Option<String> {
         let app_id = self.session.as_ref().map(|session| session.app.id.clone())?;
-        Some(match crate::boot_brand_id() {
+        Some(match semio_framework_os_renderer_wgpu_host_base::boot_brand_id() {
             Some(brand_id) => format!("{brand_id}:{app_id}"),
             None => app_id,
         })
@@ -47,18 +47,18 @@ impl DocumentState {
     ///
     /// 🏷️ React's `replayIntroductionOnLoad` brand flag ignores the device-local seen flag entirely,
     /// which is exactly what a kiosk brand needs. Carried by the brand ROW since this packet.
-    pub(crate) fn auto_start_introduction(&mut self, seen_key: &str, seen: bool, chrome: &mut ChromeState, tutorial: &TutorialState) {
+    pub fn auto_start_introduction(&mut self, seen_key: &str, seen: bool, chrome: &mut ChromeState, tutorial: &TutorialState) {
         let has_introduction = self.session.as_ref().is_some_and(|session| session.app.introduction.is_some());
-        let replay_on_load = crate::boot_brand().replays_introduction();
-        if !should_auto_start_introduction(seen_key, has_introduction, tutorial.tutorial.is_some(), seen, replay_on_load, crate::host_introduction_suppressed()) {
+        let replay_on_load = semio_framework_os_renderer_wgpu_host_base::boot_brand().replays_introduction();
+        if !should_auto_start_introduction(seen_key, has_introduction, tutorial.tutorial.is_some(), seen, replay_on_load, semio_framework_os_renderer_wgpu_host_base::host_introduction_suppressed()) {
             return;
         }
         chrome.chrome_build.start_introduction();
     }
 
     /// 🎓️ Reconciles a live host-policy transition without marking an unseen introduction as answered.
-    pub(crate) fn reconcile_host_introduction_policy(&mut self, chrome: &mut ChromeState, tutorial: &TutorialState) {
-        let suppressed = crate::host_introduction_suppressed();
+    pub fn reconcile_host_introduction_policy(&mut self, chrome: &mut ChromeState, tutorial: &TutorialState) {
+        let suppressed = semio_framework_os_renderer_wgpu_host_base::host_introduction_suppressed();
         if chrome.chrome_build.introduction_host_suppressed == suppressed {
             return;
         }
@@ -71,7 +71,7 @@ impl DocumentState {
         }
     }
 
-    pub(super) fn advance_chrome_preferences_load_step(&mut self, chrome: &mut ChromeState, prefs: &mut PrefsState) {
+    pub fn advance_chrome_preferences_load_step(&mut self, chrome: &mut ChromeState, prefs: &mut PrefsState) {
         let phase = chrome.chrome_present.maintenance.load_phase;
         match phase {
             0 => {
@@ -79,7 +79,7 @@ impl DocumentState {
                 let custom_themes = custom_themes_from(&preferences);
                 prefs.appearance_id = resolve_appearance_id(&preferences);
                 prefs.locale_id = resolve_locale_id(env_lock("SEMIO_LOCKED_LOCALE"), &preferences, prefs.active_locale());
-                crate::interpreter::install_ui_engine_locale(prefs.active_locale());
+                semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(prefs.active_locale());
                 prefs.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| prefs.active_terminology().as_str().to_string());
                 prefs.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 chrome.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
@@ -103,14 +103,14 @@ impl DocumentState {
                 chrome.chrome_present.preferences_loaded = true;
                 chrome.chrome_present.maintenance.load_requested = false;
                 chrome.chrome_present.maintenance.load_phase = 0;
-                chrome.chrome_present.last_synced_preferences = Some(UiPrefsSnapshot::capture(chrome, prefs));
+                chrome.chrome_present.last_synced_preferences = Some(capture_ui_prefs_snapshot(chrome, prefs));
                 return;
             }
         }
         chrome.chrome_present.maintenance.load_phase = phase.saturating_add(1);
     }
 
-    pub(super) fn has_display_tabs(&self) -> bool {
+    pub fn has_display_tabs(&self) -> bool {
         self.session.as_ref().is_some_and(|s| !s.app.window_kinds.is_empty())
     }
 }

@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { afterEach, expect, it } from "vitest";
 import fixture from "../🧫️fixtures/🎬️row-action-admission/🔣️.json";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
-import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 import { LocalDocumentOwnerRegistryV1 } from "../../🧱️elements/🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 
 afterEach(cleanup);

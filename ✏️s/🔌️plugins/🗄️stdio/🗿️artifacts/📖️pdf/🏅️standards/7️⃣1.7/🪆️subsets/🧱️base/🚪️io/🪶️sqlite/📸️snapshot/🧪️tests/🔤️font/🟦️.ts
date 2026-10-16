@@ -7,7 +7,7 @@ import type { PdfFont, PdfFontDescriptor, PdfFontProgram, PdfSimpleEncoding, Pdf
 import { PdfProjection, PdfReader, type SqliteDatabase } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { pdfFontNumberColumns, writePdfFontDescriptor, readPdfFontDescriptor, writePdfFontProgram, readPdfFontProgram, writePdfEncoding, readPdfEncoding, writePdfToUnicode, readPdfToUnicode, writePdfCMap, readPdfCMap, writePdfCidFont, readPdfCidFont, writePdfFont, readPdfFont } from "../../🔤️font/🟦️.ts";
-import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import { parsePdfFont } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
 async function source(): Promise<{ descriptor: PdfFontDescriptor; programs: PdfFontProgram[]; encodings: PdfSimpleEncoding[]; unicode: PdfToUnicode; cmaps: PdfCMap[] }> {

@@ -6,7 +6,6 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox } from "@semio-tech/framework";
 import * as React from "react";
 import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
@@ -28,6 +27,7 @@ import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors } from "@semio-tech/ui-styling";
+import { ephemeralBox } from "../../../🫧️transient/🟦️.ts";
 import { CameraIcon, GripVerticalIcon } from "../🔣️Icons/🟦️.tsx";
 import { type Point, type Vector, type Plane, type Camera } from "./📐️geometry/🟦️.ts";
 // #endregion 🔌️Adapters

@@ -1,4 +1,4 @@
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 import { parseSemioChild, type ArtifactChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
 import { parseSemioKitConnection, parseSemioKitDesign, parseSemioKitPiece, parseSemioKitSnapshot, parseSemioKitType, type SemioKitConnection, type SemioKitDesign, type SemioKitPiece, type SemioKitSnapshot, type SemioKitType } from "../📸️snapshot/🟦️.ts";

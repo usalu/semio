@@ -5,7 +5,7 @@ extern crate semio_framework_os_kernel as store;
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp};
+use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, NeedsLabel, Plugin, PluginApp, PluginBuilder};
 
 //#region 🧮️GuestHeapWitness
 //#endregion 🧮️GuestHeapWitness
@@ -69,7 +69,7 @@ fn flow_extension_declarations() -> Result<Vec<FlowExtensionDeclaration>, Plugin
 
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<ProceduralApps>::builder("procedural")
+    let mut builder = PluginBuilder::<NeedsLabel, ProceduralApps>::new("procedural")
         .label("Procedural")
         .version("0.1.0")
         .package_id("semio:procedural")

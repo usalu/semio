@@ -11,7 +11,7 @@ export type ProtectedActorSelectionV1 = Readonly<{generationId:string;pluginId:s
 const assets=["manifest","component","descriptor","browser-actor"] as const;
 const claim=(bytes:Uint8Array):ProtectedActorByteClaimV1=>({sha256:createHash("sha256").update(bytes).digest("hex"),byteLength:bytes.byteLength});
 const same=(a:ProtectedActorByteClaimV1,b:ProtectedActorByteClaimV1)=>a.sha256===b.sha256&&a.byteLength===b.byteLength;
-const fail=():never=>{throw Error("protected actor execution: selected authenticated byte join refused");};
+function fail():never {throw Error("protected actor execution: selected authenticated byte join refused");}
 
 /** 🔗️ Joins one server-selected private document target to its current same-package original producer. */
 export function joinProtectedActorResponsesV1(selected:ProtectedActorSelectionV1,inputs:readonly ProtectedActorResponseInputV1[],hubOrigin:string){

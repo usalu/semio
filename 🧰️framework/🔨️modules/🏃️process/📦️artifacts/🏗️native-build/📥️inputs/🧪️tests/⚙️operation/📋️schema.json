@@ -7,8 +7,8 @@
   "properties": {
     "cases": {
       "type": "array",
-      "minItems": 16,
-      "maxItems": 16,
+      "minItems": 17,
+      "maxItems": 17,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -36,7 +36,8 @@
               "descendant-error",
               "descendant-undefined",
               "detached-continuation",
-              "port-undefined"
+              "port-undefined",
+              "cancelled-before"
             ]
           },
           "failed": {

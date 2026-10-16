@@ -15,7 +15,7 @@ use super::*;
 /// (`mutation.invariant`) or region (`mutation.clamped`) is named after "Change refused by the hub", else only that.
 /// The producer's English `reason` never reaches the human. Contract:
 /// [`CommandRejectionV1`](../../../../../../🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json).
-pub(crate) fn command_rejection_notice(code: store_sync::sync::CommandRejectionCode, messages: &[store_sync::os_spr::MutationMessage], locale: Locale) -> (&'static str, String, semio_framework::Severity) {
+pub fn command_rejection_notice(code: store_sync::sync::CommandRejectionCode, messages: &[store_sync::os_spr::MutationMessage], locale: Locale) -> (&'static str, String, semio_framework::Severity) {
     let de = locale == Locale::De;
     if let Some((code, key, severity)) = local_command_rejection_notice(code) {
         return (code, shell_chrome_string(key, de).to_string(), severity);

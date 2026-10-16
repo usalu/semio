@@ -1,0 +1,334 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/compositions/stdio/composition/contribution/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "artifact",
+    "package",
+    "order",
+    "selections",
+    "apps",
+    "nativeFactories",
+    "openTargets",
+    "catalogPackage",
+    "symbolPackages",
+    "playgrounds",
+    "mutationDescriptors",
+    "mutationCoordinates"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.composition-contribution/v1"
+    },
+    "artifact": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "package": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "selections": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "order",
+          "variant",
+          "role",
+          "type",
+          "factory",
+          "mutationRoster",
+          "laws"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "variant": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "role": {
+            "enum": [
+              "editor",
+              "viewer"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          },
+          "factory": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          },
+          "mutationRoster": {
+            "type": "boolean"
+          },
+          "laws": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "editing",
+                  "sqliteSnapshot"
+                ],
+                "properties": {
+                  "editing": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  },
+                  "sqliteSnapshot": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "editor"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "laws": {
+                  "type": "object"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "laws": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "openTargets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "factoryId",
+          "role",
+          "surfaceId"
+        ],
+        "properties": {
+          "factoryId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surfaceId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "catalogPackage": {
+      "description": "🧩️ The crate whose `contribution()` the full catalog selects instead of `package`'s, or null when `package` is its own catalog.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "symbolPackages": {
+      "description": "🔤️ The further crates the contribution's app types, factories and mutation descriptors may name.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    },
+    "playgrounds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "variant",
+          "app",
+          "aliases",
+          "ports"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "variant": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "app": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "ports": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "react",
+              "wgpu"
+            ],
+            "properties": {
+              "react": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              "wgpu": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              }
+            }
+          }
+        }
+      }
+    },
+    "mutationDescriptors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "snapshot",
+          "mutation"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "snapshot": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          },
+          "mutation": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          }
+        }
+      }
+    },
+    "mutationCoordinates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact",
+          "standard",
+          "subset",
+          "surface",
+          "owner",
+          "prefix"
+        ],
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "standard": {
+            "type": "string",
+            "minLength": 1
+          },
+          "subset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surface": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prefix": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "nativeFactories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "factoryId",
+          "definitionPath",
+          "protocolPath"
+        ],
+        "properties": {
+          "factoryId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definitionPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "protocolPath": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

@@ -31,7 +31,7 @@ impl DockTabNode {
         !self.children.is_empty()
     }
 
-    pub(crate) fn contains(&self, id: &str) -> bool {
+    pub fn contains(&self, id: &str) -> bool {
         self.id == id || self.children.iter().any(|child| child.contains(id))
     }
 }

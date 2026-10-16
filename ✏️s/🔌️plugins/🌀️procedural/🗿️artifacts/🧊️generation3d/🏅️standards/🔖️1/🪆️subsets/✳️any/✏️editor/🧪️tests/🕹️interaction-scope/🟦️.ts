@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { resolveUiDirtyScope, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtyScope } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️.ts";
+import {
+  resolveUiDirtyScope,
+  uiDirtyScopeWantsCatalogue,
+  uiDirtyScopeWantsPanelBody,
+  uiDirtyScopeWantsSection,
+  uiDirtyScopeWantsWindowBody,
+  type UiDirtyScope
+} from "@semio-tech/framework/kernel";
 
 type InteractionScopeRow = { readonly verb: string; readonly windowBodies: readonly string[]; readonly panelBodies: readonly string[]; readonly measures: boolean };
 type InteractionScopeRole = {

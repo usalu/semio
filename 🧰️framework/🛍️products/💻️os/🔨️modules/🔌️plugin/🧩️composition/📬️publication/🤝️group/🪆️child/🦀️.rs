@@ -1,42 +1,56 @@
-use crate::app_emission::ChildEmit;
-use super::*;
-use crate::component::private_child_input::PrivateChildGenesisInput;
+use semio_framework_plugin_decl_emission::ChildEmit;
+use semio_framework::kernel::ActorId;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+use semio_framework_plugin_decl_views::child_view::{ChildContentRetainers, MemberKeyRef};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use std::mem::ManuallyDrop;
+use store::{MemberFactory, SpaceMember};
+use semio_framework_plugin_decl_emission::child_emit_preparation::OwnedChildEmit;
+use semio_framework_plugin_composition_emission::metadata::private_child_metadata::{PrivateChildMemberMetadata, PrivateChildMemberMetadataIssuer, PrivateChildMemberMetadataSource};
+use semio_framework_value::{RetirementDemand, ValueError};
+use crate::group::private_publication_group::{child, owner};
+use semio_framework_plugin_composition_emission::private_child_input::PrivateChildGenesisInput;
 use semio_framework_job::{Generation, OperationId};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
-pub(crate) struct PrivateChildPublicationInput {
-    source: ManuallyDrop<Option<OwnedChildEmit>>,
-    issuer: PrivateChildMemberMetadataIssuer,
-    metadata: Option<PrivateChildMemberMetadata>,
-    genesis: PrivateChildGenesisInput,
-    pub(crate) request: ManuallyDrop<Option<store::MemberOpenRequest>>,
-    declaration: usize,
+#[doc(hidden)]
+pub struct PrivateChildPublicationInput {
+    pub source: ManuallyDrop<Option<OwnedChildEmit>>,
+    pub issuer: PrivateChildMemberMetadataIssuer,
+    pub metadata: Option<PrivateChildMemberMetadata>,
+    pub genesis: PrivateChildGenesisInput,
+    pub request: ManuallyDrop<Option<store::MemberOpenRequest>>,
+    pub declaration: usize,
     declaration_count: Option<usize>,
     declaration_pointer: Option<usize>,
-    pub(crate) schema: Option<&'static str>,
-    framed: bool,
-    ready: bool,
-    pub(crate) closing: bool,
+    pub schema: Option<&'static str>,
+    pub framed: bool,
+    pub ready: bool,
+    pub closing: bool,
 }
 pub(crate) struct PrivateChildPublicationInputParts {
-    pub(crate) source: OwnedChildEmit,
-    pub(crate) metadata: PrivateChildMemberMetadata,
-    pub(crate) request: Option<store::MemberOpenRequest>,
+    pub source: OwnedChildEmit,
+    pub metadata: PrivateChildMemberMetadata,
+    pub request: Option<store::MemberOpenRequest>,
 }
 impl PrivateChildPublicationInput {
     /// 🪆️ Keeps original child metadata and its typed source inline until exact private admission.
-    pub(crate) fn new(source: OwnedChildEmit) -> Self {
+    pub fn new(source: OwnedChildEmit) -> Self {
         Self { source: ManuallyDrop::new(Some(source)), issuer: PrivateChildMemberMetadataIssuer::new(), metadata: None, genesis: PrivateChildGenesisInput::default(), request: ManuallyDrop::new(None), declaration: 0, declaration_count: None, declaration_pointer: None, schema: None, framed: false, ready: false, closing: false }
     }
-    pub(crate) fn source(&self) -> Option<&ChildEmit> { self.source.as_ref()?.metadata() }
-    pub(crate) fn ready(&self) -> bool { self.ready && !self.closing }
-    fn metadata_source<'a>(&'a self, parent_id: &'a str, parent_dialect: &'a ArtifactDialect, existing: Option<&'a ArtifactRef>, actor: &'a str, transaction: Option<&'a protocol::TransactionRef>, group_id: Option<&'a str>) -> Result<PrivateChildMemberMetadataSource<'a>, ValueError> {
+    pub fn source(&self) -> Option<&ChildEmit> { self.source.as_ref()?.metadata() }
+    pub fn ready(&self) -> bool { self.ready && !self.closing }
+    pub fn metadata_source<'a>(&'a self, parent_id: &'a str, parent_dialect: &'a ArtifactDialect, existing: Option<&'a ArtifactRef>, actor: &'a str, transaction: Option<&'a protocol::TransactionRef>, group_id: Option<&'a str>) -> Result<PrivateChildMemberMetadataSource<'a>, ValueError> {
         let source = self.source().ok_or_else(|| input_error("private child source has already transferred"))?;
         let expected = source.genesis.as_ref().map(|genesis| &genesis.reference).or(existing).ok_or_else(|| input_error("private child requires its declared existing member or exact genesis"))?;
         Ok(PrivateChildMemberMetadataSource { expected, parent_id, parent_dialect, key: MemberKeyRef { owner: &source.owner, slot: &source.slot, child_id: &source.child_id }, actor, transaction, group_id })
     }
     /// 📐️ Borrows each next complete metadata, URI, or page allocation before any input transfer.
-    pub(crate) fn next_capacity_byte_demand(&self, parent_id: &str, parent_dialect: &ArtifactDialect, existing: Option<&ArtifactRef>, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: Option<&str>) -> Result<usize, ValueError> {
+    pub fn next_capacity_byte_demand(&self, parent_id: &str, parent_dialect: &ArtifactDialect, existing: Option<&ArtifactRef>, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: Option<&str>) -> Result<usize, ValueError> {
         if self.ready || self.closing { return Ok(0); }
         if self.metadata.is_none() {
             return self.issuer.next_capacity_byte_demand(self.metadata_source(parent_id, parent_dialect, existing, actor, transaction, group_id)?).ok_or_else(|| input_error("private metadata lost its next field birth"));
@@ -47,7 +61,7 @@ impl PrivateChildPublicationInput {
         self.genesis.next_capacity_byte_demand(store::MemberGenesisEnvelopeSource { schema: self.schema.unwrap(), expected: &parts.expected, owner: &parts.owner, initial_pack: &genesis.initial_pack })
     }
     /// 🪜️ Processes one original metadata or canonical genesis input phase under independent work and release grants.
-    pub(crate) fn advance(&mut self, parent_id: &str, parent_dialect: &ArtifactDialect, existing: Option<&ArtifactRef>, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: Option<&str>, declarations: &'static [store::MemberOpenDeclaration], operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, parent_id: &str, parent_dialect: &ArtifactDialect, existing: Option<&ArtifactRef>, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: Option<&str>, declarations: &'static [store::MemberOpenDeclaration], operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_copy_bytes: grant.maximum_copy_bytes.min(64), ..grant };
         let paused = || RetainedCloneStep::Progress(Default::default());
         if grant.maximum_items == 0 { return Ok(paused()); }
@@ -99,11 +113,11 @@ impl PrivateChildPublicationInput {
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
     /// 🧳️ Hands off only original ready owners; opening remains a separately funded factory phase.
-    pub(crate) fn take_ready(&mut self, grant: RetainedCloneGrant) -> Option<PrivateChildPublicationInputParts> {
+    pub fn take_ready(&mut self, grant: RetainedCloneGrant) -> Option<PrivateChildPublicationInputParts> {
         if grant.maximum_items == 0 || !self.ready || self.closing || !self.genesis.terminal_is_empty() { return None; }
         Some(PrivateChildPublicationInputParts { source: self.source.take()?, metadata: self.metadata.take()?, request: self.request.take() })
     }
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let mut demand = if let Some(request) = self.request.as_ref() {
             RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(body)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()? }
@@ -116,7 +130,7 @@ impl PrivateChildPublicationInput {
         Ok(demand)
     }
     /// ♻️ Retires exact retained request, metadata and typed source under their independently supplied grant.
-    pub(crate) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -156,12 +170,14 @@ impl PrivateChildPublicationInput {
         }
         Ok(RetainedCloneStep::Complete(empty))
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.issuer.terminal_is_empty() && self.genesis.terminal_is_empty() }
+    pub fn terminal_is_empty(&self) -> bool { self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.issuer.terminal_is_empty() && self.genesis.terminal_is_empty() }
 }
 impl Drop for PrivateChildPublicationInput { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "private child input retains each exact original owner until guarded handoff or bounded close"); } }
-fn structural() -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }) }
+#[doc(hidden)]
+pub fn structural() -> RetainedCloneStep { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }) }
 fn input_error(message: &str) -> ValueError { ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, message) }
 fn take_reference(value: &mut ArtifactRef) -> ArtifactRef { ArtifactRef { artifact_id: std::mem::take(&mut value.artifact_id), dialect: ArtifactDialect { artifact_kind: std::mem::take(&mut value.dialect.artifact_kind), standard: std::mem::take(&mut value.dialect.standard), subset: std::mem::take(&mut value.dialect.subset) } } }
 
 
-fn input_pending(step: RetainedCloneStep) -> RetainedCloneStep { match step { RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress), progress => progress } }
+#[doc(hidden)]
+pub fn input_pending(step: RetainedCloneStep) -> RetainedCloneStep { match step { RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress), progress => progress } }

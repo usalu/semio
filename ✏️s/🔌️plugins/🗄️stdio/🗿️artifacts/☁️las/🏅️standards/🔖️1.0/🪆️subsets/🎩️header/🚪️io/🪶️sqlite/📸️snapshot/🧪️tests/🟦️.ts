@@ -6,8 +6,8 @@ import {Database} from "bun:sqlite";
 import fixture from "./🧫️fixtures/🔣️.json";
 import type {LasSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {LAS_SQLITE_SCHEMA,lasSnapshotToSqliteDatabase,lasSnapshotFromSqliteDatabase,lasSnapshotValidateSqliteSubset} from "../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 import {lasSnapshotFixture as snapshot} from "🧰️support/🟦️.ts";
 const f=(index:number)=>({bits:BigInt("0x"+fixture.float64Bits[index%fixture.float64Bits.length]!)});
@@ -57,8 +57,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {lasSnapshotToSqliteDatabase as normSemanticProject,lasSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 
 
 test("LAS controlled cohort literal fields and every raw word have independent SQLite and DataView identity",async()=>{

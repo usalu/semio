@@ -24,7 +24,7 @@ import {
   uiDirtyScopeWantsSection,
   uiDirtyScopeWantsWindowBody,
   type UiDirtySection
-} from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+} from "../../../../../../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
 import { type ExtraWindowInstance } from "../../🐚️Shell/🟦️.tsx";
 
 //#region ShellHelpers
@@ -402,7 +402,7 @@ export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: Ui
   };
 }
 
-/** 🐢️ The four selection predicates are the KERNEL's (`🎠️kernel/🟦️.ts`), whose Rust twin the wgpu
+/** 🐢️ The four selection predicates are the KERNEL's (`🎠️kernel`), whose Rust twin the wgpu
  * shell's `refresh_ui` reads from the same fixture — one implementation per language, never one per
  * renderer, so the two shells cannot drift into different ideas of what a settle dirtied. */
 const uiRefreshWantsWindow = uiDirtyScopeWantsWindowBody;

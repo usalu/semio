@@ -1,4 +1,4 @@
-import { interactivityArtifactSubmitFailures } from "../../../../../../../../📜️script.ts";
+import { interactivityArtifactSubmitFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity artifact submit policy assertions. */
 export function interactivityArtifactSubmitSelfTests(): void {

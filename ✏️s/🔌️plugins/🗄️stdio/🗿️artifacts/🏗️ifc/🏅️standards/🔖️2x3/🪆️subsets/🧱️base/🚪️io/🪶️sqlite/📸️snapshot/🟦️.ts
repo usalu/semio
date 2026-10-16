@@ -1,7 +1,7 @@
 /** 🏭️ IFC2x3 exact decimal/EDM relations. */
 import type {Ifc2x3Snapshot,Part21Value,Part21Decimal,Part21Instance,Part21Entity,Ifc2x3EdmPreamble} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueByteLengthControlled,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteRow,SqliteDatabase,SqliteValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueByteLengthControlled,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteRow,SqliteDatabase,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
 export const IFC2X3_SQLITE_SCHEMA=`CREATE TABLE ifc2x3_document (
   id INTEGER PRIMARY KEY,
   schema TEXT NOT NULL,

@@ -133,18 +133,18 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   type AppFrameValue = import("../../🔨️modules/🪢️wire-contracts/🟦️.ts").AppFrameValue;
   type ArtifactPresencePeer = import("../../../../🔨️modules/📡️replication/🟦️.ts").ArtifactPresencePeer;
   type BinaryBackboneMessage = import("../../🔨️modules/🧵️backbone/🟦️.ts").BinaryBackboneMessage;
-  type Conflict = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").Conflict;
-  type DispatchReport = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").DispatchReport;
+  type Conflict = import("../../../../🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts").Conflict;
+  type DispatchReport = import("../../../../🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts").DispatchReport;
   type LocalInteractionIdentity = import("../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionIdentity;
   type LocalInteractionQueryReply = import("../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts").LocalInteractionQueryReply;
   type LocalInteractionQueryToken = import("../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionQueryToken;
   type MediaContract = import("../../🔨️modules/🧵️backbone/🟦️.ts").MediaContract;
-  type MergeReport = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").MergeReport;
+  type MergeReport = import("../../../../🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts").MergeReport;
   type OsWorkflow = import("../../🔨️modules/🧵️backbone/🟦️.ts").OsWorkflow;
   type OsWorkflowNode = import("../../🔨️modules/🧵️backbone/🟦️.ts").OsWorkflowNode;
   type PackInteger = import("../../🔨️modules/🎁️packs/🟦️.ts").PackInteger;
   type PackValue = import("../../🔨️modules/🎁️packs/🟦️.ts").PackValue;
-  type TurnOutcome = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").TurnOutcome;
+  type TurnOutcome = import("../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts").TurnOutcome;
 
   const { describe, expect, it } = vitest;
 

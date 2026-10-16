@@ -19,8 +19,8 @@ use super::*;
 /// for every app-declared Mac-scoped binding), while `format_keybinding_shortcut` — fixed by W7a at
 /// the same file — painted `⌘️`. Two functions, one question, two answers
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-transport-residual.md` §3).
-pub(crate) fn command_host_platform() -> semio_framework::manifest::Platform {
-    crate::host_platform()
+pub fn command_host_platform() -> semio_framework::manifest::Platform {
+    semio_framework_os_renderer_wgpu_host_base::host_platform()
 }
 
 //#region ⌨️WindowScope
@@ -28,7 +28,7 @@ pub(crate) fn command_host_platform() -> semio_framework::manifest::Platform {
 /// `chordCarriesAcceleratorV1`. The rule the wgpu shell's own [`is_reserved_shell_chord`] already
 /// applies: a bare key belongs to whichever surface has focus, an accelerator chord the shell's
 /// chrome answers is never an app's to shadow.
-pub(crate) fn chord_carries_accelerator_v1(chord: &str) -> bool {
+pub fn chord_carries_accelerator_v1(chord: &str) -> bool {
     let lowered = chord.to_ascii_lowercase();
     let segments: Vec<&str> = lowered.split('+').collect();
     segments.split_last().map(|(_, modifiers)| modifiers.iter().any(|segment| matches!(*segment, "mod" | "ctrl" | "meta" | "cmd"))).unwrap_or(false)
@@ -36,7 +36,7 @@ pub(crate) fn chord_carries_accelerator_v1(chord: &str) -> bool {
 
 /// 🛡️ The chords the shell's own chrome keeps out of the app-keybinding loop, after the user's
 /// overrides — twin of React's `reservedShellChordsV1`.
-pub(crate) fn reserved_shell_chords_v1(shell_table: &[(String, String)], overrides: &[(String, String)]) -> std::collections::BTreeSet<String> {
+pub fn reserved_shell_chords_v1(shell_table: &[(String, String)], overrides: &[(String, String)]) -> std::collections::BTreeSet<String> {
     let mut reserved = std::collections::BTreeSet::new();
     for (control_id, keys) in shell_table {
         let keys = overrides.iter().find(|(id, _)| id == control_id).map_or(keys.as_str(), |(_, keys)| keys.as_str());
@@ -53,7 +53,7 @@ pub(crate) fn reserved_shell_chords_v1(shell_table: &[(String, String)], overrid
 /// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
 /// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
 /// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
-pub(crate) fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
+pub fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
     let mut want_mod = false;
     let mut want_shift = false;
     let mut want_alt = false;
@@ -110,7 +110,7 @@ impl DocumentState {
     /// 🔌️ The current session's program manifest (for its `commands: Vec<CommandDefinition>` — Plugin-scope
     /// commands apply whenever any of that plugin's apps is focused, mirroring `os-shell.tsx`'s
     /// `activePluginManifest`).
-    pub(super) fn active_plugin_manifest(&self, plugins: &PluginState) -> Option<&semio_framework::PluginManifest> {
+    pub fn active_plugin_manifest(&self, plugins: &PluginState) -> Option<&semio_framework::PluginManifest> {
         let session = self.session.as_ref()?;
         plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| &entry.manifest)
     }
@@ -124,7 +124,7 @@ impl DocumentState {
     /// none of the three has any persisted shell state yet (no introduction-playback step, no named
     /// `UiTheme` list, no desktop/tablet layout flag) — inventing that storage is out of this region's
     /// scope (`shell::ShellTypes` owns `ShellState`'s fields and is off-limits this wave).
-    pub(crate) fn build_os_commands(&self, chrome: &ChromeState) -> Vec<semio_framework::CommandDefinition> {
+    pub fn build_os_commands(&self, chrome: &ChromeState) -> Vec<semio_framework::CommandDefinition> {
         use semio_framework::manifest::Platform;
         use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
         let terminology_options: Vec<ActionArgOption> =
@@ -183,7 +183,7 @@ impl DocumentState {
     /// 🎛️ Every command visible for the current session — os built-ins, the active plugin's Plugin-scope
     /// commands, and the app's App-/active-Mode-scope commands. The wgpu mirror of `os-shell.tsx`'s
     /// `resolveCommands(buildOsCommands(...), activePluginManifest, session?.app, activeModeId)` call site.
-    pub(crate) fn resolved_commands(&self, chrome: &ChromeState, plugins: &PluginState) -> Vec<ResolvedCommand> {
+    pub fn resolved_commands(&self, chrome: &ChromeState, plugins: &PluginState) -> Vec<ResolvedCommand> {
         let os_commands = self.build_os_commands(chrome);
         let Some(session) = self.session.as_ref() else {
             return os_commands.into_iter().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Os)).collect();
@@ -205,7 +205,7 @@ impl DocumentState {
     /// - zero args → fires immediately (os commands locally, everything else across the command boundary);
     /// - any command carrying args → React's single `…`-suffixed row that redirects to the
     ///   command's staged form (`command-form:`) rather than firing a guess.
-    pub(crate) fn command_search_items(&self, chrome: &ChromeState, plugins: &PluginState, prefs: &PrefsState) -> Vec<SearchPaletteItem> {
+    pub fn command_search_items(&self, chrome: &ChromeState, plugins: &PluginState, prefs: &PrefsState) -> Vec<SearchPaletteItem> {
         let mut items = Vec::new();
         for entry in self.resolved_commands(chrome, plugins) {
             let ResolvedCommand { definition, address } = entry;
@@ -260,7 +260,7 @@ impl DocumentState {
     /// could neither prove nor disprove a German session from outside the canvas
     /// (`📓️wgpu-status-a11y-i18n-2026-09-13.md` §5.3, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     /// Printed once per RESOLUTION — a preferences load and a `setLocale` — never per frame.
-    pub(crate) fn trace_resolved_locale(&self, reason: &str, chrome_state: &ChromeState, prefs: &PrefsState) {
+    pub fn trace_resolved_locale(&self, reason: &str, chrome_state: &ChromeState, prefs: &PrefsState) {
         let is_de = prefs.locale_id == "de";
         let chrome = ["overlay.search.title", "overlay.find.title", "example.overlay.title", "common.cancel", "common.close", "common.focus", "common.loading", "nodeGraph.fitGraph", "contextMenu.goHome"]
             .iter()
@@ -278,7 +278,7 @@ impl DocumentState {
     /// `build_settings_theme_ui` commands that never got a `CommandDefinition` (see that fn's own
     /// `os.setThemeId`-only doc comment) — the single label source `note_shell_command_action` call
     /// sites below draw from, so a chrome label edit never drifts from what the history panel shows.
-    pub(crate) fn shell_command_label_for_setting(&self, command_id: &str, chrome: &ChromeState, prefs: &PrefsState) -> String {
+    pub fn shell_command_label_for_setting(&self, command_id: &str, chrome: &ChromeState, prefs: &PrefsState) -> String {
         match command_id {
             "os.resetThemeId" => shell_chrome_string("settings.theme.reset", prefs.locale_id == "de").to_string(),
             "os.deleteThemeId" => shell_chrome_string("settings.theme.delete", prefs.locale_id == "de").to_string(),
@@ -286,7 +286,7 @@ impl DocumentState {
         }
     }
 
-    pub(crate) fn arm_control_command(&mut self, control_id: &str, detail: Option<Value>, settle: &mut SettleState, plugins: &PluginState, prefs: &PrefsState) {
+    pub fn arm_control_command(&mut self, control_id: &str, detail: Option<Value>, settle: &mut SettleState, plugins: &PluginState, prefs: &PrefsState) {
         let Some((command_id, label)) = shell_command_for_control(control_id, prefs.locale_id == "de") else {
             return;
         };
@@ -301,7 +301,7 @@ impl DocumentState {
     /// categories, the five Settings leaves, the Marketplace leaf, each mode tool's leaf and the chat
     /// transcript. Derived from `default_dock`'s own sources, so a leaf can never be dockable without
     /// a body or carry a body without being dockable.
-    pub(crate) fn shell_owned_panel_leaves(&self, chrome: &ChromeState, plugins: &PluginState, prefs: &PrefsState) -> Vec<String> {
+    pub fn shell_owned_panel_leaves(&self, chrome: &ChromeState, plugins: &PluginState, prefs: &PrefsState) -> Vec<String> {
         let mut leaves: Vec<String> = self.command_category_tabs(chrome, plugins).into_iter().map(|tab| tab.id).collect();
         leaves.push(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.to_string());
         leaves.push(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID.to_string());
@@ -310,7 +310,7 @@ impl DocumentState {
         leaves.push(FRAMEWORK_SYNC_PANEL_TAB_ID.to_string());
         leaves.push(FRAMEWORK_TASK_MANAGER_PANEL_ID.to_string());
         leaves.push(FRAMEWORK_CHAT_PANEL_ID.to_string());
-        leaves.push(crate::hub_connection::FRAMEWORK_HUB_PANEL_ID.to_string());
+        leaves.push(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID.to_string());
         leaves.extend(self.tool_panel_tabs(prefs).into_iter().map(|tab| tab.id));
         leaves
     }
@@ -326,8 +326,8 @@ impl DocumentState {
     /// arm to attach a plain `ActionDescriptor` to (only the ⌘️K search's `"os-command:"` string redirect
     /// can reach `apply_os_command` for it), so it renders as a pointer to command search instead of a
     /// non-functional button.
-    #[cfg(test)]
-    pub(crate) fn build_command_panel_ui(&self, chrome: &ChromeState, plugins: &PluginState, prefs: &PrefsState) -> UiNode {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn build_command_panel_ui(&self, chrome: &ChromeState, plugins: &PluginState, prefs: &PrefsState) -> UiNode {
         let resolved: Vec<_> = self.resolved_commands(chrome, plugins).into_iter().filter(|entry| entry.definition.in_palette).collect();
         let categories = command_categories(&resolved);
         let mut sections = Vec::new();
@@ -343,7 +343,7 @@ impl DocumentState {
 /// 🎛️ Merges os-built-in, Plugin-scope, App-scope, and active-Mode-scope commands into one list — the
 /// wgpu mirror of `os-shell.tsx`'s `resolveCommands`. A `Mode`-scope command only resolves when
 /// `active_mode_id`'s `ModeDefinition.commands` references it, exactly like the React source.
-pub(crate) fn resolve_commands(os_commands: Vec<semio_framework::CommandDefinition>, plugin_manifest: Option<&semio_framework::PluginManifest>, plugin_id: &str, app: &AppDefinition, active_mode_id: &str) -> Vec<ResolvedCommand> {
+pub fn resolve_commands(os_commands: Vec<semio_framework::CommandDefinition>, plugin_manifest: Option<&semio_framework::PluginManifest>, plugin_id: &str, app: &AppDefinition, active_mode_id: &str) -> Vec<ResolvedCommand> {
     let mut resolved: Vec<ResolvedCommand> = os_commands.into_iter().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Os)).collect();
     if let Some(manifest) = plugin_manifest {
         resolved.extend(manifest.commands.iter().cloned().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id: plugin_id.to_string() })));
@@ -359,7 +359,7 @@ pub(crate) fn resolve_commands(os_commands: Vec<semio_framework::CommandDefiniti
 /// `"named-layout"` -> `"Named Layout"`) — the wgpu mirror of `os-shell.tsx`'s `titleizeCommandCategory`.
 /// wgpu has no `ui.settings.tab.*` translation table to special-case chrome-known ids against, so every
 /// category (chrome-known or app/plugin-invented) goes through this uniformly.
-pub(crate) fn command_category_label(category: &str) -> String {
+pub fn command_category_label(category: &str) -> String {
     category
         .split(|c: char| c == '-' || c == '_')
         .filter(|segment| !segment.is_empty())
@@ -376,7 +376,7 @@ pub(crate) fn command_category_label(category: &str) -> String {
 
 /// 🎛️ Ordered, deduped `(category id, display label)` pairs derived from whatever commands actually
 /// resolved — the wgpu mirror of `os-shell.tsx`'s `commandCategories`.
-pub(crate) fn command_categories(commands: &[ResolvedCommand]) -> Vec<(String, String)> {
+pub fn command_categories(commands: &[ResolvedCommand]) -> Vec<(String, String)> {
     let mut seen = std::collections::HashSet::new();
     let mut categories = Vec::new();
     for entry in commands {
@@ -396,7 +396,7 @@ pub(crate) fn command_categories(commands: &[ResolvedCommand]) -> Vec<(String, S
 /// ever sees it — see the plugin crate's universal command-recording mechanism). `detail` is the
 /// caller-supplied JSON payload (e.g. `{"value": ...}`/`{"windowId": ...}`), left out of `args`
 /// entirely when `None` rather than serialized as `null`.
-pub(crate) fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<Value>) -> ActionDescriptor {
+pub fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<Value>) -> ActionDescriptor {
     let mut args = serde_json::json!({ "commandId": command_id, "label": label });
     if let Some(detail) = detail {
         args["detail"] = detail;
@@ -417,7 +417,7 @@ pub(crate) fn note_shell_command_action(controller_id: &str, command_id: &str, l
 /// NOWHERE (`🏛️ShellHost/🟦️.tsx` declares no `shell.windowMaximize` command at all). This renderer
 /// used to note one, so `window-cap-focus` journaled a `noteShellCommand` React never emits
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/w12c-parity-run-19/steps.json` step 16).
-pub(crate) fn shell_command_for_control(control_id: &str, is_de: bool) -> Option<(&'static str, String)> {
+pub fn shell_command_for_control(control_id: &str, is_de: bool) -> Option<(&'static str, String)> {
     if control_id.starts_with("dock.tab.") && control_id.ends_with(".close") {
         return Some(("shell.windowClose", shell_chrome_string("common.close", is_de).to_string()));
     }

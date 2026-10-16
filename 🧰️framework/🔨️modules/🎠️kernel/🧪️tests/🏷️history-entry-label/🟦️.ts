@@ -9,7 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { LocalizedLabel } from "../../../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
-import { historyEntryLabelText } from "../../🟦️.ts";
+import { historyEntryLabelText } from "../../🕰️history/🟦️.ts";
 
 const filled = { native: { en: "Add Widget", de: "Widget hinzufügen" }, reuse: { en: "Add Part", de: "Teil hinzufügen" } } as unknown as LocalizedLabel;
 

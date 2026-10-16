@@ -1,8 +1,8 @@
 /** 📖️ PDF1.4's authored page dimensions and ordered text entities. */
 import type { PdfSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteTables, artifactSqliteDocument, artifactSqliteInteger, artifactSqliteText, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import { encodeIeee754Cells, readBinary64, type Ieee754Column } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteTables, artifactSqliteDocument, artifactSqliteInteger, artifactSqliteText, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import { encodeIeee754Cells, readBinary64, type Ieee754Column } from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 🏛️ Language-neutral handwritten PDF1.4 entity schema. */
 export const PDF14_SQLITE_SCHEMA = `CREATE TABLE pdf14_document (id INTEGER PRIMARY KEY CHECK (id = 1), schema TEXT NOT NULL);

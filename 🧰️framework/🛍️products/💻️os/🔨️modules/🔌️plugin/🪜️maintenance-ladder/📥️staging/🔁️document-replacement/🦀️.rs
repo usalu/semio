@@ -2,7 +2,15 @@
 use super::*;
 
 /// 🔁️ Shared document replacement invalidates concrete window transients and retains displaced owners.
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
+    /// 🪟️ Preserves the caller's original full policy through every displaced document generation.
+    pub(crate) fn retire_document_windows_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+        let cursor = if closing { &mut self.close.close_window_retirement_cursor } else { &mut self.maintenance.maintenance_window_retirement_cursor };
+        retire_document_window_registry_step(&mut self.stores.retired_window_transient_stores, cursor, grant, closing)
+    }
+}
+
+impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     pub(crate) fn prepare_document_window_reset(&self) -> Result<WindowTransientOwnerRegistry, Fault> {
         if self.close.close_started {
             return Err(plugin_sdk_fault("a closing app cannot replace its document window owners"));
@@ -14,12 +22,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let mut replacement = WindowTransientOwnerRegistry::for_document_generation(generation);
         A::register_window_transient_owners(&mut replacement)?;
         Ok(replacement)
-    }
-
-    /// 🪟️ Preserves the caller's original full policy through every displaced document generation.
-    pub(crate) fn retire_document_windows_step(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
-        let cursor = if closing { &mut self.close.close_window_retirement_cursor } else { &mut self.maintenance.maintenance_window_retirement_cursor };
-        retire_document_window_registry_step(&mut self.stores.retired_window_transient_stores, cursor, grant, closing)
     }
 
     /// 📏️ Quotes the next displaced document window retirement under the same cursor [`Self::retire_document_windows_step`] advances.

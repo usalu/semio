@@ -182,7 +182,7 @@ async fn fresh_program(actor: &str) -> ToyApp {
 /// ✏️ One document edit authored through the program's store, as a committed gesture leaves it.
 async fn author_edit(app: &mut ToyApp, op: &Value) {
     crate::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, &mut identity).await).expect("the edit applies");
-    app.refresh_cache().await.expect("the history backfills the edit");
+    app.render_ctx().refresh_cache().await.expect("the history backfills the edit");
 }
 
 /// ⏯️ Runs one fixture step: a document edit, or a history-edit verb through the session laws' own runner; a finalized
@@ -196,7 +196,7 @@ async fn route_step(findings: &mut RouteFindings, app: &mut ToyApp, fixture: &Va
     }
     if step.get("commit").is_some() {
         pump_until(app, "the finalize retires", |app| !app.time_travel.has_pending_work()).await;
-        app.refresh_cache().await.expect("the history backfills the finalized history edit");
+        app.render_ctx().refresh_cache().await.expect("the history backfills the finalized history edit");
     }
 }
 
@@ -250,7 +250,7 @@ async fn deliver(batches: Vec<BackboneMessage>, port: &mut MemoryBackbone, to: &
     }
     to.tick_backbone(&mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the reader ingests the batch");
     pump_until(to, "the reader adopts the batch", |app| app.stores.store.reprojection_progress().is_none()).await;
-    to.refresh_cache().await.expect("the reader's history backfills");
+    to.render_ctx().refresh_cache().await.expect("the reader's history backfills");
 }
 
 /// 🧭️ Drives one host load driver against `app`: the kernel's driver decides each command, and the program answers it as its
@@ -299,7 +299,7 @@ async fn merge_through_the_host(app: &mut ToyApp, folder: &RouteFolder) -> (prot
     let archive = protocol::decode_document_archive_bytes(folder.archive.as_ref().expect("the folder holds an archive")).await.expect("the folder's archive decodes");
     let (outcome, _, terminal) = drive_archive_host(app, protocol::DocumentArchiveLoadHost::merging(archive)).await;
     pump_until(app, "the merged events are adopted", |app| app.stores.store.reprojection_progress().is_none()).await;
-    app.refresh_cache().await.expect("the history backfills the merged events");
+    app.render_ctx().refresh_cache().await.expect("the history backfills the merged events");
     let terminal = terminal.expect("a merge is polled to its terminal status");
     (outcome, terminal.completed, terminal.ahead)
 }
@@ -534,10 +534,10 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
     PluginApp::begin_document_archive_load(&mut target, 62, archive).expect("the archive is admitted");
     let first = PluginApp::poll_document_archive_load(&mut target, 62, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the load is polled once");
     findings.holds(matches!(first.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running), || format!("the load ended within one poll ({:?}), so the cancel has nothing to cancel", first.state));
-    findings.holds(target.reprojection_status().is_some_and(|status| status.kind == semio_framework::kernel::HistoryReprojectionKind::Load), || "a running load shows no loading row".to_string());
+    findings.holds(target.render_ref().reprojection_status().is_some_and(|status| status.kind == semio_framework::kernel::HistoryReprojectionKind::Load), || "a running load shows no loading row".to_string());
     let cancelled = verb(&mut target, &fixture, semio_framework::history_edit::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Vec::new()).await;
     findings.holds(rejected(&cancelled).is_none(), || format!("the cancel was refused: {:?}", cancelled.output));
-    findings.holds(target.reprojection_status().is_none(), || format!("the cancelled load still reads as loading: {:?}", target.reprojection_status()));
+    findings.holds(target.render_ref().reprojection_status().is_none(), || format!("the cancelled load still reads as loading: {:?}", target.render_ref().reprojection_status()));
     findings.holds(target.ingest.document_loading_refusal(&target.tools, "undo").is_none(), || "a verb still waits for the cancelled load".to_string());
     let mut turns = 0usize;
     while target.ingest.document_archive_loads.get(62).is_some_and(|load| !load.terminal()) && turns < 100_000 {
@@ -560,7 +560,7 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
 
 /// 🕒️ The positions, in applied order, of the document mutations the history lists as not applied while a history edit is open.
 async fn pending_positions(app: &mut ToyApp) -> Vec<u64> {
-    let patch = app.history_patch(true).await.expect("history patch");
+    let patch = app.render_ctx().history_patch(true).await.expect("history patch");
     patch.upserts.iter().rev().filter(|entry| entry.edit_id.is_some()).flat_map(|entry| entry.mutations.iter()).enumerate().filter(|(_, mutation)| mutation.pending).map(|(position, _)| position as u64).collect()
 }
 

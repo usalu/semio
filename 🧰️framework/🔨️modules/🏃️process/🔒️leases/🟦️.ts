@@ -1,3 +1,6 @@
+import retirementSchema from "./🧬️schema/♻️retirement.json" with {type:"json"};
+import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {type:"json"};
+import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,finishResourceLeaseCleanupV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1} from "./♻️retirement/🟦️.ts";
 import { createHash } from "node:crypto";
 import {requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
@@ -72,7 +75,7 @@ async function waitProgress(options: LeaseOptions, progress: LeaseWait, started:
 }
 
 export type ResourceLease = ResourceAccess & { release(): void };
-type IssuedResourceLeaseV1={readonly path:string;readonly directory:string;readonly resource:string;readonly signal:AbortSignal;readonly control:ResourceLeaseControl|undefined;readonly mode:ResourceAccess["mode"];live:boolean};
+type IssuedResourceLeaseV1={readonly path:string;readonly directory:string;readonly resource:string;readonly database:LeaseDatabase;readonly signal:AbortSignal;readonly control:ResourceLeaseControl|undefined;readonly mode:ResourceAccess["mode"];live:boolean};
 const originalLeases=new WeakMap<ResourceLease,IssuedResourceLeaseV1>();
 declare const writerProofBrand:unique symbol;
 /** 🎟️ Carries no release port and resolves only to its privately retained exclusive transaction. */
@@ -93,7 +96,7 @@ export function requireAcceptedPhysicalCleanupWriterProofV1(proof:ResourceLeaseW
 /** 🪪️ Requires the exact live system transaction issued for this original catalog writer. */
 export function requireResourceLeaseCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||issued.mode!=="exclusive"||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live catalog writer custody required");}
 
-type LeaseDatabase = { exec(sql: string): void; read(sql: string, ...values: string[]): Record<string, unknown> | undefined; close(): void };
+type LeaseDatabase = ResourceLeaseDatabaseV1;
 const APPLICATION_ID = 0x534d4c53;
 
 /** 🗜️ Gives system SQLite a closed page limit before its first bootstrap write. */
@@ -107,13 +110,13 @@ export function resourceLeaseMaximumPagesV1(maximumDatabaseBytes:number):number{
 const BUN_SQLITE_MODULE = "bun:sqlite" as const;
 
 /** 🗃️ Uses each runtime's system SQLite behind the same local interface. */
-async function openDatabase(path: string): Promise<LeaseDatabase> {
+async function openDatabase(path: string, readonly=false,create=!readonly): Promise<LeaseDatabase> {
   if (process.versions.bun) {
-    const { Database } = await import(/* @vite-ignore */ BUN_SQLITE_MODULE), database = new Database(path, { create: true });
-    return { exec: sql => database.exec(sql), read: (sql, ...values) => database.query(sql).get(...values) as Record<string, unknown> | undefined, close: () => database.close() };
+    const { Database } = await import(/* @vite-ignore */ BUN_SQLITE_MODULE), database = new Database(path, { readonly, readwrite:!readonly, create });let closed=false;
+    return { exec: sql => database.exec(sql), read: (sql, ...values) => {const statement=database.prepare(sql);try{return statement.get(...values) as Record<string, unknown>|undefined;}finally{statement.finalize();}}, close: () => {if(!closed){database.close(true);closed=true;}} };
   }
-  const { DatabaseSync } = await import("node:sqlite"), database = new DatabaseSync(path);
-  return { exec: sql => database.exec(sql), read: (sql, ...values) => database.prepare(sql).get(...values), close: () => database.close() };
+  const { DatabaseSync } = await import("node:sqlite"), database = new DatabaseSync(path,{readOnly:readonly});let closed=false;
+  return { exec: sql => database.exec(sql), read: (sql, ...values) => database.prepare(sql).get(...values), close: () => {if(!closed){database.close();closed=true;}} };
 }
 
 /** 🛣️ Keeps lock identities on regular paths without following a substituted store. */
@@ -154,19 +157,19 @@ function initialize(database: LeaseDatabase, resource: string): void {
 export function requireResourceLeaseReadCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.mode!=="shared"||issued.control!==control||issued.directory!==resolve(directory)||issued.resource!==resource||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live resource reader custody required");}
 
 /** 🔒️ Waits cancellably for shared or exclusive access; release only after the protected operation stops. */
-export async function acquireResourceLease(options: LeaseOptions): Promise<ResourceLease> {
+async function acquireUngatedResourceLease(options: LeaseOptions,started:number,onUnclosed?:(database:LeaseDatabase)=>void): Promise<ResourceLease> {
   options=Object.freeze({...options});
   options.signal.throwIfAborted();
   if (typeof options.resource !== "string" || !options.resource.length || options.resource.length > 4096 || options.resource.includes("\0")) throw new Error("Invalid lease resource");
   if (!["shared", "exclusive"].includes(options.mode)) throw new Error("Invalid resource access mode");
   if (options.timeoutMs !== undefined && (!Number.isFinite(options.timeoutMs) || options.timeoutMs < 0)) throw new Error("Invalid resource lease timeout");
-  const started = Date.now(); remaining(options, started);
+  remaining(options, started);
   const maximumPages=options.maximumDatabaseBytes===undefined?undefined:resourceLeaseMaximumPagesV1(options.maximumDatabaseBytes),path=databasePath(options.directory,options.resource);
   if(maximumPages!==undefined){try{if(lstatSync(path).size>options.maximumDatabaseBytes!)throw Error("Original bootstrap SQLite exceeds capacity");}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}
   const database = await openDatabase(path);
-  let nextProgress = 0, acquired = false;
+  let nextProgress = 0, acquired = false,failed=false,failure:unknown;
   try {
-    database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");
+    remaining(options,started);database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");
     for (;;) {
       const budget = remaining(options, started);
       if (options.timeoutMs !== 0 && budget <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
@@ -180,10 +183,9 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
         if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
         acquired = true;
         let released = false;
-        const issued:IssuedResourceLeaseV1={path,directory:resolve(options.directory),resource:options.resource,control:options.control,signal:options.signal,live:true,mode:options.mode};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
+        const issued:IssuedResourceLeaseV1={path,directory:resolve(options.directory),resource:options.resource,database,control:options.control,signal:options.signal,live:true,mode:options.mode};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
           if (released) return;
-          released = true;issued.live=false;
-          try { database.exec("ROLLBACK"); } finally { database.close(); }
+          database.close();released = true;issued.live=false;
         } };originalLeases.set(lease,issued);return lease;
       } catch (error) {
         try { database.exec("ROLLBACK"); } catch {}
@@ -200,7 +202,25 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
       await delay(Math.max(1, Math.min(40, remaining(options, started))), undefined, { signal: options.signal });
       remaining(options, started);
     }
-  } finally { if (!acquired) database.close(); }
+  } catch(error){failed=true;failure=error;throw error;} finally { if (!acquired) finishResourceLeaseCleanupV1(failed,failure,[()=>{try{database.close();}catch(error){onUnclosed?.(database);throw error;}}]); }
+}
+
+const admissionResource=retirementSchema.properties.admissionResource.const;
+function requireAdmission(gate:ResourceLease,directory:string,exclusive=false):void{const held=originalLeases.get(gate);if(!held?.live||held.directory!==resolve(directory)||held.resource!==admissionResource||gate.resource!==admissionResource||gate.mode!==held.mode||exclusive&&held.mode!=="exclusive")throw Error("Original directory admission custody required");}
+const admissionFinalizer=new ResourceLeaseAdmissionFinalizerV1<ResourceLease>();
+function protectAdmission(gate:ResourceLease,database:LeaseDatabase):void{admissionFinalizer.protect(gate,database);}
+function releaseAdmission(gate:ResourceLease|undefined):void{admissionFinalizer.release(gate);}
+async function directoryAdmission(options:LeaseOptions,mode:ResourceAccess["mode"],started:number):Promise<ResourceLease>{admissionFinalizer.retry();return acquireUngatedResourceLease({...options,resource:admissionResource,mode,maximumDatabaseBytes:retirementSchema.properties.maximumDatabaseBytes.const},started);}
+async function acquireUnderAdmission(options:LeaseOptions,gate:ResourceLease,started:number):Promise<ResourceLease>{requireAdmission(gate,options.directory);return acquireUngatedResourceLease(options,started,database=>protectAdmission(gate,database));}
+function closeDatabase(database:LeaseDatabase,gate?:ResourceLease):void{try{database.close();}catch(error){if(gate)protectAdmission(gate,database);throw error;}}
+function releaseUnderAdmission(lease:ResourceLease|undefined,gate:ResourceLease):void{if(!lease)return;try{lease.release();}catch(error){protectAdmission(gate,originalLeases.get(lease)!.database);throw error;}}
+
+/** 🚪️ Fences every opener until actual identity SELECT or failed connection close settles. */
+export async function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{
+ options=Object.freeze({...options});options.signal.throwIfAborted();if(options.resource===admissionResource)throw Error("Directory admission resource is reserved");if(typeof options.resource!=="string"||!options.resource.length||options.resource.length>4096||options.resource.includes("\0"))throw Error("Invalid lease resource");if(!["shared","exclusive"].includes(options.mode))throw Error("Invalid resource access mode");if(options.timeoutMs!==undefined&&(!Number.isFinite(options.timeoutMs)||options.timeoutMs<0))throw Error("Invalid resource lease timeout");const started=Date.now();remaining(options,started);let gate:ResourceLease|undefined,lease:ResourceLease|undefined,failed=false,failure:unknown;
+ try{gate=await directoryAdmission(options,"shared",started);lease=await acquireUnderAdmission(options,gate,started);}catch(error){failed=true;failure=error;if(error instanceof Error&&error.message==="Resource lease timed out: "+admissionResource)failure=Error("Resource lease timed out: "+options.resource);}
+ try{releaseAdmission(gate);}catch(error){if(!failed){failed=true;failure=error;}try{lease?.release();}catch{if(gate&&lease)protectAdmission(gate,originalLeases.get(lease)!.database);}}
+ if(failed)throw failure;return lease!;
 }
 
 /** 🚦️ One waiter's place in a resource's arrival queue: `<directory>/<resource-hash>.queue/<arrivedAtMs>-<pid>-<owner>`. */
@@ -233,25 +253,46 @@ export function resourceQueueClaimV1(directory:string,resource:string,ticket:str
 /** 🧭️ Derives one canonical claim catalog per data namespace for every opener and retirement. */
 export function resourceQueueCatalogPathV1(directory:string):string{return resourceLeasePathV1(directory,retentionSchema.properties.resource.const);}
 
-async function queueClaimCatalog(options:LeaseOptions,mode:"shared"|"exclusive"):Promise<ResourceLease>{return acquireResourceLease({directory:options.directory,resource:retentionSchema.properties.resource.const,mode,signal:options.signal,control:options.control,onWait:options.onWait,timeoutMs:options.timeoutMs,maximumDatabaseBytes:retentionSchema.properties.maximumDatabaseBytes.const});}
-
-/** 🔎️ Reads exact owned claim identity without issuing retirement or inventing storage custody. */
-export async function readResourceQueueClaimIdentityV1(directory:string,name:string,control:ResourceLeaseControl):Promise<Readonly<{path:string;resource:string;queueTicketPath:string;device:number;inode:number;allocatedBytes:number}>|undefined>{
- checkResourceLeaseControl(control);if(!/^[a-f0-9]{64}\.sqlite$/u.test(name))throw Error("Exact queue claim filename required");const claims=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const)),path=requireMaterializedPathV1(join(claims,name));let before;try{before=lstatSync(path);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1||before.size>custodySchema.properties.maximumDatabaseBytes.const)throw Error("Original regular bounded queue claim required");
- const database=await openDatabase(path);try{if(database.read("PRAGMA application_id")?.application_id!==APPLICATION_ID)return undefined;const row=database.read("SELECT version,resource FROM semio_resource_lease WHERE id=1");if(row?.version!==1||typeof row.resource!=="string")throw Error("Original queue claim identity required");const resource=row.resource,identity=new RegExp("^"+custodySchema.properties.resourcePrefix.const+"([a-f0-9]{64}):("+queueSchema.definitions.Protocol.const.ticketPattern.slice(1,-1)+")$","u").exec(resource);if(!identity||resourceLeasePathV1(claims,resource)!==path)throw Error("Original queue claim path identity required");queueTicketRequest(identity[2]!);return Object.freeze({path,resource,queueTicketPath:requireMaterializedPathV1(join(directory,identity[1]+".queue",identity[2]!)),device:before.dev,inode:before.ino,allocatedBytes:before.blocks*512});}finally{database.close();}
+async function queueClaimCatalog(options:LeaseOptions,mode:"shared"|"exclusive",started=Date.now()):Promise<ResourceLease>{
+ let gate:ResourceLease|undefined,catalog:ResourceLease|undefined,failed=false,failure:unknown;try{gate=await directoryAdmission(options,"shared",started);catalog=await acquireUnderAdmission({...options,resource:retentionSchema.properties.resource.const,mode,maximumDatabaseBytes:retentionSchema.properties.maximumDatabaseBytes.const},gate,started);const held=catalog,admission=gate,combined:ResourceLease={resource:held.resource,mode:held.mode,release(){finishResourceLeaseCleanupV1(false,undefined,[()=>held.release(),()=>releaseAdmission(admission)]);}};originalLeases.set(combined,originalLeases.get(held)!);return combined;}catch(error){failed=true;failure=error;throw error;}finally{if(failed)finishResourceLeaseCleanupV1(failed,failure,[()=>catalog?.release(),()=>releaseAdmission(gate)]);}
+}
+type ClaimIdentity=Readonly<{path:string;resource:string;queueTicketPath:string;device:number;inode:number;allocatedBytes:number}>;
+async function readClaimIdentity(directory:string,name:string,control:ResourceLeaseControl,gate:ResourceLease):Promise<ClaimIdentity|undefined>{
+ checkResourceLeaseControl(control);const claims=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const));requireAdmission(gate,claims);if(!/^[a-f0-9]{64}\.sqlite$/u.test(name))throw Error("Exact queue claim filename required");const candidate=captureResourceLeaseCandidateV1(claims,name);if(!candidate)return;let database:LeaseDatabase|undefined,failed=false,failure:unknown;try{database=await openDatabase(candidate.path,true);checkResourceLeaseControl(control);database.exec("PRAGMA busy_timeout=0;PRAGMA trusted_schema=OFF;BEGIN");const resource=readOwnedResourceLeaseV1(database,claims,candidate.path);if(!resource)return;const identity=new RegExp("^"+custodySchema.properties.resourcePrefix.const+"([a-f0-9]{64}):("+queueSchema.definitions.Protocol.const.ticketPattern.slice(1,-1)+")$","u").exec(resource);if(!identity)throw Error("Original queue claim path identity required");queueTicketRequest(identity[2]!);checkResourceLeaseControl(control);requireResourceLeaseCandidateV1(candidate);return Object.freeze({path:candidate.path,resource,queueTicketPath:requireMaterializedPathV1(join(directory,identity[1]+".queue",identity[2]!)),device:candidate.file.dev,inode:candidate.file.ino,allocatedBytes:candidate.allocatedBytes});}catch(error){failed=true;failure=error;throw error;}finally{if(database)finishResourceLeaseCleanupV1(failed,failure,[()=>closeDatabase(database!,gate)]);}
 }
 
-/** ♻️ Closes settled original claim handles before unlinking while canonical catalog custody excludes every opener. */
-export async function retireResourceQueueClaimsV1(directory:string,control:ResourceLeaseControl,timeoutMs?:number):Promise<Readonly<{examined:number;retired:number;allocatedBytes:number}>>{
- checkResourceLeaseControl(control);const started=Date.now(),options={directory,resource:retentionSchema.properties.resource.const,mode:"exclusive" as const,signal:control.signal,control,timeoutMs},catalog=await queueClaimCatalog(options,"exclusive");let examined=0,retired=0,allocatedBytes=0;
- let headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined;
- try{headroom=(await import("./📦️metadata/🟦️.ts")).retainResourceQueueMetadataHeadroomV1(directory,catalog,control);let names:string[];try{names=readdirSync(requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const)));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return {examined,retired,allocatedBytes};throw error;}
-  for(const name of names.filter(name=>/^[a-f0-9]{64}\.sqlite$/u.test(name)).sort().slice(0,retentionSchema.properties.maximumClaimsPerTurn.const)){
-   remaining(options,started);let held:ResourceLease|undefined;try{const row=await readResourceQueueClaimIdentityV1(directory,name,control);if(!row)continue;examined++;held=await acquireResourceLease({directory:dirname(row.path),resource:row.resource,mode:"exclusive",signal:control.signal,control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});remaining(options,started);const before=lstatSync(row.path);if(before.dev!==row.device||before.ino!==row.inode)throw Error("Original queue claim inode changed");const retire=()=>{try{unlinkSync(row.queueTicketPath);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}held?.release();held=undefined;const settled=lstatSync(row.path);if(settled.dev!==row.device||settled.ino!==row.inode)throw Error("Released queue claim inode changed");unlinkSync(row.path);};try{retire();}catch(error){const code=(error as NodeJS.ErrnoException).code;if(code!=="ENOSPC"&&!(code==="EFAULT"&&statfsSync(directory).bavail<8))throw error;headroom!.recover();retire();}retired++;allocatedBytes+=row.allocatedBytes;
-   }catch(error){const code=error as {code?:string;errcode?:number;errno?:number};if(!String(error).includes("Resource lease timed out")&&code.code!=="SQLITE_BUSY"&&code.errcode!==5&&code.errno!==5)throw error;}finally{held?.release();}
-   await control.yieldContinuation();checkResourceLeaseControl(control);
-  }return Object.freeze({examined,retired,allocatedBytes});
- }finally{try{headroom?.recheck();}finally{catalog.release();}}
+/** 🔎️ Protects the complete read-only claim connection in exact parent-before-child admission custody. */
+export async function readResourceQueueClaimIdentityV1(directory:string,name:string,control:ResourceLeaseControl):Promise<ClaimIdentity|undefined>{
+ const started=Date.now(),options:LeaseOptions={directory,resource:retentionSchema.properties.resource.const,mode:"shared",signal:control.signal,control};let catalog:ResourceLease|undefined,gate:ResourceLease|undefined,failed=false,failure:unknown;try{catalog=await queueClaimCatalog(options,"shared",started);gate=await directoryAdmission({...options,directory:join(directory,custodySchema.properties.claimDirectory.const)},"shared",started);return await readClaimIdentity(directory,name,control,gate);}catch(error){failed=true;failure=error;throw error;}finally{finishResourceLeaseCleanupV1(failed,failure,[()=>releaseAdmission(gate),()=>catalog?.release()]);}
+}
+
+/** 📊️ Reports immediate physical databases examined and safely retired in one bounded turn. */
+export type ResourceLeaseRetirementV1=Readonly<{examined:number;retired:number;allocatedBytes:number}>;
+function databaseRejection(error:unknown):boolean{const value=error!==null&&typeof error==="object"?error as{code?:string;errcode?:number;errno?:number}:undefined;return ["SQLITE_ERROR","SQLITE_CORRUPT","SQLITE_NOTADB","SQLITE_SCHEMA"].includes(value?.code??"")||[1,11,17,26].includes((value?.errcode??value?.errno??-1)&255);}
+function recoverRetirementHeadroom(error:unknown,directory:string,headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined):void{if(!headroom)throw error;const code=error!==null&&typeof error==="object"?(error as NodeJS.ErrnoException).code:undefined;if(code!=="ENOSPC"&&!(code==="EFAULT"&&statfsSync(directory).bavail<8))throw error;headroom.recover();}
+async function retireResources(directory:string,control:ResourceLeaseControl,timeoutMs:number,resource?:string):Promise<ResourceLeaseRetirementV1>{
+ checkResourceLeaseControl(control);const started=Date.now(),options:LeaseOptions={directory,resource:"resource-retirement",mode:"exclusive",signal:control.signal,control,timeoutMs};let gate:ResourceLease|undefined,catalog:ResourceLease|undefined,headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined,failed=false,failure:unknown;let examined=0,retired=0,allocatedBytes=0;
+ try{gate=await directoryAdmission(options,"exclusive",started);catalog=await acquireUnderAdmission({...options,resource:retentionSchema.properties.resource.const,timeoutMs:0,maximumDatabaseBytes:retentionSchema.properties.maximumDatabaseBytes.const},gate,started);if(lstatSync(join(directory,metadataSchema.properties.filename.const),{throwIfNoEntry:false}))headroom=(await import("./📦️metadata/🟦️.ts")).retainResourceQueueMetadataHeadroomV1(directory,catalog,control);const names=resource===undefined?resourceLeaseRetirementNamesV1(directory):[resourceLeasePathV1(directory,resource).slice(resolve(directory).length+1)];
+ for(const name of names.filter(name=>/^[a-f0-9]{64}\.sqlite$/u.test(name)).slice(0,retirementSchema.properties.maximumCandidatesPerTurn.const)){remaining(options,started);const path=join(directory,name);if(path===resourceLeasePathV1(directory,admissionResource)||path===resourceQueueCatalogPathV1(directory))continue;const candidate=captureResourceLeaseCandidateV1(directory,name);if(!candidate)continue;examined++;let database:LeaseDatabase|undefined,probeFailed=false,probeFailure:unknown;
+  try{requireAdmission(gate,directory,true);database=await openDatabase(path,false,false);remaining(options,started);database.exec("PRAGMA busy_timeout=0;PRAGMA trusted_schema=OFF;BEGIN EXCLUSIVE");const logical=readOwnedResourceLeaseV1(database,directory,path);if(logical===undefined||logical.startsWith(custodySchema.properties.resourcePrefix.const)||resource!==undefined&&logical!==resource)continue;remaining(options,started);requireResourceLeaseCandidateV1(candidate);closeDatabase(database,gate);database=undefined;const remove=()=>{requireAdmission(gate!,directory,true);requireResourceLeaseCandidateV1(candidate);unlinkSync(path);};try{remove();}catch(error){recoverRetirementHeadroom(error,directory,headroom);remove();}retired++;allocatedBytes+=candidate.allocatedBytes;
+  }catch(error){probeFailed=true;probeFailure=error;if(!resourceLeaseBusyV1(error)&&!databaseRejection(error))throw error;probeFailed=false;}finally{if(database)finishResourceLeaseCleanupV1(probeFailed,probeFailure,[()=>closeDatabase(database!,gate)]);}
+  await control.yieldContinuation();checkResourceLeaseControl(control);
+ }return Object.freeze({examined,retired,allocatedBytes});
+ }catch(error){failed=true;failure=error;throw error;}finally{finishResourceLeaseCleanupV1(failed,failure,[()=>headroom?.recheck(),()=>catalog?.release(),()=>releaseAdmission(gate)]);}
+}
+
+/** ♻️ Retires only authenticated idle immediate databases while exact directory and catalog writers remain retained. */
+export function retireResourceLeasesV1(directory:string,control:ResourceLeaseControl,timeoutMs=0):Promise<ResourceLeaseRetirementV1>{return retireResources(resolve(directory),control,timeoutMs);}
+/** 🎯️ Retires one exact settled owner through the same protected close-to-unlink protocol. */
+export function retireResourceLeaseV1(directory:string,resource:string,control:ResourceLeaseControl,timeoutMs=0):Promise<ResourceLeaseRetirementV1>{resourceLeasePathV1(directory,resource);if(typeof resource!=="string"||!resource.length||resource.length>4096||resource.includes("\0"))throw Error("Invalid retirement resource");return retireResources(resolve(directory),control,timeoutMs,resource);}
+
+/** ♻️ Retires settled claims under data admission, queue catalog and exact claims admission in fixed order. */
+export async function retireResourceQueueClaimsV1(directory:string,control:ResourceLeaseControl,timeoutMs=0):Promise<ResourceLeaseRetirementV1>{
+ checkResourceLeaseControl(control);const started=Date.now(),options:LeaseOptions={directory,resource:retentionSchema.properties.resource.const,mode:"exclusive",signal:control.signal,control,timeoutMs};let catalog:ResourceLease|undefined,gate:ResourceLease|undefined,headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined,failed=false,failure:unknown;let examined=0,retired=0,allocatedBytes=0;
+ try{try{catalog=await queueClaimCatalog(options,"exclusive",started);gate=await directoryAdmission({...options,directory:join(directory,custodySchema.properties.claimDirectory.const),timeoutMs:0},"exclusive",started);}catch(error){if(resourceLeaseBusyV1(error))return Object.freeze({examined,retired,allocatedBytes});throw error;}headroom=(await import("./📦️metadata/🟦️.ts")).retainResourceQueueMetadataHeadroomV1(directory,catalog,control);
+ for(const name of resourceLeaseRetirementNamesV1(join(directory,custodySchema.properties.claimDirectory.const)).filter(name=>/^[a-f0-9]{64}\.sqlite$/u.test(name)&&name!==resourceLeasePathV1(join(directory,custodySchema.properties.claimDirectory.const),admissionResource).split(/[\/]/u).at(-1)).slice(0,retentionSchema.properties.maximumClaimsPerTurn.const)){remaining(options,started);let held:ResourceLease|undefined,probeFailed=false,probeFailure:unknown;try{const row=await readClaimIdentity(directory,name,control,gate);if(!row)continue;examined++;held=await acquireUnderAdmission({directory:dirname(row.path),resource:row.resource,mode:"exclusive",signal:control.signal,control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const},gate,started);remaining(options,started);const candidate=captureResourceLeaseCandidateV1(dirname(row.path),name);if(!candidate||candidate.file.dev!==row.device||candidate.file.ino!==row.inode)throw Error("Original queue claim inode changed");const remove=()=>{try{unlinkSync(row.queueTicketPath);}catch(error){if((error as NodeJS.ErrnoException|undefined)?.code!=="ENOENT")throw error;}releaseUnderAdmission(held,gate!);held=undefined;requireAdmission(gate!,dirname(row.path),true);requireResourceLeaseCandidateV1(candidate);unlinkSync(row.path);};try{remove();}catch(error){recoverRetirementHeadroom(error,directory,headroom);remove();}retired++;allocatedBytes+=row.allocatedBytes;}catch(error){probeFailed=true;probeFailure=error;if(!resourceLeaseBusyV1(error)&&!databaseRejection(error))throw error;}finally{finishResourceLeaseCleanupV1(probeFailed&&!resourceLeaseBusyV1(probeFailure)&&!databaseRejection(probeFailure),probeFailure,[()=>{if(held)releaseUnderAdmission(held,gate!);}]);}await control.yieldContinuation();checkResourceLeaseControl(control);
+ }return Object.freeze({examined,retired,allocatedBytes});
+ }catch(error){failed=true;failure=error;throw error;}finally{finishResourceLeaseCleanupV1(failed,failure,[()=>headroom?.recheck(),()=>releaseAdmission(gate),()=>catalog?.release()]);}
 }
 
 /** 🚦️ Serves original kernel-held tickets in arrival order; an exclusive SQLite claim alone proves abandoned custody. */
@@ -263,7 +304,7 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
   if (!/^[A-Za-z0-9._-]{1,64}$/u.test(options.owner)) throw new Error("Invalid lease queue owner");
   const started = Date.now(); remaining(options, started);
   const pendingOptions=():LeaseOptions=>({...options,timeoutMs:options.timeoutMs===undefined?undefined:Math.max(0,remaining(options,started))});
-  if(options.control)await retireResourceQueueClaimsV1(options.directory,options.control,pendingOptions().timeoutMs);
+  if(options.control)await retireResourceQueueClaimsV1(options.directory,options.control,0);
   remaining(options,started);
   const ticket = resourceQueueTicketV1({arrivedAtMs:started,pid:process.pid,owner:options.owner});
   const admitted = resourceLeasePathV1(options.directory, options.resource, ticket);

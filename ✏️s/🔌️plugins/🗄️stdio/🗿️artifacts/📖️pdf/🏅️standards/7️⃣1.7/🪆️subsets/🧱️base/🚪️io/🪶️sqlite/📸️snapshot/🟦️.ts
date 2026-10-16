@@ -15,7 +15,7 @@ import { writePdfEmbeddedFile,readPdfEmbeddedFile,writePdfOutputIntent,readPdfOu
 import { writePdfInfo,readPdfInfo } from "./📇️metadata/📆️date/🟦️.ts";
 import { writePdfAcroForm,readPdfAcroForm,writePdfOptionalContent,readPdfOptionalContent } from "./📝️form/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "./🧩️cos/🟦️.ts";
-import { artifactSqliteInteger } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 export { PDF17_SQLITE_SCHEMA };
 async function writeCollection<T>(out:PdfProjection,table:string,values:readonly T[],write:(out:PdfProjection,value:T)=>Promise<bigint>):Promise<void>{out.checkRowsAdditional(values.length);for(const[ordinal,value]of values.entries())await out.insert(table,[1n,BigInt(ordinal),await write(out,value)]);}
 async function readCollection<T>(reader:PdfReader,table:string,read:(reader:PdfReader,key:bigint)=>Promise<T>):Promise<T[]>{const values:T[]=[];for(const child of await reader.children(table,1,2,1n)){const relation=await reader.take(table,child.rowid,4);values.push(await read(reader,artifactSqliteInteger(relation,3)));}return values;}

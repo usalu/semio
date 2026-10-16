@@ -1,5 +1,5 @@
 import{parseChangeBlockField,type ChangeBlockField,type BlockField}from"../../../../../🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts";
-import{parseSchemaRecord}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import{parseSchemaRecord}from"@semio-tech/framework/schema/record";
 import {parseFormsJsonValue,formsValueJsonProjection,parseFormsJsonCondition,formsConditionJson} from "../../../📸️snapshot/🔣️json/🟦️.ts";
 
 /** 🎛️ Decode only the literal payload fields of the JSON mutation transport. */

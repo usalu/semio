@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "cleanup"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recognized",
+          "hashMatches",
+          "kernelHeld",
+          "physicalSafe",
+          "retired",
+          "name"
+        ],
+        "properties": {
+          "recognized": {
+            "type": "boolean"
+          },
+          "hashMatches": {
+            "type": "boolean"
+          },
+          "kernelHeld": {
+            "type": "boolean"
+          },
+          "physicalSafe": {
+            "type": "boolean"
+          },
+          "retired": {
+            "type": "boolean"
+          },
+          "name": {
+            "enum": [
+              "idle",
+              "reader",
+              "writer",
+              "foreign",
+              "extra-table",
+              "extra-trigger",
+              "wrong-schema",
+              "wrong-hash",
+              "uninitialized",
+              "hardlink",
+              "symlink",
+              "sidecar",
+              "wal"
+            ]
+          }
+        }
+      }
+    },
+    "cleanup": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "primary",
+          "closeFailures",
+          "gateHeldAfterFailure",
+          "gateHeldAfterCompletion",
+          "completeBeforeRelease"
+        ],
+        "properties": {
+          "primary": {
+            "enum": [
+              "undefined",
+              "frozen"
+            ]
+          },
+          "closeFailures": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "gateHeldAfterFailure": {
+            "type": "boolean"
+          },
+          "gateHeldAfterCompletion": {
+            "const": false
+          },
+          "completeBeforeRelease": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

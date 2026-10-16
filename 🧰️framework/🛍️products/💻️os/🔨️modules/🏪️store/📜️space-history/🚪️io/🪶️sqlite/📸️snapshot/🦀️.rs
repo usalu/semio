@@ -17,7 +17,7 @@ mod native;
 pub mod settlement;
 pub use native::decode_with as decode_native_cst;
 #[path = "🛂️admission/🦀️.rs"]
-pub(crate) mod admission;
+pub mod admission;
 /// 🚪️ The new explicitly authored SQLite coordinate of the real persisted history owner.
 pub const SQLITE_SNAPSHOT_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: S_SPACE_HISTORY_SCHEMA, standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
 pub use semio_framework_os_store_space_schema::lifted_snapshot::{pair, rows, schema, word, write_rows};

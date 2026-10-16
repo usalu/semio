@@ -10,7 +10,7 @@ import {
   type ReactNode,
   type ThreeCamera,
   type Ray as ThreeRay
-} from "@semio-tech/ui-react";
+} from "@semio-tech/framework/ui/targets/react";
 import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
 import {
   defaultModelDefinitionId,

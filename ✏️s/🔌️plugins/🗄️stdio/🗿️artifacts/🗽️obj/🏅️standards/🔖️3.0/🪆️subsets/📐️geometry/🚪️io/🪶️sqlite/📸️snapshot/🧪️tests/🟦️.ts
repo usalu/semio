@@ -1,6 +1,6 @@
-import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalCorpus } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
-import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🧫️ Shared OBJ geometry and membership fixture with independent SQL edits. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
@@ -206,8 +206,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {objSnapshotToSqliteDatabase as normSemanticProject,objSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("OBJ complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(normSemanticContract["schemaBytes"]).toEqual(6231);expect(normSemanticContract["tableWidths"]).toEqual({"obj_document":3,"obj_face":3,"obj_face_boundary":4,"obj_face_vertex":9,"obj_group":4,"obj_group_face":6,"obj_material_range":7,"obj_normal":12,"obj_object":4,"obj_object_face":6,"obj_smoothing_range":7,"obj_texcoord":12,"obj_unknown_statement":6,"obj_vertex":15});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSharedSourceNative","rows":34,"valueBytes":1830},{"id":"emptyCollectionsRetainMetadata","rows":2,"valueBytes":60},{"id":"originalSourceEmpty","rows":2,"valueBytes":41}]);
  for(const item of normSemanticContract.cases){const source=structuredClone(input);if(item.id!=="originalSharedSourceNative"){source.vertices=[];source.texcoords=[];source.normals=[];source.faces=[];source.groups=[];source.objects=[];source.usemtl=[];source.smoothingGroups=[];source.unknownStatements=[];if(item.id==="originalSourceEmpty"){source.schema="empty.obj";source.mtllib=undefined;}}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:14,maxColumns:15};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);

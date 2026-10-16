@@ -25,7 +25,7 @@ pub use switch_space_alternative::SwitchSpaceAlternative;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::Mutations)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = SpaceHistorySnapshot, diff = SpaceHistoryDiff, schema = "os.space.history")]
 pub enum SpaceHistoryMutation {

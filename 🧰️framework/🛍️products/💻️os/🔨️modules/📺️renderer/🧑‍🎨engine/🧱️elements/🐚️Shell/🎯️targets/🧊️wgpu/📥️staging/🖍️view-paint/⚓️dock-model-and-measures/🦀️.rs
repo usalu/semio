@@ -5,7 +5,7 @@ use super::*;
 //#region ShellLifecycle
 //#region 🧭️PanelAnchorModel
 /// 📑️ Places root-to-leaf tab rows from the anchor's logical block start.
-pub(crate) fn flowed_anchor_tab_row_y(block: ui_contract::FlowBlock, panel: Rect, row_index: usize, row_count: usize, row_height: f32) -> f32 {
+pub fn flowed_anchor_tab_row_y(block: ui_contract::FlowBlock, panel: Rect, row_index: usize, row_count: usize, row_height: f32) -> f32 {
     if block.is_reversed() {
         panel.y + panel.h - (row_index.min(row_count) + 1) as f32 * row_height
     } else {
@@ -14,7 +14,7 @@ pub(crate) fn flowed_anchor_tab_row_y(block: ui_contract::FlowBlock, panel: Rect
 }
 
 /// 📐️ The boundary between retained content and an anchor's complete tab bar.
-pub(crate) fn flowed_anchor_tab_divider_y(block: ui_contract::FlowBlock, panel: Rect, bar_height: f32) -> f32 {
+pub fn flowed_anchor_tab_divider_y(block: ui_contract::FlowBlock, panel: Rect, bar_height: f32) -> f32 {
     if block.is_reversed() {
         panel.y + panel.h - bar_height
     } else {

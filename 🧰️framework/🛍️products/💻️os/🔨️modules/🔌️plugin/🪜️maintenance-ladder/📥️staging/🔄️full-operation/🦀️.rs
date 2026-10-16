@@ -1,22 +1,10 @@
 //! 🏺️ Staged slice of the `full-operation` band of the mounted artifact instance: its `instance-ladders` members (WP6 step S0 of the instance family).
 use super::*;
 
-impl<A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static> VcsArtifactApp<A,M>{
- pub(crate) fn next_granted_mounted_retirement(&self)->Option<(usize,u64)>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|{let index=(self.close.close_typed_operation_cursor+offset)%ARTIFACT_LIVE_OUTPUT_SLOTS;self.tools.tool_operations.entry(index).filter(|(_,owner)|self.close.close_started||owner.stage==MountedTypedCommandFullOperationStage::Retiring||(owner.granted_retirement_ready()&&owner.granted_retirement_pending())).map(|(id,_)|(index,*id))})}
-
- pub(crate) fn granted_mounted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  let Some((_,id))=self.next_granted_mounted_retirement()else{return Ok(Default::default());};let owner=self.tools.tool_operations.get(id).unwrap();
-  if owner.close_fault_pending(){return owner.close_fault_demands(body);}
-  if owner.stage==MountedTypedCommandFullOperationStage::Retiring { if let Some(group)=owner.owned_child_group { return if self.child_composition.private_child_groups.get(group).is_some(){self.child_composition.private_child_group_operation_close_demands(group, body)}else{Ok(RetirementDemand{depth:1,..Default::default()})}; } }
-  if owner.lease_retirement_ready(){return owner.lease_retirement_demands(&self.tools.tool_cancellations,body);}
-  if self.close.close_started{return owner.close_demands(body);}
-  if owner.stage==MountedTypedCommandFullOperationStage::Retiring{return owner.retirement_demands(body);}
-  owner.granted_retirement_demands(body)
- }
-
+impl<'ctx, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
  pub(crate) fn granted_mounted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
-  if self.next_granted_mounted_retirement().is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  let grant=cx.retained_grant();let demand=self.granted_mounted_retirement_demands(grant.maximum_copy_bytes)?;
+  if self.shared().next_granted_mounted_retirement().is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  let grant=cx.retained_grant();let demand=self.shared().granted_mounted_retirement_demands(grant.maximum_copy_bytes)?;
   let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
    self.granted_mounted_retirement_original(same,actual).map(|step|(PluginLifecycleStep::Progress(step.progress()),false))
   })?;
@@ -24,19 +12,19 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static> VcsArtifactApp<A,M>
  }
 
  fn granted_mounted_retirement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
-  let Some((index,id))=self.next_granted_mounted_retirement()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
+  let Some((index,id))=self.shared().next_granted_mounted_retirement()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
   let closing=self.close.close_started;
-  if closing||self.tools.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{self.request_gesture_cancellation(id);}
+  if closing||self.tools.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{self.as_render().request_gesture_cancellation(id);}
   if self.tools.tool_operations.get(id).unwrap().close_fault_pending(){let step=self.tools.tool_operations.get_mut(id).unwrap().close_fault_step(grant)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step)}
   if self.tools.tool_operations.get(id).unwrap().lease_retirement_ready(){let step=self.tools.tool_operations.get_mut(id).unwrap().lease_retirement_step(&self.tools.tool_cancellations,grant)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step)}
   if self.tools.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{
    if !closing{
-    let step=self.retire_typed_operation_unit(id,cx)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
+    let step=self.as_typed().retire_typed_operation_unit(id,cx)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
     return Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()))
    }
    if let Some(group)=self.tools.tool_operations.get(id).unwrap().owned_child_group{
     if self.child_composition.private_child_groups.get(group).is_some(){
-     let step=self.child_composition.close_private_child_group_operation_step(&mut self.stores, group, cx, grant)?;
+     let step=self.child_composition.close_private_child_group_operation_step(&mut *self.stores, group, cx, grant)?;
      return Ok(RetainedCloneStep::Progress(step.progress()))
     }
     if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
@@ -58,5 +46,19 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static> VcsArtifactApp<A,M>
    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:step.progress().copied_items.max(1),..step.progress()}))
   }
   self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;Ok(step)
+ }
+}
+
+impl<'v, A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+ pub(crate) fn next_granted_mounted_retirement(&self)->Option<(usize,u64)>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|{let index=(self.close.close_typed_operation_cursor+offset)%ARTIFACT_LIVE_OUTPUT_SLOTS;self.tools.tool_operations.entry(index).filter(|(_,owner)|self.close.close_started||owner.stage==MountedTypedCommandFullOperationStage::Retiring||(owner.granted_retirement_ready()&&owner.granted_retirement_pending())).map(|(id,_)|(index,*id))})}
+
+ pub(crate) fn granted_mounted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  let Some((_,id))=self.next_granted_mounted_retirement()else{return Ok(Default::default());};let owner=self.tools.tool_operations.get(id).unwrap();
+  if owner.close_fault_pending(){return owner.close_fault_demands(body);}
+  if owner.stage==MountedTypedCommandFullOperationStage::Retiring { if let Some(group)=owner.owned_child_group { return if self.child_composition.private_child_groups.get(group).is_some(){self.child_composition.private_child_group_operation_close_demands(group, body)}else{Ok(RetirementDemand{depth:1,..Default::default()})}; } }
+  if owner.lease_retirement_ready(){return owner.lease_retirement_demands(&self.tools.tool_cancellations,body);}
+  if self.close.close_started{return owner.close_demands(body);}
+  if owner.stage==MountedTypedCommandFullOperationStage::Retiring{return owner.retirement_demands(body);}
+  owner.granted_retirement_demands(body)
  }
 }

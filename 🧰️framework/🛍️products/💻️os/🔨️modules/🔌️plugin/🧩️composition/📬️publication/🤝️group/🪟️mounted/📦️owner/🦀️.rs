@@ -1,33 +1,60 @@
-use mounted_child_group_receipt_group::{MountedGroupMemberReceipts,MountedGroupReceiptOutput};
-use mounted_child_group_receipt::MountedArtifactHandleIssuer;
+use semio_framework::kernel::ArtifactHandle;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_child::ChildMemberRegistry;
+use crate::mounted_child_group_receipt_group::command::CommandAppend;
+use semio_framework_plugin_decl_views::history_view::CommandLogEntry;
+use semio_framework_value::DslValue;
+use store::MemberFactory;
+use crate::mounted_child_group_identity::MountedChildGroupIdentityIssuer;
+use crate::mounted_child_group_receipt_group::command::entry::MountedCommandEntry;
+use crate::mounted_child_group_receipt_group::command::PagedCommandLog;
+use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value::RetirementDemand;
+use semio_framework_plugin_decl_views::history_view::ShellHistoryReplay;
+use store::SpaceMember;
+use semio_framework_value::ValueError;
+use crate::mounted_child_group_receipt;
+use crate::mounted_child_group_receipt::mounted_nested_retirement_demand;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use crate::mounted_child_group_receipt_group::receipt_members::MountedGroupMemberReceipts;
+use crate::mounted_child_group_receipt_group::MountedGroupReceiptOutput;
+use crate::mounted_child_group_receipt::MountedArtifactHandleIssuer;
 use std::mem::ManuallyDrop;
 
-pub(crate) struct MountedPrivateChildGroup<M:SpaceMember+MemberFactory> {
-    pub(crate) identity:MountedChildGroupIdentityIssuer,
-    pub(crate) parent_issuer:MountedArtifactHandleIssuer,
-    pub(crate) parent_issuer_closed:bool,
-    pub(crate) parent_handle:Option<ArtifactHandle>,
-    pub(crate) parent_touched:bool,
-    pub(crate) group_id:ManuallyDrop<Option<String>>,
-    pub(crate) parent_batch:ManuallyDrop<Option<store::MemberStoreOwnedBatch>>,
-    pub(crate) publication:ManuallyDrop<Option<PrivateChildPublicationGroup<M>>>,
-    pub(crate) receipts:ManuallyDrop<Option<Box<MountedGroupMemberReceipts>>>,
-    pub(crate) command:Option<MountedCommandEntry>,
-    pub(crate) append:Option<CommandAppend>,
-    pub(crate) output:ManuallyDrop<Option<MountedGroupReceiptOutput>>,
-    pub(crate) record:ManuallyDrop<Option<CommandLogEntry>>,
+#[doc(hidden)]
+pub struct MountedPrivateChildGroup<M:SpaceMember+MemberFactory> {
+    pub identity:MountedChildGroupIdentityIssuer,
+    pub parent_issuer:MountedArtifactHandleIssuer,
+    pub parent_issuer_closed:bool,
+    pub parent_handle:Option<ArtifactHandle>,
+    pub parent_touched:bool,
+    pub group_id:ManuallyDrop<Option<String>>,
+    pub parent_batch:ManuallyDrop<Option<store::MemberStoreOwnedBatch>>,
+    pub publication:ManuallyDrop<Option<PrivateChildPublicationGroup<M>>>,
+    pub receipts:ManuallyDrop<Option<Box<MountedGroupMemberReceipts>>>,
+    pub command:Option<MountedCommandEntry>,
+    pub append:Option<CommandAppend>,
+    pub output:ManuallyDrop<Option<MountedGroupReceiptOutput>>,
+    pub record:ManuallyDrop<Option<CommandLogEntry>>,
     record_close_field:usize,
-    pub(crate) displaced_shell_redo:ManuallyDrop<Vec<ShellHistoryReplay>>,
-    pub(crate) phase:u8,
-    pub(crate) captured_millis:i64,
-    pub(crate) expires_at_us:u64,
-    pub(crate) closing:bool,
+    pub displaced_shell_redo:ManuallyDrop<Vec<ShellHistoryReplay>>,
+    pub phase:u8,
+    pub captured_millis:i64,
+    pub expires_at_us:u64,
+    pub closing:bool,
 }
 
 impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
-    pub(crate) fn new(captured_millis:i64,expires_at_us:u64)->Self{Self{identity:MountedChildGroupIdentityIssuer::new(),parent_issuer:MountedArtifactHandleIssuer::new(),parent_issuer_closed:false,parent_handle:None,parent_touched:false,group_id:ManuallyDrop::new(None),parent_batch:ManuallyDrop::new(None),publication:ManuallyDrop::new(None),receipts:ManuallyDrop::new(None),command:None,append:None,output:ManuallyDrop::new(None),record:ManuallyDrop::new(None),displaced_shell_redo:ManuallyDrop::new(Vec::new()),record_close_field:0,phase:0,captured_millis,expires_at_us,closing:false}}
-    pub(crate) fn frame_birth_bytes()->usize{size_of::<Self>()}
-    pub(crate) fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn new(captured_millis:i64,expires_at_us:u64)->Self{Self{identity:MountedChildGroupIdentityIssuer::new(),parent_issuer:MountedArtifactHandleIssuer::new(),parent_issuer_closed:false,parent_handle:None,parent_touched:false,group_id:ManuallyDrop::new(None),parent_batch:ManuallyDrop::new(None),publication:ManuallyDrop::new(None),receipts:ManuallyDrop::new(None),command:None,append:None,output:ManuallyDrop::new(None),record:ManuallyDrop::new(None),displaced_shell_redo:ManuallyDrop::new(Vec::new()),record_close_field:0,phase:0,captured_millis,expires_at_us,closing:false}}
+    pub fn frame_birth_bytes()->usize{size_of::<Self>()}
+    pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         use mounted_child_group_receipt::mounted_nested_retirement_demand as nested;
         let release = |release_bytes, depth| RetirementDemand { release_bytes, depth, ..Default::default() };
@@ -50,8 +77,8 @@ impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
         if !self.identity.terminal_is_empty() { return Ok(release(self.identity.next_close_byte_demand(), 2)); }
         Ok(release(0, 2))
     }
-    pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.record.is_none()&&self.displaced_shell_redo.capacity()==0&&self.append.is_none()&&self.command.is_none()&&self.receipts.is_none()&&self.publication.is_none()&&self.parent_batch.is_none()&&self.group_id.is_none()&&self.identity.terminal_is_empty()&&self.parent_issuer_closed}
-    pub(crate) fn close_step(&mut self,parent:&mut impl SpaceMember,registry:&mut ChildMemberRegistry<M>,graph:&mut store::os_store::composition_coordinator::CompositionGraph,live:&ChildContentView,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
+    pub fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.record.is_none()&&self.displaced_shell_redo.capacity()==0&&self.append.is_none()&&self.command.is_none()&&self.receipts.is_none()&&self.publication.is_none()&&self.parent_batch.is_none()&&self.group_id.is_none()&&self.identity.terminal_is_empty()&&self.parent_issuer_closed}
+    pub fn close_step(&mut self,parent:&mut impl SpaceMember,registry:&mut ChildMemberRegistry<M>,graph:&mut store::os_store::composition_coordinator::CompositionGraph,live:&ChildContentView,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         use semio_framework_job::InteractiveJobCloseStep;
         let pending=|step:RetainedCloneStep| InteractiveJobCloseStep::Pending{progress:step.progress()};
@@ -78,8 +105,4 @@ impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
 }
 impl<M:SpaceMember+MemberFactory> Drop for MountedPrivateChildGroup<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"mounted private child frame retains original inputs and staged owners until funded terminal close");}}
 
-#[cfg(test)]
-include!("🧪️tests/🦀️.rs");
 
-#[cfg(test)]
-include!("../../../../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs");

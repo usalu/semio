@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MEDIA_VIDEO_RENDER_CAPABILITY, type VideoRenderProgram, videoRenderDurationMilliseconds, videoRenderFrameCount, videoRenderProgramFromWire, videoRenderProgramProblem } from "../../🟦️.ts";
+import {
+  MEDIA_VIDEO_RENDER_CAPABILITY,
+  type VideoRenderProgram,
+  videoRenderDurationMilliseconds,
+  videoRenderFrameCount,
+  videoRenderProgramFromWire,
+  videoRenderProgramProblem
+} from "../../🎥️video-render-program/🟦️.ts";
 import { wireEffectToFriendly } from "../../../🎭️actor/🖼️wire-turn/🟦️.ts";
 
 /** 🎞️ TypeScript twin of `🧪️tests/🎞️video-render-program/🦀️.rs`, driven from the SAME fixture

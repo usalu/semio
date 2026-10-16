@@ -20,7 +20,7 @@ fn chrome_accessibility_role(kind: &HitKind) -> &'static str {
 }
 
 impl<'ctx> PanelsViewCtx<'ctx> {
-    pub(super) fn palette_accessibility_nodes(&mut self, hits: &[HitTarget<ActionDescriptor>]) -> Option<Vec<ui_contract::AccessibilityProjectionNode>> {
+    pub fn palette_accessibility_nodes(&mut self, hits: &[HitTarget<ActionDescriptor>]) -> Option<Vec<ui_contract::AccessibilityProjectionNode>> {
         let kind = match self.input.overlay_state {
             OverlayState::Search => ShellPaletteKind::Search,
             OverlayState::Find => ShellPaletteKind::Find,
@@ -131,7 +131,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     /// level below it in paint order, named, described, valued and pressed from the painted registry, a gated submit
     /// or choice `disabled`, each focus stop tabbable, and the dialog's own keyboard focus as the focused node. While
     /// it is open nothing behind the veil is published, as React's `aria-modal` makes the page inert.
-    pub(super) fn dialog_accessibility_nodes(&self, hits: &[HitTarget<ActionDescriptor>]) -> Option<Vec<ui_contract::AccessibilityProjectionNode>> {
+    pub fn dialog_accessibility_nodes(&self, hits: &[HitTarget<ActionDescriptor>]) -> Option<Vec<ui_contract::AccessibilityProjectionNode>> {
         let request = self.chrome.chrome_build.dialog_stack.last()?;
         let key = request.accessibility_key();
         let prefix = format!("{key}.");
@@ -185,7 +185,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     /// new code: `aria-label` from the painted text, `aria-keyshortcuts` from this session's own
     /// remappable chord table (React's `aria-keyshortcuts` twin, audit W14 §B14), `aria-disabled`
     /// from the registry.
-    pub(crate) fn chrome_accessibility_nodes(&mut self, hits: &[HitTarget<ActionDescriptor>]) -> Vec<ui_contract::AccessibilityProjectionNode> {
+    pub fn chrome_accessibility_nodes(&mut self, hits: &[HitTarget<ActionDescriptor>]) -> Vec<ui_contract::AccessibilityProjectionNode> {
         if let Some(mut nodes) = self.dialog_accessibility_nodes(hits).or_else(|| self.palette_accessibility_nodes(hits)) {
             if let Some(notice) = self.transient_notice_accessibility_node(nodes.iter().map(|node| node.node_id).max().unwrap_or(0) + 1) {
                 nodes.push(notice);
@@ -347,7 +347,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     /// `data-notice-code`): named by its localized message and described by its machine code, so an assistive technology
     /// and the ARIA mirror hear what the banner paints and not only its close button. Projected over a modal too — a
     /// refusal answered while a dialog is open is still told. `None` once dismissed or past its 4 s deadline.
-    pub(super) fn transient_notice_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+    pub fn transient_notice_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let notice = self.chrome.chrome_build.transient_notice.as_ref().filter(|notice| !transient_notice_expired(notice, chrome_now_ms()))?;
         let mut node = chrome_status_accessibility_node(node_id, TRANSIENT_NOTICE_STATUS_ID, notice.message.clone());
         node.description = notice.code.clone();
@@ -357,7 +357,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     /// 🏷️ The footer chips this shell paints without a hit target — the presence roster (React's `#s-presence-peers`
     /// status) and the hub connection — with the text they paint, so a screen reader and the
     /// accessibility mirror read them too. The signed-out action is a separate button and gets its own hit-backed node.
-    pub(crate) fn footer_status_chips(&self) -> Vec<(&'static str, String)> {
+    pub fn footer_status_chips(&self) -> Vec<(&'static str, String)> {
         let mut chips = Vec::new();
         if !self.chrome.mobile_panel_active() {
             chips.push(("s-presence-peers", ui_wgpu::wgpu::presence_bar_chip_accessible_text(&self.footer_presence_rows(), None, self.prefs.active_locale())));

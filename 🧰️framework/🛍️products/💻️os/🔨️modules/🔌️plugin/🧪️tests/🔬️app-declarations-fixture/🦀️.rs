@@ -890,7 +890,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (0, 0));
         assert_eq!((moved.requested_bytes, moved.released_bytes), (0, 0));
         let graph_demand = semio_framework_value::RetirementDemand { copy_bytes: app.child_composition.composition.next_close_copy_byte_demand().unwrap(), capacity_bytes: app.child_composition.composition.next_close_capacity_byte_demand(4096).unwrap(), release_bytes: app.child_composition.composition.next_close_release_byte_demand().unwrap(), depth: app.child_composition.composition.next_close_depth_demand().unwrap() };
-        let app_demand = app.retained_fields_close_demand(4096).unwrap();
+        let app_demand = app.ladder_ref().retained_fields_close_demand(4096).unwrap();
         let exact = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: graph_demand.copy_bytes, maximum_capacity_bytes: graph_demand.capacity_bytes, maximum_release_bytes: graph_demand.release_bytes, maximum_depth: graph_demand.depth };
         assert_eq!(graph_demand.release_bytes, extent);
         for bytes in fixture["deniedBytes"].as_array().unwrap() {

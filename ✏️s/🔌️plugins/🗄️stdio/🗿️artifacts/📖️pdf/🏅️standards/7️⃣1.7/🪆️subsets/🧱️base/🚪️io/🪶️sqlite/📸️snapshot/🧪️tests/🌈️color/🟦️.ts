@@ -5,7 +5,7 @@ import { Database } from "bun:sqlite";
 import type { PdfFunction, PdfColorSpace, Binary64 } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { parsePdfFunction, parsePdfColorSpace } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { pdfFunctionToSqliteDatabase, pdfFunctionFromSqliteDatabase, pdfColorSpaceToSqliteDatabase, pdfColorSpaceFromSqliteDatabase } from "../../🌈️color/🟦️.ts";
-import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 async function cases(): Promise<{ functions: PdfFunction[]; colors: PdfColorSpace[]; depth: number }> {
   const input = await Bun.file(new URL("../../🌈️color/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();

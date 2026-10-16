@@ -8,6 +8,7 @@
 //! `🏃️run/🦀️.rs` proves the wire-level plumbing against a REAL guest.
 use super::*;
 use std::cell::RefCell;
+use std::collections::HashMap;
 
 #[derive(Default)]
 struct FakeInstance {

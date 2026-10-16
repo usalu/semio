@@ -1,5 +1,5 @@
 //! 🌳️ Retained admission of one complete recursively owned document closure.
-use super::OwnerRef;
+use semio_framework_os_store_envelope::owner::OwnerRef;
 use semio_framework_composition_admission::{CHILD_RESTORE_MAXIMUM_FIELD_BYTES,ChildRestoreProjection,ChildRestoreProjectionError};
 use {semio_framework_artifact_reference::ArtifactRef};
 use semio_framework_job::{Generation, OperationId, StepContext};
@@ -56,21 +56,21 @@ enum Phase {
 
 /// 🗂️ Fixed metadata only; candidate envelopes, projections and retirements remain caller-owned.
 pub struct OwnedDocumentClosure {
-    operation: OperationId,
-    generation: Generation,
+    pub operation: OperationId,
+    pub generation: Generation,
     source_generation: u64,
-    expires_at_us: u64,
+    pub expires_at_us: u64,
     expected_members: Option<usize>,
-    phase: Phase,
-    table: [usize; TABLE_SIZE],
+    pub phase: Phase,
+    pub table: [usize; TABLE_SIZE],
     queue: [usize; OWNED_DOCUMENT_MAXIMUM_MEMBERS + 1],
-    seen: [bool; OWNED_DOCUMENT_MAXIMUM_MEMBERS],
-    head: usize,
-    tail: usize,
-    child: usize,
+    pub seen: [bool; OWNED_DOCUMENT_MAXIMUM_MEMBERS],
+    pub head: usize,
+    pub tail: usize,
+    pub child: usize,
     probe: Option<usize>,
-    progress: OwnedDocumentClosureProgress,
-    terminal: Option<OwnedDocumentClosureStep>,
+    pub progress: OwnedDocumentClosureProgress,
+    pub terminal: Option<OwnedDocumentClosureStep>,
 }
 
 impl OwnedDocumentClosure {
@@ -133,7 +133,7 @@ impl OwnedDocumentClosure {
         OwnedDocumentClosureStep::Pending(self.progress)
     }
 
-    fn authority<S: OwnedDocumentClosureSource>(&self, source: &S, cx: &StepContext<'_>) -> Result<(), OwnedDocumentClosureDiagnostic> {
+    pub fn authority<S: OwnedDocumentClosureSource>(&self, source: &S, cx: &StepContext<'_>) -> Result<(), OwnedDocumentClosureDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation || source.generation() != self.source_generation || self.expected_members.is_some_and(|count| count != source.member_count()) {
             return Err(OwnedDocumentClosureDiagnostic::Stale);
         }
@@ -149,7 +149,7 @@ impl OwnedDocumentClosure {
         Ok(())
     }
 
-    fn root<S: OwnedDocumentClosureSource>(&mut self, source: &S) -> Result<(), OwnedDocumentClosureDiagnostic> {
+    pub fn root<S: OwnedDocumentClosureSource>(&mut self, source: &S) -> Result<(), OwnedDocumentClosureDiagnostic> {
         if !valid_reference(source.root_reference()) {
             return Err(OwnedDocumentClosureDiagnostic::InvalidReference);
         }
@@ -158,7 +158,7 @@ impl OwnedDocumentClosure {
         Ok(())
     }
 
-    fn index<S: OwnedDocumentClosureSource>(&mut self, source: &S) -> Result<(), OwnedDocumentClosureDiagnostic> {
+    pub fn index<S: OwnedDocumentClosureSource>(&mut self, source: &S) -> Result<(), OwnedDocumentClosureDiagnostic> {
         let index = self.progress.indexed;
         if index == source.member_count() {
             self.phase = Phase::Walk;
@@ -244,7 +244,7 @@ impl OwnedDocumentClosure {
         Ok(())
     }
 
-    fn reject(&mut self, diagnostic: OwnedDocumentClosureDiagnostic) -> OwnedDocumentClosureStep {
+    pub fn reject(&mut self, diagnostic: OwnedDocumentClosureDiagnostic) -> OwnedDocumentClosureStep {
         let terminal = OwnedDocumentClosureStep::Rejected(diagnostic);
         self.terminal = Some(terminal);
         terminal

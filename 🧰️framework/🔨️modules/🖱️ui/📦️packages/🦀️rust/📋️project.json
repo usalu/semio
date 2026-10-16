@@ -4,7 +4,7 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/*/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
@@ -168,7 +168,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️retained-control-commit/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️retained-control-commit/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️retained-control-commit/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/**/*.tsx"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",

@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalFixture } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
@@ -139,8 +139,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {zipSnapshotToSqliteDatabase as normSemanticProject,zipSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("ZIP complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(normSemanticContract["schemaBytes"]).toEqual(3963);expect(normSemanticContract["tableWidths"]).toEqual({"zip_archive":4,"zip_central_extra_field":4,"zip_central_extra_field_byte":4,"zip_central_header":11,"zip_central_legacy_comment_byte":4,"zip_central_legacy_name_byte":4,"zip_entry":6,"zip_entry_byte":4,"zip_local_extra_field":4,"zip_local_extra_field_byte":4,"zip_local_header":6,"zip_local_legacy_name_byte":4});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":30,"valueBytes":1151},{"id":"emptyEntries","rows":1,"valueBytes":36},{"id":"absentEntryMetadata","rows":11,"valueBytes":528}]);
  for(const item of normSemanticContract.cases){const source=parseZipSnapshot(item.id==="absentEntryMetadata"?{...fixture,entries:fixture.entries.map(({metadata,...entry})=>entry)}:fixture);if(item.id==="emptyEntries"){source.entries=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:12,maxColumns:11};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);

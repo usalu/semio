@@ -1,4 +1,4 @@
-import {binary32Value,binary64Value,type Binary32,type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32Value,binary64Value,type Binary32,type Binary64} from "@semio-tech/framework/value/ieee754";
 import type {ByteBuffer, Float32Buffer} from "../📸️snapshot/🟦️.ts";
 /** 🧬️ Remodeling mutation vocabulary — TypeScript twin of `🧬️mutations/🦀️.rs` and of all
  *  thirty-six `<slug>/🔺️diff/🦀️.rs` leaves.

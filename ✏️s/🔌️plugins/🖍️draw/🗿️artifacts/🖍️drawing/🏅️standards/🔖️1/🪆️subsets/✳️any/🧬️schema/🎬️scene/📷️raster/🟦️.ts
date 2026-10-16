@@ -1,8 +1,8 @@
 /** 🖼️ Resolved world-space scene inputs with isolated scopes and cropped private paint. */
 import {PathRasterJob,type PathRasterInput} from "../../🧮️geometry/📷️raster/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
-import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
-import type {CompositeBlend,CompositeAffine} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
+import type {PixelImage} from "@semio-tech/framework/pixels/editing";
+import type {CompositeBlend,CompositeAffine} from "@semio-tech/framework/pixels/compositing";
 export type RasterSceneGroup={readonly id:string;readonly opacity:number;readonly blendMode:CompositeBlend};
 export type RasterSceneAsset={readonly id:string;readonly image:PixelImage};
 export type RasterSceneContent=({readonly kind:"path"}&Pick<PathRasterInput,"segments"|"fillRule"|"fill"|"stroke">)|{readonly kind:"pixels";readonly image:PixelImage}|{readonly kind:"image";readonly asset:string;readonly width:number;readonly height:number};
@@ -10,10 +10,10 @@ export type RasterSceneNode={readonly id:string;readonly groups:readonly RasterS
 export type RasterSceneInput={width:number;height:number;origin:readonly[number,number];tolerance:number;maxPixels:number;maxSourceBytes:number;assets:readonly RasterSceneAsset[];nodes:readonly RasterSceneNode[]};
 export type RasterSceneProgress={phase:string;nodes:number;totalNodes:number;pixels:number;assets:number;totalAssets:number;sourceBytes:number;admittedImages:number;work:number;done:boolean};
 export type RasterSceneOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:RasterSceneProgress)=>void};
-import {CompositeJob,type CompositeLayer} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
-import {validateExtent,validateImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
+import {CompositeJob,type CompositeLayer} from "@semio-tech/framework/pixels/compositing";
+import {validateExtent,validateImage} from "@semio-tech/framework/pixels/editing";
 import {arcGeometry} from "../../🧮️geometry/🟦️.ts";
-import {AffineImageJob} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts";
+import {AffineImageJob} from "@semio-tech/framework/pixels/sampling/affine";
 const identity:CompositeAffine=[1,0,0,1,0,0];
 const coordinate=(v:number)=>Number.isFinite(v)&&Math.abs(v)<=1e9;
 function fail(message:string):never{throw new RangeError(message);}

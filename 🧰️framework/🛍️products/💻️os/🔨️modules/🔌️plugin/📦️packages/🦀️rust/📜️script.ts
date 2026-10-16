@@ -334,10 +334,16 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
           target: { kind: "lib", name: "semio_framework_os_kernel" },
           cargoArgs: ["--features", "sync"],
           laws: [
-            "os_store::sync::tests::document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal",
-            "os_store::sync::tests::actor_tests::raw_document_backbone_reaches_hub_once_and_returns_one_canonical_event",
-            "os_store::sync::native_actor::retained_turn_fixtures::retained_readiness_wake_after_turn_release_is_observed_once",
-            "os_store::sync::native_actor::retained_turn_fixtures::cancellation_cannot_complete_before_an_inflight_turn_returns_its_exact_owner",
+            "os_store::component::sync_tests::document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal",
+            "os_store::component::sync_tests::actor_tests::raw_document_backbone_reaches_hub_once_and_returns_one_canonical_event",
+          ],
+        },
+        {
+          package: "semio-framework-os-store-sync-native",
+          target: { kind: "lib" },
+          laws: [
+            "native_actor::retained_turn_fixtures::retained_readiness_wake_after_turn_release_is_observed_once",
+            "native_actor::retained_turn_fixtures::cancellation_cannot_complete_before_an_inflight_turn_returns_its_exact_owner",
           ],
         },
         {
@@ -414,7 +420,7 @@ class SnapshotSqliteRefusalScript extends BundleScript {
   const [mode,...rest]=segments;
   if(rest.length || !["source","native","host-native"].includes(mode))throw Error("test-snapshot-sqlite-refusal requires source, native or host-native");
   if(mode==="host-native"){
-   const receipts=await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd:this.repoRoot,env:process.env,groups:[{package:"semio-framework-plugin-host",target:{kind:"lib"},laws:["sqlite_refusal_tests::sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_actual_vm_cancellation","snapshot_call::metadata::tests::original_snapshot_scalar_metadata_borrows_actual_json_without_heap","snapshot_call::metadata::tests::original_snapshot_scalar_metadata_cancellation_keeps_source_and_ceiling","snapshot_call::tests::original_snapshot_pending_fuel_preserves_original_completed_ceiling"]},{package:"semio-framework-plugin-interpreter",target:{kind:"lib"},laws:["operation::input::tests::original_snapshot_input_cancellation_retains_actual_json_backing"]}],progress(event){console.log(`[DEBUG] original snapshot host owner ${event.stage}: ${event.law??""}`);}});
+   const receipts=await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd:this.repoRoot,env:process.env,groups:[{ package: "semio-framework-plugin-host-guest-laws", target: { kind: "lib" }, laws: ["sqlite_refusal_tests::sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_actual_vm_cancellation"] }, { package: "semio-framework-plugin-host-guest-runtime", target: { kind: "lib" }, laws: ["snapshot_call::metadata::tests::original_snapshot_scalar_metadata_borrows_actual_json_without_heap", "snapshot_call::metadata::tests::original_snapshot_scalar_metadata_cancellation_keeps_source_and_ceiling", "snapshot_call::tests::original_snapshot_pending_fuel_preserves_original_completed_ceiling"] },{package:"semio-framework-plugin-interpreter",target:{kind:"lib"},laws:["operation::input::tests::original_snapshot_input_cancellation_retains_actual_json_backing"]}],progress(event){console.log(`[DEBUG] original snapshot host owner ${event.stage}: ${event.law??""}`);}});
    console.log(`[DEBUG] original snapshot host owner receipts=${receipts.length}`);
    return;
   }
@@ -603,7 +609,7 @@ class OriginalMediaCustodyNative extends OriginalMediaCustodySource{
 }
 /** 🧯️ Original fixture completion custody and unchanged caller fuel use independent neutral oracles. */
 class OriginalFixtureCloseSource extends BundleScript{
- async run(args:string[]):Promise<void>{if(args.length)throw Error("original fixture close takes no arguments");const sources=[resolve(this.root,"../../🧪️tests/🧬️mutation-fixtures-job-close/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🧪️tests/🔬️unit/⛽️fuel/🟦️.ts")];const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original fixture close takes no arguments");const sources=[resolve(this.root,"../../🧪️tests/🧬️mutation-fixtures-job-close/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🧪️tests/🔬️unit/⛽️fuel/🟦️.ts"),resolve(this.root,"../../📬️completion/⚠️fault/🧪️tests/🟦️.ts")];const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
 }
 const router = new ScriptRouter(import.meta.dir).register("test-original-fixture-close-source",OriginalFixtureCloseSource).register("test-original-media-custody-source",OriginalMediaCustodySource).register("test-original-media-custody-native",OriginalMediaCustodyNative).register("test-original-command-receiving-source",OriginalCommandReceivingSource).register("test-original-command-receiving-native",OriginalCommandReceivingNative).register("test-original-pending-worker-source",OriginalPendingWorkerSource).register("test-original-pending-worker-native",OriginalPendingWorkerNative).register("test-original-inference-close-source",OriginalInferenceCloseSource).register("test-original-inference-close-native",OriginalInferenceCloseNative).register("test-original-paged-output-source",OriginalPagedOutputSource).register("test-original-paged-output-native",OriginalPagedOutputNative).register("test-original-lifecycle-source",OriginalLifecycleSource).register("test-original-lifecycle-native",OriginalLifecycleNative).register("test-original-failure-debit-source",OriginalFailureDebitSource).register("test-original-failure-debit-native",OriginalFailureDebitNative).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-structural-refusal",RetainedStructuralRefusalScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("test-window-registry",WindowRegistryScript)

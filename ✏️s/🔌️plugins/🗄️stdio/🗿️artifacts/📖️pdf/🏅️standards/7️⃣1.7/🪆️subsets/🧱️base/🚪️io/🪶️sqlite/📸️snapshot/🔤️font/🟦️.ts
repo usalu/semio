@@ -4,8 +4,8 @@ import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type Sqlit
 import {writePdfArtifactReference,readPdfArtifactReference} from "../📦️artifact-reference/🟦️.ts";
 import { writePdfDictionary, readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfOperations, readPdfOperations, pdfContentNumberColumns } from "../🖋️content/🟦️.ts";
-import { artifactSqliteInteger, artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { Ieee754Column } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { artifactSqliteInteger, artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { Ieee754Column } from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 
 /** 🔢️ Each native font binary64 field has its explicitly authored companion location. */
 export function pdfFontNumberColumns(table: string): readonly Ieee754Column[] {

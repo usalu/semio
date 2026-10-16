@@ -10,8 +10,8 @@ impl DirectoryState {
     /// `ShellToGateway::AgentMessage` queued on the bridge outbox plus the identical turn echoed into
     /// the conversation, so the feed is never behind the human's own typing. A blank draft, or a draft
     /// typed while no socket is open, queues nothing and KEEPS the text rather than swallowing it.
-    pub(crate) fn send_agent_chat_draft(&mut self, chrome: &mut ChromeState) -> bool {
-        if !matches!(chrome.chrome_build.agent.status, crate::agent_bridge::AgentBridgeStatus::Open) {
+    pub fn send_agent_chat_draft(&mut self, chrome: &mut ChromeState) -> bool {
+        if !matches!(chrome.chrome_build.agent.status, semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeStatus::Open) {
             return false;
         }
         let trimmed = self.agent_chat_draft.trim().to_string();
@@ -48,10 +48,10 @@ impl DirectoryState {
     /// ⌨️ React's composer submits on a bare Enter (Shift+Enter keeps the newline), which the
     /// retained input expresses as `commit: "enter"` plus an `on_submit` verb — the same
     /// `sendChatDraft` the Send button dispatches, so both routes are one code path.
-    pub(crate) fn build_agent_chat_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
+    pub fn build_agent_chat_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let locale = prefs.active_locale();
-        let connected = matches!(chrome.chrome_build.agent.status, crate::agent_bridge::AgentBridgeStatus::Open);
+        let connected = matches!(chrome.chrome_build.agent.status, semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeStatus::Open);
         let mut children = Vec::new();
         let mut feed = Vec::new();
         if chrome.chrome_build.agent.conversation.is_empty() {

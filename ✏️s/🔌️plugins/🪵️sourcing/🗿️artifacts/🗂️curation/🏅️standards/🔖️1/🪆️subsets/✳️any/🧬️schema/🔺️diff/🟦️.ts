@@ -1,4 +1,4 @@
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import type { ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseCurationCatalogChild, parseCurationCount, parseCurationList, parseCurationText, parseCuratedItem, parseObjectKindExtra, type CuratedItem, type ObjectKindExtra } from "../🟦️.ts";
 export interface CurationObjectKindExtraPatchEntry { extra: ObjectKindExtra }

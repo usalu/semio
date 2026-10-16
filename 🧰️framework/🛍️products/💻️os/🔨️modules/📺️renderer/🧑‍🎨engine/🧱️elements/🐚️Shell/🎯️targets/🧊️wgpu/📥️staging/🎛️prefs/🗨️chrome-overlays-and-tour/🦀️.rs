@@ -11,9 +11,9 @@ use super::*;
 /// (`🔌️plugin/🦀️.rs`'s `viewer.read-only`, and the mutation-outcomes contract's `app.command.rejected`),
 /// which is also what React's `SURFACE_FAULT_CODES.ViewerReadOnly`/`COMMAND_REJECTED_FAULT_CODE`
 /// match on.
-pub(crate) const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
+pub const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
 
-pub(crate) const COMMAND_REJECTED_FAULT_CODE: &str = "app.command.rejected";
+pub const COMMAND_REJECTED_FAULT_CODE: &str = "app.command.rejected";
 
 /// 🧯️ Classifies one dispatch-fault string — and the structured guest refusal behind it, when there is one — into the banner
 /// React would show for it: a read-only viewer is an `info` with its own frozen copy, a hub history refusal an `error` with
@@ -22,7 +22,7 @@ pub(crate) const COMMAND_REJECTED_FAULT_CODE: &str = "app.command.rejected";
 /// history, `{n}` from `Fault.params` — as warnings, then the app's `faultNotices` with the fault's own severity), a rejected
 /// mutation an `error` carrying the frozen code, any other guest refusal React's localized `dispatch-failed` notice (never its
 /// raw code), and any other shell error its own text. Pure, so the mapping is testable without a live plugin bridge.
-pub(crate) fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuestFault>, terminology: Terminology, locale: Locale) -> (String, semio_framework::Severity, Option<String>) {
+pub fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuestFault>, terminology: Terminology, locale: Locale) -> (String, semio_framework::Severity, Option<String>) {
     use semio_framework::Severity;
     if error.contains(VIEWER_READ_ONLY_FAULT_CODE) {
         let text = LocalizedLabel::native("This is a read-only viewer — editing is disabled.", "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert.").resolve(terminology, locale).to_string();
@@ -48,7 +48,7 @@ pub(crate) fn classify_dispatch_fault_notice(error: &str, refused: Option<&Refus
 /// 📣️ The text a refused program call reads in the shell's language: the localized notice of the structured fault behind it
 /// (`kernel::fault_notice` over the framework's tables — the host's guest admission `plugin.channel-mismatch` names both
 /// channels), else the call's own text.
-pub(crate) fn program_fault_text(refusal: &crate::program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
+pub fn program_fault_text(refusal: &semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, terminology: Terminology, locale: Locale) -> String {
     #[cfg(not(target_arch = "wasm32"))]
     if refusal.frame.is_some() { return LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(terminology, locale).to_string(); }
     refusal.fault.as_ref().and_then(|fault| semio_framework::kernel::fault_notice(fault, &[], terminology, locale)).map_or_else(|| refusal.text.clone(), |notice| notice.text)
@@ -75,7 +75,7 @@ impl PrefsState {
 
     /// 📣️ Records one refused program call's structured guest fault beside the refusing app's notices for the funnel, and
     /// answers the `code: message` text every `String` dispatch channel carries.
-    pub(crate) fn refused_guest_call(&mut self, refusal: crate::program_bridge::ProgramFault, app: &AppDefinition, chrome: &mut ChromeState) -> String {
+    pub fn refused_guest_call(&mut self, refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, app: &AppDefinition, chrome: &mut ChromeState) -> String {
         #[cfg(not(target_arch = "wasm32"))]
         { if chrome.chrome_build.refused_frame_fault.is_none() { chrome.chrome_build.refused_frame_fault = refusal.frame; }if chrome.chrome_build.refused_kernel_fault.is_none(){chrome.chrome_build.refused_kernel_fault=refusal.kernel;}if chrome.chrome_build.refused_actor_call.is_none(){chrome.chrome_build.refused_actor_call=refusal.actor_call;} }
         #[cfg(not(target_arch = "wasm32"))]
@@ -89,7 +89,7 @@ impl PrefsState {
     /// 🤝️ Tells one refused instance open — the host's guest admission (`plugin.channel-mismatch`, both channels named) or any
     /// other structured refusal — through the dispatch-fault funnel, so it reaches the person as its localized notice and never
     /// as a raw code; answers the text the open's own status keeps ([`program_fault_text`]).
-    pub(crate) fn note_refused_open(&mut self, refusal: crate::program_bridge::ProgramFault, chrome: &mut ChromeState) -> String {
+    pub fn note_refused_open(&mut self, refusal: semio_framework_os_renderer_wgpu_program_bridge::ProgramFault, chrome: &mut ChromeState) -> String {
         #[cfg(not(target_arch = "wasm32"))]
         { if chrome.chrome_build.refused_frame_fault.is_none() { chrome.chrome_build.refused_frame_fault = refusal.frame; }if chrome.chrome_build.refused_kernel_fault.is_none(){chrome.chrome_build.refused_kernel_fault=refusal.kernel;}if chrome.chrome_build.refused_actor_call.is_none(){chrome.chrome_build.refused_actor_call=refusal.actor_call;} }
         let detail = program_fault_text(&refusal, self.active_terminology(), self.active_locale());
@@ -105,3 +105,13 @@ impl PrefsState {
 //#endregion 🔖️ChromeOverlaysAndTour
 //#endregion ShellChrome
 
+//#region ShellChrome
+//#region 🔖️ChromeOverlaysAndTour
+//#region 🧯️TransientNoticeAndAgentOverlays
+/// 🛟️ The native input draft disposition of an exact typed history refusal.
+pub fn dispatch_refusal_discards_input_draft(error: &str) -> bool {
+    time_travel::history_refusal_discards_input_draft(error)
+}
+//#endregion 🧯️TransientNoticeAndAgentOverlays
+//#endregion 🔖️ChromeOverlaysAndTour
+//#endregion ShellChrome

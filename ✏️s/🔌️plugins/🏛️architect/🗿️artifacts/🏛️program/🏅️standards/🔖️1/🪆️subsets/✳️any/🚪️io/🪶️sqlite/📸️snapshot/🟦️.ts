@@ -1,9 +1,9 @@
 /** 🏛️ Literal Architect entities and relationships under the owned semantic schema. */
 import * as model from "../../../🧬️schema/🟦️.ts";
-import { ArtifactSqliteProjection, artifactSqliteTables, artifactSqliteCheckpoint, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import { type SqliteDatabase, type SqliteRow, type SqliteValue } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {binary64Value,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { NativeDecodeControl } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import { ArtifactSqliteProjection, artifactSqliteTables, artifactSqliteCheckpoint, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import { type SqliteDatabase, type SqliteRow, type SqliteValue } from "@semio-tech/framework/io/sqlite-snapshot";
+import {binary64Value,type Binary64} from "@semio-tech/framework/value/ieee754";
+import { NativeDecodeControl } from "@semio-tech/framework/value/decode";
 import { PROGRAM_SQLITE_SCHEMA } from "./🗄️schema/🟦️.ts";
 
 type Cells=readonly SqliteValue[];

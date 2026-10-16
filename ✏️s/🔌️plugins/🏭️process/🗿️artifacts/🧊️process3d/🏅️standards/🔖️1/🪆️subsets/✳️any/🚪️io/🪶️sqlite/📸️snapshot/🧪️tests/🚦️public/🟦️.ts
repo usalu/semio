@@ -7,7 +7,7 @@ import fixture from "../🧫️fixtures/🚦️public/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
 import { independentProcess3dSqliteFile, process3dSqliteFixture } from "../🧰️support/🟦️.ts";
 import { process3dSnapshotFromSqliteDatabase } from "../../🟦️.ts";
-import { importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("Process3d declared public I/O has one closed 3d parent contract", () => {
   

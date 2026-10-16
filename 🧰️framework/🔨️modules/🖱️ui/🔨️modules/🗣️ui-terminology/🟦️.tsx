@@ -1,5 +1,6 @@
 /** 🗣 Owns the persisted chrome terminology preference and its subscription hook. */
-import { type StoragePort, ephemeralSet } from "@semio-tech/framework";
+import { type StoragePort } from "../🗄️storage-port/🟦️.ts";
+import { ephemeralSet } from "../../../🫧️transient/🟦️.ts";
 import * as React from "react";
 import { useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 import { type UiLocale } from "../../🧱️elements/📚️I18n/🟦️.tsx";

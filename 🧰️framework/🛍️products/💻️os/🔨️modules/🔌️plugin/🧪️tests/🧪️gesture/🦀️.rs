@@ -106,9 +106,9 @@ fn in_window(actor: &str, window: &str) -> ActionMeta {
 /// live revision, driven against its slot, settled like a publishing completion. Answers what the tick committed.
 fn stream(app: &mut ToyApp, actor: &str, operation: u64, window: &str, value: i32) -> Option<(protocol::TransactionRef, Vec<TestMutation>)> {
     let base = app.stores.store.content_revision_now();
-    let slot = app.admit_gesture_slot(operation, &base, &in_window(actor, window),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+    let slot = app.render_ctx().admit_gesture_slot(operation, &base, &in_window(actor, window),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
     let committed = slot.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value }.into()), "seed").expect("a stream tick is never refused");
-    assert!(app.settle_gesture_slot(operation, true), "the dispatch drove its slot");
+    assert!(app.render_ctx().settle_gesture_slot(operation, true), "the dispatch drove its slot");
     retire_gesture_capture(slot);
     committed
 }
@@ -184,9 +184,9 @@ async fn a_late_release_of_a_press_the_runtime_ended_leaves_zero_trace() {
     let mut app = seeded_app(&fixture, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let base = app.stores.store.content_revision_now();
     let dispatch = |app: &mut ToyApp, operation: u64, press: &str, phase: GesturePhase, value: i32| {
-        let slot = app.admit_gesture_slot(operation, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+        let slot = app.render_ctx().admit_gesture_slot(operation, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
         let committed = slot.drive::<NudgeTool>(Some(press), "nudge", phase, Some(SetCount { value }.into()), "seed").expect("the dispatch is never refused");
-        assert!(app.settle_gesture_slot(operation, true), "even a dropped dispatch drove its slot");
+        assert!(app.render_ctx().settle_gesture_slot(operation, true), "even a dropped dispatch drove its slot");
         retire_gesture_capture(slot);
         committed
     };
@@ -217,20 +217,20 @@ async fn the_slot_follows_only_a_publishing_dispatch_admitted_on_the_gesture_it_
     let actor = text(&fixture["actor"]).to_string();
     let mut app = seeded_app(&fixture, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let base = app.stores.store.content_revision_now();
-    let faulted = app.admit_gesture_slot(900, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+    let faulted = app.render_ctx().admit_gesture_slot(900, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
     faulted.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 7 }.into()), "seed").expect("a tick");
-    assert!(app.settle_gesture_slot(900, false));
+    assert!(app.render_ctx().settle_gesture_slot(900, false));
     assert!(app.tool_machines.gestures().is_empty(), "a dispatch that does not publish decides nothing");
-    let (first, second) = (app.admit_gesture_slot(901, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission"), app.admit_gesture_slot(902, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission"));
+    let (first, second) = (app.render_ctx().admit_gesture_slot(901, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission"), app.render_ctx().admit_gesture_slot(902, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission"));
     first.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 8 }.into()), "seed").expect("a tick");
     second.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 9 }.into()), "seed").expect("a tick");
-    assert!(app.settle_gesture_slot(901, true) && app.settle_gesture_slot(902, true));
+    assert!(app.render_ctx().settle_gesture_slot(901, true) && app.render_ctx().settle_gesture_slot(902, true));
     assert_eq!(app.rendered_snapshot().count, 8, "the dispatch admitted on a slot that moved since is dropped");
-    assert!(!app.settle_gesture_slot(902, true), "a slot is settled once");
-    let release = app.admit_gesture_slot(903, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+    assert!(!app.render_ctx().settle_gesture_slot(902, true), "a slot is settled once");
+    let release = app.render_ctx().admit_gesture_slot(903, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
     let (transaction, mutations) = release.drive::<NudgeTool>(None, "nudge", GesturePhase::Commit, Some(SetCount { value: 10 }.into()), "seed").expect("the release").expect("the release commits");
     assert_eq!((transaction.tool.as_str(), mutations), (NUDGE_TOOL, vec![TestMutation::from(SetCount { value: 10 })]), "ONE transaction of the net leaf");
-    assert!(app.settle_gesture_slot(903, true));
+    assert!(app.render_ctx().settle_gesture_slot(903, true));
     assert!(app.tool_machines.gestures().is_empty(), "the release cleared the slot");
     let emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation> = gesture_emit(Some((transaction.clone(), vec![SetCount { value: 10 }.into()])), "seed");
     assert_eq!((emit.transaction, emit.artifact_mutations.len()), (Some(transaction), 1), "the committed gesture publishes as ONE stamped edit");

@@ -1,0 +1,579 @@
+//! 🗂️ One verified input owns dictionary ranges, semantic identity and every rejection until close.
+//! No typed snapshot/history/store or public member is constructed by this private handoff.
+
+#[path = "🛂️identity/🦀️.rs"]
+mod identity;
+#[path = "📇️index/🦀️.rs"]
+mod index;
+#[path = "🧾️record/🦀️.rs"]
+mod record;
+
+use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, VerifiedMemberHistoryInput, diagnostic};
+use crate::os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification, record::RetainedSprRecordObservation};
+use crate::os_spr::history::identity::id::{HistoryIdDiagnostic, RetainedHistoryIdV1};
+use identity::SemanticRecord;
+use index::{DictionaryIndexError, DictionaryRange, RetainedDictionaryIndex};
+use record::{DictionaryDeltaError, DictionaryDeltaEvent, RetainedDictionaryDelta};
+use semio_framework_job::StepContext;
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use std::mem::ManuallyDrop;
+
+#[derive(Clone, Copy)]
+pub(crate) struct MemberHistoryDictionaryLimits {
+    pub dictionary_entries: usize,
+    pub dictionary_bytes: u64,
+    pub records: u64,
+}
+
+impl Default for MemberHistoryDictionaryLimits {
+    fn default() -> Self {
+        Self { dictionary_entries: 8192, dictionary_bytes: 1048576, records: 8192 }
+    }
+}
+
+pub(crate) enum MemberHistoryDictionaryStep {
+    Pending(MemberOpenProgress),
+    Ready,
+    Rejected(MemberOpenDiagnostic),
+}
+pub(crate) struct MemberHistoryDictionaryAdmissionError {
+    pub diagnostic: MemberOpenDiagnostic,
+    pub input: VerifiedMemberHistoryInput,
+}
+
+struct DictionaryOwners {
+    input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
+    index: ManuallyDrop<Option<RetainedDictionaryIndex>>,
+}
+
+impl DictionaryOwners {
+    fn request(&self) -> Result<&MemberOpenRequest, MemberOpenDiagnostic> {
+        let input = self.input.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
+        if let Some(error) = input.diagnostic {
+            return Err(error);
+        }
+        input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)
+    }
+    fn check(&self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+        self.request()?.check_step_authority(cx)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.input.is_none() && self.index.is_none()
+    }
+    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.index.is_some() { return crate::os_store::snapshot_read::retirement_owner_demands(&self.index, body); }
+        crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body)
+    }
+}
+impl ErasedSnapshotRetirement for DictionaryOwners {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if self.index.is_some() {
+            let step = crate::os_store::snapshot_read::retirement_owner_close(&mut self.index, grant)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        crate::os_store::snapshot_read::retirement_owner_close(&mut self.input, grant)
+    }
+    fn terminal_is_empty(&self) -> bool { DictionaryOwners::terminal_is_empty(self) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+}
+
+impl Drop for DictionaryOwners {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "dictionary owners require bounded retirement");
+    }
+}
+
+struct PendingByte {
+    offset: u64,
+    value: u8,
+    framed: bool,
+}
+struct DictionaryLookup {
+    range: DictionaryRange,
+    copied: u64,
+}
+
+pub(crate) struct MemberHistoryDictionaryOwner {
+    owners: ManuallyDrop<Option<DictionaryOwners>>,
+    scanner: Option<RetainedSprVerification>,
+    record: Option<RetainedSprRecordObservation>,
+    delta: Option<RetainedDictionaryDelta>,
+    semantic: Option<SemanticRecord>,
+    id: Option<RetainedHistoryIdV1>,
+    lookup: Option<DictionaryLookup>,
+    lookup_byte: Option<u8>,
+    pending: Option<PendingByte>,
+    schema: &'static str,
+    end: u64,
+    document_seen: bool,
+    document_matches: bool,
+    composition_matches: bool,
+    composition_seen: bool,
+    initial_history_exact: bool,
+    payload_done: bool,
+    record_matches: bool,
+    id_retiring: bool,
+    ready: bool,
+    closing: bool,
+    error: Option<MemberOpenDiagnostic>,
+    transition: &'static str,
+}
+
+impl MemberHistoryDictionaryOwner {
+    pub(super) fn begin(input: VerifiedMemberHistoryInput, schema: &'static str, limits: MemberHistoryDictionaryLimits, cx: &StepContext<'_>) -> Result<Self, MemberHistoryDictionaryAdmissionError> {
+        let valid_limits = limits.dictionary_entries <= 8192 && limits.dictionary_bytes <= 1048576 && limits.records > 0 && limits.records <= 8192;
+        let admitted = input.diagnostic.map_or(Ok(()), Err).and_then(|_| input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx));
+        let error = admitted.err().or_else(|| (!valid_limits).then_some(MemberOpenDiagnostic::Capacity)).or_else(|| (schema.is_empty() || schema.len() > 256 || schema.chars().any(char::is_control)).then_some(MemberOpenDiagnostic::Identity));
+        if let Some(diagnostic) = error {
+            return Err(MemberHistoryDictionaryAdmissionError { diagnostic, input });
+        }
+        let end = input.verified_end();
+        let scanner = match RetainedSprVerification::new(end, RetainedSprLimits { records: limits.records, ..RetainedSprLimits::default() }) {
+            Ok(scanner) => scanner,
+            Err(error) => return Err(MemberHistoryDictionaryAdmissionError { diagnostic: diagnostic(error), input }),
+        };
+        let index = match RetainedDictionaryIndex::new(end, limits.dictionary_entries, limits.dictionary_bytes) {
+            Ok(index) => index,
+            Err(error) => return Err(MemberHistoryDictionaryAdmissionError { diagnostic: index_error(error), input }),
+        };
+        Ok(Self {
+            owners: ManuallyDrop::new(Some(DictionaryOwners { input: ManuallyDrop::new(Some(input)), index: ManuallyDrop::new(Some(index)) })),
+            scanner: Some(scanner),
+            record: None,
+            delta: None,
+            semantic: None,
+            id: None,
+            lookup: None,
+            lookup_byte: None,
+            pending: None,
+            schema,
+            end,
+            document_seen: false,
+            document_matches: false,
+            composition_matches: false,
+            composition_seen: false,
+            initial_history_exact: true,
+            payload_done: false,
+            record_matches: false,
+            id_retiring: false,
+            ready: false,
+            closing: false,
+            error: None,
+            transition: "begin",
+        })
+    }
+
+    fn reject(&mut self, error: MemberOpenDiagnostic) -> MemberOpenDiagnostic {
+        if let Some(index) = self.owners.as_mut().and_then(|owners| owners.index.as_mut()) {
+            index.reject_record();
+        }
+        *self.error.get_or_insert(error)
+    }
+    fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+        if self.closing {
+            return Err(MemberOpenDiagnostic::Cancelled);
+        }
+        if let Some(error) = self.error {
+            return Err(error);
+        }
+        let result = self.owners.as_ref().ok_or(MemberOpenDiagnostic::Stale).and_then(|owners| owners.check(cx));
+        result.map_err(|error| self.reject(error))
+    }
+    fn progress(&self) -> MemberHistoryDictionaryStep {
+        MemberHistoryDictionaryStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::History, completed: self.scanner.as_ref().map_or(self.end, RetainedSprVerification::consumed), total: self.end })
+    }
+
+    pub(crate) fn step(&mut self, cx: &mut StepContext<'_>) -> MemberHistoryDictionaryStep {
+        if let Err(error) = self.check(cx) {
+            return MemberHistoryDictionaryStep::Rejected(error);
+        }
+        if self.ready {
+            return MemberHistoryDictionaryStep::Ready;
+        }
+        cx.set_stage("member-open.history.dictionary");
+        while !cx.should_yield() {
+            if let Err(error) = self.check(cx) {
+                return MemberHistoryDictionaryStep::Rejected(error);
+            }
+            if let Err(error) = self.unit(cx) {
+                return MemberHistoryDictionaryStep::Rejected(self.reject(error));
+            }
+            if let Err(error) = self.check(cx) {
+                return MemberHistoryDictionaryStep::Rejected(error);
+            }
+            if self.ready {
+                return MemberHistoryDictionaryStep::Ready;
+            }
+        }
+        self.progress()
+    }
+
+    fn unit(&mut self, cx: &mut StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+        let owners = self.owners.as_mut().ok_or(MemberOpenDiagnostic::Stale)?;
+        if self.delta.as_ref().is_some_and(RetainedDictionaryDelta::has_event) {
+            cx.consume_fuel(1);
+            let event = self.delta.as_mut().unwrap().take_event().map_err(delta_error)?.ok_or(MemberOpenDiagnostic::Malformed)?;
+            let index = owners.index.as_mut().ok_or(MemberOpenDiagnostic::Stale)?;
+            match event {
+                DictionaryDeltaEvent::Begin { base, count } => {
+                    index.begin_delta(base, count).map_err(index_error)?;
+                    self.transition = "delta-begin";
+                }
+                DictionaryDeltaEvent::Entry { offset, length } => {
+                    index.append(DictionaryRange { offset, length }).map_err(index_error)?;
+                    self.transition = "entry";
+                }
+            }
+            return Ok(());
+        }
+        if self.id_retiring {
+            cx.consume_fuel(1);
+            self.transition = "id-retire";
+            if self.id.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.close_bytes(1) == 0 {
+                self.id.take();
+                self.id_retiring = false;
+                self.lookup = None;
+            }
+            return Ok(());
+        }
+        if let Some(id) = self.id.as_mut() {
+            if id.is_complete() {
+                cx.consume_fuel(1);
+                self.transition = "id-complete";
+                self.semantic.as_mut().ok_or(MemberOpenDiagnostic::Malformed)?.accept_id(id.finish().map_err(id_error)?, owners.request()?, self.schema)?;
+                self.id_retiring = true;
+                return Ok(());
+            }
+            if let Some(index) = id.lookup() {
+                cx.consume_fuel(1);
+                self.transition = "id-lookup";
+                let range = owners.index.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.lookup(index as usize).map_err(index_error)?;
+                let length = usize::try_from(range.length).map_err(|_| MemberOpenDiagnostic::Capacity)?;
+                id.begin_dictionary(index, length, &mut 1).map_err(id_error)?;
+                self.lookup = Some(DictionaryLookup { range, copied: 0 });
+                return Ok(());
+            }
+            if id.dictionary_pending() {
+                if let Some(mut byte) = self.lookup_byte.take() {
+                    cx.consume_fuel(1);
+                    self.transition = "id-feed";
+                    let result = id.push_dictionary(byte, &mut 1).map_err(id_error);
+                    byte = 0;
+                    let _ = byte;
+                    result?;
+                } else {
+                    let lookup = self.lookup.as_mut().ok_or(MemberOpenDiagnostic::Malformed)?;
+                    if lookup.copied >= lookup.range.length {
+                        return Err(MemberOpenDiagnostic::Malformed);
+                    }
+                    let mut byte = [0; 1];
+                    let offset = usize::try_from(lookup.range.offset + lookup.copied).map_err(|_| MemberOpenDiagnostic::Capacity)?;
+                    let copied = owners.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, &mut byte, cx)?;
+                    if copied == 1 {
+                        self.lookup_byte = Some(byte[0]);
+                        lookup.copied += 1;
+                        self.transition = "id-copy";
+                    }
+                    byte.fill(0);
+                }
+                return Ok(());
+            }
+        }
+        if let Some(pending) = self.pending.as_mut() {
+            if !pending.framed {
+                cx.consume_fuel(1);
+                self.transition = "framing";
+                self.scanner.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.push(&[pending.value], &mut 1).map_err(diagnostic)?;
+                pending.framed = true;
+                return Ok(());
+            }
+            if self.record.is_none() {
+                if let Some(record) = self.scanner.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.observe_record_header().map_err(diagnostic)? {
+                    cx.consume_fuel(1);
+                    self.transition = "record";
+                    self.pending = None;
+                    if (matches!(record.kind(), crate::os_spr::REC_DOC | crate::os_spr::REC_STR_DICT | crate::os_spr::REC_TRANSITION) && record.flags() != 2) || (record.kind() == crate::os_spr::REC_COMPOSITION && record.flags() != 0) {
+                        return Err(MemberOpenDiagnostic::Malformed);
+                    }
+                    if record.kind() == 1 && self.document_seen {
+                        return Err(MemberOpenDiagnostic::Malformed);
+                    }
+                    if record.kind() == 3 {
+                        self.delta = Some(RetainedDictionaryDelta::new(record.payload_start(), record.payload_end()).map_err(delta_error)?);
+                    }
+                    self.initial_history_exact &= matches!(record.kind(), 1 | 3 | 65 | crate::os_spr::REC_COMMIT);
+                    self.initial_history_exact &= record.kind() != 65 || !self.composition_seen;
+                    if matches!(record.kind(), 1 | 65) {
+                        self.semantic = Some(SemanticRecord::new(record.kind()));
+                    }
+                    self.record = Some(record);
+                    self.payload_done = false;
+                    return Ok(());
+                }
+            }
+            let payload = self.record.as_ref().is_some_and(|record| pending.offset >= record.payload_start() && pending.offset < record.payload_end());
+            if payload && self.semantic.as_ref().is_some_and(SemanticRecord::needs_id) && self.id.is_none() {
+                cx.consume_fuel(1);
+                self.id = Some(RetainedHistoryIdV1::new());
+                self.transition = "id-begin";
+                return Ok(());
+            }
+            cx.consume_fuel(1);
+            self.transition = if payload { "payload" } else { "framing-release" };
+            let pending = self.pending.take().unwrap();
+            let result = if payload {
+                if let Some(delta) = self.delta.as_mut() {
+                    delta.push(pending.value, &mut 1).map(|_| ()).map_err(delta_error)
+                } else if let Some(id) = self.id.as_mut() {
+                    id.push_wire(pending.value, &mut 1).map(|_| ()).map_err(id_error)
+                } else if let Some(semantic) = self.semantic.as_mut() {
+                    semantic.push(pending.value, owners.request()?)
+                } else {
+                    Ok(())
+                }
+            } else {
+                Ok(())
+            };
+            result?;
+            return Ok(());
+        }
+        let consumed = self.scanner.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.consumed();
+        if let Some(record) = self.record.as_ref() {
+            if consumed == record.payload_end() && !self.payload_done {
+                cx.consume_fuel(1);
+                self.transition = "payload-end";
+                if self.id.is_some() {
+                    return Err(MemberOpenDiagnostic::Malformed);
+                }
+                if let Some(delta) = self.delta.as_mut() {
+                    delta.finish().map_err(delta_error)?;
+                    delta.close_bytes(0);
+                    self.delta.take();
+                }
+                if let Some(semantic) = self.semantic.as_ref() {
+                    self.record_matches = semantic.finish()?;
+                }
+                self.semantic = None;
+                self.payload_done = true;
+                return Ok(());
+            }
+            if consumed == record.frame_end() {
+                cx.consume_fuel(1);
+                self.transition = "record-end";
+                if !self.payload_done {
+                    return Err(MemberOpenDiagnostic::Malformed);
+                }
+                match record.kind() {
+                    3 => {
+                        owners.index.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.publish_delta().map_err(index_error)?;
+                        self.transition = "delta";
+                    }
+                    1 => {
+                        self.document_seen = true;
+                        self.document_matches = self.record_matches;
+                        self.transition = "document";
+                    }
+                    65 => {
+                        self.composition_matches = self.record_matches;
+                        self.composition_seen = true;
+                        self.transition = "composition";
+                    }
+                    _ => {}
+                }
+                self.record = None;
+                return Ok(());
+            }
+        }
+        if consumed == self.end {
+            cx.consume_fuel(1);
+            self.transition = "ready";
+            let span = self.scanner.as_mut().unwrap().finish().map_err(diagnostic)?;
+            let original = owners.input.as_ref().and_then(|input| input.span.as_ref()).ok_or(MemberOpenDiagnostic::Stale)?;
+            if span.end() != self.end || span.tail() != 0 || span.sequence() != original.sequence() || span.chain() != original.chain() {
+                return Err(MemberOpenDiagnostic::Malformed);
+            }
+            if !self.document_seen || !self.document_matches || !self.composition_matches {
+                return Err(MemberOpenDiagnostic::Identity);
+            }
+            self.ready = true;
+            return Ok(());
+        }
+        let mut byte = [0; 1];
+        let copied = owners.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(consumed as usize, &mut byte, cx)?;
+        if copied == 1 {
+            self.pending = Some(PendingByte { offset: consumed, value: byte[0], framed: false });
+            self.transition = "copy";
+        }
+        byte.fill(0);
+        Ok(())
+    }
+
+    pub(crate) fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<VerifiedMemberHistoryDictionary>, MemberOpenDiagnostic> {
+        self.check(cx)?;
+        if !self.ready || cx.should_yield() {
+            return Ok(None);
+        }
+        cx.consume_fuel(1);
+        self.check(cx)?;
+        if cx.deadline_exceeded() {
+            return Ok(None);
+        }
+        self.scanner = None;
+        self.ready = false;
+        let initial_history_exact = self.initial_history_exact && self.composition_seen;
+        Ok(Some(VerifiedMemberHistoryDictionary { owners: ManuallyDrop::new(self.owners.take()), schema: self.schema, initial_history_exact, closing: false, diagnostic: None }))
+    }
+}
+
+impl MemberHistoryDictionaryOwner {
+    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.pending.is_some() || self.lookup_byte.is_some() || self.delta.is_some() || self.id.is_some() { return Ok(RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() }); }
+        if self.scanner.is_some() || self.record.is_some() || self.semantic.is_some() || self.lookup.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, body)
+    }
+}
+impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_depth < self.next_depth_demand()? { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "dictionary retirement exceeds admitted depth")); }
+        if self.next_copy_byte_demand()? > grant.maximum_copy_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        self.closing = true;
+        if self.pending.is_some() || self.lookup_byte.is_some() {
+            if self.pending.take().is_none() { self.lookup_byte = None; }
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: 1, ..empty }));
+        }
+        if let Some(delta) = self.delta.as_mut() {
+            let copied_bytes = delta.close_bytes(grant.maximum_copy_bytes);
+            if delta.terminal_is_empty() { drop(self.delta.take()); }
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..empty }));
+        }
+        if let Some(id) = self.id.as_mut() {
+            let copied_bytes = id.close_bytes(grant.maximum_copy_bytes);
+            if copied_bytes < grant.maximum_copy_bytes { drop(self.id.take()); }
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..empty }));
+        }
+        if self.scanner.is_some() || self.record.is_some() || self.semantic.is_some() || self.lookup.is_some() {
+            self.scanner = None;
+            self.record = None;
+            self.semantic = None;
+            self.lookup = None;
+            self.id_retiring = false;
+            self.ready = false;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+        }
+        crate::os_store::snapshot_read::retirement_owner_close(&mut self.owners, grant)
+    }
+    fn terminal_is_empty(&self) -> bool { self.owners.is_none() && self.pending.is_none() && self.lookup_byte.is_none() && self.delta.is_none() && self.id.is_none() && self.scanner.is_none() && self.record.is_none() && self.semantic.is_none() && self.lookup.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
+}
+
+impl Drop for MemberHistoryDictionaryOwner {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "dictionary operation requires retained close or handoff");
+    }
+}
+
+pub(crate) struct VerifiedMemberHistoryDictionary {
+    owners: ManuallyDrop<Option<DictionaryOwners>>,
+    schema: &'static str,
+    initial_history_exact: bool,
+    closing: bool,
+    diagnostic: Option<MemberOpenDiagnostic>,
+}
+
+impl VerifiedMemberHistoryDictionary {
+    pub(super) fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        self.owners.as_ref().and_then(|owners|owners.input.as_ref()).ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)
+    }
+    pub(super) fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+        self.check_step_authority(cx)?;self.owners.as_ref().and_then(|owners|owners.input.as_ref()).ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)
+    }
+    pub(super) fn check_step_authority(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+        if let Some(error) = self.diagnostic {
+            return Err(error);
+        }
+        let checked = if self.closing { Err(MemberOpenDiagnostic::Cancelled) } else { self.owners.as_ref().ok_or(MemberOpenDiagnostic::Stale).and_then(|owners| owners.check(cx)) };
+        if let Err(error) = checked {
+            self.diagnostic = Some(error);
+            if let Some(index) = self.owners.as_mut().and_then(|owners| owners.index.as_mut()) {
+                index.reject_record();
+            }
+        }
+        checked
+    }
+
+    pub(super) fn initial_history_is_exact(&self) -> bool {
+        self.initial_history_exact
+    }
+
+    pub(super) fn verified_end(&self) -> u64 {
+        self.owners.as_ref().and_then(|owners| owners.input.as_ref()).map_or(0, VerifiedMemberHistoryInput::verified_end)
+    }
+
+    pub(super) fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
+        self.check_step_authority(cx)?;
+        self.owners.as_mut().and_then(|owners| owners.input.as_mut()).ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
+    }
+
+    pub(super) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str, crate::os_spr::ActorId), MemberOpenDiagnostic> {
+        self.check_step_authority(cx)?;
+        let request = self.owners.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.request()?;
+        Ok((request.admitted_expected()?.clone(), request.owner().cloned(), self.schema, request.actor().clone()))
+    }
+}
+
+impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
+        crate::os_store::snapshot_read::retirement_owner_close(&mut self.owners, grant)
+    }
+    fn terminal_is_empty(&self) -> bool { self.owners.is_none() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, 0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, 0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.owners, 0)?.depth) }
+}
+
+impl Drop for VerifiedMemberHistoryDictionary {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "semantic input witness requires bounded retirement");
+    }
+}
+
+fn index_error(error: DictionaryIndexError) -> MemberOpenDiagnostic {
+    match error {
+        DictionaryIndexError::Capacity => MemberOpenDiagnostic::Capacity,
+        DictionaryIndexError::State => MemberOpenDiagnostic::Stale,
+        DictionaryIndexError::Malformed => MemberOpenDiagnostic::Malformed,
+    }
+}
+fn delta_error(error: DictionaryDeltaError) -> MemberOpenDiagnostic {
+    match error {
+        DictionaryDeltaError::Capacity => MemberOpenDiagnostic::Capacity,
+        DictionaryDeltaError::State => MemberOpenDiagnostic::Stale,
+        DictionaryDeltaError::Cancelled => MemberOpenDiagnostic::Cancelled,
+        DictionaryDeltaError::Malformed => MemberOpenDiagnostic::Malformed,
+    }
+}
+fn id_error(error: HistoryIdDiagnostic) -> MemberOpenDiagnostic {
+    match error {
+        HistoryIdDiagnostic::Capacity => MemberOpenDiagnostic::Capacity,
+        HistoryIdDiagnostic::State => MemberOpenDiagnostic::Stale,
+        HistoryIdDiagnostic::Cancelled => MemberOpenDiagnostic::Cancelled,
+        HistoryIdDiagnostic::Identity => MemberOpenDiagnostic::Identity,
+        HistoryIdDiagnostic::Malformed => MemberOpenDiagnostic::Malformed,
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🗂️dictionary/🦀️.rs"]
+mod tests;

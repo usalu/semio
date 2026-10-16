@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { panelTabFirstDraggableElementId } from "@semio-tech/framework";
+import { panelTabFirstDraggableElementId } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.useRef/.useMemo at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).

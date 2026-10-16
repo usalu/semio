@@ -10,7 +10,7 @@ impl DirectoryState {
     /// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1e gave the browser build a real identity of its
     /// own (`poll_browser_identity`); it used to be a cfg pair whose browser half answered a hard
     /// `None`, so every guest saw an anonymous session on the browser renderer alone.
-    pub(super) fn session_identity_view(&self) -> Option<ViewSessionIdentity> {
+    pub fn session_identity_view(&self) -> Option<ViewSessionIdentity> {
         self.identity.as_ref().map(|identity| ViewSessionIdentity { user_id: identity.user_id.clone(), display_name: identity.display_name.clone() })
     }
 }

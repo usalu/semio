@@ -1,6 +1,6 @@
 /** 📍️ GIS feature data preserves the full intrinsic native Value domain. */
-import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {parseIntrinsicValue,type IntrinsicValue} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
+import {parseIntrinsicValue,type IntrinsicValue} from "@semio-tech/framework/value/schema/intrinsic";
 export type GisMapValue=IntrinsicValue;
 export interface GisMapFeature{id:string;data:GisMapValue}
 export interface GisMapFeaturePropertyValue{value:GisMapValue}

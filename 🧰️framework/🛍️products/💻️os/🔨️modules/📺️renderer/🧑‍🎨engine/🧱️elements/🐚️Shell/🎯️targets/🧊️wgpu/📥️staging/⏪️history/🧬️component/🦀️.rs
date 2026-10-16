@@ -38,6 +38,6 @@ pub struct HistoryState {
     /// (browser) — `📎️local-folders`'s `LOCAL_FOLDER_DIRECT_REATTACH`.
     pub local_folder_direct_reattach: bool,
     /// 🌐️ The folder- or file-bound document the browser build keeps through the dev host's backbone route.
-    #[cfg(any(target_arch = "wasm32", test))]
+    #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
     pub host_route_folder: Option<local_folders::HostRouteFolder>,
 }

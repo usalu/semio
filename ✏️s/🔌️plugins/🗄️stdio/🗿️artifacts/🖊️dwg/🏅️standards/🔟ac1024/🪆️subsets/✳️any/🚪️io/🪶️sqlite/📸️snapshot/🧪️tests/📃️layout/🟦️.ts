@@ -5,7 +5,7 @@ import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectLayout,dwgReconstructLayout } from "../../📃️layout/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import { dwgLayoutFixture as layout } from "../🧰️support/📃️layout/🟦️.ts";
 const max=18446744073709551615n;
 test("DWG paper layout named vectors, enums and optional handles are queryable and exact",async()=>{

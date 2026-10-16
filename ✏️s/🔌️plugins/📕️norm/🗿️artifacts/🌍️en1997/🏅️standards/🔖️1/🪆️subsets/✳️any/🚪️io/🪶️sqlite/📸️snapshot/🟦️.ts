@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
 import type{SoilLayer,SpreadFoundation,FoundationLoadCase,Pile,PileTestProfile,RetainingWall,Slope,UpliftCase}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 export type En1997SqliteLayer=Omit<SoilLayer,"depthTop"|"depthBottom"|"gamma"|"gammaPrime"|"phiPrimeDeg"|"cohesionEffective"|"cohesionUndrained"|"oedometricModulus"|"poissonRatio"|"cptQc"|"sptN">&{depthTop:Binary64;depthBottom:Binary64;gamma:Binary64;gammaPrime:Binary64;phiPrimeDeg:Binary64;cohesionEffective:Binary64;cohesionUndrained:Binary64;oedometricModulus:Binary64;poissonRatio:Binary64;cptQc:Binary64;sptN:Binary64};
 export type En1997SqliteLoad=Omit<FoundationLoadCase,"verticalPermanent"|"verticalVariable"|"horizontalPermanent"|"horizontalVariable"|"momentPermanent"|"momentVariable">&{verticalPermanent:Binary64;verticalVariable:Binary64;horizontalPermanent:Binary64;horizontalVariable:Binary64;momentPermanent:Binary64;momentVariable:Binary64};
 export type En1997SqliteFooting=Omit<SpreadFoundation,"width"|"length"|"embedment"|"baseInclinationDeg"|"settlementLimit"|"loadCases">&{width:Binary64;length:Binary64;embedment:Binary64;baseInclinationDeg:Binary64;settlementLimit:Binary64;loadCases:En1997SqliteLoad[]};

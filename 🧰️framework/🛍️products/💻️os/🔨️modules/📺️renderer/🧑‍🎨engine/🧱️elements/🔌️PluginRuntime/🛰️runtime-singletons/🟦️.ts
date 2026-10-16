@@ -4,7 +4,7 @@
  */
 
 import { rendererOriginalWorkStock } from "../../../🧵️work/🟦️.ts";
-import { ActivationRegistry } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { ActivationRegistry } from "../../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
 import { assertShardJspiAvailable, ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { shardWorkerUrl } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
@@ -122,7 +122,7 @@ export function poolConcurrency(): number {
 /** 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): `ShardClientOptions.onShardLost`'s
  * real production wiring — before this packet, the callback here only `console.error`'d (a shard's
  * whole actor roster silently stopped receiving turns, undetectable short of reading the console).
- * `ActivationRegistry.handleShardLost` (`🎠️kernel/🟦️.ts`, already coordinator-verified) is
+ * `ActivationRegistry.handleShardLost` (`🎠️kernel`, already coordinator-verified) is
  * the REAL restore path: it bumps each affected actor's generation, cancels its stale queue, and
  * `resume()`s it from its last checkpoint on a freshly rebuilt shard. Split out from
  * {@link buildShardClientOptions} (rather than inlined as an arrow there) purely so a test can call it

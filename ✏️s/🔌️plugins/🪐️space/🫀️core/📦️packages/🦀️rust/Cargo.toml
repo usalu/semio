@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Shared Space authority independent of concrete artifact implementations"
 
 [package.metadata.semio]
-role = "kernel"
+role = "library"
 
 [lints]
 workspace = true
@@ -21,7 +21,6 @@ semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modu
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
-semio-framework-artifact-space-space = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

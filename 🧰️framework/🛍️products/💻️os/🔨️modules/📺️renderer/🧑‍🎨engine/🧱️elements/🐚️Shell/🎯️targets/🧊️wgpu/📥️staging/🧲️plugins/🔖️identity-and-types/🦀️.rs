@@ -7,7 +7,7 @@ use super::*;
 //#region 🔖️IdentityPure
 /// 📇️ §5/§6 — a direct manifest scan for the one app a plugin declares for a given
 /// `(dialect, role)`, mirroring the React shell's `findDialectApp`.
-pub(crate) fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
+pub fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
     program.manifest.apps.iter().find(|app| &app.dialect == dialect && app.role == role)
 }
 
@@ -38,7 +38,7 @@ pub struct ShellPluginInstall {
 /// Reading it back off a resident entry is what lets the shell install a plugin without the renderer
 /// having to hand it a second copy of a path it already owns.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn plugin_modules_root_of(programs: &[ProgramBridgeEntry]) -> Option<std::path::PathBuf> {
+pub fn plugin_modules_root_of(programs: &[ProgramBridgeEntry]) -> Option<std::path::PathBuf> {
     programs.iter().find_map(|entry| entry.wasm_artifact_path().and_then(|path| path.parent()).and_then(|dir| dir.parent()).map(std::path::Path::to_path_buf))
 }
 

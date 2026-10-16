@@ -5,7 +5,7 @@ use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot 
 use crate::io::sqlite::snapshot::*;
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(){
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("layout").label("Layout owned SQLite").version("0.0.1").package_id("semio:layout").artifact(semio_s_artifact_layout_layout::declaration().unwrap()).try_build().unwrap();
+    semio_framework_plugin::PluginBuilder::<semio_framework_plugin::NeedsLabel, semio_framework_plugin::app::NoPluginApp>::new("layout").label("Layout owned SQLite").version("0.0.1").package_id("semio:layout").artifact(semio_s_artifact_layout_layout::declaration().unwrap()).try_build().unwrap();
     let codec=store::os_store::codec_registry::document_codec(LAYOUT_DOCUMENT_SCHEMA).await.unwrap().unwrap();
     let provider=codec.snapshot_sqlite.expect("actual Layout declaration must publish semantic SQLite capability");
     assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<LayoutSnapshot>()));
@@ -175,7 +175,7 @@ mod public_populated_owner {
         }}
         same(&a.to_value(),&b.to_value());assert_eq!(a.encode_pack(),b.encode_pack());assert_eq!(a.print_dsl(),b.print_dsl());
     }
-    fn register(){semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("layout").label("Layout populated public SQLite").version("0.0.1").package_id("semio:layout").artifact(semio_s_artifact_layout_layout::declaration().unwrap()).try_build().unwrap();}
+    fn register(){semio_framework_plugin::PluginBuilder::<semio_framework_plugin::NeedsLabel, semio_framework_plugin::app::NoPluginApp>::new("layout").label("Layout populated public SQLite").version("0.0.1").package_id("semio:layout").artifact(semio_s_artifact_layout_layout::declaration().unwrap()).try_build().unwrap();}
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_layout_populated_public_binary_text_exact_owner(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};

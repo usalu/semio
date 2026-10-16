@@ -1,12 +1,12 @@
 /** 🔒️ Persisted layer protection and inherited command capabilities. */
 import {expect,test} from "bun:test";
 
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 
 import {hierarchy} from "d3-hierarchy";
 
-import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
-import fixture from "../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json";
+import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
+import { paintProtectionFixture as fixture } from "@semio-tech/framework/surface/paint/testing";
 import schema from "../../🔣️.json";
 import {layerProtection} from "../../🟦️.ts";
 import {rasterLayerNodeFromJson as parseRasterLayerNode} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";

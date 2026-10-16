@@ -24,7 +24,8 @@ import {
 import { type TreePanelConfig, UI_TERMINOLOGY_NATIVE } from "@semio-tech/ui-react";
 import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { InterpretedUiNode, TreeWindowContext, type TreeWindowContextValue, type TreeWindowReportV1 } from "../../🗣️Interpreter/🟦️.tsx";
+import { InterpretedUiNode } from "../../🗣️Interpreter/🟦️.tsx";
+import { TreeWindowContext, type TreeWindowContextValue, type TreeWindowReportV1 } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import {
   EMPTY_APP_LABELS_OVERLAY,
   FRAMEWORK_CHECKIN_CONTROLLER_ID,

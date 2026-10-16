@@ -12,7 +12,7 @@ export function testSnapshotReadRetirement(): void {
     const actual = row.visits.map(() => {
       const ordered = Object.keys(occupied).map(Number).sort((left, right) => (left - cursor + 1024) % 1024 - (right - cursor + 1024) % 1024);
       const index = ordered[0];
-      assert.notEqual(index, undefined);
+      assert.ok(index !== undefined);
       cursor = (index + 1) % 1024;
       if (!occupied[index]) return null;
       occupied = applyPatch(occupied, [{ op: "remove", path: "/" + index }], true, false).newDocument;

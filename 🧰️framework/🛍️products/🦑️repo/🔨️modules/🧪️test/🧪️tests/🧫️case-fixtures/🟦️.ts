@@ -3,7 +3,10 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { dirname, join } from "node:path";
 import glob from "fast-glob";
 import { minimatch } from "minimatch";
-import { discoverTestCases, repoRootFromHere, testTaxonomy, validateCaseContract, type OracleRegistry } from "../../🟦️.ts";
+import { discoverTestCases, repoRootFromHere } from "../../🧭️case-discovery/🟦️.ts";
+import { testTaxonomy } from "../../🗂️taxonomy/🟦️.ts";
+import { validateCaseContract } from "../../📃️case-contract/🟦️.ts";
+import { type OracleRegistry } from "../../🤝️contributions/🟦️.ts";
 import { discoverCaseDirs } from "../../🟨️.mjs";
 import examples from "../🧫️fixtures/🧫️case-fixtures/🔣️.json";
 const real = repoRootFromHere(), vocabulary = testTaxonomy(real);

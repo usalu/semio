@@ -6,7 +6,7 @@ extern crate semio_framework_os_kernel as store;
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::{ExecutionMode, NeedsLabel, Plugin, PluginApp, PluginBuilder};
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -25,7 +25,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#region 🔌️Registration
 /// 🔌️ Composes the three artifact declarations with their mutation rosters and activation events.
 pub fn plugin() -> Result<Plugin<BlockApps>, PluginAssemblyError> {
-    Plugin::<BlockApps>::builder("block")
+    PluginBuilder::<NeedsLabel, BlockApps>::new("block")
         .label("Block")
         .version("0.1.0")
         .package_id("semio:block")

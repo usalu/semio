@@ -26,7 +26,7 @@ const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127
 export default defineConfig({
   testDir: workspaceRoot,
   testMatch: [
-    "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️presentation/🧪️tests/🎞️storybook-deck/🟦️.ts",
+    "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎞️storybook-deck/🟦️.ts",
     "✏️s/🔌️plugins/📐️cad/🧪️tests/🎨️storybook-renderer/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-no-wasm/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-wasm/🟦️.ts",

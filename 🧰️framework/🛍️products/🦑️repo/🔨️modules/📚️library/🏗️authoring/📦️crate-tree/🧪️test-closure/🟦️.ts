@@ -53,6 +53,7 @@ export function fixturesToRuntime(text: string, fileAbs: string, repoRoot: strin
     const relative = literal(i + 3);
     if (relative === null || tokens[i + 4]!.text !== ")" || !isFixture(relative) || inLiteralMacro(i)) continue;
     let head = i - 1;
+    const level = depth[i];
     const isConst = tokens[head]?.text === "=" && tokens[head - 1]?.text === "str" && tokens[head - 2]?.text === "&" && tokens[head - 3]?.text === ":" && tokens[head - 4]?.kind === "identifier" && (tokens[head - 5]?.text === "const" || tokens[head - 5]?.text === "static") && depth[i] === 0;
     if (isConst) {
       const name = tokens[head - 4]!.text;
@@ -63,7 +64,7 @@ export function fixturesToRuntime(text: string, fileAbs: string, repoRoot: strin
       edits.push({ start: tokens[start]!.start, end: tokens[end]!.end, text: `static ${name}: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("${target(relative)}"));` });
       names.add(name);
       definitionRanges.push([tokens[start]!.start, tokens[end]!.end]);
-    } else if (depth[i] >= 1) {
+    } else if (level !== undefined && level >= 1) {
       edits.push({ start: tokens[i]!.start, end: tokens[i + 4]!.end, text: `runtime_fixture_text("${target(relative)}")` });
     }
   }

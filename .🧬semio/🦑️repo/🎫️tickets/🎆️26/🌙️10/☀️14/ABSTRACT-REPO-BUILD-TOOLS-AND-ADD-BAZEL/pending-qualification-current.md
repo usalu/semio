@@ -2,6 +2,42 @@
 
 This is a read-only coordination checklist, not an execution receipt. It supersedes stale pending wording only by the explicit scopes below. Root owns all releases and final ticket closure. No runtime, cache ownership or cleanup was performed for this document.
 
+## Latest Coordination — 2026-10-16 03:32 UTC
+
+Direct permanent NESTED41927 terminated1 before any task action on SQLITE_FULL during resource lease initialization. Actual Bun aggregate0pass/2fail/1assertion/18.53s; all planner, test and native/store custody closed. Exact fresh462-file backend snapshot passed prelaunch checks; the primary failure is storage, distinct from earlier Source refusals.
+
+Read-only census found the64MiB lease image full, with4,675 ordinary resource databases,49 claim databases and filesystem event-log allocation. Host and other build partitions had free blocks. Existing canonical claim-only diagnostic10010 then terminated0: its own before/after4,669 ordinary/44claim names and118,784available bytes were unchanged. No net headroom recovery, no ordinary/system deletion or quota change. [Storage report](nested-sqlite-full-storage.md) preserves exact observation limits.
+
+High implements a schema-first ordinary-database retirement protocol under Source-only authorization; Core and Low independently review. Every opener/raw reader must participate in gate custody, root/claims catalogs require fixed ordering, and the current canonical namespace requires real imageEX exclusion. No production reclamation, SDK setup, public workspace, ALL or Bazel phase is active.
+
+Selected full-entry strict now passes after declaration/test-type correction; outputs focusedSource/strict and toolkit receiverSource/strict also pass, independently reviewed. These do not replace full public targets. The inference declaration path intersects the older462-file backend snapshot once, so future backend runtime requires a fresh capture. SDK currentness remains unaccepted after metadata15753 semanticFALSE; future complete role capture/independent audit/canonical metadata remains required.
+
+## Latest Coordination — 2026-10-16 03:23 UTC
+
+Setup15238 terminated0 at03:20:16UTC, generationef51eb78…bdc8. Complete Source41814 and independent381-row audit were clean, but metadata15753 authenticated that generation while reporting semanticFALSE against changed/new runtime Source. No public workspace recovery or current SDK acceptance follows. Root has no runtime/store custody.
+
+High now owns one explicitly released SDK-independent direct permanent Bazel NESTED phase, gated by a fresh no-store backend capture and exact Source preflight; no automatic retry or installed Nx parity. The ordinary Original0/defaultNx/null wire and existing120-second phase remain.
+
+Selected inference context correction is test-only held (semanticGREEN1/19, strict0, independent review clean). Toolkit duplicate receiver correction is test-only held (Source3/29, five-root strict0, independent review clean; Node15/Bun20 limits preserved). Core reproduces/corrects a concrete outputs purpose AST assertion stale against mandatory actualphase. These are Source readiness scopes, not full public target acceptance.
+
+## Latest Coordination — 2026-10-16 03:17 UTC
+
+Registry recovery is held: actual final Source41677 passed2laws/300assertions; focused strict41995 passed. Both independent reviews are clean against graphd0ec24a6…d99fb. No public graph recovery acceptance is claimed.
+
+Public setup28960 terminated0 at03:15:32UTC, generationd80c9c2f…5c2a0, three Node38 preflights agree bundle5f59384d…a9329. Fresh roles98452 then captured117reader/194runtime/70compiler and independent381-row audit was clean at03:16:14–15UTC. Canonical metadata at03:16:36 authenticated the generation but reported semanticFALSE: three runtime published differences, including a newly added graph-input authority owner. That owner also changed after the capture/audit, so currentSourceMismatches was nonempty. The earlier successful audit is not continuing authority.
+
+Root started another ordinary public setup15238 at03:16:58UTC, all11incoming overrides absent, CLI0 and no extra outer cap. It is the sole physical/store producer. Independent Source-only work reproduces and corrects concrete next-target test bindings: missing selected inference phase and duplicate process-birth receivers. No public workspace or aggregate is active. [Readiness](registry-candidate-qualification-readiness.md) retains receipts and scope limits.
+
+## Latest Coordination — 2026-10-16 03:08 UTC
+
+Public setup6687 terminated0 and canonical metadata26331 authenticated generation7ce0d901…7128 with all380 role rows equal at02:30:38UTC. This is historical point-in-time provenance. Public workspace51709 then terminated1 before Bun tests on the registry-scope guard, confirmed02:46:36UTC. No physical runtime/store producer is active.
+
+High implements closed normal registry-candidate invalidation and complete scope release/re-admission under the same incoming phase/Original, sharing the unchanged total nine attempts with membership invalidations. Core and Low independently review settlement, failure-ledger, cancellation and publication boundaries. Actual model RED is0pass/2fail/10assertions; final GREEN/strict/holds are pending. The active qualifier retains exact ordered nine module inputs; proposed runtime changes use existing fingerprinted graph Source/admission schema only. Root prepared a distinct fresh-role/metadata receipt branch without opening a store.
+
+After implementation hold and reviews, capture complete current SDK roles and authenticate semantic currentness before the next actual public workspace. Keep Nx default. Remaining required scopes are the full permanent target matrix, complete current Bazel Source/parity/nine phases, actual WATCH/RESET, sealed Stdio/Cargo and ordinary ALL/exhaustive audits; no older modeled or partial result substitutes. Physical Windows/Linux/devcontainer qualification remains unavailable here.
+
+Earlier checkpoints below retain their original observation scopes; their active/pending labels are historical.
+
 ## Actual State
 
 ### Latest Checkpoint — 2026-10-16 01:22 UTC

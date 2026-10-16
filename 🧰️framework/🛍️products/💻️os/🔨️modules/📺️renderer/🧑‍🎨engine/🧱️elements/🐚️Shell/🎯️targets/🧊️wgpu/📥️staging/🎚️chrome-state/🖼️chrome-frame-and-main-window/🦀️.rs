@@ -7,14 +7,14 @@ use super::*;
 //#region ShellChrome
 impl ChromeState {
     /// 📨️ Coalesces the persisted chrome load without touching platform storage in the frame step.
-    pub(super) fn request_chrome_preferences_load(&mut self) {
+    pub fn request_chrome_preferences_load(&mut self) {
         if !self.chrome_present.preferences_loaded {
             self.chrome_present.maintenance.load_requested = true;
         }
     }
 
     /// 🎨️ Exposes the already-loaded theme id without synchronously opening preference storage.
-    pub(crate) fn active_theme_id_for_frame(&self) -> &str {
+    pub fn active_theme_id_for_frame(&self) -> &str {
         &self.chrome_build.preferences.theme_id
     }
 }

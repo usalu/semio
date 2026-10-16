@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Snapshot details window: schema-driven detail presentation and its controls"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

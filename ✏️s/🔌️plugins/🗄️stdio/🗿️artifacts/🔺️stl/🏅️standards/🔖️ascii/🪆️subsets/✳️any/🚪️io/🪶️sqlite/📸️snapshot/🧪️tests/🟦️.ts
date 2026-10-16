@@ -1,6 +1,6 @@
-import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalCorpus } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
-import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🧫️ Shared STL triangle fixture and independent scalar SQL interoperability. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
@@ -107,8 +107,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {stlSnapshotToSqliteDatabase as normSemanticProject,stlSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("STL complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(normSemanticContract["schemaBytes"]).toEqual(1483);expect(normSemanticContract["tableWidths"]).toEqual({"stl_facet":12,"stl_solid":3,"stl_vertex":12});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSharedSourceNative","rows":9,"valueBytes":762},{"id":"emptyCollectionsRetainMetadata","rows":1,"valueBytes":42}]);
  for(const item of normSemanticContract.cases){const source=structuredClone(input);if(item.id!=="originalSharedSourceNative"){source.triangles=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:3,maxColumns:12};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);

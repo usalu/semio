@@ -3,14 +3,12 @@
     {
       "mode": "prototype",
       "nativeProfile": "prototype",
-      "wasmProfile": "wasm-prototype",
       "configuration": "Debug",
       "optLevel": "0"
     },
     {
       "mode": "release",
       "nativeProfile": "release",
-      "wasmProfile": "wasm-release",
       "configuration": "Release",
       "optLevel": "3"
     }
@@ -129,7 +127,8 @@
         "--",
         "-C",
         "opt-level=1"
-      ]
+      ],
+      "accept": true
     },
     {
       "input": [
@@ -141,15 +140,7 @@
       ],
       "configuration": "/configuration.toml",
       "buildDirectory": "/compiler",
-      "expected": [
-        "build",
-        "--config",
-        "/configuration.toml",
-        "--config",
-        "build.build-dir=\"/foreign\"",
-        "--config",
-        "build.build-dir=\"/compiler\""
-      ]
+      "accept": false
     },
     {
       "input": [
@@ -160,10 +151,12 @@
       "buildDirectory": "/compiler space/\"quoted\"/back\\slash",
       "expected": [
         "build",
-        "--config=/configuration.toml",
+        "--config",
+        "/configuration.toml",
         "--config",
         "build.build-dir=\"/compiler space/\\\"quoted\\\"/back\\\\slash\""
-      ]
+      ],
+      "accept": true
     },
     {
       "input": [
@@ -175,7 +168,8 @@
         "build",
         "--config",
         "build.build-dir=\"/compiler\""
-      ]
+      ],
+      "accept": true
     }
   ]
 }

@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
 import type{LoadCase}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 export type En1993SqliteMaterial={id:string;grade:string;fy:Binary64;fu:Binary64;eModulus:Binary64;gModulus:Binary64;subgrade:string;kind:string};
 export type En1993SqliteSection={id:string;designation:string;kind:string;h:Binary64;b:Binary64;tw:Binary64;tf:Binary64;r:Binary64;area:Binary64;shearAreaY:Binary64;shearAreaZ:Binary64;iy:Binary64;iz:Binary64;it:Binary64;iw:Binary64;wElY:Binary64;wElZ:Binary64;wPlY:Binary64;wPlZ:Binary64;areaNet:Binary64};
 export type En1993SqliteMember={id:string;label:string;memberType:string;sectionId:string;materialId:string;length:Binary64;bucklingLengthY:Binary64;bucklingLengthZ:Binary64;ltbLength:Binary64;ltbRestraintSpacing:Binary64;loadApplication:string;endMomentRatioPsi:Binary64;momentDiagram:string;deflectionLimitRatio:Binary64;analysis:string};

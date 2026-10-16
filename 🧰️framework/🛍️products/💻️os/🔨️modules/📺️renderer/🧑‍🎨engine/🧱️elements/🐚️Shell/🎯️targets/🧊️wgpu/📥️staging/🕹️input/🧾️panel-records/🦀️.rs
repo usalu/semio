@@ -8,7 +8,7 @@ use super::*;
 //#region 🧾️PanelRecordsAssembler
 /// ⌨️ A control id as a readable row label — React's `humanizeControlId`: the last dot segment,
 /// camelCase split on word boundaries, first letter upper-cased.
-pub(crate) fn humanize_control_id(control_id: &str) -> String {
+pub fn humanize_control_id(control_id: &str) -> String {
     let leaf = control_id.rsplit('.').next().unwrap_or(control_id);
     let mut out = String::new();
     for (index, ch) in leaf.chars().enumerate() {

@@ -17,7 +17,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from "../../🧱️elements/🛠️ShellHelpers/🎚️measure-controls/🟦️.tsx";
 import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
-import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 import { FlowProvider } from "@semio-tech/ui-react";
 import readingFlow from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/🔤️text-flow/🔣️.json";
 

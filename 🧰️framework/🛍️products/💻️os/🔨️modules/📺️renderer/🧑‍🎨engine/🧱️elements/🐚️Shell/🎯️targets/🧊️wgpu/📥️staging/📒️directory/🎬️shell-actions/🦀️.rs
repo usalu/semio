@@ -9,7 +9,7 @@ impl DirectoryState {
     //#region 🔖️NativeBackboneSync
     /// 🎭️ ticket §1 — contract §C0's `user:{userId}#{sessionId}` once identity is minted/restored,
     /// else the pre-identity local default this shell always used (`shell_actor`'s pure decision).
-    pub(crate) fn current_shell_actor(&self, instance_id: u32) -> String {
+    pub fn current_shell_actor(&self, instance_id: u32) -> String {
         shell_actor(self.identity.as_ref(), &self.shell_session_id, instance_id)
     }
     //#endregion 🔖️NativeBackboneSync

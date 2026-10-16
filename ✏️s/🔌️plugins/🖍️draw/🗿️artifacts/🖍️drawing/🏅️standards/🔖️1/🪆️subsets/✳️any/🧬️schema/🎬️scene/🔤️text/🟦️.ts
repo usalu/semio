@@ -2,11 +2,11 @@ import {DRAWING_FONT_FAMILIES,parseDrawingFontFamily,drawingFontCatalogFamily,ty
 /** 🔤️ Original semantic text and paint acquire genuine font outlines before shared scene publication. */
 import type {DocumentScenePlan} from "../📋️prepare/🟦️.ts";
 import {ScenePlanCloseJob} from "../🧹️retire/🟦️.ts";
-import {FontCatalogAdmissionJob,type FontByteSource} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";
-import {UnicodeDataAdmissionJob,type UnicodeData} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts";
-import {FontOutlineRunJob} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts";
-import type {FontFace,FontOutlineLimits} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {FontCatalogAdmissionJob,type FontByteSource} from "@semio-tech/framework/2d/text/font/catalog";
+import {UnicodeDataAdmissionJob,type UnicodeData} from "@semio-tech/framework/2d/text/font/shape/unicode";
+import {FontOutlineRunJob} from "@semio-tech/framework/2d/text/font/run";
+import type {FontFace,FontOutlineLimits} from "@semio-tech/framework/2d/text/font";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
 export const DOCUMENT_FONT_LIMITS:FontOutlineLimits={maxFontBytes:67108864,maxTables:128,maxGlyphs:65536,maxPoints:1048576,maxContours:65536,maxComponents:262144,maxDepth:32,maxSegments:65536,maxWork:1e9};
 export type DocumentTextProgress={phase:"nodes"|"fontSources"|"fonts"|"run"|"complete";nodes:number;work:number;done:boolean};
 export class DocumentTextJob{

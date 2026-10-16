@@ -1,9 +1,9 @@
 /** 🧪️ Neutral IO descriptors agree with owned parsers and the independent Ajv schema oracle. */
-import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import schema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
-import { parseIoEntryDescriptor, parseIoRoute } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { ioSchema as schema } from "@semio-tech/framework/io/schema";
+import { parseIoEntryDescriptor, parseIoRoute } from "@semio-tech/framework/io/schema";
 import fixture from "../🧫️fixtures/📇️descriptor-parity.json" with { type: "json" };
 import { ioEntries } from "../../🟦️.ts";
 

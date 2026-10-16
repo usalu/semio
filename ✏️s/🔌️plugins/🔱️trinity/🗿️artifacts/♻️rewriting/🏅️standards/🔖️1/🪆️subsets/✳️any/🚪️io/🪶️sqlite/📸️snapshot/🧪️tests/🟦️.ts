@@ -2,13 +2,14 @@ import {parse as parseGraphql,print as printGraphql,buildASTSchema,coerceInputVa
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import * as owner from "../../../../../../../../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import {readdirSync} from "node:fs";
 test("Rewriting actual document retirement vectors own typed parent and every mutation",async()=>{const api=await import("../../../../🧬️schema/♻️retirement/🧪️tests/🔬️document-retirement/🟦️.ts");expect(()=>api.testRewritingDocumentRetirementOracle()).not.toThrow();});
 
 import {parseRewritingDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
+import { frameworkSourcePath, frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
@@ -131,7 +132,7 @@ test("Rewriting committed sparse deltas own typed fields and exact inverse asset
  const vector=JSON.parse(readFileSync(new URL("./🧫️fixtures/🌳️typed/🔣️.json",import.meta.url),"utf8"));
  for(const url of vector.schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(url,import.meta.url),"utf8")));
  ajv.addSchema(JSON.parse(readFileSync(new URL("../../../../🧬️schema/🔣️.json",import.meta.url),"utf8")));
- ajv.addSchema(JSON.parse(readFileSync(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔣️.json",import.meta.url),"utf8")));
+ ajv.addSchema(JSON.parse(readFileSync(frameworkSourceUrl("🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔣️.json"),"utf8")));
  const validate=ajv.compile(JSON.parse(readFileSync(new URL("../../../../🧬️schema/🔺️diff/🔣️.json",import.meta.url),"utf8")));
  const files=readdirSync(root,{recursive:true}).map(String).filter(path=>path.endsWith("/🔺️diff/🔣️.json"));
  expect(files.length).toBe(9);
@@ -165,7 +166,7 @@ test("Rewriting published mutation union accepts all nine typed committed inputs
 
 test("Rewriting GraphQL body inputs own full typed rules and composed parent",()=>{
  const read=(relative:string)=>readFileSync(new URL(relative,import.meta.url),"utf8");
- const roots=["../../../../🧬️schema/🔗️.graphql","../../../../🧬️schema/🧬️mutations/🔗️.graphql","../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql","../../../../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔗️.graphql","../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql","../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql","../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"];
+ const roots=["../../../../🧬️schema/🔗️.graphql","../../../../🧬️schema/🧬️mutations/🔗️.graphql","../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql",frameworkSourcePath("🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔗️.graphql"),frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🔗️.graphql"),frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"),frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔗️.graphql")];
  const documents=roots.map(relative=>parseGraphql(read(relative)));
  const types=new Map(documents.flatMap(document=>document.definitions).filter((node:any)=>node.name).map((node:any)=>[node.name.value,node]));
  for(const [slug,type,field,payload]of [["👈️edit-lhs","EditLhsInput","newLhs","LhsInput"],["👉️edit-rhs","EditRhsInput","newRhs","RhsInput"],["🖼️edit-working-graph","EditWorkingGraphInput","newWorkingGraph","JackSnapshotInput"]]){
@@ -226,7 +227,7 @@ test("Rewriting Proto field roles retain typed bodies and complete Jack manifest
  expect(fields("ManifestEdgeKind")).toBe("string name = 1; repeated ManifestProperty properties = 2;");
  expect(fields("ManifestPortKind")).toBe("string name = 1; string direction = 2; repeated ManifestProperty properties = 3;");
  expect(fields("ManifestProperty")).toContain("semio.framework.value.ValueType value_type = 3;");
- const value=read("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto");
+ const value=read(frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🛰️.proto"));
  expect(value).toContain("message Binary64Word { fixed64 bits = 1; }");
  const db=new Database(":memory:",{safeIntegers:true});
  try{db.exec("CREATE TABLE exact_word(bits INTEGER NOT NULL) STRICT");
@@ -256,7 +257,7 @@ test("Rewriting retained child capture contract preserves exact publication and 
  }finally{db.close()}
 });
 test("Rewriting exact twenty-eight scenario roster owns all eighteen closed typed inline payloads",async()=>{
- const {parseFeature}=await import("../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🥒️gherkin/🟦️.ts");
+ const {parseFeature}=await import("@semio-tech/framework/test/gherkin");
  const read=(relative:string)=>JSON.parse(readFileSync(new URL(relative,import.meta.url),"utf8"));
  const feature=parseFeature(readFileSync(new URL("../../../../🧪️tests/♻️mutate-rewrite-1/🥒️.feature",import.meta.url),"utf8"));
  const kinds=["edit-working-graph","edit-lhs","edit-rhs","change-parameter-binding","remove-parameter-binding","change-rule-layout-point","remove-rule-layout-point","drag-rule-nodes","set-rule-layout-points"];
@@ -294,10 +295,9 @@ test("Rewriting member membership identity remains separate from its exact addre
  expect(contract.childId).toBe("logical !@/\0引用😀");expect(contract.childId).not.toBe(contract.target.artifactId);
  const ajv=semioSchemaAjvV1({allErrors:true});ajv.addSchema(JSON.parse(readFileSync(new URL("../../../../🧬️schema/📸️snapshot/🌳️typed/🪆️child/🔣️.json",import.meta.url),"utf8")));
  expect(contract["contractId"]).toEqual("rewriting-full-child-frame-lifetime");expect(contract["slot"]).toEqual("workingGraph");expect(contract["target"]["dialect"]["artifactKind"]).toEqual("s.stdio.semio");expect(contract["target"]["dialect"]["standard"]).toEqual("v1");expect(contract["target"]["dialect"]["subset"]).toEqual("graph");expect(contract["retainedTailBytes"]).toEqual(65536);expect(contract["borrowedCaptureAllocationBytes"]).toEqual(0);expect(contract["closeGrants"]).toEqual([0,1]);expect(contract["refusals"]).toEqual(["wrongParent","missingSlot","missingTarget","wrongDialect"]);expect(contract["intrinsicKinds"]).toEqual(["bool","bytes","float","int","list","map","null","ref","str"]);expect(contract["childId"]).toEqual("logical !@/\u0000引用😀");
- const closure=await import("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🟦️.ts");closure.testOwnedDocumentClosureOracle();
  const db=new Database(":memory:");try{db.exec("CREATE TABLE member (parent TEXT NOT NULL,slot TEXT NOT NULL,child_id TEXT NOT NULL,target TEXT NOT NULL UNIQUE,PRIMARY KEY(parent,slot,child_id));");db.run("INSERT INTO member VALUES (?,?,?,?)",["parent",contract.slot,contract.childId,contract.target.artifactId]);expect(db.query("SELECT target FROM member WHERE parent=? AND slot=? AND child_id=?").get("parent",contract.slot,contract.childId)).toEqual({target:contract.target.artifactId});expect(()=>db.run("INSERT INTO member VALUES (?,?,?,?)",["other","other","other",contract.target.artifactId])).toThrow();}finally{db.close();}
- const plugin=readFileSync(new URL("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",import.meta.url),"utf8");
+ const plugin=readFileSync(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8");
  const admission=plugin.slice(plugin.indexOf("fn declared_child_reference("),plugin.indexOf("async fn prepare_child_member("));expect(admission).toContain("fields.artifact_id");expect(admission).toContain("fields.child_id == child_id");expect(admission).not.toContain("artifact_id: child_id.clone()");
- const store=readFileSync(new URL("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",import.meta.url),"utf8"),sync=store.slice(store.indexOf("pub async fn sync_member<P: ArtifactRefs>"),store.indexOf("/// 🧹️ One grant-sized retirement turn"));
+ const store=readFileSync(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"),"utf8"),sync=store.slice(store.indexOf("pub async fn sync_member<P: ArtifactRefs>"),store.indexOf("/// 🧹️ One grant-sized retirement turn"));
  expect(sync).not.toContain("child.child_id != child.target.artifact_id");expect(sync).toContain("next_owns.insert(child.target.artifact_id");
 });

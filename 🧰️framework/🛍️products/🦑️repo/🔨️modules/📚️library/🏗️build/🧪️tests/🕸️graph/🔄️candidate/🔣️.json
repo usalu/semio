@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "selected registry changes once",
+      "selection": "tasks",
+      "outcomes": [
+        "owner-registry",
+        "ready"
+      ]
+    },
+    {
+      "name": "ALL registry changes once",
+      "selection": "all",
+      "outcomes": [
+        "owner-registry",
+        "ready"
+      ]
+    },
+    {
+      "name": "membership and registry share one bound",
+      "selection": "tasks",
+      "outcomes": [
+        "source-authority",
+        "owner-registry",
+        "ready"
+      ]
+    },
+    {
+      "name": "all nine invalidated",
+      "selection": "tasks",
+      "outcomes": [
+        "owner-registry",
+        "owner-registry",
+        "owner-registry",
+        "owner-registry",
+        "owner-registry",
+        "owner-registry",
+        "owner-registry",
+        "owner-registry",
+        "owner-registry"
+      ]
+    },
+    {
+      "name": "fatal never retries",
+      "selection": "tasks",
+      "outcomes": [
+        "fatal"
+      ]
+    },
+    {
+      "name": "undefined fatal preserved",
+      "selection": "tasks",
+      "outcomes": [
+        "undefined"
+      ]
+    },
+    {
+      "name": "cleanup failure never retries",
+      "selection": "tasks",
+      "outcomes": [
+        "owner-registry"
+      ],
+      "closeFails": true
+    },
+    {
+      "name": "refresh cancellation stops admission",
+      "selection": "tasks",
+      "outcomes": [
+        "owner-registry",
+        "ready"
+      ],
+      "refreshFails": true
+    }
+  ],
+  "inventoryCases": [
+    {
+      "name": "before admission",
+      "changeAt": 1,
+      "fatal": "none"
+    },
+    {
+      "name": "before inference",
+      "changeAt": 2,
+      "fatal": "none"
+    },
+    {
+      "name": "after inference",
+      "changeAt": 3,
+      "fatal": "none"
+    },
+    {
+      "name": "fatal remains fatal during drift",
+      "changeAt": 3,
+      "fatal": "frozen"
+    },
+    {
+      "name": "undefined remains fatal during drift",
+      "changeAt": 3,
+      "fatal": "undefined"
+    }
+  ]
+}

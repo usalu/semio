@@ -39,7 +39,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
   type ThreeCamera
-} from "@semio-tech/ui-react";
+} from "@semio-tech/framework/ui/targets/react";
 // #endregion 🔌️Adapters
 import { canvasPickTargetKey } from "@semio-tech/framework";
 import { worldProjectionFamily, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";

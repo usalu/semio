@@ -4,7 +4,7 @@ import {dwgSnapshotFixture as snapshot} from "🧰️support/🟦️.ts";
 import fixture from "./🧫️fixtures/🎭️bodies/🔣️.json";
 import encodingFixture from "./🧫️fixtures/📏️encoding.json";
 import {dwgSnapshotToSqliteDatabase,dwgSnapshotFromSqliteDatabase,dwgSnapshotValidateSqliteSubset} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("DWG semantic guard admits relational aliases and rejects independently edited state",async()=>{
   const database=await dwgSnapshotToSqliteDatabase(snapshot),native=Database.deserialize(await exportSqliteDatabase(database));

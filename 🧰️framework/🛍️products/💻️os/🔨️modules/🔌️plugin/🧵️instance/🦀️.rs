@@ -578,18 +578,6 @@ mod docs_typed_operations;
 #[path = "📄️docs/📥️staging/🪜️maintenance-ladder/🦀️.rs"]
 mod docs_maintenance_ladder;
 
-#[path = "🧷️command-routes/📥️staging/🎟️lease/🦀️.rs"]
-mod commands_lease;
-
-#[path = "🧷️command-routes/📥️staging/📨️dispatch/🦀️.rs"]
-mod commands_dispatch;
-
-#[path = "🧷️command-routes/📥️staging/🚪️ingress/🦀️.rs"]
-mod commands_ingress;
-
-#[path = "🧷️command-routes/📥️staging/🤝️group/🦀️.rs"]
-mod commands_group;
-
 #[path = "🧷️command-routes/📥️staging/🧵️instance-root/🦀️.rs"]
 mod commands_instance_root;
 
@@ -598,9 +586,6 @@ mod command_routes;
 
 #[path = "🧾️typed-operations/📥️staging/🔌️plugin-app-impl/🦀️.rs"]
 mod typed_ops_plugin_app_impl;
-
-#[path = "🧾️typed-operations/📥️staging/🛠️tool-machine/🦀️.rs"]
-mod typed_ops_tool_machine;
 
 #[path = "🧾️typed-operations/📥️staging/🧵️instance-root/🦀️.rs"]
 mod typed_ops_instance_root;
@@ -652,7 +637,78 @@ mod plugin_app_impl;
 
 #[path = "🧩️extensions/🦀️.rs"]
 mod extensions;
-pub(crate) use extensions::InstanceExtension;
+#[path = "🖼️render/📥️staging/📜️history-view/🦀️.rs"]
+mod render_history_view;
+
+#[path = "🖼️render/📥️staging/🛠️tool-machine/🦀️.rs"]
+mod render_tool_machine;
+
+#[path = "🖼️render/📥️staging/🧭️interaction/🦀️.rs"]
+mod render_interaction;
+
+#[path = "🖼️render/📥️staging/🏷️reserved-jobs/🦀️.rs"]
+mod render_reserved_jobs;
+
+#[path = "📨️dispatch/📥️staging/🎟️producers/🦀️.rs"]
+mod dispatch_producers;
+
+#[path = "📨️dispatch/📥️staging/📤️emit/🦀️.rs"]
+mod dispatch_emit;
+
+#[path = "📨️dispatch/📥️staging/📣️host-events/🦀️.rs"]
+mod dispatch_host_events;
+
+#[path = "📨️dispatch/📥️staging/⌨️typed-command/🦀️.rs"]
+mod dispatch_typed_command;
+
+#[path = "📨️dispatch/📥️staging/🤝️group-history/🦀️.rs"]
+mod dispatch_group_history;
+
+#[path = "🧾️typed-operations/📥️staging/♻️retirement/🦀️.rs"]
+mod typed_retirement;
+
+#[path = "🧾️typed-operations/📥️staging/🪆️child-group/🦀️.rs"]
+mod typed_child_group;
+
+#[path = "🧾️typed-operations/📥️staging/📬️publication/🦀️.rs"]
+mod typed_publication;
+
+#[path = "🧾️typed-operations/📥️staging/⌨️typing/🦀️.rs"]
+mod typed_typing;
+
+#[path = "🧷️command-routes/📥️staging/🧊️reserved-routes/🦀️.rs"]
+mod command_reserved_routes;
+
+#[path = "🧷️command-routes/📥️staging/🚦️actions/🦀️.rs"]
+mod command_actions;
+
+#[path = "🧷️command-routes/📥️staging/🗃️archive-merge/🦀️.rs"]
+mod command_archive_merge;
+
+#[path = "🖼️render/📥️staging/🧺️bundle/🦀️.rs"]
+mod render_bundle;
+
+#[path = "📨️dispatch/📥️staging/🧺️bundle/🦀️.rs"]
+mod dispatch_bundle;
+
+#[path = "🧾️typed-operations/📥️staging/🧺️bundle/🦀️.rs"]
+mod typed_bundle;
+
+#[path = "../⏪️time-travel/🧵️instance/📥️staging/🧺️bundle/🦀️.rs"]
+mod time_travel_bundle;
+
+#[path = "../⏯️tool-run/🧵️instance/📥️staging/🧺️bundle/🦀️.rs"]
+mod tool_run_bundle;
+
+#[path = "🧷️command-routes/📥️staging/🧺️bundle/🦀️.rs"]
+mod command_bundle;
+
+#[path = "../🪜️maintenance-ladder/📥️staging/🧺️bundle/🦀️.rs"]
+mod ladder_bundle;
+
+#[path = "📥️staging/🏗️ctx-builders/🦀️.rs"]
+mod app_ctx_builders;
+pub(crate) use extensions::{ExtensionCtx, ExtensionRef, InstanceExtension};
 pub(crate) use children_instance_root::{genesis_member_schema};
 pub(crate) use children_plugin_app_impl::{MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY};
 pub(crate) use docs_instance_root::{artifact_handle_of, typed_operation_document_is_fresh};
@@ -685,4 +741,12 @@ pub(crate) use docs_components::{MediaTransfers, EnvelopeJobs};
 pub(crate) use ladders_components::{MaintenanceCursors, CloseCursors};
 #[path = "📥️staging/🧬️composer-api/🦀️.rs"]
 mod app_composer_api;
+pub(crate) use render_bundle::{RenderCtx, RenderRef};
+pub(crate) use dispatch_bundle::{DispatchCtx};
+pub(crate) use typed_bundle::{TypedCtx};
+pub(crate) use time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
+pub(crate) use tool_run_bundle::{ToolRunCtx, ToolRunRef};
+pub(crate) use command_bundle::{CommandCtx};
+pub(crate) use ladder_bundle::{LadderCtx, LadderRef};
+pub(crate) use render_history_view::{history_command};
 //#endregion 📥️StagedInstanceMounts

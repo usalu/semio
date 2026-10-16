@@ -11,7 +11,7 @@ impl WindowState {
     /// (see {@link ShellState::arm_tool_for_panel_tab}), so this renders no second activation toggle.
     /// The wgpu program bridge has no `tool_measures` reader yet, so the section carries the tool's
     /// armed state and stays otherwise empty exactly as React's does with no measures in hand.
-    pub(crate) fn build_tool_panel_ui(&self, tool_id: &str, prefs: &PrefsState, docs: &DocumentState) -> UiNode {
+    pub fn build_tool_panel_ui(&self, tool_id: &str, prefs: &PrefsState, docs: &DocumentState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let armed = docs.session.as_ref().and_then(|session| session.view_state.active_tool_id.as_deref()) == Some(tool_id);
         let items = self.tool_measures.get(tool_id).map(|measures| window_measure_tree_rows(measures)).unwrap_or_default();

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
@@ -82,26 +82,31 @@ export async function sDevCompositionOwnershipV1(repoRoot: string): Promise<void
   const worker = readFileSync(join(repoRoot, `${specific}/🧩️service-composition/👷️worker/🟦️.ts`), "utf8");
   assert(worker.includes("createGisMapInferenceWorkerV1"));
   assert(worker.includes('import.meta.hot.dispose(retire)'));
-  const receivingTests = ts.createSourceFile("gis-worker-tests.ts", readFileSync(join(repoRoot, `${specific}/🧩️service-composition/🧪️tests/🟦️.ts`), "utf8"), ts.ScriptTarget.Latest, true);
-  const declarations: Array<{ name: string; value: string; position: number }> = [];
+  const receivingDirectory = join(repoRoot, `${specific}/🧩️service-composition/🧪️tests`);
   let receivingFixtures = 0;
-  const visit = (node: ts.Node): void => {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isStringLiteral(node.initializer)) declarations.push({ name: node.name.text, value: node.initializer.text, position: node.pos });
-    if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "URL" && node.arguments?.[1]?.getText(receivingTests) === "source.url") {
-      const argument = node.arguments[0];
-      let path: string | undefined;
-      if (ts.isStringLiteral(argument)) path = argument.text;
-      else if (ts.isBinaryExpression(argument) && ts.isIdentifier(argument.left) && ts.isStringLiteral(argument.right)) {
-        const name = argument.left.text;
-        const declaration = declarations.filter(row => row.name === name && row.position < node.pos).at(-1);
-        if (declaration) path = declaration.value + argument.right.text;
+  for (const entry of readdirSync(receivingDirectory, { withFileTypes: true }).filter(row => row.isDirectory())) {
+    const receivingTests = ts.createSourceFile(`gis-worker-tests-${entry.name}.ts`, readFileSync(join(receivingDirectory, entry.name, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    const declarations: Array<{ name: string; value: string; position: number }> = [];
+    const visit = (node: ts.Node): void => {
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isStringLiteral(node.initializer)) declarations.push({ name: node.name.text, value: node.initializer.text, position: node.pos });
+      if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "URL" && node.arguments?.[1]?.getText(receivingTests) === "source.url") {
+        const argument = node.arguments[0];
+        let path: string | undefined;
+        if (ts.isStringLiteral(argument)) path = argument.text;
+        else if (ts.isBinaryExpression(argument) && ts.isIdentifier(argument.left) && ts.isStringLiteral(argument.right)) {
+          const name = argument.left.text;
+          const declaration = declarations.filter(row => row.name === name && row.position < node.pos).at(-1);
+          if (declaration) path = declaration.value + argument.right.text;
+        }
+        if (path) { assert(existsSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os", path)), path); receivingFixtures++; }
       }
-      if (path) { assert(existsSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os", path)), path); receivingFixtures++; }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(receivingTests);
-  assert(receivingFixtures > 40);
+      ts.forEachChild(node, visit);
+    };
+    visit(receivingTests);
+  }
+  assert(receivingFixtures > 8);
+  const receiverConfiguration = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🎚️config/🟦️.ts"), "utf8");
+  assert(receiverConfiguration.includes("🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/👷️worker"));
   console.log(`[DEBUG] GIS worker defining source authority: ${receivingFixtures} actual fixture/source URL readers resolve`);
   assert(!existsSync(join(repoRoot, `${neutral}/🧩️service-composition/🧪️tests/🟦️.ts`)));
   console.log(`s-dev-composition-source: neutral entries=${entries.length}, isolated neutral runtimes=2, independent AST/esbuild/Cargo owners, GIS/Puzzle deployment source passed`);

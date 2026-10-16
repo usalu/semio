@@ -6,19 +6,19 @@ use super::*;
 fn native_renderer_asset_path(url: &str) -> Result<std::path::PathBuf, String> {
     if url.starts_with("/mesh/") {
         let source = &mesh_assets::resolve_mesh_asset(url)?.source;
-        return Ok(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../..").join(source));
+        return Ok(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../../..").join(source));
     }
     if let Some(path) = url.strip_prefix("file://") {
         return Ok(std::path::PathBuf::from(path));
     }
     if url.starts_with('/') {
-        return Ok(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").join(url.trim_start_matches('/')));
+        return Ok(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../..").join(url.trim_start_matches('/')));
     }
     Ok(std::path::PathBuf::from(url))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
+pub async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
     if fetch.url().starts_with("http://") || fetch.url().starts_with("https://") {
         return stream_native_renderer_http_asset(mailbox, fetch).await;
     }
@@ -29,7 +29,7 @@ pub(crate) async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &Ru
             return Err(NativeAssetStreamFailure::Cancelled);
         }
         let value = run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: WORLD_ASSET_RESPONSE_PAGE_BYTES }).await.map_err(NativeAssetStreamFailure::Unavailable)?;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         mailbox.wait_native_asset_page_test_barrier(fetch);
         let semio_framework_os_services::NativeIoValue::Page { mut bytes, eof } = value else { return Err("native renderer asset I/O returned the wrong value".into()) };
         if mailbox.renderer_asset_cancelled(fetch) {
@@ -53,7 +53,7 @@ pub(crate) async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &Ru
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn push_renderer_asset_page(fetch: &mut RendererAssetFetchOwner, bytes: &mut semio_framework_job::RetainedJobPayload) -> Result<(), &'static str> {
+pub fn push_renderer_asset_page(fetch: &mut RendererAssetFetchOwner, bytes: &mut semio_framework_job::RetainedJobPayload) -> Result<(), &'static str> {
     let source = bytes.single_page().ok_or("native renderer asset I/O must return one retained page")?;
     if !source.is_empty() {
         let page = WorldAssetResponsePage::try_from_owned(source.to_vec()).map_err(|_| "native renderer asset page exceeded fixed credits")?;

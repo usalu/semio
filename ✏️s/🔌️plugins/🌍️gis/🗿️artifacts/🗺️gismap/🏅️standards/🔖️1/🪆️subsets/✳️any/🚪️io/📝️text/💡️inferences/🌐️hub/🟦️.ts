@@ -1,5 +1,5 @@
 import {GIS_MAP_INFERENCE_REQUEST_MAX_BYTES,type GisMapInferenceJobRequestV1,type GisMapInferenceApprovalRequestV1} from "../../../../../../../../💡️inference/🧬️schema/🟦️.ts";
-import {textUtf8ByteLength} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts";
+import {textUtf8ByteLength} from "@semio-tech/framework/value/text";
 
 /** 📤️ Admits the physical JSON request before transport publication. */
 export function gisMapInferenceRequestToJson(request:GisMapInferenceJobRequestV1|GisMapInferenceApprovalRequestV1):string{

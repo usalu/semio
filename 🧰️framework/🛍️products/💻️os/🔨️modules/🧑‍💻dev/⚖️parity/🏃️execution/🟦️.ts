@@ -283,7 +283,7 @@ class ParitySweepScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const shardArg = segments.find((s) => s.startsWith("--shard="))?.slice("--shard=".length);
     const [shardIndex, shardCount] = shardArg ? shardArg.split("/").map(Number) : [0, 1];
-    const variants = playgroundCatalog.map((r) => r.variant).filter((_, i) => i % (shardCount ?? 1) === (shardIndex ?? 0));
+    const variants = playgroundCatalog().map((r) => r.variant).filter((_, i) => i % (shardCount ?? 1) === (shardIndex ?? 0));
     const reports: ParityPlaygroundReport[] = [];
     for (const variant of variants) {
       let report: ParityPlaygroundReport;

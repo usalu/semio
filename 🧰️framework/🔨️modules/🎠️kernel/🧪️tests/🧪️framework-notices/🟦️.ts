@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🧫️framework-notices/🔣️.json";
 import schema from "../../🧬️schema/🔣️framework-notices/🔣️.json";
-import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, frameworkFaultNotice, historyNotice } from "../../🟦️.ts";
+import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, frameworkFaultNotice, historyNotice } from "../../🏷️notice-labels/🟦️.ts";
 
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 

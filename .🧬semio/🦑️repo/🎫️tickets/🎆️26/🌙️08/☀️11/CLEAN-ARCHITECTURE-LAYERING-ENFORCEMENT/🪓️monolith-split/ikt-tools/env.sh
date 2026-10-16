@@ -1,0 +1,10 @@
+export LC_ALL=en_US.UTF-8
+export R=/Users/ueli/Documents/semio
+export F="$R/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split"
+export G="$F/🗑️generated"
+export T="$F/ikt-tools"
+export W="$G/ikt"
+export E="$R/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements"
+export IP="$E/🗣️Interpreter"
+export KD="$R/🧰️framework/🔨️modules/🎠️kernel"
+export RT="$R/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine"

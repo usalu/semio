@@ -129,7 +129,8 @@ mod artifact_fixed_registry_tests {
         ActiveArtifactEnvelopeIngress::new(pages)
     }
 
-    fn close_ingress(mut ingress: ActiveArtifactEnvelopeIngress) {
+    #[doc(hidden)]
+pub fn close_ingress(mut ingress: ActiveArtifactEnvelopeIngress) {
         let empty = RetainedCloneProgress::default();
         let copy = ingress.retirement_demands();
         assert!(copy.copy_bytes > 0 && copy.release_bytes == 0);

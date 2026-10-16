@@ -3,13 +3,12 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::local_folders::*;
 
 impl SyncState {
     /// 🗂️ The document a folder or file binding holds now: the document actor's on the native build, the host-route
     /// mirror's on the browser build.
-    pub(super) fn attached_document_id(&self, history: &HistoryState) -> Option<&str> {
-        #[cfg(any(target_arch = "wasm32", test))]
+    pub fn attached_document_id(&self, history: &HistoryState) -> Option<&str> {
+        #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
         if let Some(folder) = history.host_route_folder.as_ref() {
             return Some(folder.document_id.as_str());
         }

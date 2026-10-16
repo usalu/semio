@@ -4,6 +4,6 @@ export * from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema
 export type{Generation3dSnapshot}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
 export type{Generation3dDiff}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
 export * from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-export {parseBinary64,binary64,binary64Value,type Binary64} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+export {parseBinary64,binary64,binary64Value,type Binary64} from "@semio-tech/framework/value/ieee754";
 
 export { catalogue, CATALOGUE_CATEGORY_FILES } from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🗂️catalogue/🟦️.ts";

@@ -2,40 +2,41 @@
   "description": "Manifest-admitted universal history serve selection. Catalog rows come from generated playground authority.",
   "cases": [
     {
-      "name": "specialized journey keeps declared puzzle default",
+      "name": "specialized journey keeps the declared scenario playground",
       "universal": false,
-      "url": "http://127.0.0.1:6064/?plugin=draw",
+      "url": "http://127.0.0.1:6064/?plugin=$family",
       "renderer": "react",
-      "expected": "puzzle2d"
+      "expected": "$scenario",
+      "scenarioVariant": "$scenario"
     },
     {
-      "name": "custom route forwards declared drawing family",
+      "name": "custom route forwards a declared family",
       "universal": true,
-      "url": "http://127.0.0.1:6064/?plugin=draw",
+      "url": "http://127.0.0.1:6064/?plugin=$family",
       "renderer": "react",
-      "expected": "draw"
+      "expected": "$family"
     },
     {
-      "name": "native catalog port admits drawing family",
+      "name": "native catalog port admits a declared family",
       "universal": true,
-      "url": "http://127.0.0.1:6164/",
+      "url": "http://127.0.0.1:$familyWgpuPort/",
       "renderer": "wgpu",
-      "expected": "draw"
+      "expected": "$family"
     },
     {
       "name": "explicit custom family works on a free port",
       "universal": true,
       "url": "http://127.0.0.1:6901/",
       "renderer": "react",
-      "explicit": "draw",
-      "expected": "draw"
+      "explicit": "$family",
+      "expected": "$family"
     },
     {
       "name": "conflicting route and explicit family is refused",
       "universal": true,
-      "url": "http://127.0.0.1:6901/?plugin=puzzle2d",
+      "url": "http://127.0.0.1:6901/?plugin=$scenario",
       "renderer": "react",
-      "explicit": "draw",
+      "explicit": "$family",
       "error": true
     },
     {
@@ -55,8 +56,8 @@
   ],
   "startups": [
     {
-      "name": "cold puzzle React activates before listener",
-      "variant": "puzzle2d",
+      "name": "cold scenario React activates before listener",
+      "variant": "$scenario",
       "renderer": "react",
       "port": 6012,
       "answers": false,
@@ -65,14 +66,14 @@
       "activationFails": false,
       "outcome": "ready",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype",
+        "@semio-tech/framework-os-dev:activate-$scenario-react-prototype",
         "spawn",
         "stop"
       ]
     },
     {
       "name": "cold custom WGPU activates its declared family",
-      "variant": "draw",
+      "variant": "$family",
       "renderer": "wgpu",
       "port": 6164,
       "answers": false,
@@ -81,14 +82,14 @@
       "activationFails": false,
       "outcome": "ready",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-draw-wgpu-prototype",
+        "@semio-tech/framework-os-dev:activate-$family-wgpu-prototype",
         "spawn",
         "stop"
       ]
     },
     {
       "name": "existing serve is reused without activation",
-      "variant": "draw",
+      "variant": "$family",
       "renderer": "react",
       "port": 6064,
       "answers": true,
@@ -100,7 +101,7 @@
     },
     {
       "name": "failed activation starts no listener",
-      "variant": "puzzle2d",
+      "variant": "$scenario",
       "renderer": "react",
       "port": 6012,
       "answers": false,
@@ -109,12 +110,12 @@
       "activationFails": true,
       "outcome": "error",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype"
+        "@semio-tech/framework-os-dev:activate-$scenario-react-prototype"
       ]
     },
     {
       "name": "pre-cancelled journey owns no producer or listener",
-      "variant": "draw",
+      "variant": "$family",
       "renderer": "wgpu",
       "port": 6164,
       "answers": false,
@@ -126,7 +127,7 @@
     },
     {
       "name": "cancelled activation starts no listener",
-      "variant": "draw",
+      "variant": "$family",
       "renderer": "wgpu",
       "port": 6164,
       "answers": false,
@@ -135,12 +136,12 @@
       "activationFails": false,
       "outcome": "error",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-draw-wgpu-prototype"
+        "@semio-tech/framework-os-dev:activate-$family-wgpu-prototype"
       ]
     },
     {
       "name": "occupied non-server port refuses before activation",
-      "variant": "puzzle2d",
+      "variant": "$scenario",
       "renderer": "react",
       "port": 6012,
       "answers": false,
@@ -152,7 +153,7 @@
     },
     {
       "name": "canonical hub port refuses before activation",
-      "variant": "puzzle2d",
+      "variant": "$scenario",
       "renderer": "react",
       "port": 7800,
       "answers": false,
@@ -164,7 +165,7 @@
     },
     {
       "name": "another journey finishes the listener during activation",
-      "variant": "puzzle2d",
+      "variant": "$scenario",
       "renderer": "react",
       "port": 6012,
       "answers": false,
@@ -173,14 +174,14 @@
       "activationFails": false,
       "outcome": "reused",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype"
+        "@semio-tech/framework-os-dev:activate-$scenario-react-prototype"
       ],
       "afterActivationAnswers": true,
       "afterActivationOccupied": true
     },
     {
       "name": "a non-server claims the port during activation",
-      "variant": "puzzle2d",
+      "variant": "$scenario",
       "renderer": "react",
       "port": 6012,
       "answers": false,
@@ -189,7 +190,7 @@
       "activationFails": false,
       "outcome": "error",
       "trace": [
-        "@semio-tech/framework-os-dev:activate-puzzle2d-react-prototype"
+        "@semio-tech/framework-os-dev:activate-$scenario-react-prototype"
       ],
       "afterActivationAnswers": false,
       "afterActivationOccupied": true

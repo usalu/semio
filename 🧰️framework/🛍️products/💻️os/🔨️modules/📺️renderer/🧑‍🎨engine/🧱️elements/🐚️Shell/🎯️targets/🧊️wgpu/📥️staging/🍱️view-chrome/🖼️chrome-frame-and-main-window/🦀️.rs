@@ -7,24 +7,24 @@ use super::*;
 //#region ShellChrome
 
 #[derive(Default)]
-pub(crate) struct ShellChromeChildCursor {
-    pub(super) empty_notice_lines: Vec<(std::ops::Range<usize>, Rect)>,
-    pub(super) empty_notice_text: &'static str,
-    pub(crate) phase: u16,
-    pub(crate) item: usize,
-    pub(crate) scalar: usize,
-    pub(crate) x: f32,
-    pub(crate) right: f32,
-    pub(crate) flag: bool,
-    pub(crate) fault: bool,
-    pub(crate) group_phase: u8,
-    pub(crate) document: UiDocumentFrameCursor,
-    pub(crate) window: Option<UiText>,
-    pub(crate) rect: Option<Rect>,
-    pub(crate) path: ShellUtilityPath,
-    pub(crate) depth: usize,
-    pub(super) find_rejected: Option<ShellFindItem>,
-    pub(crate) glyph: RetainedGlyphCursor,
+pub struct ShellChromeChildCursor {
+    pub empty_notice_lines: Vec<(std::ops::Range<usize>, Rect)>,
+    pub empty_notice_text: &'static str,
+    pub phase: u16,
+    pub item: usize,
+    pub scalar: usize,
+    pub x: f32,
+    pub right: f32,
+    pub flag: bool,
+    pub fault: bool,
+    pub group_phase: u8,
+    pub document: UiDocumentFrameCursor,
+    pub window: Option<UiText>,
+    pub rect: Option<Rect>,
+    pub path: ShellUtilityPath,
+    pub depth: usize,
+    pub find_rejected: Option<ShellFindItem>,
+    pub glyph: RetainedGlyphCursor,
 }
 
 impl<'ctx> ChromeViewCtx<'ctx> {
@@ -34,7 +34,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// `ephemeral` brand answers its tour without ever writing a device-local flag, so the next
     /// load replays it. The in-memory answer still stands for THIS session (the tour does not
     /// come back on a republication) — that is React's `dismissedIntroductionAppIds` half.
-    pub(crate) fn advance_chrome_maintenance_step(&mut self) -> bool {
+    pub fn advance_chrome_maintenance_step(&mut self) -> bool {
         if !self.surfaces.retired_world3d_states.is_empty() {
             self.surfaces.advance_world3d_retirement_step();
         } else if self.chrome.chrome_present.maintenance.load_requested {
@@ -45,7 +45,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             self.chrome.chrome_build.introduction_seen.insert(seen_key.clone(), seen);
             self.docs.auto_start_introduction(&seen_key, seen, &mut self.chrome, &self.tutorial);
         } else if let Some(seen_key) = self.chrome.chrome_present.maintenance.introduction_write.take() {
-            if crate::boot_brand().persists_introduction_seen() {
+            if semio_framework_os_renderer_wgpu_host_base::boot_brand().persists_introduction_seen() {
                 let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{seen_key}");
                 stored_field_set(&key, "true");
             }
@@ -59,7 +59,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         !self.surfaces.retired_world3d_states.is_empty() || self.chrome.chrome_present.maintenance.pending()
     }
 
-    pub(crate) fn advance_presence_preview_step(&mut self) {
+    pub fn advance_presence_preview_step(&mut self) {
         self.chrome.chrome_present.maintenance.presence_requested = false;
         let Some(channel) = self.sync.sync_channel.as_ref() else { return };
         if channel.document_id.len() > SHELL_CHROME_IO_FIELD_BYTES || channel.plugin_id.len() > SHELL_CHROME_IO_FIELD_BYTES {
@@ -80,21 +80,21 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         self.sync.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 
-    pub(crate) fn navbar_leading_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+    pub fn navbar_leading_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
         self.dock.anchor_tab_row_item(PanelAnchor::TopLeft, index)
     }
 
-    pub(crate) fn navbar_center_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+    pub fn navbar_center_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
         self.dock.anchor_tab_row_item(PanelAnchor::TopMiddle, index)
     }
 
-    pub(crate) fn navbar_trailing_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+    pub fn navbar_trailing_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
         let tabs = self.dock.dock_tabs.tabs(PanelAnchor::TopRight);
         let last = tabs.len().checked_sub(1)?;
         tabs.get(last.checked_sub(index)?).cloned().map(|node| (PanelAnchor::TopRight, node))
     }
 
-    pub(super) fn footer_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
+    pub fn footer_tab_row_item(&self, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
         let mut seen = 0;
         for anchor in [PanelAnchor::BottomLeft, PanelAnchor::BottomMiddle, PanelAnchor::BottomRight] {
             let tabs = self.dock.dock_tabs.tabs(anchor);
@@ -106,18 +106,18 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         None
     }
 
-    pub(crate) fn navbar_control_band_width(&self, atlas: &mut FontAtlas, theme: &Theme, controls: &[ShellNavbarControl]) -> f32 {
+    pub fn navbar_control_band_width(&self, atlas: &mut FontAtlas, theme: &Theme, controls: &[ShellNavbarControl]) -> f32 {
         controls.iter().map(|control| self.navbar_control_width(atlas, theme, control).unwrap_or(0.0)).sum()
     }
 
     /// 📐️ The one width resolver used by both centred-band reservation and retained paint.
-    pub(crate) fn navbar_control_width(&self, atlas: &mut FontAtlas, theme: &Theme, control: &ShellNavbarControl) -> Option<f32> {
+    pub fn navbar_control_width(&self, atlas: &mut FontAtlas, theme: &Theme, control: &ShellNavbarControl) -> Option<f32> {
         let label = self.chrome.chrome_control_label(&control.control_id, &control.label);
         let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
         retained_chrome_group_item_width(atlas, theme, &item).map(|width| resolve_shell_navbar_control_width(width.max(theme.control_height), control.width_policy, theme.root_rem_pixels))
     }
 
-    pub(super) fn navbar_center_width(&self, atlas: &mut FontAtlas, theme: &Theme) -> f32 {
+    pub fn navbar_center_width(&self, atlas: &mut FontAtlas, theme: &Theme) -> f32 {
         let title = self.docs.session.as_ref().map_or_else(|| SHELL_NAVBAR_SESSIONLESS_TITLE.to_string(), |session| shell_navbar_title(&session.app, &self.prefs.terminology_id));
         let logo = theme.gap_standard * SHELL_NAVBAR_LOGO_UI_SPACING;
         let mut logo_title = logo + theme.gap_standard + atlas.measure_text(&title, theme.font_size_body).0 + theme.padding_standard * 2.0;
@@ -126,7 +126,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             let item = ChromeGroupItem { control_id: "", icon_id: None, label: Some(label), active: false, disabled: false, kind: HitKind::Button };
             logo_title += theme.gap_standard + retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0);
         }
-        let rows = if crate::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
+        let rows = if semio_framework_os_renderer_wgpu_host_base::boot_locks().example_id.is_empty() { self.docs.session_example_rows(&self.plugins, &self.prefs) } else { Vec::new() };
         let examples: Vec<ShellNavbarControl> = shell_example_control(&rows, matches!(&self.input.overlay_state, OverlayState::Dropdown(id) if id == "example"), self.prefs.locale_id == "de").into_iter().collect();
         let modes = self.docs.session.as_ref().map(|session| shell_mode_controls(&session.app, session.view_state.active_mode_id.as_deref(), self.prefs.active_terminology(), self.prefs.active_locale())).unwrap_or_default();
         let roles = self.docs
@@ -145,7 +145,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         occupied.iter().sum::<f32>() + theme.gap_standard * 2.0 * occupied.len().saturating_sub(1) as f32
     }
 
-    pub(crate) fn navbar_chrome_layout(&self, atlas: &mut FontAtlas, theme: &Theme, width: f32) -> ShellNavbarChromeLayout {
+    pub fn navbar_chrome_layout(&self, atlas: &mut FontAtlas, theme: &Theme, width: f32) -> ShellNavbarChromeLayout {
         let leading_right = theme.padding_standard + self.dock.chrome_tab_band_width(atlas, theme, PanelAnchor::TopLeft);
         let fullscreen_width = self.prefs.fullscreen_item_width(atlas, theme, &self.chrome);
         let top_right_width = self.dock.chrome_tab_band_width(atlas, theme, PanelAnchor::TopRight);
@@ -156,11 +156,11 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         ShellNavbarChromeLayout { center: shell_chrome_centered_band(width, &occupied, self.navbar_center_width(atlas, theme)), trailing_right }
     }
 
-    pub(super) fn footer_band_width(&self, atlas: &mut FontAtlas, theme: &Theme, anchor: PanelAnchor) -> f32 {
+    pub fn footer_band_width(&self, atlas: &mut FontAtlas, theme: &Theme, anchor: PanelAnchor) -> f32 {
         self.dock.chrome_tab_band_width(atlas, theme, anchor)
     }
 
-    pub(crate) fn navbar_leading_tab_row_rect(&self, atlas: &mut FontAtlas, theme: &Theme, index: usize, lead_x: f32, btn_y: f32, btn_h: f32) -> Option<(PanelAnchor, DockTabNode, Rect)> {
+    pub fn navbar_leading_tab_row_rect(&self, atlas: &mut FontAtlas, theme: &Theme, index: usize, lead_x: f32, btn_y: f32, btn_h: f32) -> Option<(PanelAnchor, DockTabNode, Rect)> {
         let (anchor, node) = self.navbar_leading_tab_row_item(index)?;
         let item = ChromeGroupItem { control_id: "", icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
         let item_w = retained_panel_chrome_item_width(atlas, theme, &item)?;
@@ -171,7 +171,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// column, so two open anchors in one column band it between them instead of painting over each
     /// other — and the anchor's MEASURED content height, so the panel hugs its content exactly as
     /// React's `<Panel>` does instead of filling its band.
-    pub(crate) fn anchor_rect(&self, anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
+    pub fn anchor_rect(&self, anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
         let body = panel_band(anchor, body, theme);
         let column: Vec<PanelAnchor> = ANCHOR_COLUMN_ORDER.into_iter().filter(|candidate| candidate.horizontal() == anchor.horizontal() && self.dock.anchor_open(*candidate)).collect();
         let index = column.iter().position(|candidate| *candidate == anchor).unwrap_or(0);
@@ -200,10 +200,10 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     ///
     /// 🖼️ One derivation per frame: the mobile flat stack, the docked-out tree of a live drag, or
     /// the committed tree — everything below (plan, drop registries, chrome, hits) reads THIS.
-    pub(crate) fn plan_dock_windows(&mut self, rect: Rect, theme: &Theme, atlas: &mut FontAtlas) {
+    pub fn plan_dock_windows(&mut self, rect: Rect, theme: &Theme, atlas: &mut FontAtlas) {
         self.dock.dock_canvas_bounds = rect;
         self.dock.dock_axis_separator = theme.gap_standard;
-        self.dock.dock.mobile = self.chrome.screen_w <= crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+        self.dock.dock.mobile = self.chrome.screen_w <= semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
         self.dock.dock_view = self.dock.dock.render_view(self.dock.dock_drag.as_ref().map(|drag| &drag.payload));
         if self.plugins.space_mode && self.docs.spawned_ui.is_some() {
             self.dock.dock_window_plan = vec![("spawned".to_string(), rect)];
@@ -215,7 +215,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         }
         let (labels, _icon_ids) = self.dock.dock_chrome_maps(&self.prefs, &self.docs, &self.windows);
         for (window_id, label) in &labels {
-            note_dock_control_name(window_id, crate::dock::DockControlName::Body(label), self.prefs.locale_id == "de");
+            note_dock_control_name(window_id, semio_framework_os_renderer_wgpu_dock::DockControlName::Body(label), self.prefs.locale_id == "de");
         }
         let (bodies, silhouettes) = self.dock.dock_view.stack_body_rects_with_silhouettes(rect, theme, &labels, atlas);
         self.dock.dock_drop_tab_bars = self.dock.dock_view.stack_corner_tab_bar_rects(rect, theme, atlas, &labels);
@@ -235,7 +235,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     ///
     /// 🫳️ The index the preview pill painted, so what drops is what was shown: the chip half the
     /// pointer released over, or the row's end.
-    pub(crate) fn finish_dock_tab_drag(&mut self, tab_id: &str, from_anchor: PanelAnchor, x: f32, y: f32, theme: &Theme) {
+    pub fn finish_dock_tab_drag(&mut self, tab_id: &str, from_anchor: PanelAnchor, x: f32, y: f32, theme: &Theme) {
         let Some(target_anchor) = self.anchor_at_point(x, y, theme) else { return };
         if target_anchor == from_anchor {
             return;
@@ -250,7 +250,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// 🫳️ The ROOT-ROW index a drop at `(x, y)` lands at inside `anchor`, over the same chip-half rule
     /// the insert preview paints — `None` when the point is not on that anchor's own root tab row (a
     /// drop anywhere else in the anchor appends, React's own `index: buttons.length` fallback).
-    pub(super) fn dock_tab_drop_index(&mut self, anchor: PanelAnchor, x: f32, y: f32, theme: &Theme) -> Option<usize> {
+    pub fn dock_tab_drop_index(&mut self, anchor: PanelAnchor, x: f32, y: f32, theme: &Theme) -> Option<usize> {
         if !self.dock.anchor_open(anchor) {
             return None;
         }
@@ -279,7 +279,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
 
     /// 🧭️ Which anchor a screen point belongs to: an open anchor's own painted box first, then the
     /// body quadrant the point falls in, so a tab can be dropped onto a FOLDED anchor too.
-    pub(super) fn anchor_at_point(&mut self, x: f32, y: f32, theme: &Theme) -> Option<PanelAnchor> {
+    pub fn anchor_at_point(&mut self, x: f32, y: f32, theme: &Theme) -> Option<PanelAnchor> {
         let body = self.as_session().body_rect(theme);
         for anchor in self.dock.open_anchors() {
             if self.anchor_rect(anchor, body, theme).contains(x, y) {
@@ -313,7 +313,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// row, drawn before the chip the drop would land in front of (and after the last chip when the
     /// drop index is past the end). The index is React's own rule: the half of the chip the pointer is
     /// over (`fraction >= 0.5` → after), or the row's length when the pointer is past every chip.
-    pub(crate) fn paint_anchor_tab_bar(&mut self, anchor: PanelAnchor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, panel: Rect) {
+    pub fn paint_anchor_tab_bar(&mut self, anchor: PanelAnchor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, panel: Rect) {
         let rows = self.dock.anchor_panel_tab_rows(anchor);
         let active: Vec<String> = self.dock.anchor_state(anchor).path.clone();
         let active_offset = usize::from(matches!(anchor.vertical(), "top" | "bottom"));
@@ -377,7 +377,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one retained panel document opportunity forwards the host frame context")]
-    pub(super) fn render_panel_document_opportunity(
+    pub fn render_panel_document_opportunity(
         &mut self,
         cursor: &mut ShellChromeChildCursor,
         window: &str,
@@ -394,13 +394,13 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     ) -> Option<bool> {
         let controller = self.docs.document_controller_id(&self.plugins);
         let document = self.docs.panel_documents.remove(window)?;
-        crate::interpreter::set_ui_document_flow(window, anchor.flow());
+        semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(window, anchor.flow());
         let complete = {
             let scroll_offsets = &mut self.input.scroll_offsets;
             let collapsed_sections = &mut self.input.collapsed_sections;
             let open_selects = &mut self.input.open_selects;
             let widget_maps = &mut self.input.widget_maps_staging;
-            let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window };
+            let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window };
             let viewport_height_for_widgets = panel_draw.screen_height();
             let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(content);
@@ -423,7 +423,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// ↔ A corner or edge-middle anchor grows inward, so its one handle sits on the
     /// canvas-facing edge; a middle-column anchor is centred and grows both ways, so it
     /// carries one on each edge — React's `resizeSides` in `🖼️Panel/🟦️.tsx`.
-    pub(crate) fn render_panel_step(
+    pub fn render_panel_step(
         &mut self,
         cursor: &mut ShellChromeChildCursor,
         anchor: PanelAnchor,
@@ -570,7 +570,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// Toggled by `ui.mobilePanel.toggle`, invisible until then, exactly as React's own
     /// `mobilePanelVisible` gate.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    pub(super) fn render_mobile_panel_step(
+    pub fn render_mobile_panel_step(
         &mut self,
         cursor: &mut ShellChromeChildCursor,
         panel_draw: &mut DrawList,
@@ -624,7 +624,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
-                    let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window.as_str() };
+                    let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window.as_str() };
                     let viewport_height_for_widgets = panel_draw.screen_height();
                     let mut ctx = framework_widget_context(panel_draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
@@ -652,7 +652,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// 📱️ The mobile panel's single tab row: every flattened tab as one chip, registering the same
     /// `shell.panel.tab.mobile.<tabId>` ids the mobile path reader answers.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    pub(crate) fn paint_mobile_tab_bar(&self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, panel: Rect, tabs: &[DockTabNode]) {
+    pub fn paint_mobile_tab_bar(&self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, panel: Rect, tabs: &[DockTabNode]) {
         let mut x = panel.x + theme.gap_standard;
         let active = self.dock.mobile_panel_path.first().cloned().unwrap_or_default();
         for node in tabs {
@@ -683,7 +683,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
 /// `calc(-1 * (var(--size-large) + var(--size-medium)) / 2)` — from the body's edge back to the
 /// centred `h-medium` row inside the `h-large` navbar/footer band, where `PanelChromeTabBar`
 /// parked the folded toggle. So an open panel's own cap sits IN the chrome band, not below it.
-pub(super) fn chrome_hosted_panel_overhang(theme: &Theme) -> f32 {
+pub fn chrome_hosted_panel_overhang(theme: &Theme) -> f32 {
     (theme.navbar_height + theme.control_height) * 0.5
 }
 
@@ -706,7 +706,7 @@ pub(super) fn chrome_hosted_panel_overhang(theme: &Theme) -> f32 {
 /// 📐️ `anchor_panel_rect` re-applies `inset` inside this band, so the band carries `-inset` on
 /// the grown edge to land the panel on React's exact `-overhang` and `available_h` on its exact
 /// `100% + overhang`. A middle anchor has no bonded edge and keeps the body it centres on.
-pub(crate) fn panel_band(anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
+pub fn panel_band(anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
     let overhang = chrome_hosted_panel_overhang(theme);
     let inset = theme.panel_inset;
     let root_row = theme.control_height;

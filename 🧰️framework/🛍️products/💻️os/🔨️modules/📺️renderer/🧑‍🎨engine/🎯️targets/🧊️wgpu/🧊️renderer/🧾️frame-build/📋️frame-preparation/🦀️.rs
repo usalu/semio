@@ -3,30 +3,30 @@ use super::*;
 
 //#region 📮️RuntimeMailbox
 #[derive(Clone,Copy,PartialEq,Eq)]
-pub(crate) enum FramePreparationStep { Pending, Complete, Cancelled, Fault }
+pub enum FramePreparationStep { Pending, Complete, Cancelled, Fault }
 
-pub(crate) struct AppFramePreparation {
-    pub(crate) retained: semio_framework_job::RetainedCloneGrant,
-    pub(crate) params: Option<semio_framework_job_worker_authority::BatchJobParams>,
-    pub(crate) params_cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
-    pub(crate) worker_semantic_pending: bool,
-    pub(crate) outcome_pending: Option<FramePreparationStep>,
-    pub(crate) outcome_acknowledged: bool,
-    pub(crate) refused_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
-    pub(crate) job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
-    pub(crate) job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
-    pub(crate) input_candidate: Option<shell::PresentedInputCandidateWitness>,
-    pub(crate) session: Option<semio_framework_job_worker::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
-    pub(crate) engine_packets: Option<FrameEnginePackets>,
-    pub(crate) generation: semio_framework_trace::Generation,
-    pub(crate) cursor: SemioCursor,
-    pub(crate) theme_dark: bool,
-    pub(crate) fullscreen: Option<bool>,
-    pub(crate) cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+pub struct AppFramePreparation {
+    pub retained: semio_framework_job::RetainedCloneGrant,
+    pub params: Option<semio_framework_job_worker_authority::BatchJobParams>,
+    pub params_cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
+    pub worker_semantic_pending: bool,
+    pub outcome_pending: Option<FramePreparationStep>,
+    pub outcome_acknowledged: bool,
+    pub refused_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
+    pub job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
+    pub job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
+    pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
+    pub session: Option<semio_framework_job_worker::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
+    pub engine_packets: Option<FrameEnginePackets>,
+    pub generation: semio_framework_trace::Generation,
+    pub cursor: SemioCursor,
+    pub theme_dark: bool,
+    pub fullscreen: Option<bool>,
+    pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
-    pub(crate) terminal: bool,
-    pub(crate) fault: Option<&'static str>,
+    pub job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
+    pub terminal: bool,
+    pub fault: Option<&'static str>,
 }
 
 /// 🪙️ Compares actual child demand with the five unchanged incoming frame axes.
@@ -42,15 +42,15 @@ impl AppFramePreparation {
     /// unbound raster producer therefore ended every frame build after the reference image decoded and
     /// the shell presented ONE frame per boot with a completely silent console (ticket
     /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md`).
-    pub(crate) fn fault(&self) -> Option<&'static str> {
+    pub fn fault(&self) -> Option<&'static str> {
         self.fault
     }
 
-    pub(crate) fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
+    pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
         self.session.as_ref().and_then(semio_framework_job_worker::BatchJobSession::callback_verdict)
     }
 
-    pub(crate) fn drive_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<FramePreparationStep, semio_framework_value::ValueError> {
+    pub fn drive_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<FramePreparationStep, semio_framework_value::ValueError> {
         use semio_framework_job::{JobOutcomeView};
 use semio_framework_job_worker::{WorkerJobPoll};
         use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -103,7 +103,7 @@ use semio_framework_job_worker::{WorkerJobPoll};
         Ok(FramePreparationStep::Pending)
     }
 
-    pub(crate) fn take_presentation(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<AppFramePresentation>,semio_framework_value::ValueError> {
+    pub fn take_presentation(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<AppFramePresentation>,semio_framework_value::ValueError> {
         if !self.terminal || !self.outcome_acknowledged {
             return Ok(None);
         }
@@ -128,11 +128,11 @@ use semio_framework_job_worker::{WorkerJobPoll};
         }))
     }
 
-    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {
+    pub fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {
         discard_frame_input_candidate(runtime, &mut self.input_candidate)
     }
 
-    pub(crate) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, witness: Option<&semio_framework_job::CancelToken>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, witness: Option<&semio_framework_job::CancelToken>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
         let grant=cx.retained_grant();
         if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if self.input_candidate.is_some() { return Ok(InteractiveJobCloseStep::Blocked); }
@@ -216,7 +216,7 @@ use semio_framework_job_worker::{WorkerJobPoll};
         Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.params.is_none() && self.params_cancel_retirement.is_none() && !self.worker_semantic_pending && self.outcome_pending.is_none() && !self.outcome_acknowledged && self.refused_receipt.is_none() && self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.engine_packets.is_none() && self.input_candidate.is_none() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -231,11 +231,11 @@ use semio_framework_job_worker::{WorkerJobPoll};
 }
 
 impl AppFramePresentation {
-    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {
+    pub fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {
         discard_frame_input_candidate(runtime, &mut self.input_candidate)
     }
 
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
         if self.input_candidate.is_some() { return Ok(InteractiveJobCloseStep::Blocked); }
         if let Some(packet) = self.packet.as_mut() {
             if !packet.retirement_is_empty() { return frame_child_step(packet.close_step(grant), grant, packet.retirement_is_empty()); }
@@ -259,7 +259,7 @@ impl AppFramePresentation {
         Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.packet.is_none() && self.input_candidate.is_none() && self.engine_packets.terminal_is_empty() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {

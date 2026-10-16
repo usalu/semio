@@ -7,7 +7,7 @@ import { join } from "node:path";
 import type { ValidateFunction } from "ajv";
 type SchemaCheck=((data:unknown)=>boolean)&Pick<ValidateFunction,"errors">;
 import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { runArtifactRustTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { parseBinarySnapshot } from "../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
 import { binarySnapshotToSqliteDatabase, binarySnapshotFromSqliteDatabase } from "../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";

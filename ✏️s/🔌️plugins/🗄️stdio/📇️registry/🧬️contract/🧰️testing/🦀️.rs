@@ -29,6 +29,9 @@ pub const fn mounted_policy() -> MountedOwnerPolicyV1 {
     MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
 }
 
+/// 🚢️ The language-agnostic shipped-fleet SQLite owner law (authored natural texts and exact domain rows), owned by stdio and shared with its TypeScript twin, so that a composition test reads it through this crate and never through a stdio fixture path.
+pub const SHIPPED_FLEET_SQLITE_OWNERS: &str = include_str!("../../../🧪️tests/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json");
+
 /// 🛬️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
 pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) -> T) -> T {
     let grant = original_grant();

@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
 import { afterEach, expect, it } from "vitest";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
-import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 
 type RendererInput = { readonly key: string; readonly label: string; readonly value: string; readonly action: string; readonly draftTargetContains: string };
 type RendererEntry = { readonly key: string; readonly label: string; readonly defaultOpen: boolean; readonly value: { readonly key: string; readonly label: string; readonly input: RendererInput } };

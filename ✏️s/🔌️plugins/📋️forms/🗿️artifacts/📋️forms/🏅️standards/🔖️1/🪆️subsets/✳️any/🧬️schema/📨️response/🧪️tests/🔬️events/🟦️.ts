@@ -4,7 +4,7 @@ import { applyPatch, compare } from "fast-json-patch";
 import fixture from "../../../../🧪️tests/🧫️fixtures/📨️response/🔣️events.json";
 import timestamps from "../../../../🧪️tests/🧫️fixtures/📨️response/🔣️timestamps.json";
 import responseSchema from "../../🔣️.json";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { parseFormsResponse, applyResponseEvent, inverseResponseEvent, type FormsResponseEvent } from "../../🟦️.ts";
 
 /** 📨️ Submission, retraction and undo share fixtures and independent JSON Patch outcomes. */

@@ -1,6 +1,6 @@
 // #region 🔌️Adapters
 import * as React from "react";
-import { createMemoryStoragePort } from "@semio-tech/framework";
+import { createMemoryStoragePort } from "../../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Ajv2020 from "ajv/dist/2020.js";
 import { afterEach, describe, expect, it, vi } from "vitest";

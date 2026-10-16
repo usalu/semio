@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellTypes
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn terminal_directory_home_ack(result: &semio_framework::kernel::InvocationResult, bootstrap_epoch: u64) -> Result<DirectoryEventPageAckV1, String> {
+pub fn terminal_directory_home_ack(result: &semio_framework::kernel::InvocationResult, bootstrap_epoch: u64) -> Result<DirectoryEventPageAckV1, String> {
     const RECEIPT_SCHEMA: &str = "semio.space.home.directory-projection-receipt.v1";
     let mut acknowledgement = None;
     for effect in &result.requested_effects {
@@ -43,25 +43,25 @@ pub(crate) fn terminal_directory_home_ack(result: &semio_framework::kernel::Invo
 }
 
 //#region 📄️ShellDocumentRetirement
-pub(super) const SHELL_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * UI_DOCUMENT_LEASE_ALIASES as usize;
+pub const SHELL_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * UI_DOCUMENT_LEASE_ALIASES as usize;
 
-pub(super) const SHELL_DOCUMENT_RETIREMENT_WORD_BITS: usize = u64::BITS as usize;
+pub const SHELL_DOCUMENT_RETIREMENT_WORD_BITS: usize = u64::BITS as usize;
 
-pub(super) const SHELL_DOCUMENT_RETIREMENT_WORDS: usize = (SHELL_DOCUMENT_RETIREMENT_CAPACITY + SHELL_DOCUMENT_RETIREMENT_WORD_BITS - 1) / SHELL_DOCUMENT_RETIREMENT_WORD_BITS;
+pub const SHELL_DOCUMENT_RETIREMENT_WORDS: usize = (SHELL_DOCUMENT_RETIREMENT_CAPACITY + SHELL_DOCUMENT_RETIREMENT_WORD_BITS - 1) / SHELL_DOCUMENT_RETIREMENT_WORD_BITS;
 
-pub(super) struct ShellDocumentRetirementSlot {
-    pub(crate) epoch: u64,
-    pub(crate) generation: u64,
-    pub(crate) surface: Option<SurfaceId>,
-    pub(crate) document: UiDocumentLease,
+pub struct ShellDocumentRetirementSlot {
+    pub epoch: u64,
+    pub generation: u64,
+    pub surface: Option<SurfaceId>,
+    pub document: UiDocumentLease,
 }
 
-pub(crate) struct ShellDocumentRetirementRegistry {
-    pub(crate) slots: Box<[Option<ShellDocumentRetirementSlot>; SHELL_DOCUMENT_RETIREMENT_CAPACITY]>,
-    pub(crate) epochs: [u64; SHELL_DOCUMENT_RETIREMENT_CAPACITY],
-    pub(crate) occupied: [u64; SHELL_DOCUMENT_RETIREMENT_WORDS],
-    pub(super) occupied_count: u64,
-    pub(crate) cursor: usize,
+pub struct ShellDocumentRetirementRegistry {
+    pub slots: Box<[Option<ShellDocumentRetirementSlot>; SHELL_DOCUMENT_RETIREMENT_CAPACITY]>,
+    pub epochs: [u64; SHELL_DOCUMENT_RETIREMENT_CAPACITY],
+    pub occupied: [u64; SHELL_DOCUMENT_RETIREMENT_WORDS],
+    pub occupied_count: u64,
+    pub cursor: usize,
 }
 
 impl Default for ShellDocumentRetirementRegistry {
@@ -71,7 +71,7 @@ impl Default for ShellDocumentRetirementRegistry {
 }
 
 impl ShellDocumentRetirementRegistry {
-    pub(crate) fn first_vacant_index(&self) -> Option<usize> {
+    pub fn first_vacant_index(&self) -> Option<usize> {
         self.occupied.iter().enumerate().find_map(|(word_index, occupied)| {
             let first_index = word_index * SHELL_DOCUMENT_RETIREMENT_WORD_BITS;
             let remaining = SHELL_DOCUMENT_RETIREMENT_CAPACITY.saturating_sub(first_index);
@@ -81,7 +81,7 @@ impl ShellDocumentRetirementRegistry {
         })
     }
 
-    pub(super) fn next_occupied_index(&self) -> Option<usize> {
+    pub fn next_occupied_index(&self) -> Option<usize> {
         if self.occupied_count == 0 {
             return None;
         }
@@ -110,7 +110,7 @@ impl ShellDocumentRetirementRegistry {
         (wrapped != 0).then_some(start_word * SHELL_DOCUMENT_RETIREMENT_WORD_BITS + wrapped.trailing_zeros() as usize)
     }
 
-    pub(super) fn mark_occupied(&mut self, index: usize) {
+    pub fn mark_occupied(&mut self, index: usize) {
         let word = index / SHELL_DOCUMENT_RETIREMENT_WORD_BITS;
         let bit = 1_u64 << (index % SHELL_DOCUMENT_RETIREMENT_WORD_BITS);
         assert_eq!(self.occupied[word] & bit, 0, "shell document retirement slot was indexed twice");
@@ -118,7 +118,7 @@ impl ShellDocumentRetirementRegistry {
         self.occupied_count = self.occupied_count.checked_add(1).expect("shell document retirement occupied count overflow");
     }
 
-    pub(super) fn clear_occupied(&mut self, index: usize) {
+    pub fn clear_occupied(&mut self, index: usize) {
         let word = index / SHELL_DOCUMENT_RETIREMENT_WORD_BITS;
         let bit = 1_u64 << (index % SHELL_DOCUMENT_RETIREMENT_WORD_BITS);
         assert_ne!(self.occupied[word] & bit, 0, "shell document retirement slot lost its occupied index");
@@ -126,19 +126,19 @@ impl ShellDocumentRetirementRegistry {
         self.occupied_count = self.occupied_count.checked_sub(1).expect("shell document retirement occupied count underflow");
     }
 
-    pub(crate) fn try_admit(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
+    pub fn try_admit(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
         let Some(admission) = self.try_reserve_admission() else { return Err(document) };
         self.admit_reserved(admission, document);
         Ok(())
     }
 
-    pub(crate) fn try_reserve_admission(&self) -> Option<ShellDocumentRetirementAdmission> {
+    pub fn try_reserve_admission(&self) -> Option<ShellDocumentRetirementAdmission> {
         let index = self.first_vacant_index()?;
         let epoch = self.epochs[index].checked_add(1)?;
         Some(ShellDocumentRetirementAdmission { index, epoch })
     }
 
-    pub(crate) fn admit_reserved(&mut self, admission: ShellDocumentRetirementAdmission, document: UiDocumentLease) {
+    pub fn admit_reserved(&mut self, admission: ShellDocumentRetirementAdmission, document: UiDocumentLease) {
         assert_eq!(self.first_vacant_index(), Some(admission.index), "shell document retirement admission lost its exact vacancy");
         assert_eq!(self.epochs[admission.index].checked_add(1), Some(admission.epoch), "shell document retirement admission epoch changed before transfer");
         assert!(self.slots[admission.index].is_none(), "shell document retirement vacancy index disagreed with owner storage");
@@ -163,7 +163,7 @@ impl ShellDocumentRetirementRegistry {
     /// `📓️close-ladder-budget-2026-09-12.md` §3 prices every other retirement in this shell.
     /// The fixed occupied-word index preserves the same physical-slot cursor order while bounding
     /// sparse discovery to eight words; `occupied_count` makes the empty decision scalar.
-    pub(crate) fn close_one(&mut self) -> bool {
+    pub fn close_one(&mut self) -> bool {
         let Some(index) = self.next_occupied_index() else { return false };
         self.cursor = (index + 1) % SHELL_DOCUMENT_RETIREMENT_CAPACITY;
         let slot = self.slots[index].as_mut().expect("the located shell document retirement slot is occupied");
@@ -176,12 +176,12 @@ impl ShellDocumentRetirementRegistry {
         true
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.occupied_count == 0
     }
 
-    #[cfg(test)]
-    pub(super) fn qualified_owners(&self) -> impl Iterator<Item = (u64, u64, Option<&SurfaceId>)> {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn qualified_owners(&self) -> impl Iterator<Item = (u64, u64, Option<&SurfaceId>)> {
         self.slots.iter().flatten().map(|slot| (slot.epoch, slot.generation, slot.surface.as_ref()))
     }
 }
@@ -189,3 +189,18 @@ impl ShellDocumentRetirementRegistry {
 //#endregion 📄️ShellDocumentRetirement
 //#endregion ShellTypes
 
+//#region ShellTypes
+//#region 📄️ShellDocumentRetirement
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ShellDocumentRetirementAdmission {
+    pub index: usize,
+    pub epoch: u64,
+}
+//#endregion 📄️ShellDocumentRetirement
+//#endregion ShellTypes
+
+//#region ShellTypes
+//#region 📄️ShellDocumentRetirement
+pub const SHELL_DOCUMENT_RETIREMENT_INDEX_BYTES: usize = std::mem::size_of::<[u64; SHELL_DOCUMENT_RETIREMENT_WORDS]>() + std::mem::size_of::<u64>();
+//#endregion 📄️ShellDocumentRetirement
+//#endregion ShellTypes

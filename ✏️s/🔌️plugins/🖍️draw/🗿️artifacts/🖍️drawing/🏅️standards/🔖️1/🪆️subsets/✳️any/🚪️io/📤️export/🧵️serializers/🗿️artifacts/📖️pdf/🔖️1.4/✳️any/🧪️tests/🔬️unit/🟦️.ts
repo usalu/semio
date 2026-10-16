@@ -1,7 +1,7 @@
 /** 📖️ Independently render native PDF exports of the language-neutral compositing corpus. */
 import { expect, test } from "bun:test";
 import { join } from "node:path";
-import { testLevelBudgetMs } from "../../../../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { testLevelBudgetMs } from "@semio-tech/framework/process/test-budget";
 import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas";
 import sharp from "sharp";
 import cases from "../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";

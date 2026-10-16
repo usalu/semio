@@ -43,6 +43,8 @@ semio-framework-plugin-instance-children = { path = "../../../../🧵️instance
 semio-framework-plugin-instance-jobs = { path = "../../../../🧵️instance/👷️jobs/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-extension = { path = "../../../../🧵️instance/🧩️extensions/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-render = { path = "../../../../🧵️instance/🖼️render/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-dispatch = { path = "../../../../🧵️instance/📨️dispatch/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

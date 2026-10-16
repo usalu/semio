@@ -2,13 +2,15 @@ import {readFileSync} from "node:fs";
 import {dirname,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
-import {type ToolJobMemberStoreProducerSources, type toolJobMemberStoreProducerExact} from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
-import domainSchema from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧬️schema/🔣️.json" with {type:"json"};
 import baseSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
 
-/** 🧪️ Checks this instance’s actual producer/table binding under the original Generic source contract. */
-export function semioMemberStoreProducerSourceSelfTests(check:typeof toolJobMemberStoreProducerExact,sources:ToolJobMemberStoreProducerSources):number{
+/** 📥️ One producer or member body of the explicit extension whose source text the binding mutations edit. */
+type ProducerSourceBodyV1=Readonly<{source:string}>;
+/** 📥️ The explicit extensions of one member-store producer source declaration, as the owning check receives them. */
+type ProducerSourcesV1=Readonly<{extensions:readonly Readonly<{producer:ProducerSourceBodyV1;members:ProducerSourceBodyV1}>[]}>;
+/** 🧪️ Checks this instance’s actual producer/table binding under the original Generic source contract; the owning check, the sources and the Generic domain schema are supplied by the composition that owns the Store contract. */
+export function semioMemberStoreProducerSourceSelfTests(check:(sources:ProducerSourcesV1)=>boolean,sources:ProducerSourcesV1,domainSchema:Readonly<{$id:string}>):number{
  const root=resolve(dirname(fileURLToPath(import.meta.url)),"../../../../../../../../../../..");
  const declaration=JSON.parse(readFileSync(resolve(root,"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🔣️.json"),"utf8"));
  const ajv=new Ajv({strict:true,allErrors:true});ajv.addKeyword({keyword:"x-semio-formats",valid:true});ajv.addSchema(domainSchema);

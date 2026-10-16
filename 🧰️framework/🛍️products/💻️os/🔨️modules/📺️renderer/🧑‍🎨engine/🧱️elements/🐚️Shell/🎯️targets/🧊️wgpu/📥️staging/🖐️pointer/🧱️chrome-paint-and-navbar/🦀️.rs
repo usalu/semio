@@ -8,14 +8,14 @@ fn floating_panel_available_width(body: Rect, theme: &Theme) -> f32 {
     (body.w - theme.panel_inset * 2.0).max(theme.panel_min_width)
 }
 
-pub(crate) fn floating_panel_max_width(body: Rect, theme: &Theme) -> f32 {
+pub fn floating_panel_max_width(body: Rect, theme: &Theme) -> f32 {
     theme.panel_max_width.min(floating_panel_available_width(body, theme)).max(theme.panel_min_width)
 }
 
 /// 📑️ The window id behind a dock tab's LABEL target (`dock.tab.<path>.<windowId>`) — `None` for the
 /// action chips (`….focus`/`….close`/`….drag`), which carry one dot more. React's label is its own
 /// `<button>` beside those chips (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1049-1071`).
-pub(crate) fn dock_tab_select_window_id(control_id: &str) -> Option<&str> {
+pub fn dock_tab_select_window_id(control_id: &str) -> Option<&str> {
     let rest = control_id.strip_prefix("dock.tab.")?;
     let (_, window_id) = rest.split_once('.')?;
     (!window_id.contains('.')).then_some(window_id)
@@ -23,7 +23,7 @@ pub(crate) fn dock_tab_select_window_id(control_id: &str) -> Option<&str> {
 
 /// ↔ Which anchor a `panel.resize.<anchor>.<inner|outer>` control belongs to, and whether it is the
 /// inner (canvas-facing) handle — the one id shape both the registration and the drag arm parse.
-pub(crate) fn panel_resize_anchor(control_id: &str) -> Option<(PanelAnchor, bool)> {
+pub fn panel_resize_anchor(control_id: &str) -> Option<(PanelAnchor, bool)> {
     let rest = control_id.strip_prefix("panel.resize.")?;
     let (anchor_id, side) = rest.rsplit_once('.')?;
     Some((PanelAnchor::from_str(anchor_id)?, side == "inner"))
@@ -33,7 +33,7 @@ pub(crate) fn panel_resize_anchor(control_id: &str) -> Option<(PanelAnchor, bool
 /// ⌨️ {@link is_reserved_shell_chord} against a RESOLVED table, so a REMAPPED shell chord is reserved
 /// at its new spelling and the default it replaced becomes an app's to claim — React's
 /// `reservedShellChordsV1(SHELL_KEYBINDINGS, uiKeybindingOverrides)`.
-pub(crate) fn is_reserved_shell_chord_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+pub fn is_reserved_shell_chord_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
     shell_shortcut_for_in(table, action, modifiers).is_some()
 }
 
@@ -41,7 +41,7 @@ pub(crate) fn is_reserved_shell_chord_in(table: &[(String, String)], action: &ui
 /// 🛑️ The declared shape of a `World3dScene.statusJson` cancel affordance — the projection of
 /// [`World3dComputeStatus`] the overlay control layer needs and nothing more.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct World3dCancelAffordance {
+pub struct World3dCancelAffordance {
     pub cancellable: bool,
     pub cancel_action: String,
     pub cancel_args: serde_json::Map<String, Value>,
@@ -49,7 +49,7 @@ pub(crate) struct World3dCancelAffordance {
 
 /// 🛑️ Reads the cancel contract out of one `statusJson`. The shell learns no domain verb from code:
 /// whatever id `cancelAction` names is what the control dispatches.
-pub(crate) fn world3d_cancel_affordance(status_json: Option<&str>) -> World3dCancelAffordance {
+pub fn world3d_cancel_affordance(status_json: Option<&str>) -> World3dCancelAffordance {
     let status = world3d_compute_status(status_json);
     World3dCancelAffordance { cancellable: status.cancellable, cancel_action: status.cancel_action, cancel_args: status.cancel_args }
 }
@@ -64,8 +64,21 @@ pub(crate) fn world3d_cancel_affordance(status_json: Option<&str>) -> World3dCan
 /// is painted INSIDE a world pane's rect, so without a claimable prefix every utility press was handed
 /// to the world surface instead of the shell — the same gap the pane chips had
 /// (`📓️w12d-pane-chip-ids-and-projection-toggle.md` §3).
-pub(crate) const WINDOW_UTILITY_RAIL_PARENT: &str = "framework.utility.";
+pub const WINDOW_UTILITY_RAIL_PARENT: &str = "framework.utility.";
 
 //#endregion 🪟️WindowPaneChrome
 //#endregion ActionPanelAndUtilities
 
+//#region ActionPanelAndUtilities
+/// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav/surface-role/
+/// mode-cycle) that must win over app-declared keybindings (P4 — "reserved shell chords still win").
+///
+/// The `mod+alt+e`/`mod+alt+v` and `mod+alt+←`/`mod+alt+→` rows are the wgpu twin of React's
+/// `SHELL_KEYBINDINGS` entries for `playground.navbar.roles.{editor,viewer}` and
+/// `ui.shell.mode.{next,previous}` — see `🧱️elements/🏛️ShellHost/🟦️.tsx` and
+/// `🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json`'s `keybindings` rows, which pin both spellings.
+#[cfg(any(test, feature = "testkit"))]
+pub fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+    is_reserved_shell_chord_in(&shell_shortcut_table(&HashMap::new()), action, modifiers)
+}
+//#endregion ActionPanelAndUtilities

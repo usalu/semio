@@ -7,6 +7,7 @@ import { applyPatch } from "fast-json-patch";
 import { applyDrawingCanvasWindowConfigMutation, type DrawingCanvasWindowConfig, type DrawingCanvasWindowConfigMutation } from "../../🧬️schema/🟦️.ts";
 import { applyDrawingCanvasWindowTransientMutation, type DrawingCanvasWindowTransient, type DrawingCanvasWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🟦️.ts";
 import { parseDrawingPresence } from "../../../../../../../👥️presence/🧬️schema/🟦️.ts";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 type WindowInstance = { id: string; windowKindId: string };
 type Fixture = {
@@ -26,7 +27,7 @@ const fixture = readJson(`${here}/../../🧫️fixtures/🔬️window/🔣️.js
 const configSchema = readJson(`${here}/../../🧬️schema/🔣️.json`);
 const transientSchema = readJson(`${here}/../../../🫧️transient/🧬️schema/🔣️.json`);
 const presenceSchema = readJson(`${here}/../../../../../../../👥️presence/🧬️schema/🔣️.json`);
-const viewportSchema = readJson(`${here}/../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json`);
+const viewportSchema = readJson(frameworkSourcePath("🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json"));
 
 const target = (instances: WindowInstance[], id: string, expectedKind: string): void => {
   const instance = instances.find((candidate) => candidate.id === id);

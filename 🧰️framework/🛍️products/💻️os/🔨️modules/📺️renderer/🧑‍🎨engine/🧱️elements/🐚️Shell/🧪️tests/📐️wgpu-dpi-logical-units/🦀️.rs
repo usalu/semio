@@ -16,7 +16,7 @@
 //! `AppInteractionState::resize` does, and the assertions compare production chrome functions.
 
 use super::*;
-use crate::dock::DockNode;
+use semio_framework_os_renderer_wgpu_dock::DockNode;
 use ui_host::WindowMetrics;
 use ui_render::PhysicalSize;
 

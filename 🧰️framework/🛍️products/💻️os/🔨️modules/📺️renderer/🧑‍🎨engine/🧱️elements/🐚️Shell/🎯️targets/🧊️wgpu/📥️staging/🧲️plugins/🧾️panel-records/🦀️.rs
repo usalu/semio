@@ -8,7 +8,7 @@ use super::*;
 //#region 🧾️PanelRecordsAssembler
 /// 👁️✏️ Byte-identical to React's `DEFAULT_APP_NONE_VALUE` (`📌️ChromePanels/🟦️.tsx`) — the
 /// default-apps `Select` value that clears a pin rather than naming an app.
-pub(crate) const DEFAULT_APP_NONE_VALUE: &str = "none";
+pub const DEFAULT_APP_NONE_VALUE: &str = "none";
 
 //#endregion 🧾️PanelRecordsAssembler
 //#endregion ShellLifecycle

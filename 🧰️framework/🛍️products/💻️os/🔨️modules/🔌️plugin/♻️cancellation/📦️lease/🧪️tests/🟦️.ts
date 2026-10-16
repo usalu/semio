@@ -20,7 +20,7 @@ test("original cancellation scope detach preserves every sibling and retains det
  }
 });
 test("mounted original lease uses canonical alias custody and independent physical cursor birth/release",()=>{
- const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),host=familyText(),frontier=["🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs","🧵️instance/🔄️full-operation/🦀️.rs"].map(file=>readFileSync(join(import.meta.dir,"../../..",file),"utf8")).join("\n");
+ const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),host=familyText(),frontier=[["🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs"].map.map(file=>readFileSync(join(import.meta.dir,"../../..",file),"utf8")).join("\n"),familyText()].join("\n");
  expect(source).toContain("PublicationClaimHandle::same_original");expect(source).toContain("canonical.state");expect(source).toContain("canonical.app_generation");expect(source).toContain("canonical.active");expect(source).not.toContain("strong_count");expect(source).not.toContain("weak_count");expect(source).not.toContain("original.finish()");
  expect(host).toMatch(sizeOfDemand("capacity_bytes","ToolCancellationLeaseRetirement"));expect(host).toMatch(sizeOfDemand("release_bytes","ToolCancellationLeaseRetirement"));expect(source.indexOf("std::alloc::alloc(layout)")).toBeLessThan(source.indexOf("original.take().unwrap()"));
  expect(host).toContain("self.cancellation_retirement.is_none()");expect(host).toContain("operation.lease_retirement_demands(&self.tool_cancellations,body)");expect(frontier).toContain("lease_retirement_step(&self.tool_cancellations,grant)");expect(readFileSync(join(import.meta.dir,"../../../🎮️command/📥️admission/🦀️.rs"),"utf8")).toMatch(/\bif\s+scope\.claim\.is_finished\(\s*\)/);
@@ -31,7 +31,7 @@ test("yielded window refresh keeps the original mutation and receipt before ACK"
 });
 
 test("mounted cancellation flags original gesture custody before both retirement frontiers",()=>{
- const host=familyText(),frontier=["🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs","🧵️instance/🔄️full-operation/🦀️.rs"].map(file=>readFileSync(join(import.meta.dir,"../../..",file),"utf8")).join("\n"),gesture=["🛠️tool-machine/🦀️.rs","🧵️instance/🛠️tool-machine/🦀️.rs"].map(file=>readFileSync(join(import.meta.dir,"../../..",file),"utf8")).join("\n");
+ const host=familyText(),frontier=[["🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs"].map.map(file=>readFileSync(join(import.meta.dir,"../../..",file),"utf8")).join("\n"),familyText()].join("\n"),gesture=[["🛠️tool-machine/🦀️.rs"].map.map(file=>readFileSync(join(import.meta.dir,"../../..",file),"utf8")).join("\n"),familyText()].join("\n");
  const normal=host.slice(host.indexOf("fn retire_typed_operation_unit("),host.indexOf("/// ♻️ Drives ONE retiring typed operation"));
  expect(normal.includes("self.request_gesture_cancellation(operation_id)")).toBe(true);
  const granted=frontier.slice(frontier.indexOf("fn granted_mounted_retirement_step("));

@@ -1,5 +1,5 @@
 /** 🧮️ Controlled baseline JPEG component projection before color conversion. */
-import {NativeDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 export interface JpgDecodedComponents{width:number;height:number;componentIds:number[];samples:Uint8Array}
 interface Component{id:number;h:number;v:number;quant:number;dc:number;ac:number;previous:number;stride:number;plane:Float64Array}
 interface Huffman{codes:ReadonlyMap<number,number>;length:number}

@@ -257,6 +257,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.stores.edit_transactions()
     }
 }
+//#endregion 🔖️Driver
 
 impl<A:ArtifactApp,M:store::SpaceMember+store::MemberFactory+'static> VcsArtifactApp<A,M>{
  #[cfg(any(test,feature="artifact-app-testing"))]

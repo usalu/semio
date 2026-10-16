@@ -19,7 +19,7 @@ pub struct BootSelectionRequest<'a> {
 /// exactly: a manifest that declares the sibling surface for the anchor's dialect wins, and a
 /// manifest that does not keeps the anchor — a viewer request on an editor-only artifact is a
 /// downgrade to the surface that exists, never a dead boot.
-pub(super) fn project_boot_app_role<'a>(manifest: &'a semio_framework::PluginManifest, anchor: &'a AppDefinition, app_role: semio_framework::manifest::AppRole) -> &'a AppDefinition {
+pub fn project_boot_app_role<'a>(manifest: &'a semio_framework::PluginManifest, anchor: &'a AppDefinition, app_role: semio_framework::manifest::AppRole) -> &'a AppDefinition {
     if anchor.role == app_role {
         return anchor;
     }
@@ -33,7 +33,7 @@ pub(super) fn project_boot_app_role<'a>(manifest: &'a semio_framework::PluginMan
 /// re-arms. The native preview chain converges in five ticks and six extension round trips per
 /// preview window; this is generous enough for several windows and finite enough that a guest that
 /// never settles is reported instead of spinning forever.
-pub(crate) const SHELL_DEFERRED_CHAIN_ROUNDS: usize = 512;
+pub const SHELL_DEFERRED_CHAIN_ROUNDS: usize = 512;
 
 /// 📏️ Pump steps ONE live producer may publish the same progress reading for before the pump stops
 /// believing the guest will arm another hop and drives that run to a terminal state.
@@ -43,17 +43,17 @@ pub(crate) const SHELL_DEFERRED_CHAIN_ROUNDS: usize = 512;
 /// witness and resets the count, and only a producer whose witness is frozen — `meshingFaces 36/56`
 /// for 200 s on 6118, deaf to `setActiveExample` — ever reaches it
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md` §8.2).
-pub(crate) const SHELL_SETTLE_STALL_STEPS: u32 = 240;
+pub const SHELL_SETTLE_STALL_STEPS: u32 = 240;
 
 /// 📏️ Terminal drives the pump may aim at ONE wedged surface before it leaves the run alone. The
 /// abort is the producer's OWN published `cancelAction`, and the run it retires is commonly restarted
 /// by the producer's own restart policy — so this is bounded to keep a producer that answers an abort
 /// with a fresh wedge from becoming an abort storm.
-pub(crate) const SHELL_SETTLE_TERMINAL_DRIVES: u32 = 3;
+pub const SHELL_SETTLE_TERMINAL_DRIVES: u32 = 3;
 
 /// 🫀️ What the watchdog decided about ONE live producer this step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ShellSettleVerdict {
+pub enum ShellSettleVerdict {
     /// 🫀️ Spend this step's crossing on the producer's own window body.
     Fund,
     /// 🧯 The witness has been frozen for [`SHELL_SETTLE_STALL_STEPS`] steps: drive the run to a
@@ -74,7 +74,7 @@ pub(crate) enum ShellSettleVerdict {
 
 /// ⏳️ The progress witness the wedge watchdog compares across frames — every counter a producer moves
 /// while it is genuinely advancing, and nothing that changes on its own.
-pub(super) fn settle_progress_signature(status: &World3dComputeStatus) -> String {
+pub fn settle_progress_signature(status: &World3dComputeStatus) -> String {
     format!("{}|{}|{}|{}|{}|{}", status.phase, status.units_done, status.units_total, status.faces_done, status.faces_total, status.in_flight)
 }
 //#endregion ShellTypes

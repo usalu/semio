@@ -109,16 +109,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const closest=overlapping.caseNames.map((name:string)=>fixture.gumball.raySegmentClosestCases.find((row:{name:string})=>row.name===name));
       expect(overlapping.objects[closest[0].segmentPoint[2]>closest[1].segmentPoint[2]?0:1]).toBe(overlapping.selectedObject);
       const clipped=fixture.gumball.projectedSegmentCases;
-      const clipCamera=new PerspectiveCamera(clipped.camera.fov,clipped.viewport[0]/clipped.viewport[1],clipped.camera.near,clipped.camera.far);clipCamera.position.set(...clipped.camera.position);clipCamera.up.set(...clipped.camera.up);clipCamera.lookAt(new Vector3(...clipped.camera.target));clipCamera.updateMatrixWorld();
+      const clipCamera=new PerspectiveCamera(clipped.camera.fov,clipped.viewport[0]/clipped.viewport[1],clipped.camera.near,clipped.camera.far);clipCamera.position.fromArray(clipped.camera.position);clipCamera.up.fromArray(clipped.camera.up);clipCamera.lookAt(new Vector3(...clipped.camera.target));clipCamera.updateMatrixWorld();
       for(const row of clipped.cases){
-        const ends=[new Vector3(...row.a),new Vector3(...row.b)];let visible=true;
+        const ends:[Vector3,Vector3]=[new Vector3(...row.a),new Vector3(...row.b)];let visible=true;
         for(const plane of [new Plane(new Vector3(0,0,-1),-clipped.camera.near),new Plane(new Vector3(0,0,1),clipped.camera.far)]){
-          const distances=ends.map(point=>plane.distanceToPoint(point));
+          const distances:[number,number]=[plane.distanceToPoint(ends[0]),plane.distanceToPoint(ends[1])];
           if(distances.every(distance=>distance<0)){visible=false;break;}
-          if(distances.some(distance=>distance<0)){const point=plane.intersectLine(new Line3(ends[0],ends[1]),new Vector3())!;ends[distances[0]<0?0:1]=point;}
+          if(distances.some(distance=>distance<0)){const point=plane.intersectLine(new Line3(ends[0],ends[1]),new Vector3());if(point===null)throw Error("Expected clipped segment intersection required");ends[distances[0]<0?0:1]=point;}
         }
         expect(visible).toBe(row.visible);
-        if(visible)for(let index=0;index<2;index++){expect(ends[index].distanceTo(new Vector3(...row.points[index]))).toBeLessThan(1e-10);const expected=new Vector3(...row.points[index]).project(clipCamera),actual=ends[index].clone().project(clipCamera);expect(actual.distanceTo(expected)).toBeLessThan(1e-9);expect((actual.x+1)*clipped.viewport[0]/2).toBeCloseTo(row.screen[index][0],8);expect((1-actual.y)*clipped.viewport[1]/2).toBeCloseTo(row.screen[index][1],8);}
+        if(visible)for(const index of[0,1]as const){expect(ends[index].distanceTo(new Vector3(...row.points[index]))).toBeLessThan(1e-10);const expected=new Vector3(...row.points[index]).project(clipCamera),actual=ends[index].clone().project(clipCamera);expect(actual.distanceTo(expected)).toBeLessThan(1e-9);expect((actual.x+1)*clipped.viewport[0]/2).toBeCloseTo(row.screen[index][0],8);expect((1-actual.y)*clipped.viewport[1]/2).toBeCloseTo(row.screen[index][1],8);}
       }
       const nearClip=fixture.gumball.clippedWirePick;const intersection=new Plane(new Vector3(0,0,-1),-nearClip.camera.near).intersectLine(new Line3(new Vector3(...nearClip.a),new Vector3(...nearClip.b)),new Vector3())!;
       expect(-intersection.z).toBeCloseTo(nearClip.closestDepth,10);
@@ -268,7 +268,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const expected = fixture.cases.find((row: { name: string }) => row.name === entry.case);
         const geometry = new BufferGeometry().setAttribute("position", new Float32BufferAttribute(entry.positions, 3)).setIndex(entry.indices);
         const position = geometry.getAttribute("position");
-        const corner = [new Vector3(), new Vector3(), new Vector3()];
+        const corner: [Vector3,Vector3,Vector3] = [new Vector3(), new Vector3(), new Vector3()];
         const edgeUses = new Map<string, number>();
         const weld = (point: Vector3) => [point.x, point.y, point.z].map((value) => Math.round(value * 1e5)).join(",");
         let volume = 0, area = 0;
@@ -276,8 +276,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           corner.forEach((point, index) => point.fromBufferAttribute(position, entry.indices[triangle + index]));
           volume += corner[0].dot(corner[1].clone().cross(corner[2])) / 6;
           area += new Triangle(corner[0], corner[1], corner[2]).getArea();
-          for (let index = 0; index < 3; index++) {
-            const key = [weld(corner[index]), weld(corner[(index + 1) % 3])].sort().join("|");
+          for (const [first,second]of[[0,1],[1,2],[2,0]]as const) {
+            const key = [weld(corner[first]), weld(corner[second])].sort().join("|");
             edgeUses.set(key, (edgeUses.get(key) ?? 0) + 1);
           }
         }

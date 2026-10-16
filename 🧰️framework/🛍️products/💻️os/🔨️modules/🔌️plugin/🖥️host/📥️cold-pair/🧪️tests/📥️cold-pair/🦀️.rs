@@ -1,5 +1,8 @@
 use super::*;
 use semio_framework::kernel::{ActorInstanceLifetime, ColdDocumentPairHeader};
+use semio_framework::kernel::Event;
+use crate::conversion::{kernel_lifetime_to_wit, kernel_turn_inputs_to_wit};
+use crate::wit_reactor;
 
 fn wit_cursor(value: ColdDocumentPairCursor) -> wit_reactor::ColdDocumentPairCursor {
     wit_reactor::ColdDocumentPairCursor { lifetime: kernel_lifetime_to_wit(value.lifetime), transfer_generation: value.transfer_generation, page_index: value.page_index, page_count: value.page_count }

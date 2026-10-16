@@ -7,7 +7,7 @@ import schema from "../../🧬️schema/🔣️.json";
 import pathHandoffCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🧹️path/🔣️.json";
 import imageHandoffCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🧹️image/🔣️.json";
 import imageSources from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🖼️images/🔣️.json";
-import {AffineImageJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts";
+import {AffineImageJob} from "@semio-tech/framework/pixels/sampling/affine";
 import pathSchema from "../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import compositingCases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput,type RasterSceneNode} from "../../🟦️.ts";
@@ -105,7 +105,7 @@ test("conservative ellipse bounds do not reject a visible short arc with large r
 test("scene retains actual compositor through output publication until explicit close",async()=>{
  const rows=(await import("../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🧹️compositing/🔣️.json")).default;
  
- const {CompositeJob}=await import("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts"),original=CompositeJob.prototype.intoRetirement;
+ const {CompositeJob}=await import("@semio-tech/framework/pixels/compositing"),original=CompositeJob.prototype.intoRetirement;
  for(const handoff of rows)for(const grant of [1,7,4096]){
   const row=cases.find(v=>v.name===handoff.source)!,value=input(row.input),before=structuredClone(value),job=new RasterSceneJob(value),state=job as any;let closed:any=null,adopted=0,work=0;
   const spy=spyOn(CompositeJob.prototype,"intoRetirement").mockImplementation(function(this:CompositeJob){adopted++;closed=original.call(this);expect(closed.output).not.toBeNull();const advance=closed.job.advance.bind(closed.job);closed.job.advance=(unit:number)=>{expect(unit).toBe(1);expect(state.phase).toBe("complete");expect(state.compositor).toBeNull();const p=advance(unit);expect(p.work-work).toBe(1);work=p.work;return p;};return closed;});

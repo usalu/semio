@@ -2,7 +2,7 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import fixture from"./🧫️fixtures/🔣️.json";
 import{EN1992_SQLITE_SCHEMA,en1992SnapshotToSqliteDatabase as project,en1992SnapshotFromSqliteDatabase as restore,type En1992SqliteSnapshot}from"../🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue}from"@semio-tech/framework/io/sqlite-snapshot";
 function owned(value:unknown,word=0x3fe0000000000000n):unknown{if(value===0.5)return{bits:word};if(Array.isArray(value))return value.map(v=>owned(v,word));if(value!==null&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,owned(v,word)]));return value}
 function snapshot(word?:bigint):En1992SqliteSnapshot{return owned(fixture.snapshot,word)as En1992SqliteSnapshot}
 type MutableDatabase={tables:{name:string;sql:string;rows:{rowid:bigint;values:SqliteValue[]}[]}[]};

@@ -1,18 +1,18 @@
 /** 🧪️ Rewriting document values agree with the shared value owner and independent JSON Schema validation. */
 import assert from "node:assert/strict";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import mapSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔣️.json" with { type: "json" };
+import { mutationMapSchema as mapSchema } from "@semio-tech/framework/replication/mutation/map/schema";
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseRewritingDiff } from "../../🔺️diff/🟦️.ts";
-import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json" with { type: "json" };
+import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import { parseRewritingArtifact } from "../../🟦️.ts";
 import { parseRewritingSnapshot } from "../../📸️snapshot/🟦️.ts";
-import propertySchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔣️.json" with {type:"json"};
+import { manifestValueSchema as propertySchema } from "@semio-tech/framework/graph/manifest/value/schema";
 import {parseRewritingJsonValue,parseRewritingDiffJsonValue} from "../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
 import {rewritingToJsonValue} from "../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
 

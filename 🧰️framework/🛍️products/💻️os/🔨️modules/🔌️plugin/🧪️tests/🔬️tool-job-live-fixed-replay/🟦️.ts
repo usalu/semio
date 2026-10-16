@@ -1,4 +1,4 @@
-import { toolJobLiveFixedReplayExact } from "../../../../../../../📜️script.ts";
+import { toolJobLiveFixedReplayExact } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🟦️.ts";
 
 /** 🧪️ Executes tool job live fixed replay policy assertions. */
 export function toolJobLiveFixedReplaySelfTests(actor: string, shard: string, executor: string, wgpu: string, actionBus: string, pluginApp: string, pluginHost: string, programBridge: string): number {

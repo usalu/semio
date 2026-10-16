@@ -1,8 +1,8 @@
 /** 🔺️ Explicit mesh topology, ordered vertex attributes and genuine texture data. */
 import type {SemioMeshSnapshot,SemioMesh,SemioPrimitive,SemioMaterial,SemioTopology} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,readBinary32,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,readBinary32,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_MESH_SQLITE_SCHEMA=`CREATE TABLE semio_mesh_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_mesh_mesh (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_mesh_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL);
 CREATE TABLE semio_mesh_primitive (id INTEGER PRIMARY KEY, mesh_id INTEGER NOT NULL REFERENCES semio_mesh_mesh(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, topology TEXT NOT NULL CHECK (topology IN ('points','lines','line_strip','triangles','triangle_strip','triangle_fan')), material_native_id TEXT);

@@ -1,3 +1,4 @@
+import "../📥️invocation/🏃️process/🧪️tests/📊️profile/🟦️.ts";
 import "../📤️exports/🧪️tests/🟦️.ts";
 import "../📥️invocation/🏃️process/🧹️cleanup/🧪️tests/🟦️.ts";
 import { spawnSync } from "node:child_process";

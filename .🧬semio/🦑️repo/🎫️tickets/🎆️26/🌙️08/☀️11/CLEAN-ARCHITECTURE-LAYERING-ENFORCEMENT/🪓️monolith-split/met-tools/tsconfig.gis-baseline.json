@@ -1,0 +1,8 @@
+{
+  "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "tsBuildInfoFile": null, "composite": false },
+  "include": [],
+  "files": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/👷️worker/🟦️.ts"
+  ]
+}

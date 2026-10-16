@@ -1,4 +1,4 @@
-import {type Binary64,parseBinary64} from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ StlArtifact schema — full `stdio.stl` artifact state (mirrors `StlSnapshot`). */
 export interface StlTriangle {
   normal: [Binary64, Binary64, Binary64];

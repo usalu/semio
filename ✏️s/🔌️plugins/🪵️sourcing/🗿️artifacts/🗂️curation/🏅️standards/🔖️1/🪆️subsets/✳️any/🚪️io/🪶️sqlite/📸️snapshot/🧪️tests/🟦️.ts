@@ -1,4 +1,4 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import distinctChild from "./🧫️fixtures/🪆️distinct/🔣️.json";
 
 import{expect,test}from"bun:test";
@@ -8,13 +8,13 @@ import fixture from"./🧫️fixtures/🔣️.json";
 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
-import ioSchema from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import childSchema from"../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary32,binary64,type Binary32,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type{ArtifactSqliteOptions}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import{declaredChildDialectSchema}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
+import {binary32,binary64,type Binary32,type Binary64} from "@semio-tech/framework/value/ieee754";
+import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
+import type{ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import{declaredChildDialectSchema}from"@semio-tech/framework/schema/oracles/document";
 const semioChildSchema=declaredChildDialectSchema("https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json",childSchema.$id,{kit:{artifactKind:"s.stdio.semio",standard:"v1",subset:"kit"}});
 type Geometry={kind:"box";width:Binary64;height:Binary64;depth:Binary64}|{kind:"frame";width:Binary64;height:Binary64;depth:Binary64;profile:Binary64}|{kind:"slab";width:Binary64;depth:Binary64;thickness:Binary64}|{kind:"mesh";positions:Binary32[];normals:Binary32[];indices:number[]}|{kind:"glb";url:string;extent:Binary64};
 type Extra=Omit<owner.CurationSnapshot["stockExtra"][number],"geometry">&{geometry:Geometry};

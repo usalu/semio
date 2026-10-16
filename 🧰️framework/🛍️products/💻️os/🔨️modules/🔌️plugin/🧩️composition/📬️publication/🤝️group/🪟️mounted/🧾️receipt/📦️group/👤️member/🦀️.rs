@@ -1,27 +1,51 @@
-use crate::child_content::mounted_child_group_receipt::mounted_nested_retirement_demand;
-use crate::child_content::mounted_child_group_receipt::MOUNTED_RECEIPT_MAXIMUM_BYTES;
-use crate::child_content::mounted_child_group_receipt::MountedKernelMutationReceipt;
-use crate::child_content::mounted_child_group_receipt::MountedPreparedOperationBytes;
-use crate::child_content::mounted_child_group_receipt::MountedPreparedOperationsBytes;
-use crate::child_content::mounted_child_group_receipt::MountedReceiptBytes;
-use crate::child_content::mounted_child_group_receipt::MountedKernelMutationReceiptSource;
+use semio_framework::kernel::ActorId;
+use semio_framework::kernel::ArtifactHandle;
+use semio_framework::kernel::ArtifactVersion;
+use semio_framework::kernel::HybridLogicalTimestamp;
+use semio_framework::kernel::InverseMutation;
+use semio_framework::kernel::KernelMutation;
+use std::mem::ManuallyDrop;
+use crate::mounted_child_group_receipt_group::MountedGroupReceipt;
+use semio_framework::kernel::MutationId;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value::RetirementDemand;
+use semio_framework::kernel::UndoPolicy;
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::MemberFactory;
+use crate::mounted_child_group_receipt_group::MountedGroupPreparedChildEdits;
+use store::SpaceMember;
+use crate::mounted_child_group_receipt::mounted_nested_retirement_demand;
+use crate::mounted_child_group_receipt::MOUNTED_RECEIPT_MAXIMUM_BYTES;
+use crate::mounted_child_group_receipt::MountedKernelMutationReceipt;
+use crate::mounted_child_group_receipt::MountedPreparedOperationBytes;
+use crate::mounted_child_group_receipt::MountedPreparedOperationsBytes;
+use crate::mounted_child_group_receipt::MountedReceiptBytes;
+use crate::mounted_child_group_receipt::MountedKernelMutationReceiptSource;
 use std::collections::VecDeque;
 
 type MemberMutationTriple = (KernelMutation, MutationId, InverseMutation);
 
 pub(crate) struct MountedMemberReceiptSource<'a> {
-    pub(crate) publication: &'a dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication,
-    pub(crate) document: ArtifactHandle,
-    pub(crate) invocation_id: &'a str,
-    pub(crate) group_id: &'a str,
+    pub publication: &'a dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication,
+    pub document: ArtifactHandle,
+    pub invocation_id: &'a str,
+    pub group_id: &'a str,
     pub(crate) fallback_author: &'a str,
 }
 impl MountedMemberReceiptSource<'_> {
-    fn identity(&self) -> [(usize, usize); 5] {
+    pub fn identity(&self) -> [(usize, usize); 5] {
         let edit = self.publication.prepared_edit_id().unwrap_or("");
         [(self.publication as *const dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication as *const () as usize, 0), (edit.as_ptr() as usize, edit.len()), (self.invocation_id.as_ptr() as usize, self.invocation_id.len()), (self.group_id.as_ptr() as usize, self.group_id.len()), (self.fallback_author.as_ptr() as usize, self.fallback_author.len())]
     }
-    fn kernel<'a>(&'a self, index: usize, inverse: &'a [u8]) -> Result<MountedKernelMutationReceiptSource<'a>, ValueError> {
+    pub fn kernel<'a>(&'a self, index: usize, inverse: &'a [u8]) -> Result<MountedKernelMutationReceiptSource<'a>, ValueError> {
         let (schema, kind) = self.publication.prepared_operation_schema_parts(index).ok_or_else(|| MountedMemberReceipt::refusal("member receipt requires its original operation semantic schema"))?;
         let meta = self.publication.prepared_operation_metadata(index).ok_or_else(|| MountedMemberReceipt::refusal("member receipt requires original prepared operation metadata"))?;
         let id = meta.mutation_id.as_ref().ok_or_else(|| MountedMemberReceipt::refusal("member receipt requires original prepared mutation identity"))?;
@@ -31,45 +55,45 @@ impl MountedMemberReceiptSource<'_> {
 }
 
 pub(crate) struct MountedMemberReceiptOutput {
-    document: ArtifactHandle,
-    edit_id: String,
+    pub document: ArtifactHandle,
+    pub edit_id: String,
     triples: VecDeque<MemberMutationTriple>,
 }
 
 pub(crate) struct MountedMemberReceipt {
-    identity: [(usize, usize); 5],
-    document: ArtifactHandle,
-    operation_count: usize,
+    pub identity: [(usize, usize); 5],
+    pub document: ArtifactHandle,
+    pub operation_count: usize,
     inverse_count: usize,
     validated_operations: usize,
     group_offset: usize,
-    pub(crate) index: usize,
-    phase: usize,
+    pub index: usize,
+    pub phase: usize,
     edit_offset: usize,
-    edit: MountedReceiptBytes,
+    pub edit: MountedReceiptBytes,
     inverse_encoder: Option<MountedPreparedOperationsBytes>,
-    inverse: ManuallyDrop<Vec<u8>>,
-    forward: Option<MountedPreparedOperationBytes>,
-    kernel: Option<MountedKernelMutationReceipt>,
+    pub inverse: ManuallyDrop<Vec<u8>>,
+    pub forward: Option<MountedPreparedOperationBytes>,
+    pub kernel: Option<MountedKernelMutationReceipt>,
     triples: ManuallyDrop<VecDeque<MemberMutationTriple>>,
-    close_field: usize,
+    pub close_field: usize,
     operation_schema: Option<[(usize, usize); 2]>,
-    pub(crate) closing: bool,
-    transferred: bool,
+    pub closing: bool,
+    pub transferred: bool,
 }
 
 impl MountedMemberReceipt {
-    fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
-    pub(crate) fn frame_birth_bytes() -> usize { size_of::<Self>() }
+    pub fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
+    pub fn frame_birth_bytes() -> usize { size_of::<Self>() }
     /// 🧬️ Seals the exact retained publication and original borrowed identities without allocating.
-    pub(crate) fn new(source: &MountedMemberReceiptSource<'_>) -> Result<Self, ValueError> {
+    pub fn new(source: &MountedMemberReceiptSource<'_>) -> Result<Self, ValueError> {
         source.publication.prepared_edit_id().ok_or_else(|| Self::refusal("member receipt requires its original prepared edit identity"))?;
         let count = source.publication.prepared_operation_count(false).ok_or_else(|| Self::refusal("member receipt requires original forward operations"))?;
         let inverse_count = source.publication.prepared_operation_count(true).ok_or_else(|| Self::refusal("member receipt requires original inverse operations"))?;
         if count.checked_mul(size_of::<MemberMutationTriple>()).is_none_or(|bytes| bytes > MOUNTED_RECEIPT_MAXIMUM_BYTES) { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "member receipt typed backing exceeds original admission")); }
         Ok(Self { identity: source.identity(), document: source.document, operation_count: count, inverse_count, validated_operations: 0, group_offset: 0, index: 0, phase: 0, edit_offset: 0, edit: MountedReceiptBytes::new(), inverse_encoder: Some(MountedPreparedOperationsBytes::new(inverse_count)), inverse: ManuallyDrop::new(Vec::new()), forward: None, kernel: None, triples: ManuallyDrop::new(VecDeque::new()), close_field: 0, operation_schema: None, closing: false, transferred: false })
     }
-    fn validate(&self, source: &MountedMemberReceiptSource<'_>) -> Result<(), ValueError> {
+    pub fn validate(&self, source: &MountedMemberReceiptSource<'_>) -> Result<(), ValueError> {
         if self.closing || self.transferred || self.identity != source.identity() || self.document != source.document || source.publication.prepared_operation_count(false) != Some(self.operation_count) || source.publication.prepared_operation_count(true) != Some(self.inverse_count) { return Err(Self::refusal("member receipt lost its original prepared publication authority")); }
         if let Some(identity) = self.operation_schema {
             let (entity, kind) = source.publication.prepared_operation_schema_parts(self.index).ok_or_else(|| Self::refusal("member receipt lost its current original operation schema"))?;
@@ -79,8 +103,8 @@ impl MountedMemberReceipt {
         Ok(())
     }
     /// 🔢️ Exposes the current original forward ordinal so its exact schema can be borrowed per turn.
-    pub(crate) fn operation_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.index < self.operation_count).then_some(self.index) }
-    pub(crate) fn next_capacity_byte_demand(&self, source: &MountedMemberReceiptSource<'_>) -> Result<usize, ValueError> {
+    pub fn operation_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.index < self.operation_count).then_some(self.index) }
+    pub fn next_capacity_byte_demand(&self, source: &MountedMemberReceiptSource<'_>) -> Result<usize, ValueError> {
         self.validate(source)?;
         match self.phase {
             0 => { if self.validated_operations < self.operation_count { source.kernel(self.validated_operations, &self.inverse)?; Ok(0) } else { Ok(self.operation_count * size_of::<MemberMutationTriple>()) } },
@@ -91,13 +115,13 @@ impl MountedMemberReceipt {
             _ => Ok(0),
         }
     }
-    pub(crate) fn next_release_byte_demand(&self, source: &MountedMemberReceiptSource<'_>) -> Result<usize, ValueError> {
+    pub fn next_release_byte_demand(&self, source: &MountedMemberReceiptSource<'_>) -> Result<usize, ValueError> {
         self.validate(source)?;
         match self.phase { 1 => Ok(self.edit.next_growth_release_byte_demand()), 2 => self.inverse_encoder.as_ref().unwrap().next_release_byte_demand(), 3 => self.forward.as_ref().unwrap().next_growth_release_byte_demand(), 4 => Ok(self.kernel.as_ref().unwrap().next_release_byte_demand()), 5 => Ok(self.inverse.capacity()), _ => Ok(0) }
     }
-    fn progress(birth: usize, release: usize) -> RetainedCloneStep { MountedGroupReceipt::progress(birth, release) }
+    pub fn progress(birth: usize, release: usize) -> RetainedCloneStep { MountedGroupReceipt::progress(birth, release) }
     /// 🧾️ Prebuilds all original forward, framed inverse, and causal owners before publication acknowledgment.
-    pub(crate) fn advance(&mut self, source: &MountedMemberReceiptSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: &MountedMemberReceiptSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         self.validate(source)?;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         match self.phase {
@@ -120,22 +144,22 @@ impl MountedMemberReceipt {
             _ => Ok(RetainedCloneStep::Complete(Default::default())),
         }
     }
-    pub(crate) fn is_complete(&self) -> bool { !self.closing && !self.transferred && self.phase == 6 && self.index == self.operation_count }
+    pub fn is_complete(&self) -> bool { !self.closing && !self.transferred && self.phase == 6 && self.index == self.operation_count }
     pub(crate) fn ready_edit_id(&self) -> Option<&str> { self.is_complete().then(|| unsafe { std::str::from_utf8_unchecked(self.edit.as_slice()) }) }
     pub(crate) fn ready_document(&self) -> Option<ArtifactHandle> { self.is_complete().then_some(self.document) }
-    pub(crate) fn operation_count(&self) -> usize { self.operation_count }
+    pub fn operation_count(&self) -> usize { self.operation_count }
     /// 📤️ Moves one complete original causal triple in source order while retaining the remaining row owners.
     pub(crate) fn take_next_triple(&mut self, grant: RetainedCloneGrant) -> Option<MemberMutationTriple> {
         if !self.is_complete() || grant.maximum_items == 0 { return None; }
         self.triples.pop_front()
     }
     /// 🧳️ Transfers the original complete row backing and exact edit identity through constant moves.
-    fn take(&mut self, grant: RetainedCloneGrant) -> Option<MountedMemberReceiptOutput> {
+    pub fn take(&mut self, grant: RetainedCloneGrant) -> Option<MountedMemberReceiptOutput> {
         if !self.is_complete() || grant.maximum_items == 0 { return None; }
         let edit_id = unsafe { String::from_utf8_unchecked(self.edit.take(grant)?) }; self.transferred = true;
         Some(MountedMemberReceiptOutput { document: self.document, edit_id, triples: std::mem::take(&mut *self.triples) })
     }
-    pub(crate) fn next_close_byte_demand(&self) -> Result<usize, ValueError> {
+    pub fn next_close_byte_demand(&self) -> Result<usize, ValueError> {
         if self.transferred { return Ok(0); }
         if let Some(owner) = self.kernel.as_ref() { return Ok(owner.next_close_byte_demand()); }
         if let Some(owner) = self.forward.as_ref() { return owner.next_close_byte_demand(); }
@@ -145,7 +169,7 @@ impl MountedMemberReceipt {
         Ok(self.triples.back().map_or(self.triples.capacity() * size_of::<MemberMutationTriple>(), |triple| match self.close_field { 0..=9 => MountedGroupReceipt::mutation_demand(&triple.0, self.close_field), 10 => triple.1.0.capacity(), 11..=14 => MountedGroupReceipt::inverse_demand(&triple.2, self.close_field - 11), _ => 0 }))
     }
     /// 📏️ Prices retained encoder paths separately from fixed causal release fields.
-    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if let Some(owner) = self.kernel.as_ref() { return mounted_nested_retirement_demand(owner.retirement_demands()?, 1); }
         if let Some(owner) = self.forward.as_ref() { return mounted_nested_retirement_demand(owner.retirement_demands()?, 1); }
@@ -156,7 +180,7 @@ impl MountedMemberReceipt {
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth, ..Default::default() })
     }
     /// 🍂️ Retires one exact original physical owner per turn without fractional release credit.
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let bytes = self.next_close_byte_demand()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -173,7 +197,7 @@ impl MountedMemberReceipt {
         } else { drop(std::mem::take(&mut *self.triples)); }
         Ok(Self::progress(0, bytes))
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.transferred || (self.closing && self.kernel.is_none() && self.forward.is_none() && self.inverse_encoder.is_none() && self.inverse.capacity() == 0 && self.edit.terminal_is_empty() && self.triples.is_empty() && self.triples.capacity() == 0) }
+    pub fn terminal_is_empty(&self) -> bool { self.transferred || (self.closing && self.kernel.is_none() && self.forward.is_none() && self.inverse_encoder.is_none() && self.inverse.capacity() == 0 && self.edit.terminal_is_empty() && self.triples.is_empty() && self.triples.capacity() == 0) }
 }
 impl Drop for MountedMemberReceipt { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "member receipt retains every original owner until complete transfer or funded close"); } }
 

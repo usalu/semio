@@ -7,7 +7,7 @@
  *  each row's expected archive is its committed pair's `➡️after.bcf` for a mutation, `⬅️before.bcf` for its inverse,
  *  handed to the `bcf-2-1-jszip-compare-v1` pipeline as `expected-bcf`, where the jszip reader reads it and the
  *  subject's `actual-bcf`. */
-import { defineTestAdapter } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 /** 🟦️ BCF 2.1 📸️snapshot mutation case — the ORACLE half, `jszip-bcf-2-1-mutate-reader`. A reader oracle computes nothing:
  *  each row's expected archive is its committed pair's `➡️after.bcf` for a mutation, `⬅️before.bcf` for its inverse,
  *  handed to the `bcf-2-1-jszip-compare-v1` pipeline as `expected-bcf`, where the jszip reader reads it and the

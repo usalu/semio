@@ -15,7 +15,7 @@ import {
   type Group as ThreeGroup,
   type Object3D as ThreeObject3D,
   type Ray as ThreeRay
-} from "@semio-tech/ui-react";
+} from "@semio-tech/framework/ui/targets/react";
 // #endregion 🔌️Adapters
 import { type Vec3 } from "../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
 import { Model, type InteractionEvent, type SelectionTarget } from "../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";

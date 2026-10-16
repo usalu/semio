@@ -1,7 +1,7 @@
 /** 📑️ TSV semantic entities mirror the adjacent handcrafted SQLite schema and Rust facet. */
 import type { TsvSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import { ValueError, type SqliteDatabase, type SqliteRow } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import { ValueError, type SqliteDatabase, type SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 🏛️ Handcrafted SQL kept byte-equal to the adjacent schema asset. */
 export const TSV_SQLITE_SCHEMA = "CREATE TABLE tsv_document (\n  id INTEGER PRIMARY KEY CHECK(id = 1),\n  schema TEXT NOT NULL,\n  trailing_newline INTEGER NOT NULL CHECK(trailing_newline IN (0, 1)),\n  line_ending TEXT NOT NULL CHECK(line_ending IN ('lf', 'crlf'))\n);\nCREATE TABLE tsv_record (\n  id INTEGER PRIMARY KEY,\n  document_id INTEGER NOT NULL REFERENCES tsv_document(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0)\n);\nCREATE TABLE tsv_field (\n  id INTEGER PRIMARY KEY,\n  record_id INTEGER NOT NULL REFERENCES tsv_record(id),\n  ordinal INTEGER NOT NULL CHECK(ordinal >= 0),\n  value TEXT NOT NULL\n);\n";

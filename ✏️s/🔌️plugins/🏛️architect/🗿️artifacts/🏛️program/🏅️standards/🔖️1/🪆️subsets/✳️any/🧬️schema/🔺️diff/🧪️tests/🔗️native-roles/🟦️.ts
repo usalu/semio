@@ -3,6 +3,7 @@ import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 const root = resolve(import.meta.dir, "../..");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🔺️diff/🔗️native-roles/🔣️.json"), "utf8"));
@@ -10,8 +11,8 @@ const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../�
 test("native Architect sparse collection roles preserve schema and independent SQL order", () => {
   const schema = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
   const ajv = new Ajv({strict:false});
-  ajv.addSchema(JSON.parse(readFileSync(resolve("🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json"), "utf8")));
-  ajv.addSchema(JSON.parse(readFileSync(resolve("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"), "utf8")));
+  ajv.addSchema(JSON.parse(readFileSync(frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json"), "utf8")));
+  ajv.addSchema(JSON.parse(readFileSync(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"), "utf8")));
   ajv.addSchema(JSON.parse(readFileSync(resolve(root, "../🔣️.json"), "utf8")));
   const deltaSchema = {...schema, $ref:"#/$defs/ProgramStakeholdersDelta"};
   delete deltaSchema.required;

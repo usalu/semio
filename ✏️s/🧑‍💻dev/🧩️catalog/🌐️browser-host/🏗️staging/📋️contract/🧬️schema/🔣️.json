@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generationId",
+    "currentSha256",
+    "componentSha256",
+    "descriptorSha256"
+  ],
+  "properties": {
+    "generationId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "currentSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "componentSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "descriptorSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumFiles": 8192,
+        "maximumBytes": 536870912,
+        "maximumManifestBytes": 1048576,
+        "maximumRequestBytes": 4096,
+        "maximumEntries": 16384
+      }
+    }
+  }
+}

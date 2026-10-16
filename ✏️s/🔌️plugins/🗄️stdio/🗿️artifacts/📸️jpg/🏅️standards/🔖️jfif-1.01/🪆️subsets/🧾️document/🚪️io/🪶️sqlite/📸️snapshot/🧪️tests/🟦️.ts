@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalFixture } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
@@ -9,7 +9,7 @@ import intermediate from "../../../../🧪️tests/🧫️fixtures/📸️snapsh
 
 import type {JpgSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {JPG_SQLITE_SCHEMA,jpgSnapshotToSqliteDatabase,jpgSnapshotFromSqliteDatabase} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("JPG owns independent raster dimensions and partial pixel channels",async()=>{
  const snapshot={...structuredClone(fixture),image:{...structuredClone(fixture.image),...structuredClone(intermediate)}} as JpgSnapshot;

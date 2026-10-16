@@ -1,4 +1,4 @@
-import {parseArtifactRef,type ArtifactRef} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import {parseArtifactRef,type ArtifactRef} from "@semio-tech/framework/schema/artifact-reference";
 /** 📐️ Cad direct-mutation discriminated union. */
 import type { CadNode } from "../🟦️.ts";
 

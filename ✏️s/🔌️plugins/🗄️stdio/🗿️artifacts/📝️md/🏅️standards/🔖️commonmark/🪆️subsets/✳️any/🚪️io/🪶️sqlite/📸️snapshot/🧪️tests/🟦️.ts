@@ -10,7 +10,7 @@ import nativeControl from "./🧫️fixtures/🛬️controlled.json";
 import type {MdSnapshot,MdBlock,MdInline} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseMdSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {MD_SQLITE_SCHEMA,mdSnapshotToSqliteDatabase,mdSnapshotFromSqliteDatabase,validateMdSnapshotSqliteDialect} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 
 
@@ -64,8 +64,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {mdSnapshotToSqliteDatabase as normSemanticProject,mdSnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 
 
 test("CommonMark native controlled fixture names owned backing separately from semantic values",async()=>{

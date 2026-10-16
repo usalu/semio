@@ -6,7 +6,7 @@ import { Database } from "bun:sqlite";
 import type { PdfObject, PdfStreamFilter } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { parsePdfObject, parsePdfDictEntry, parsePdfIndirectObject } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PDF_COS_SQLITE_SCHEMA, pdfObjectToSqliteDatabase, pdfObjectFromSqliteDatabase } from "../../🧩️cos/🟦️.ts";
-import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 async function fixture(): Promise<{ root: PdfObject; depth: number }> {
   const value = await Bun.file(new URL("../../🧩️cos/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).json();

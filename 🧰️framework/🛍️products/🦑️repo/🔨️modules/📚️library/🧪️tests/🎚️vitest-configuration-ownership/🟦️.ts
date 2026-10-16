@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import ts from "typescript";
 import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { policyRootScriptModulePaths } from "../../⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 
 type Owner = Readonly<{ configurationRoot: string; previousPath: string; ownerPath: string; expectedName: string | null; projectionSha256: string }>;
 type Fixture = Readonly<{
@@ -210,7 +211,7 @@ describe("Vitest configuration ownership", () => {
     const missing: string[] = [];
     const wrong: string[] = [];
     const ownerPaths = new Set(fixture.owners.map(({ ownerPath }) => ownerPath));
-    for (const path of [resolve(repoRoot, "📜️script.ts")]) visitSource(path);
+    for (const path of policyRootScriptModulePaths(repoRoot)) visitSource(resolve(repoRoot, path));
     function visitSource(path: string): void {
       if (!path.endsWith(".ts")) return;
       const content = readFileSync(path, "utf8");

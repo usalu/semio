@@ -29,7 +29,7 @@ fn read_source(path: std::path::PathBuf) -> String {
 }
 
 fn wgpu_shell_source() -> String {
-    crate::shell::SHELL_SOURCE.to_string()
+    shell_source().to_string()
 }
 
 fn wgpu_target_source(relative: &str) -> String {

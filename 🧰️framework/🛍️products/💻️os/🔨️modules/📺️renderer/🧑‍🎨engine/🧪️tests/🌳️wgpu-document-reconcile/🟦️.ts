@@ -68,7 +68,7 @@ const ingressGeneration = (minted: readonly [number, number] | null, revision: n
   return publishedRevision === revision ? generation : generation + 1;
 };
 
-const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource" | "reactShellHelpersSource" | "programBridgeSource") => key === "reactInterpreterSource" ? readFileSync(resolve(engineRoot, laws[key]), "utf8") : readModuleTreeSource(resolve(engineRoot, laws[key]));
+const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource" | "reactShellHelpersSource" | "programBridgeSource") => readModuleTreeSource(resolve(engineRoot, laws[key]));
 const record = (id: number) => fixture.document.nodes.find((node) => node.id === id);
 
 describe("wgpu retained document reconcile", () => {

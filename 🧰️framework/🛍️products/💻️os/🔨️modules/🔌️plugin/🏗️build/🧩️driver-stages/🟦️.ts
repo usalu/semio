@@ -77,7 +77,7 @@ function runRepositoryComponentDriverV1(repoRoot: string, mode: BuildMode, plan:
 export function buildReleasePipelineV1(repoRoot: string, pipeline: NativeBuildPipelineV1, options: Readonly<{ invocation:ScriptInvocation; components?: ReadonlySet<string>; facet:ComponentStageFacetV1; network: CargoDependencyNetworkV1; control: CompilerAdmissionControl }>): Promise<NativeBuildOutcomeV1> {
   requireIssuedResourceControlInvocationV1(options.control,options.invocation);
   const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),mode=authority.original.buildMode;if(repoRoot!==authority.repositoryRoot)throw Error("Actual component driver workspace required");
-  const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(repoRoot, pipeline, options.components);
+  const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(repoRoot, pipeline, mode, options.components);
   return runRepositoryComponentDriverV1(repoRoot,mode, plan, { invocation:options.invocation,facet:options.facet,describeMode:mode==="release"?"verify":"local",network: options.network, control: options.control, environment: process.env, generation: nativeBuildGenerationKindV1(process.env), jobEnvironment });
 }
 

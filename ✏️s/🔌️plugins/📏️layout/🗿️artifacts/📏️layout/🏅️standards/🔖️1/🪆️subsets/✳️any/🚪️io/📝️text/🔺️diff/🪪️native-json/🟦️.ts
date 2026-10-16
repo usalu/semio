@@ -1,6 +1,6 @@
 import {type QuestionDictionary} from "../../../../🧬️schema/🟦️.ts";
 import {parseLayoutDiff,type LayoutDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
-import{questionDictionaryEntryNativeJson,questionDictionaryEntryFromNativeJson}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🪪️native-json/🟦️.ts";
+import{questionDictionaryEntryNativeJson,questionDictionaryEntryFromNativeJson}from"@semio-tech/framework/value/dictionary/native-json";
 import {row,array,fields,paragraph,character,run,story,frame,page,child,link,image,rgba} from "../../📸️snapshot/🪪️native-json/🟦️.ts";
 
 function delta(v:unknown,added:(v:unknown,out:boolean)=>unknown,out:boolean,patched?:(v:unknown,out:boolean)=>unknown):unknown{const r={...row(v)};r.inserted=array(r.inserted).map(v=>{const entry={...row(v)};entry.row=added(entry.row,out);return entry;});if(patched)r.modified=array(r.modified).map(v=>{const entry={...row(v)};entry.patch=patched(entry.patch,out);return entry;});return r;}

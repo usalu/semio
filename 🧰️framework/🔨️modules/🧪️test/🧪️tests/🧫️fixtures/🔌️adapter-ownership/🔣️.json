@@ -52,7 +52,7 @@
   ],
   "removedExports": [
     {
-      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts",
       "names": [
         "parseFeature",
         "ParsedFeature",

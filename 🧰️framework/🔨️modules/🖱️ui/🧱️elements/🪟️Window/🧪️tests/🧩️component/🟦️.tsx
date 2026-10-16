@@ -15,7 +15,7 @@ import dockNames from "../../../../🧪️tests/🧫️fixtures/🪟️dock-acce
 import Ajv2020 from "ajv/dist/2020.js";
 import searchRouting from "../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
 import paneFolds from "../🧫️fixtures/🔀️pane-fold-independence/🔣️.json";
-import { createMemoryStoragePort } from "@semio-tech/framework";
+import { createMemoryStoragePort } from "../../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
 // #endregion 🔌️Adapters
 

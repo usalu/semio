@@ -21,17 +21,23 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testing = []
+
 [dependencies]
 semio-framework-os-semio = { path = "../../../../../🧬️semio/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
 semio-framework-os-store-codec-registry = { path = "../../../../📦️codec/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-space-member = { path = "../../../../🧩️composition/👥️space-member/📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-os-directory = { path = "../../../../../📇️directory/📦️packages/🦀️rust" }
+semio-framework-os-directory-client = { path = "../../../../../📇️directory/🔌️client/📦️packages/🦀️rust" }
+semio-framework-os-store-blob-identity = { path = "../../../../📦️blob/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 
@@ -42,7 +48,9 @@ tokio = { version = "1", default-features = false, features = ["sync", "macros"]
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 futures = "0.3"
 semio-framework-os-services = { workspace = true }
-tokio = { version = "1", default-features = false, features = ["net"] }
+tokio = { version = "1", default-features = false, features = ["net", "rt", "time"] }
 tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-plugin-component-receipt = { path = "../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }

@@ -1,8 +1,8 @@
 /** 🧾️ Direct QuestionDictionary entities keep unique question identities and ordered intrinsic children. */
 import type {QuestionDictionary} from "../../../../🧬️schema/🟦️.ts";
-import type{IntrinsicValue}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import{artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteCheckpoint}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteRow,SqliteValue,SqliteOperation}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import type{IntrinsicValue}from"@semio-tech/framework/value/schema/intrinsic";
+import{artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteCheckpoint}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteRow,SqliteValue,SqliteOperation}from"@semio-tech/framework/io/sqlite-snapshot";
 type Put=(name:string,cells:readonly SqliteValue[],id?:bigint)=>Promise<bigint>;
 type Take=(name:string,id:bigint)=>Promise<SqliteRow>;
 type List=(name:string,parent:bigint,index?:number,ordinal?:number)=>Promise<SqliteRow[]>;

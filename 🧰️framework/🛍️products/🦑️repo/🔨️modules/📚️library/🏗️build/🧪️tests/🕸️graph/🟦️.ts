@@ -1,3 +1,4 @@
+import "./🔄️candidate/🟦️.ts";
 import {registerBuildTestLawV1} from "../📥️invocation/🟦️.ts";
 import "../../../⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts";
 import {readBuildInferenceDatasetV1} from "../../📥️inputs/💾️storage/🟨️.mjs";

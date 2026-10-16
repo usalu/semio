@@ -1,0 +1,72 @@
+[
+ [
+  "windows-2",
+  "🎬️wgpu-window-actions-search-panes",
+  "'unknown root path crate::collect_fixture_actions'"
+ ],
+ [
+  "windows-2",
+  "📏️wgpu-window-measures",
+  "'unknown root path crate::collect_fixture_actions'"
+ ],
+ [
+  "windows-2",
+  "🧲️engine-surface-retention",
+  "'no facade entry for engine_canvas::engine_surface_law_guard'"
+ ],
+ [
+  "chrome-5",
+  "⚙️settings-general-layout",
+  "'unknown root path crate::collect_fixture_actions'"
+ ],
+ [
+  "chrome-6",
+  "🌓️appearance-tour-and-footer-pills",
+  "'unknown root path crate::RENDERER_SOURCE'"
+ ],
+ [
+  "input-1",
+  "🔬️wgpu-shell-input",
+  "'no facade entry for scenes::camera_fixture_lease'"
+ ],
+ [
+  "input-2",
+  "🎯️presented-input-authority",
+  "'unknown root path crate::collect_fixture_actions'"
+ ],
+ [
+  "input-3",
+  "🎡️wgpu-wheel-and-escape-routing",
+  "'unknown root path crate::RENDERER_SOURCE'"
+ ],
+ [
+  "docs-1",
+  "🧪️wgpu-time-travel",
+  "'unknown root path crate::collect_fixture_actions'"
+ ],
+ [
+  "docs-2",
+  "🔗️hub-projection-workspace",
+  "'no facade entry for engine_canvas::engine_surface_law_guard'"
+ ],
+ [
+  "docs-2",
+  "🔀️wgpu-document-relay",
+  "'unknown root path crate::RENDERER_SOURCE'"
+ ],
+ [
+  "docs-3",
+  "⏯️wgpu-tool-run-panel",
+  "'unknown root path crate::collect_fixture_actions'"
+ ],
+ [
+  "docs-3",
+  "👕️board-presence",
+  "'no facade entry for engine_canvas::engine_surface_law_guard'"
+ ],
+ [
+  "docs-3",
+  "🔄️sync-owner-lifetime",
+  "'unknown root path crate::RENDERER_SOURCE'"
+ ]
+]

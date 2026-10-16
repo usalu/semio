@@ -5,13 +5,10 @@
 
 import { OwnedUiPatchIntake } from "../../📃️UiDocumentStore/📥️intake/🟦️.ts";
 // #region 🔌️Adapters
-import {
-  ActivationRegistry,
-  type ActivationReason,
-  createTurnOutcomeBroadcast,
-  type PluginWasmHandle as KernelPluginWasmHandle,
-  type TurnOutcome
-} from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { ActivationRegistry } from "../../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
+import { type ActivationReason } from "../../../../../../../../🔨️modules/🎠️kernel/🚦️activation-reason/🟦️.ts";
+import { createTurnOutcomeBroadcast, type TurnOutcome } from "../../../../../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts";
+import { type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
 import {
   ShardClient,
   type ShardActorActivationLease,

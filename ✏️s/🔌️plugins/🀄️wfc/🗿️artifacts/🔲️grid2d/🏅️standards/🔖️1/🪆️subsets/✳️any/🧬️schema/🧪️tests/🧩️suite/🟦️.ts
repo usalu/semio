@@ -12,7 +12,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "bun:test";
-import {binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "@semio-tech/framework/value/ieee754";
 import { fixtureSnapshot, fixtureDiff } from "./🧰️support/🟦️.ts";
 import { applyGrid2dDiff, cellId, type Grid2dDiff } from "../../🔺️diff/🟦️.ts";
 import { GRID2D_MUTATION_KINDS, type Grid2dMutation } from "../../🧬️mutations/🟦️.ts";

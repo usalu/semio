@@ -17,7 +17,7 @@
  * in one hop alone fails closed instead of turning a correct producer into a runtime fault.
  *
  * 🧾️ A zero-import leaf on purpose: the drain element and `ShardClient` both read it, and `ShardClient`
- * cannot reach anything that imports it back (`🎠️kernel/🟦️.ts` imports `ShardClient`). */
+ * cannot reach anything that imports it back (`🎠️kernel` imports `ShardClient`). */
 export const SEGMENTED_DOWNLOAD_CONTRACT = Object.freeze({
   chunkBytes: 4096,
   maximumOutstandingChunks: 8192,

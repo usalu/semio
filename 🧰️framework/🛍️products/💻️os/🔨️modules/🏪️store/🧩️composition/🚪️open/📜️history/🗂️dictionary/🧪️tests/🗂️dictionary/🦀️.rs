@@ -1,9 +1,16 @@
 //! 🧪️ Actual retained input and production SPR writer exercise the neutral owner contract.
 
-use super::super::{MemberHistoryInputStep, MemberHistoryVerification};
-use super::*;
+use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
+use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_os_store_member_open::history::dictionary::record::RetainedDictionaryDelta;
+use semio_framework_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
+use semio_framework_job::StepContext;
+use semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
-use crate::os_store::{owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, owned_schema_decode::OwnedSchemaDecodeCredits, owned_schema_decode::OwnedSchemaDecodePage, owned_schema_decode::OwnedSchemaDecodePages, OwnerRef};
+use semio_framework_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
+use semio_framework_os_store_envelope::owner::OwnerRef;
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use serde_json::Value;
 
@@ -76,16 +83,16 @@ async fn history(fixture: &Value, row: &Value) -> Vec<u8> {
         records.push((65, vec![1, 7]));
     }
     if operation == "noncritical-transition" {
-        records.push((crate::os_spr::REC_TRANSITION, vec![1]));
+        records.push((semio_framework_os_spr::REC_TRANSITION, vec![1]));
     }
     if operation != "missing-composition" {
         records.push((65, composition));
     }
-    let options = crate::os_spr::WriteOptions { required_flags: protocol::REQUIRED_HASH_CHAIN, optional_flags: protocol::OPTIONAL_CANONICAL };
-    let mut writer = crate::os_spr::SprWriter::begin(Vec::new(), &options).await.unwrap();
+    let options = semio_framework_os_spr::WriteOptions { required_flags: protocol::REQUIRED_HASH_CHAIN, optional_flags: protocol::OPTIONAL_CANONICAL };
+    let mut writer = semio_framework_os_spr::SprWriter::begin(Vec::new(), &options).await.unwrap();
     for (kind, payload) in records {
         let critical = match (operation, kind) {
-            ("noncritical-dictionary", 3) | ("noncritical-document", 1) | ("noncritical-transition", crate::os_spr::REC_TRANSITION) => false,
+            ("noncritical-dictionary", 3) | ("noncritical-document", 1) | ("noncritical-transition", semio_framework_os_spr::REC_TRANSITION) => false,
             ("critical-composition", 65) => true,
             (_, 65) => false,
             _ => true,
@@ -119,7 +126,7 @@ fn request(fixture: &Value, row: &Value, history: &[u8]) -> MemberOpenRequest {
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(chunk).unwrap()).unwrap();
     }
     pages.seal().unwrap();
-    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages, crate::os_spr::ActorId(fixture["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
+    MemberOpenRequest::new(OperationId(7), Generation(11), 1000, expected, Some(owner), pages, semio_framework_os_spr::ActorId(fixture["openedActor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("neutral request admission"))
 }
 
 fn verified_input(fixture: &Value, row: &Value, history: &[u8]) -> VerifiedMemberHistoryInput {
@@ -127,12 +134,12 @@ fn verified_input(fixture: &Value, row: &Value, history: &[u8]) -> VerifiedMembe
     let mut sequence = 0;
     for _ in 0..10000 {
         let mut original_retained_progress_1 = semio_framework_value::RetainedCloneProgress::default();
-        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);
+        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(4096, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_1);
         match owner.step(&mut cx) {
             MemberHistoryInputStep::Pending(_) => {}
             MemberHistoryInputStep::Ready => {
                 let mut original_retained_progress_2 = semio_framework_value::RetainedCloneProgress::default();
-                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);
+                let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_2);
                 let input = owner.take_ready(&mut cx).unwrap().unwrap();
                 assert!(owner.terminal_is_empty());
                 return input;
@@ -153,11 +160,11 @@ fn new_owner(fixture: &Value, row: &Value, history: &[u8]) -> MemberHistoryDicti
     }
     let mut sequence = 0;
     let mut original_retained_progress_3 = semio_framework_value::RetainedCloneProgress::default();
-    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);
+    let cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_3);
     MemberHistoryDictionaryOwner::begin(input, "stdio.semio.flow", limits, &cx).unwrap_or_else(|_| panic!("dictionary input admission"))
 }
 
-use super::super::tests::RequestRetirementCensus;
+use super::history_tests::RequestRetirementCensus;
 impl RequestRetirementCensus for MemberHistoryDictionaryOwner {
     fn request(&self) -> Option<&MemberOpenRequest> {
         if self.pending.is_some() || self.lookup_byte.is_some() || self.delta.is_some() || self.id.is_some() { return None; }
@@ -176,7 +183,7 @@ impl RequestRetirementCensus for VerifiedMemberHistoryDictionary {
 
 fn retire(owner: &mut dyn RequestRetirementCensus, payload_grant: usize) -> usize {
     assert_eq!(owner.close_step(RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: payload_grant, ..Default::default() }).unwrap(), RetainedCloneStep::Progress(Default::default()));
-    super::super::tests::retire(owner, payload_grant)
+    super::history_tests::retire(owner, payload_grant)
 }
 
 fn expected_error(row: &Value) -> Option<MemberOpenDiagnostic> {
@@ -194,7 +201,7 @@ fn expected_error(row: &Value) -> Option<MemberOpenDiagnostic> {
 fn run_step(owner: &mut MemberHistoryDictionaryOwner, grant: u64) -> MemberHistoryDictionaryStep {
     let mut sequence = 0;
     let mut original_retained_progress_4 = semio_framework_value::RetainedCloneProgress::default();
-    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);
+    let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_4);
     let before = owner.scanner.as_ref().map_or(owner.end, RetainedSprVerification::consumed);
     let result = owner.step(&mut cx);
     let after = owner.scanner.as_ref().map_or(owner.end, RetainedSprVerification::consumed);
@@ -251,7 +258,7 @@ async fn member_history_dictionary_is_atomic_and_bounded_by_neutral_records() {
             };
             let mut sequence = 0;
             let mut original_retained_progress_5 = semio_framework_value::RetainedCloneProgress::default();
-            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);
+            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_5);
             let retired = if error.is_none() {
                 let mut witness = owner.take_ready(&mut cx).unwrap().unwrap();
                 assert!(owner.terminal_is_empty());
@@ -301,7 +308,7 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
             assert!(found, "{}", row["id"]);
             let mut sequence = 0;
             let mut original_retained_progress_6 = semio_framework_value::RetainedCloneProgress::default();
-            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);
+            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut original_retained_progress_6);
             let mut witness = if at == "witness" { owner.take_ready(&mut cx).unwrap() } else { None };
             let cancel = root_cancel_token();
             let event = row["event"].as_str().unwrap();
@@ -316,13 +323,13 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
                 _ => || Some(1),
             };
             let mut original_retained_progress_7 = semio_framework_value::RetainedCloneProgress::default();
-            let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_7);
+            let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(7, 999, semio_framework_value::testing::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_7);
             if let Some(witness) = witness.as_mut() {
                 assert_eq!(witness.schema, fixture["expected"]["schema"].as_str().unwrap());
                 assert_eq!(witness.check_step_authority(&cx).err(), expected_error(row));
                 let mut retry_sequence = 0;
                 let mut original_retained_progress_8 = semio_framework_value::RetainedCloneProgress::default();
-                let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, crate::os_store::component::tests::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_8);
+                let retry = StepContext::new(OperationId(7), Generation(11), StepBudget::new(7, 999, semio_framework_value::testing::physical_test_close_grant()), root_cancel_token(), || Some(1), &mut retry_sequence, &mut original_retained_progress_8);
                 assert_eq!(witness.check_step_authority(&retry).err(), expected_error(row));
                 assert!(witness.owners.as_ref().unwrap().index.as_ref().unwrap().lookup(0).is_err());
             } else if event == "none" {
@@ -358,7 +365,7 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
                         let cancel = root_cancel_token();
                         cancel.cancel_now();
                         let mut original_retained_progress_9 = semio_framework_value::RetainedCloneProgress::default();
-                        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, crate::os_store::component::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_9);
+                        let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(1, 999, semio_framework_value::testing::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_9);
                         if let MemberHistoryDictionaryStep::Rejected(found) = owner.step(&mut cx) {
                             error = Some(found);
                         }
@@ -410,7 +417,7 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
             let cancel = root_cancel_token();
             cancel.cancel_now();
             let mut original_retained_progress_10 = semio_framework_value::RetainedCloneProgress::default();
-            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, crate::os_store::component::tests::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_10);
+            let mut cx = StepContext::new(OperationId(7), Generation(11), StepBudget::new(grant as u64, 999, semio_framework_value::testing::physical_test_close_grant()), cancel, || Some(1), &mut sequence, &mut original_retained_progress_10);
             assert!(matches!(owner.step(&mut cx), MemberHistoryDictionaryStep::Rejected(MemberOpenDiagnostic::Cancelled)));
             assert_eq!(cx.fuel_remaining(), grant as u64);
             assert_eq!(owner.scanner.as_ref().unwrap().consumed(), before);

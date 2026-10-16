@@ -1,10 +1,10 @@
 /** 📷️ Resumable authored path coverage and local paint into straight RGBA. */
-import {PathFlattenJob,type FlatContour} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts";
-import {StrokeOutlineJob,type StrokeGeometryStyle} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
-import {CoverageJob,type CoverageMask} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts";
-import {validateExtent,type PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
-import type {PathSegment,Vec2} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import {PathFlattenJob,type FlatContour} from "@semio-tech/framework/2d/path/flatten";
+import {StrokeOutlineJob,type StrokeGeometryStyle} from "@semio-tech/framework/2d/path/stroke";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
+import {CoverageJob,type CoverageMask} from "@semio-tech/framework/pixels/coverage";
+import {validateExtent,type PixelImage} from "@semio-tech/framework/pixels/editing";
+import type {PathSegment,Vec2} from "@semio-tech/framework/2d";
 import {PreparedFill} from "../../🎨️fill/🎨️sampling/🟦️.ts";
 import type {Fill,Color} from "../../🎨️fill/🟦️.ts";
 import {parseStrokeCap,parseStrokeJoin,type StrokeCap,type StrokeJoin} from "../../🖊️stroke/🟦️.ts";

@@ -16,14 +16,14 @@ impl<'ctx> SessionCtx<'ctx> {
     /// `refresh_app_catalogue` runs on the UI refresh, which for a freshly attached surface has
     /// already happened.
     pub fn sync_engine_surface_states(&mut self) {
-        let registrations = crate::engine_canvas::take_engine_surface_registrations();
+        let registrations = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::take_engine_surface_registrations();
         let live_windows = self.dock.live_window_ids(&self.docs);
         let live_windows: Vec<&str> = live_windows.iter().map(String::as_str).collect();
         trace_engine_surface_sync(&self.surfaces.node_graph_states, &registrations, &live_windows);
         let created = mirror_engine_surface_states(&mut self.surfaces.node_graph_states, &mut self.surfaces.tiled_map_states, &mut self.surfaces.board2d_states, &mut self.surfaces.world3d_status, &mut self.surfaces.world3d_window_ids, registrations, &live_windows);
         if !self.plugins.app_catalogue_json.is_empty() {
             for surface_id in created {
-                crate::engine_canvas::node_graph_set_catalogue_json(&surface_id, &self.plugins.app_catalogue_json);
+                semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_set_catalogue_json(&surface_id, &self.plugins.app_catalogue_json);
             }
         }
         self.retire_closed_world3d_windows(&live_windows);
@@ -33,7 +33,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🪟️ Retires a closed World3d window at the layout-to-input sync boundary, once its capture-lost cancel was driven
     /// ([`Self::world3d_close_cancel_settled`]). The scene owner and every shell-local projection keyed by that owner
     /// disappear in one bounded pass before input.
-    pub(crate) fn retire_closed_world3d_windows(&mut self, live_window_ids: &[&str]) {
+    pub fn retire_closed_world3d_windows(&mut self, live_window_ids: &[&str]) {
         let retired: Vec<String> = self.surfaces.world3d_window_ids.iter().filter(|(_, window_id)| !live_window_ids.contains(&window_id.as_str())).map(|(host_id, _)| host_id.clone()).collect();
         for host_id in retired {
             if !self.surfaces.world3d_close_cancel_settled(&host_id) {
@@ -89,7 +89,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// materialise inside [`MARKETPLACE_WINDOW_NODE_BUDGET`], and the retained layout pitches the rest as spacers, so a roster of
     /// any length stays inside the retained node ceiling and scrolls to its last row. Store-owned extensions stay nested under
     /// their declared host, including failed loads, so install failures never erase inventory.
-    pub(crate) fn build_marketplace_ui(&self) -> UiNode {
+    pub fn build_marketplace_ui(&self) -> UiNode {
         let is_de = self.prefs.locale_id == "de";
         let session_plugin = self.docs.session.as_ref().map(|session| session.plugin_id.clone());
         let ids = self.plugins.marketplace_roster();
@@ -105,7 +105,7 @@ impl<'ctx> SessionCtx<'ctx> {
         let extension_item = |entry: &ShellExtensionProjection| {
             let extension_id = entry.record.extension_id.clone();
             let can_toggle = matches!(entry.load_status, ShellExtensionLoadStatus::Available | ShellExtensionLoadStatus::Loaded);
-            let target = crate::action_args_json!({ "extensionId": extension_id.clone(), "enabled": !entry.enabled });
+            let target = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "extensionId": extension_id.clone(), "enabled": !entry.enabled });
             UiTreeItemNode {
                 id: format!("framework.marketplace.plugin.{}.extension.{extension_id}", entry.record.extends_host),
                 label: Label::data(format!("{} · {} · {}", entry.record.label, entry.record.version, shell_chrome_string(if entry.enabled { "plugins.extension.enabled" } else { "plugins.extension.disabled" }, is_de))),
@@ -129,7 +129,7 @@ impl<'ctx> SessionCtx<'ctx> {
             let label = resident.map(|entry| entry.manifest.label.clone()).unwrap_or_else(|| plugin_id.to_string());
             let version = resident.map(|entry| entry.manifest.version.clone()).unwrap_or_default();
             let head = if version.is_empty() { format!("{label} \u{b7} {}", shell_chrome_string(status_key, is_de)) } else { format!("{label} \u{b7} {version} \u{b7} {}", shell_chrome_string(status_key, is_de)) };
-            let target = crate::action_args_json!({ "pluginId": plugin_id });
+            let target = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "pluginId": plugin_id });
             let installing_reason = in_flight.then_some("plugins.reason.installing");
             let uninstall_reason = installing_reason.or_else(|| (session_plugin.as_deref() == Some(plugin_id)).then_some("plugins.reason.inUse"));
             let actions = if resident.is_some() {
@@ -290,7 +290,7 @@ impl<'ctx> SessionCtx<'ctx> {
         let is_de = self.prefs.locale_id == "de";
         let dock = self.default_dock();
         let mut tabs: Vec<DockTabNode> = PanelAnchor::ALL.into_iter().flat_map(|anchor| dock.tabs(anchor).to_vec()).collect();
-        let has_example = !self.docs.session_example_rows(&self.plugins, &self.prefs).is_empty() && crate::boot_locks().example_id.is_empty();
+        let has_example = !self.docs.session_example_rows(&self.plugins, &self.prefs).is_empty() && semio_framework_os_renderer_wgpu_host_base::boot_locks().example_id.is_empty();
         let has_modes = self.docs.session.as_ref().is_some_and(|session| session.app.modes.len() > 1);
         if has_example || has_modes {
             tabs.push(DockTabNode::leaf(FRAMEWORK_MOBILE_APP_TAB_ID, shell_chrome_string("mobilePanel.app", is_de), "circle-dot", 99));
@@ -350,7 +350,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🖥️ Applies a builtin or saved layout by id — React's `applyNamedLayout`, which searches
     /// `[...builtinLayouts, ...userLayouts]` and calls `onApplyLayout` with what it finds. `false`
     /// when no layout carries that id, so the caller journals nothing for a stale row.
-    pub(crate) fn apply_named_layout(&mut self, layout_id: &str) -> bool {
+    pub fn apply_named_layout(&mut self, layout_id: &str) -> bool {
         let Some(layout) = self.dock.named_layout_by_id(layout_id, &self.docs) else { return false };
         self.dock.layout_override = Some(layout);
         self.sync_dock();
@@ -367,14 +367,14 @@ impl<'ctx> SessionCtx<'ctx> {
 /// frame (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`). One line per completed chrome walk —
 /// tens per minute, not per frame.
-pub(super) fn trace_engine_surface_sync(states: &AdmittedSurfaceMap<NodeGraphSurface>, registrations: &[crate::engine_canvas::EngineSurfaceRegistration], live_window_ids: &[&str]) {
+pub fn trace_engine_surface_sync(states: &AdmittedSurfaceMap<NodeGraphSurface>, registrations: &[semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceRegistration], live_window_ids: &[&str]) {
     if !semio_framework_trace::runtime_diagnostics_enabled() {
         return;
     }
     use std::sync::atomic::{AtomicU64, Ordering};
     static SYNCS: AtomicU64 = AtomicU64::new(0);
     static DRAINS_WITH_GRAPH: AtomicU64 = AtomicU64::new(0);
-    let painted = registrations.iter().any(|entry| matches!(entry.detail, crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph));
+    let painted = registrations.iter().any(|entry| matches!(entry.detail, semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::NodeGraph));
     let syncs = SYNCS.fetch_add(1, Ordering::Relaxed) + 1;
     let with_graph = if painted { DRAINS_WITH_GRAPH.fetch_add(1, Ordering::Relaxed) + 1 } else { DRAINS_WITH_GRAPH.load(Ordering::Relaxed) };
     let would_evict: Vec<&str> = states.iter().filter(|(id, _)| !registrations.iter().any(|entry| &entry.host_id == *id)).map(|(id, _)| id.as_str()).collect();
@@ -399,13 +399,13 @@ pub(super) fn trace_engine_surface_sync(states: &AdmittedSurfaceMap<NodeGraphSur
 /// `Self`-less so its law can drive the real body without a `ShellState` fixture —
 /// `🐚️Shell/🧪️tests/🧲️engine-surface-retention/🦀️.rs` over
 /// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`.
-pub(crate) fn mirror_engine_surface_states(
+pub fn mirror_engine_surface_states(
     node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
     tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
     board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
     world3d_status: &mut HashMap<String, String>,
     world3d_window_ids: &mut HashMap<String, String>,
-    registrations: Vec<crate::engine_canvas::EngineSurfaceRegistration>,
+    registrations: Vec<semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceRegistration>,
     live_window_ids: &[&str],
 ) -> Vec<String> {
     let retired: Vec<String> = node_graph_states.iter().filter(|(_, surface)| !live_window_ids.contains(&surface.window_id.as_str())).map(|(id, _)| id.clone()).collect();
@@ -422,9 +422,9 @@ pub(crate) fn mirror_engine_surface_states(
     }
     let mut constructed = Vec::new();
     for registration in registrations {
-        let crate::engine_canvas::EngineSurfaceRegistration { host_id, surface_id, engine_token: _, window_id, bounds, controller_id, detail, created } = registration;
+        let semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceRegistration { host_id, surface_id, engine_token: _, window_id, bounds, controller_id, detail, created } = registration;
         match detail {
-            crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph => {
+            semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::NodeGraph => {
                 if let Some(surface) = node_graph_states.get_or_insert_with(host_id.clone(), || NodeGraphSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), window_id: window_id.clone() }) {
                     surface.surface_id = surface_id;
                     surface.bounds = bounds;
@@ -435,7 +435,7 @@ pub(crate) fn mirror_engine_surface_states(
                     constructed.push(host_id);
                 }
             }
-            crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { selection_method } => {
+            semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::TiledMap { selection_method } => {
                 if let Some(surface) = tiled_map_states.get_or_insert_with(host_id.clone(), || TiledMapSurface {
                     surface_id: surface_id.clone(),
                     bounds,
@@ -453,7 +453,7 @@ pub(crate) fn mirror_engine_surface_states(
                     constructed.push(host_id);
                 }
             }
-            crate::engine_canvas::EngineSurfaceKindDetail::Board2d { snapshot_json } => {
+            semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::Board2d { snapshot_json } => {
                 if let Some(surface) =
                     board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), snapshot_json: snapshot_json.clone(), window_id: window_id.clone() })
                 {
@@ -467,7 +467,7 @@ pub(crate) fn mirror_engine_surface_states(
                     constructed.push(host_id);
                 }
             }
-            crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json } => {
+            semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::World3d { status_json } => {
                 world3d_window_ids.insert(host_id.clone(), window_id);
                 match status_json {
                     Some(status_json) => world3d_status.insert(host_id, status_json),
@@ -481,7 +481,7 @@ pub(crate) fn mirror_engine_surface_states(
 
 /// 🎟️ The process-wide resident census, appended to every render's own log line so a `Capacity`
 /// refusal is never the first thing anyone learns about the aggregate.
-pub(crate) fn resident_census() -> String {
+pub fn resident_census() -> String {
     ui_contract::UiResidentPermit::snapshot().map_or_else(|_| String::new(), |snapshot| format!(" resident-roots={} resident-bytes={}/{}", snapshot.used_slots, snapshot.bytes, ui_contract::UI_RESIDENT_AGGREGATE_BYTES))
 }
 
@@ -490,7 +490,7 @@ pub(crate) fn resident_census() -> String {
 /// orders `-100`/`-99` so they always precede whatever an app adds). Framework-owned and
 /// session-independent, exactly like `framework_settings_tabs`, which is why the Display chip is
 /// unconditional chrome in both renderers.
-pub(crate) fn framework_display_tabs(is_de: bool) -> Vec<DockTabNode> {
+pub fn framework_display_tabs(is_de: bool) -> Vec<DockTabNode> {
     vec![DockTabNode::leaf(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, shell_chrome_string("display.tab.windows", is_de), "layout-grid", 0), DockTabNode::leaf(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, shell_chrome_string("display.tab.layout", is_de), "layout", 1)]
 }
 

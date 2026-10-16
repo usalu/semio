@@ -7,7 +7,7 @@ use super::*;
 //#region ShellChrome
 //#region 🔖️ChromeOverlaysAndTour
 /// 🎓️ Matches React's first-frame arming predicate with an independently owned host policy.
-pub(crate) fn should_auto_start_introduction(seen_key: &str, has_introduction: bool, tutorial_active: bool, seen: bool, replay_on_load: bool, suppressed: bool) -> bool {
+pub fn should_auto_start_introduction(seen_key: &str, has_introduction: bool, tutorial_active: bool, seen: bool, replay_on_load: bool, suppressed: bool) -> bool {
     !seen_key.is_empty() && has_introduction && !tutorial_active && !suppressed && (replay_on_load || !seen)
 }
 

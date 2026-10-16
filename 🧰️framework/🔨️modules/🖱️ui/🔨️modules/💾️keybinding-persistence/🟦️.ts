@@ -5,7 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { type StoragePort } from "@semio-tech/framework";
+import { type StoragePort } from "../🗄️storage-port/🟦️.ts";
 import { parseKeybindingChords } from "../🔤️keybinding-text-interpretation/🟦️.ts";
 import { isElementId } from "../../🧱️elements/🆔️ElementId/🟦️.tsx";
 // #endregion 🔌️Adapters

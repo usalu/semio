@@ -1,11 +1,14 @@
 //! 🎮️ The command log and history views, and the history panel.
-use crate::history_view::HistoryCommandFilter;
-use crate::history_view::InverseAction;
-use crate::history_view::CommandView;
-use crate::history_view::MutationView;
-use crate::history_view::HistoryView;
-use crate::history_view::AlternativeView;
-use semio_framework::{ActionKind, IconName, ViewModel, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as pack;
+use semio_framework_plugin_decl_views::history_view::InverseAction;
+use semio_framework_plugin_decl_views::history_view::CommandView;
+use semio_framework_plugin_decl_views::history_view::MutationView;
+use semio_framework_plugin_decl_views::history_view::HistoryView;
+use semio_framework_plugin_decl_views::history_view::AlternativeView;
+use semio_framework::{ActionKind, IconName};
 use semio_framework_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
@@ -23,25 +26,21 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
-use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-use crate::app_contract::ArtifactApp;
-use crate::table_kit::row_action;
-use crate::table_kit::row_target;
-use crate::tool_jobs::HistoryMutationPages;
-use crate::tool_jobs::TimeTravelPanel;
-use crate::tool_jobs::history_mutation_entry;
-use crate::tool_jobs::time_travel;
-use crate::tree_kit::TreeWindows;
-use crate::tree_kit::tree_window_indexed_item;
-use crate::tree_kit::tree_window_section;
-use crate::window_surface::UiAssemblyResult;
-use crate::window_surface::ui_assembly_error;
-use crate::window_surface::ui_label;
-use crate::window_surface::ui_text;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_window_kits_rich::table_kit::row_action;
+use semio_framework_plugin_window_kits_rich::table_kit::row_target;
+use crate::lifted_command::HistoryMutationPages;
+use crate::lifted_command::TimeTravelPanel;
+use crate::lifted_command::history_mutation_entry;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_plugin_interaction::ui_assembly_error;
+use semio_framework_plugin_window_transient::ui_label;
+use semio_framework_plugin_window_transient::ui_text;
 
 /// 🗝️ What a backfilled command-log row references: a document edit (with the verb that authored it) or a
 /// `Supersede` history transition.
-pub(crate) enum CommandLogAppendKey {
+#[doc(hidden)]
+pub enum CommandLogAppendKey {
     Edit { edit_id: String, verb: Option<String>, child_edit_ids: Vec<String> },
     Members { edit_ids: Vec<String> },
     Transition(String),
@@ -50,41 +49,45 @@ pub(crate) enum CommandLogAppendKey {
 /// 🧭️ What a cached [`HistoryView`] was built against (design §20.14): the document's and every composed member's
 /// [`time_travel::HistoryStoreStamp`], the newest command-log row and the row count it held, its shell rows and their
 /// undone count, and the supersede records — what lets the next refresh rebuild only the rows a change touched.
+#[doc(hidden)]
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct HistoryViewStamp {
-    pub(crate) document: time_travel::HistoryStoreStamp,
-    pub(crate) members: Vec<(String, time_travel::HistoryStoreStamp)>,
-    pub(crate) newest_seq: u64,
-    pub(crate) rows: usize,
-    pub(crate) inverse_rows: usize,
-    pub(crate) shell_undone: usize,
-    pub(crate) supersede_records: usize,
+pub struct HistoryViewStamp {
+    pub document: crate::lifted_command::HistoryStoreStamp,
+    pub members: Vec<(String, crate::lifted_command::HistoryStoreStamp)>,
+    pub newest_seq: u64,
+    pub rows: usize,
+    pub inverse_rows: usize,
+    pub shell_undone: usize,
+    pub supersede_records: usize,
 }
 
 /// 🗂️ The history view a refresh patches in place, with the stamp it was built against; the projection cache shares it.
-pub(crate) struct HistoryViewCache {
-    pub(crate) view: std::sync::Arc<HistoryView>,
-    pub(crate) stamp: HistoryViewStamp,
+#[doc(hidden)]
+pub struct HistoryViewCache {
+    pub view: std::sync::Arc<HistoryView>,
+    pub stamp: HistoryViewStamp,
 }
 
 /// 🩹️ The rows one refresh rebuilds in a cached [`HistoryView`]: the log rows from `fresh_from` on are new, `rebuild`
 /// names the held rows a change touched, `positions` the applied position of every document edit it touched.
-pub(crate) struct HistoryViewPatch {
-    pub(crate) fresh_from: usize,
-    pub(crate) rebuild: BTreeSet<u64>,
-    pub(crate) positions: Vec<(String, Option<usize>)>,
+#[doc(hidden)]
+pub struct HistoryViewPatch {
+    pub fresh_from: usize,
+    pub rebuild: BTreeSet<u64>,
+    pub positions: Vec<(String, Option<usize>)>,
 }
 
 /// 🧾️ How far the command log is proven to reference every edit (`backfill_command_log`): the document ledger's length
 /// and its last edit id, each composed member ledger's, the supersede records, and the newest row at that moment — the
 /// next backfill reads only what came after (design §20.14).
+#[doc(hidden)]
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct HistoryBackfillMark {
-    pub(crate) edits: usize,
-    pub(crate) last_edit: Option<String>,
-    pub(crate) members: Vec<(String, usize, Option<String>)>,
-    pub(crate) supersede_records: usize,
-    pub(crate) log_seq: u64,
+pub struct HistoryBackfillMark {
+    pub edits: usize,
+    pub last_edit: Option<String>,
+    pub members: Vec<(String, usize, Option<String>)>,
+    pub supersede_records: usize,
+    pub log_seq: u64,
 }
 
 #[cfg(test)]
@@ -97,34 +100,37 @@ thread_local! {
 /// edits it knows (`full`: every applied edit, so an unknown one is not applied), the edits by id (`full` only; a patch
 /// reads the ledger's tail), the previous projection of each row and its labels, the composed members' edits, the
 /// members' applied tails, the history edits in effect and the app instance id.
-pub(crate) struct HistoryRowReads<'a, Mu> {
-    pub(crate) full: bool,
-    pub(crate) positions: HashMap<&'a str, Option<usize>>,
-    pub(crate) edits: HashMap<&'a str, &'a protocol::Edit<Mu>>,
-    pub(crate) previous: HashMap<u64, &'a CommandView>,
-    pub(crate) labelled: HashMap<&'a str, &'a MutationView>,
-    pub(crate) members: HashMap<String, time_travel::MemberEditHistory>,
-    pub(crate) child_applied_tails: HashSet<String>,
-    pub(crate) applied_entries: HashSet<usize>,
-    pub(crate) app_id: String,
+#[doc(hidden)]
+pub struct HistoryRowReads<'a, Mu> {
+    pub full: bool,
+    pub positions: HashMap<&'a str, Option<usize>>,
+    pub edits: HashMap<&'a str, &'a protocol::Edit<Mu>>,
+    pub previous: HashMap<u64, &'a CommandView>,
+    pub labelled: HashMap<&'a str, &'a MutationView>,
+    pub members: HashMap<String, crate::lifted_command::MemberEditHistory>,
+    pub child_applied_tails: HashSet<String>,
+    pub applied_entries: HashSet<usize>,
+    pub app_id: String,
 }
 
 /// 🏷️ A backfilled edit row's label: the registry label of the verb that authored it, else its first operation's label
 /// `first` (a document leaf's localized `SemanticMutation::label`) — the rule a live row records; an edit without
 /// operations is named by its id. An edit stores no description (design §20.6).
-pub(crate) fn backfilled_edit_label<Mu>(edit: &protocol::Edit<Mu>, verb_label: Option<LocalizedLabel>, first: impl FnOnce(&Mu) -> LocalizedLabel) -> LocalizedLabel {
+#[doc(hidden)]
+pub fn backfilled_edit_label<Mu>(edit: &protocol::Edit<Mu>, verb_label: Option<LocalizedLabel>, first: impl FnOnce(&Mu) -> LocalizedLabel) -> LocalizedLabel {
     verb_label.unwrap_or_else(|| edit.forwards.first().map_or_else(|| LocalizedLabel::data(edit.id.clone()), first))
 }
 
 /// 🧾️ Inputs for one appended session command before its sequence and timestamp are assigned.
-pub(crate) struct CommandLogAppend<'a> {
-    pub(crate) action_id: &'a str,
-    pub(crate) label: LocalizedLabel,
-    pub(crate) kind: ActionKind,
-    pub(crate) edit_id: Option<String>,
-    pub(crate) transition_id: Option<String>,
-    pub(crate) timestamp: Option<String>,
-    pub(crate) inverse: Option<InverseAction>,
+#[doc(hidden)]
+pub struct CommandLogAppend<'a> {
+    pub action_id: &'a str,
+    pub label: LocalizedLabel,
+    pub kind: ActionKind,
+    pub edit_id: Option<String>,
+    pub transition_id: Option<String>,
+    pub timestamp: Option<String>,
+    pub inverse: Option<InverseAction>,
 }
 
 /// 📜️ Operations a history row previews: its edit's newest ones (see `CommandView::op_lines`).
@@ -187,7 +193,8 @@ pub fn history_intent_label<A: ArtifactApp>(tool: &str, ops: &[&store::AppliedMu
 }
 
 /// 🎯️ Resolves declared intent through a store's concrete mutation authority and effective labels.
-pub(crate) fn history_intent_label_of<P, Mu: protocol::SemanticMutation<P>>(intents: &[&str], ops: &[&store::AppliedMutation<'_, Mu>], mutations: &[MutationView]) -> Option<LocalizedLabel> {
+#[doc(hidden)]
+pub fn history_intent_label_of<P, Mu: protocol::SemanticMutation<P>>(intents: &[&str], ops: &[&store::AppliedMutation<'_, Mu>], mutations: &[MutationView]) -> Option<LocalizedLabel> {
     let intent = ops.iter().take(if intents.is_empty() { 0 } else { ops.len() }).find(|op| intents.contains(&protocol::SemanticMutation::<P>::semantics(op.operation).kind))?;
     Some(mutations.iter().find(|row| row.mutation_id == intent.mutation_id.0).map_or_else(|| protocol::SemanticMutation::<P>::label(intent.operation), |row| row.label.clone()))
 }
@@ -246,7 +253,8 @@ pub const FRAMEWORK_CHECKIN_CONTROLLER_ID: &str = "framework.checkin";
 /// newest-first command log: every applied mutation row counts, and a landed `commitCheckpoint`
 /// resets it to zero. It is what React prints after the Check In label as ` (N)`.
 // 🚫️async: a pure total fold over rows already in hand.
-fn uncommitted_command_count(history: &HistoryView) -> u32 {
+#[doc(hidden)]
+pub fn uncommitted_command_count(history: &HistoryView) -> u32 {
     let mut pending = 0u32;
     for entry in history.commands.iter().rev() {
         if entry.kind == ActionKind::History && entry.action_id == "commitCheckpoint" {
@@ -263,7 +271,8 @@ fn uncommitted_command_count(history: &HistoryView) -> u32 {
 // 🚫️async: a pure total mapping, called inside the Commands window's synchronous row closure.
 /// 🕶️ View is ephemeral cursor/selection/camera state; Shell is an outside-the-document
 /// host effect — distinct icons so a folded ×count row reads at a glance.
-fn history_panel_icon_id(kind: ActionKind) -> IconName {
+#[doc(hidden)]
+pub fn history_panel_icon_id(kind: ActionKind) -> IconName {
     match kind {
         ActionKind::Mutation => IconName::Pencil,
         ActionKind::History => IconName::Undo,
@@ -278,23 +287,24 @@ fn history_panel_icon_id(kind: ActionKind) -> IconName {
 /// current one, who branched it and when,
 /// and "Edited history" when history edits were kept as it; every other alternative switches on activation and by its
 /// Switch row action (`switchAlternative{alternativeId}`) unless the panel is read-only or frozen by a history edit.
-fn history_panel_alternative_row(alternative: &AlternativeView, controller_id: &str, locale: Locale, mutable: bool) -> UiAssemblyResult<BuiltNode> {
-    let text = |text: time_travel::HistoryPanelText| text.text(locale);
+#[doc(hidden)]
+pub fn history_panel_alternative_row(alternative: &AlternativeView, controller_id: &str, locale: Locale, mutable: bool) -> UiAssemblyResult<BuiltNode> {
+    let text = |text: crate::lifted_command::HistoryPanelText| text.text(locale);
     let id = UiText::try_format(format_args!("framework.history.alternative.{}", alternative.id)).ok_or_else(|| ui_assembly_error("history-panel.alternative-id"))?;
     let icon = if alternative.current { IconName::Check } else { IconName::GitBranch };
-    let name = if alternative.name.is_empty() { text(time_travel::HistoryPanelText::Trunk) } else { alternative.name.as_str() };
+    let name = if alternative.name.is_empty() { text(crate::lifted_command::HistoryPanelText::Trunk) } else { alternative.name.as_str() };
     let mut builder = tree_item(Label(UiText::clipped(name))).icon(ui_text(icon.as_str(), "history-panel.alternative-icon")?);
     builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.alternative-id"))?;
     let mut parts: Vec<String> = Vec::new();
     if alternative.current {
-        parts.push(text(time_travel::HistoryPanelText::Current).to_string());
+        parts.push(text(crate::lifted_command::HistoryPanelText::Current).to_string());
     }
     if let (Some(author), Some(at)) = (alternative.author.as_deref(), alternative.branched_at.as_deref()) {
         let when = at.get(..16).map_or_else(|| at.to_string(), |minute| format!("{} UTC", minute.replacen('T', " ", 1)));
-        parts.push(text(time_travel::HistoryPanelText::BranchedBy).replace("{author}", author).replace("{time}", &when));
+        parts.push(text(crate::lifted_command::HistoryPanelText::BranchedBy).replace("{author}", author).replace("{time}", &when));
     }
     if alternative.edited {
-        parts.push(text(time_travel::HistoryPanelText::EditedHistory).to_string());
+        parts.push(text(crate::lifted_command::HistoryPanelText::EditedHistory).to_string());
     }
     if !parts.is_empty() {
         builder = builder.description(UiText::clipped(&parts.join(" \u{b7} ")));
@@ -302,7 +312,7 @@ fn history_panel_alternative_row(alternative: &AlternativeView, controller_id: &
     if !alternative.current && mutable {
         let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.alternative-args"))?;
         args.push(semio_framework::SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID.to_owned(), UiValue::Text(UiText::clipped(&alternative.id))).map_err(|_| ui_assembly_error("history-panel.alternative-args"))?;
-        let switch = row_action(IconName::GitBranch.as_str(), text(time_travel::HistoryPanelText::Switch), semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, RowActionPlacement::Row)?;
+        let switch = row_action(IconName::GitBranch.as_str(), text(crate::lifted_command::HistoryPanelText::Switch), semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, RowActionPlacement::Row)?;
         builder = builder.try_row_action(switch).map_err(|_| ui_assembly_error("history-panel.alternative-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), Some(semio_framework::SWITCH_ALTERNATIVE_ACTION_ID))?);
     }
     builder.try_build().map_err(|_| ui_assembly_error("history-panel.alternative-build"))
@@ -311,9 +321,10 @@ fn history_panel_alternative_row(alternative: &AlternativeView, controller_id: &
 /// ⌛️ The placeholder child at `index` of history row `seq` whose page holds no row there (a window that moved past the
 /// page this render read, audit W2A-10): a dimmed, actionless row naming that the mutation is not available, never a
 /// failed history body.
-fn history_panel_unavailable_row(seq: u64, index: usize, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    let id = UiText::try_format(format_args!("{}{seq}.unavailable.{index}", time_travel::HISTORY_ROW_KEY_PREFIX)).ok_or_else(|| ui_assembly_error("history-panel.unavailable-id"))?;
-    let builder = tree_item(Label(UiText::clipped(time_travel::HistoryPanelText::MutationUnavailable.text(locale)))).icon(ui_text("clock", "history-panel.unavailable-icon")?).dimmed(true);
+#[doc(hidden)]
+pub fn history_panel_unavailable_row(seq: u64, index: usize, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+    let id = UiText::try_format(format_args!("{}{seq}.unavailable.{index}", crate::lifted_command::HISTORY_ROW_KEY_PREFIX)).ok_or_else(|| ui_assembly_error("history-panel.unavailable-id"))?;
+    let builder = tree_item(Label(UiText::clipped(crate::lifted_command::HistoryPanelText::MutationUnavailable.text(locale)))).icon(ui_text("clock", "history-panel.unavailable-icon")?).dimmed(true);
     builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.unavailable-id"))?.try_build().map_err(|_| ui_assembly_error("history-panel.unavailable-build"))
 }
 
@@ -325,8 +336,9 @@ fn history_panel_unavailable_row(seq: u64, index: usize, locale: Locale) -> UiAs
 /// without editable inputs (design §22.20), the store's supersede law, the session or the instance refuses is disabled
 /// because of that refusal (`RowAction::disabled_because`, announced as its description; `refusals`), and a refused
 /// Edit activates nothing (gap N15).
-pub(crate) fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool, refusals: time_travel::MutationRowRefusals) -> UiAssemblyResult<BuiltNode> {
-    let (tone, icon) = time_travel::history_severity_tone(mutation.worst);
+#[doc(hidden)]
+pub fn history_panel_mutation_row(mutation: &semio_framework::kernel::HistoryMutationEntry, controller_id: &str, locale: Locale, read_only: bool, refusals: crate::lifted_command::MutationRowRefusals) -> UiAssemblyResult<BuiltNode> {
+    let (tone, icon) = crate::lifted_command::history_severity_tone(mutation.worst);
     let icon = if mutation.pending {
         "clock"
     } else if mutation.edited {
@@ -337,14 +349,14 @@ pub(crate) fn history_panel_mutation_row(mutation: &semio_framework::kernel::His
     let id = UiText::try_format(format_args!("framework.history.mutation.{}", mutation.mutation_id)).ok_or_else(|| ui_assembly_error("history-panel.mutation-id"))?;
     let mut builder = tree_item(Label(UiText::clipped(mutation.label.resolve(Terminology::Native, locale)))).icon(ui_text(icon, "history-panel.mutation-icon")?).tone(if mutation.worst.is_some() { tone } else { Tone::Neutral });
     builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.mutation-id"))?;
-    let description = time_travel::history_mutation_description(mutation, locale);
+    let description = crate::lifted_command::history_mutation_description(mutation, locale);
     if !description.is_empty() {
         builder = builder.description(UiText::clipped(&description));
     }
     if mutation.pending || mutation.withdrawn {
         builder = builder.dimmed(true);
     }
-    let action = |icon: &str, text: time_travel::HistoryPanelText, verb: &str, refusal: Option<semio_framework_time_travel::TimeTravelLabel>| -> UiAssemblyResult<RowAction> {
+    let action = |icon: &str, text: crate::lifted_command::HistoryPanelText, verb: &str, refusal: Option<semio_framework_time_travel::TimeTravelLabel>| -> UiAssemblyResult<RowAction> {
         let action = row_action(icon, text.text(locale), verb, RowActionPlacement::Row)?;
         let Some(refusal) = refusal else { return Ok(action) };
         let reason = refusal.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).to_string();
@@ -352,12 +364,12 @@ pub(crate) fn history_panel_mutation_row(mutation: &semio_framework::kernel::His
     };
     let viewer = read_only.then_some(semio_framework_time_travel::TimeTravelLabel::RefusalReadOnly);
     let begin = viewer.or((!mutation.editable).then_some(semio_framework_time_travel::TimeTravelLabel::RefusalNotEditable)).or(refusals.begin);
-    let mut actions = vec![action(IconName::Edit.as_str(), time_travel::HistoryPanelText::Edit, semio_framework::history_edit::HISTORY_EDIT_BEGIN_ACTION_ID, begin)?];
+    let mut actions = vec![action(IconName::Edit.as_str(), crate::lifted_command::HistoryPanelText::Edit, semio_framework::history_edit::HISTORY_EDIT_BEGIN_ACTION_ID, begin)?];
     if refusals.accepted {
-        actions.push(action("undo-2", time_travel::HistoryPanelText::Restore, semio_framework::history_edit::HISTORY_EDIT_RESTORE_ACTION_ID, refusals.restore)?);
+        actions.push(action("undo-2", crate::lifted_command::HistoryPanelText::Restore, semio_framework::history_edit::HISTORY_EDIT_RESTORE_ACTION_ID, refusals.restore)?);
     } else if !mutation.withdrawn {
         let withdraw = viewer.or((!mutation.withdrawable).then_some(semio_framework_time_travel::TimeTravelLabel::RefusalNotWithdrawable)).or(refusals.withdraw);
-        actions.push(action("eye-off", time_travel::HistoryPanelText::Withdraw, semio_framework::history_edit::HISTORY_EDIT_WITHDRAW_ACTION_ID, withdraw)?);
+        actions.push(action("eye-off", crate::lifted_command::HistoryPanelText::Withdraw, semio_framework::history_edit::HISTORY_EDIT_WITHDRAW_ACTION_ID, withdraw)?);
     }
     let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.mutation-args"))?;
     args.push(semio_framework::history_edit::HISTORY_EDIT_ARG_MUTATION_ID.to_owned(), UiValue::Text(UiText::clipped(&mutation.mutation_id))).map_err(|_| ui_assembly_error("history-panel.mutation-args"))?;
@@ -390,6 +402,7 @@ pub fn history_row_applied(has_parent_edit: bool, document_applied: bool, child_
     }
 }
 
-#[path = "../⏪️time-travel/🪟️panel/🛬️lifted/🎮️command/🦀️.rs"]
-mod lifted_panel;
-pub use lifted_panel::*;
+#[path = "📥️admission/🦀️.rs"]
+pub mod command_admission;
+#[path = "🛬️lifted/⏪️time-travel/🦀️.rs"]
+pub mod lifted_command;

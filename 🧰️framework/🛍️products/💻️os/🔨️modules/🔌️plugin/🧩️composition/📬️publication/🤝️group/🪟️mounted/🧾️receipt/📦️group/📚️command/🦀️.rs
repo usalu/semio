@@ -1,62 +1,90 @@
-use crate::child_content::mounted_child_group_receipt::mounted_nested_retirement_demand;
+use semio_framework::ActionKind;
+use semio_framework_plugin_decl_views::history_view::CommandLogEntry;
+use semio_framework_value::DslValue;
+#[cfg(test)]
+use semio_framework_plugin_decl_views::history_view::InverseAction;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use std::mem::ManuallyDrop;
+use crate::mounted_child_group_receipt_group::MountedGroupReceipt;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value::RetirementDemand;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::MemberFactory;
+use crate::mounted_child_group_receipt_group::MountedGroupPreparedChildEdits;
+use store::SpaceMember;
+use crate::mounted_child_group_receipt::mounted_nested_retirement_demand;
 use std::mem::MaybeUninit;
-use std::sync::atomic::{AtomicU64,Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 const COMMAND_PAGE_RECORDS:usize=8;
 static NEXT_COMMAND_OWNER:AtomicU64=AtomicU64::new(1);
-struct CommandSlot{record:MaybeUninit<CommandLogEntry>,initialized:bool,visible:[bool;2],links:[[ *mut CommandSlot;2];2]}
-impl CommandSlot{fn empty()->Self{Self{record:MaybeUninit::uninit(),initialized:false,visible:[false;2],links:[[std::ptr::null_mut();2];2]}}}
-struct CommandPage{previous:Option<Box<CommandPage>>,next:*mut CommandPage,slots:[CommandSlot;COMMAND_PAGE_RECORDS],used:usize}
-impl CommandPage{fn empty()->Self{Self{previous:None,next:std::ptr::null_mut(),slots:std::array::from_fn(|_|CommandSlot::empty()),used:0}}}
+struct CommandSlot{pub record:MaybeUninit<CommandLogEntry>,initialized:bool,pub visible:[bool;2],links:[[ *mut CommandSlot;2];2]}
+impl CommandSlot{pub fn empty()->Self{Self{record:MaybeUninit::uninit(),initialized:false,visible:[false;2],links:[[std::ptr::null_mut();2];2]}}}
+struct CommandPage{pub previous:Option<Box<CommandPage>>,next:*mut CommandPage,pub slots:[CommandSlot;COMMAND_PAGE_RECORDS],pub used:usize}
+impl CommandPage{pub fn empty()->Self{Self{previous:None,next:std::ptr::null_mut(),slots:std::array::from_fn(|_|CommandSlot::empty()),used:0}}}
 
-pub(crate) struct PagedCommandLog{newest:ManuallyDrop<Option<Box<CommandPage>>>,oldest:*mut CommandPage,head:*mut CommandSlot,tail:*mut CommandSlot,len:usize,revision:u64,identity:u64,lane:usize,close_field:usize,closing:bool,prune_lease:Option<u64>,prune_nonce:u64,retire_page:*mut CommandPage,retire_slot:usize,retire_field:usize}
-pub(crate) struct CommandAppend{page:ManuallyDrop<Option<Box<CommandPage>>>,identity:u64,revision:u64,len:usize,needs_page:bool,admitted:bool,closed:bool}
+#[doc(hidden)]
+pub struct PagedCommandLog{pub newest:ManuallyDrop<Option<Box<CommandPage>>>,pub oldest:*mut CommandPage,pub head:*mut CommandSlot,pub tail:*mut CommandSlot,pub len:usize,pub revision:u64,pub identity:u64,pub lane:usize,pub close_field:usize,pub closing:bool,prune_lease:Option<u64>,prune_nonce:u64,pub retire_page:*mut CommandPage,retire_slot:usize,retire_field:usize}
+#[doc(hidden)]
+pub struct CommandAppend{pub page:ManuallyDrop<Option<Box<CommandPage>>>,pub identity:u64,pub revision:u64,pub len:usize,needs_page:bool,pub admitted:bool,pub closed:bool}
+#[doc(hidden)]
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub(crate) enum CommandAppendRefusal{Stale,Foreign,Unfunded,Closed,MissingRecord,Busy,Incomplete}
-pub(crate) struct CommandPrune{identity:u64,revision:u64,nonce:u64,source_len:usize,lane:usize,next:*mut CommandSlot,head:*mut CommandSlot,tail:*mut CommandSlot,kept:usize,processed:usize,closed:bool}
+pub enum CommandAppendRefusal{Stale,Foreign,Unfunded,Closed,MissingRecord,Busy,Incomplete}
+#[doc(hidden)]
+pub struct CommandPrune{pub identity:u64,pub revision:u64,nonce:u64,pub source_len:usize,pub lane:usize,next:*mut CommandSlot,pub head:*mut CommandSlot,pub tail:*mut CommandSlot,pub kept:usize,pub processed:usize,pub closed:bool}
 
 impl CommandAppend{
-    pub(crate) fn next_capacity_byte_demand(&self)->usize{if self.needs_page&&!self.admitted{size_of::<CommandPage>()}else{0}}
+    pub fn next_capacity_byte_demand(&self)->usize{if self.needs_page&&!self.admitted{size_of::<CommandPage>()}else{0}}
     /// 🌱️ Births one whole record page without modifying any original live history owner.
-    pub(crate) fn admit_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{if self.closed||grant.maximum_items==0{return RetainedCloneStep::Progress(Default::default());}let bytes=self.next_capacity_byte_demand();if grant.maximum_capacity_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}if self.admitted{return RetainedCloneStep::Complete(Default::default());}if self.needs_page{*self.page=Some(Box::new(CommandPage::empty()));}self.admitted=true;MountedGroupReceipt::progress(bytes,0)}
-    pub(crate) fn next_close_byte_demand(&self)->usize{if self.page.is_some(){size_of::<CommandPage>()}else{0}}
-    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{if self.closed{return RetainedCloneStep::Complete(Default::default());}let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}drop(self.page.take());self.closed=true;MountedGroupReceipt::progress(0,bytes)}
+    pub fn admit_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{if self.closed||grant.maximum_items==0{return RetainedCloneStep::Progress(Default::default());}let bytes=self.next_capacity_byte_demand();if grant.maximum_capacity_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}if self.admitted{return RetainedCloneStep::Complete(Default::default());}if self.needs_page{*self.page=Some(Box::new(CommandPage::empty()));}self.admitted=true;MountedGroupReceipt::progress(bytes,0)}
+    pub fn next_close_byte_demand(&self)->usize{if self.page.is_some(){size_of::<CommandPage>()}else{0}}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{if self.closed{return RetainedCloneStep::Complete(Default::default());}let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}drop(self.page.take());self.closed=true;MountedGroupReceipt::progress(0,bytes)}
 }
 /// 🧵️ Reserved page ownership remains exclusive until its constant decision link.
 unsafe impl Send for CommandAppend{}
 impl Drop for CommandAppend{fn drop(&mut self){assert!(std::thread::panicking()||self.closed,"command append requires exact transfer or funded page cancellation");}}
 impl Drop for CommandPrune{fn drop(&mut self){assert!(std::thread::panicking()||self.closed,"command prune requires a checked decision or explicit cancellation");}}
 
-pub(crate) struct CommandLogIter<'a>{front:*const CommandSlot,back:*const CommandSlot,lane:usize,remaining:usize,owner:std::marker::PhantomData<&'a PagedCommandLog>}
+pub(crate) struct CommandLogIter<'a>{pub front:*const CommandSlot,pub back:*const CommandSlot,pub lane:usize,pub remaining:usize,pub owner:std::marker::PhantomData<&'a PagedCommandLog>}
 impl<'a> Iterator for CommandLogIter<'a>{type Item=&'a CommandLogEntry;fn next(&mut self)->Option<Self::Item>{if self.remaining==0{return None;}unsafe{let slot=&*self.front;self.front=slot.links[self.lane][1];self.remaining-=1;Some(slot.record.assume_init_ref())}}fn size_hint(&self)->(usize,Option<usize>){(self.remaining,Some(self.remaining))}}
 impl DoubleEndedIterator for CommandLogIter<'_>{fn next_back(&mut self)->Option<Self::Item>{if self.remaining==0{return None;}unsafe{let slot=&*self.back;self.back=slot.links[self.lane][0];self.remaining-=1;Some(slot.record.assume_init_ref())}}}
 impl ExactSizeIterator for CommandLogIter<'_>{}
-struct CommandLogReadCursor<'a>{slot:*const CommandSlot,index:usize,lane:usize,owner:std::marker::PhantomData<&'a PagedCommandLog>}
+struct CommandLogReadCursor<'a>{pub slot:*const CommandSlot,pub index:usize,pub lane:usize,pub owner:std::marker::PhantomData<&'a PagedCommandLog>}
 impl<'a> CommandLogReadCursor<'a>{
     /// 🔎️ Advances one visible record without scanning any hidden-row run.
-    fn advance(&mut self,maximum_items:usize)->Option<&'a CommandLogEntry>{if maximum_items==0{return None;}unsafe{let slot=&*self.slot;if self.index!=0{self.index-=1;self.slot=slot.links[self.lane][1];None}else{Some(slot.record.assume_init_ref())}}}
+    pub fn advance(&mut self,maximum_items:usize)->Option<&'a CommandLogEntry>{if maximum_items==0{return None;}unsafe{let slot=&*self.slot;if self.index!=0{self.index-=1;self.slot=slot.links[self.lane][1];None}else{Some(slot.record.assume_init_ref())}}}
 }
 
 impl PagedCommandLog{
-    pub(crate) fn new()->Self{Self{newest:ManuallyDrop::new(None),oldest:std::ptr::null_mut(),head:std::ptr::null_mut(),tail:std::ptr::null_mut(),len:0,revision:0,identity:NEXT_COMMAND_OWNER.fetch_add(1,Ordering::Relaxed),lane:0,close_field:0,closing:false,prune_lease:None,prune_nonce:0,retire_page:std::ptr::null_mut(),retire_slot:0,retire_field:0}}
-    pub(crate) fn len(&self)->usize{self.len}
-    fn is_empty(&self)->bool{self.len==0}
+    pub fn new()->Self{Self{newest:ManuallyDrop::new(None),oldest:std::ptr::null_mut(),head:std::ptr::null_mut(),tail:std::ptr::null_mut(),len:0,revision:0,identity:NEXT_COMMAND_OWNER.fetch_add(1,Ordering::Relaxed),lane:0,close_field:0,closing:false,prune_lease:None,prune_nonce:0,retire_page:std::ptr::null_mut(),retire_slot:0,retire_field:0}}
+    pub fn len(&self)->usize{self.len}
+    pub fn is_empty(&self)->bool{self.len==0}
     /// 🪪️ Seals original owner, revision and visible prefix before a future append.
-    pub(crate) fn prepare_append(&self)->Result<CommandAppend,CommandAppendRefusal>{if self.closing||self.revision==u64::MAX||self.len==usize::MAX{return Err(CommandAppendRefusal::Closed);}Ok(CommandAppend{page:ManuallyDrop::new(None),identity:self.identity,revision:self.revision,len:self.len,needs_page:self.newest.as_ref().is_none_or(|page|page.used==COMMAND_PAGE_RECORDS),admitted:false,closed:false})}
-    pub(crate) fn validate_append(&self,append:&CommandAppend)->Result<(),CommandAppendRefusal>{if self.identity!=append.identity{return Err(CommandAppendRefusal::Foreign);}if self.closing||append.closed{return Err(CommandAppendRefusal::Closed);}if self.revision!=append.revision||self.len!=append.len{return Err(CommandAppendRefusal::Stale);}if !append.admitted||(append.needs_page&&append.page.is_none()){return Err(CommandAppendRefusal::Unfunded);}Ok(())}
+    pub fn prepare_append(&self)->Result<CommandAppend,CommandAppendRefusal>{if self.closing||self.revision==u64::MAX||self.len==usize::MAX{return Err(CommandAppendRefusal::Closed);}Ok(CommandAppend{page:ManuallyDrop::new(None),identity:self.identity,revision:self.revision,len:self.len,needs_page:self.newest.as_ref().is_none_or(|page|page.used==COMMAND_PAGE_RECORDS),admitted:false,closed:false})}
+    pub fn validate_append(&self,append:&CommandAppend)->Result<(),CommandAppendRefusal>{if self.identity!=append.identity{return Err(CommandAppendRefusal::Foreign);}if self.closing||append.closed{return Err(CommandAppendRefusal::Closed);}if self.revision!=append.revision||self.len!=append.len{return Err(CommandAppendRefusal::Stale);}if !append.admitted||(append.needs_page&&append.page.is_none()){return Err(CommandAppendRefusal::Unfunded);}Ok(())}
     /// 🔗️ Moves one original row into a reserved slot and links only preborn page ownership.
-    pub(crate) fn commit_append(&mut self,append:&mut CommandAppend,record:&mut Option<CommandLogEntry>)->Result<(),CommandAppendRefusal>{self.validate_append(append)?;if record.is_none(){return Err(CommandAppendRefusal::MissingRecord);}if append.needs_page{let mut page=append.page.take().ok_or(CommandAppendRefusal::Unfunded)?;let pointer=&mut*page as*mut CommandPage;if let Some(previous)=self.newest.as_mut(){previous.next=pointer;}else{self.oldest=pointer;}page.previous=self.newest.take();*self.newest=Some(page);}let page=self.newest.as_mut().unwrap();let slot=page.slots.iter_mut().find(|slot|!slot.initialized).unwrap();let pointer=slot as*mut CommandSlot;slot.record.write(record.take().unwrap());slot.initialized=true;slot.visible=[false;2];slot.visible[self.lane]=true;slot.links=[[std::ptr::null_mut();2];2];slot.links[self.lane][0]=self.tail;if !self.tail.is_null(){unsafe{(*self.tail).links[self.lane][1]=pointer;}}else{self.head=pointer;}self.tail=pointer;page.used+=1;self.len+=1;self.revision+=1;append.closed=true;Ok(())}
-    pub(crate) fn iter(&self)->CommandLogIter<'_>{CommandLogIter{front:self.head,back:self.tail,lane:self.lane,remaining:self.len,owner:std::marker::PhantomData}}
+    pub fn commit_append(&mut self,append:&mut CommandAppend,record:&mut Option<CommandLogEntry>)->Result<(),CommandAppendRefusal>{self.validate_append(append)?;if record.is_none(){return Err(CommandAppendRefusal::MissingRecord);}if append.needs_page{let mut page=append.page.take().ok_or(CommandAppendRefusal::Unfunded)?;let pointer=&mut*page as*mut CommandPage;if let Some(previous)=self.newest.as_mut(){previous.next=pointer;}else{self.oldest=pointer;}page.previous=self.newest.take();*self.newest=Some(page);}let page=self.newest.as_mut().unwrap();let slot=page.slots.iter_mut().find(|slot|!slot.initialized).unwrap();let pointer=slot as*mut CommandSlot;slot.record.write(record.take().unwrap());slot.initialized=true;slot.visible=[false;2];slot.visible[self.lane]=true;slot.links=[[std::ptr::null_mut();2];2];slot.links[self.lane][0]=self.tail;if !self.tail.is_null(){unsafe{(*self.tail).links[self.lane][1]=pointer;}}else{self.head=pointer;}self.tail=pointer;page.used+=1;self.len+=1;self.revision+=1;append.closed=true;Ok(())}
+    pub fn iter(&self)->CommandLogIter<'_>{CommandLogIter{front:self.head,back:self.tail,lane:self.lane,remaining:self.len,owner:std::marker::PhantomData}}
     fn read_cursor(&self,index:usize)->Option<CommandLogReadCursor<'_>>{if index>=self.len{None}else{Some(CommandLogReadCursor{slot:self.head,index,lane:self.lane,owner:std::marker::PhantomData})}}
-    pub(crate) fn last_mut(&mut self)->Option<&mut CommandLogEntry>{if self.closing||self.tail.is_null(){return None;}self.revision=self.revision.checked_add(1)?;Some(unsafe{(*self.tail).record.assume_init_mut()})}
+    pub fn last_mut(&mut self)->Option<&mut CommandLogEntry>{if self.closing||self.tail.is_null(){return None;}self.revision=self.revision.checked_add(1)?;Some(unsafe{(*self.tail).record.assume_init_mut()})}
     /// 🌗️ Admits one zero-allocation inactive visibility pass with an exact exclusive cursor lease.
-    pub(crate) fn begin_prune(&mut self)->Result<CommandPrune,CommandAppendRefusal>{if self.closing{return Err(CommandAppendRefusal::Closed);}if self.prune_lease.is_some()||!self.retire_page.is_null(){return Err(CommandAppendRefusal::Busy);}if self.revision==u64::MAX||self.prune_nonce==u64::MAX{return Err(CommandAppendRefusal::Closed);}self.prune_nonce+=1;self.prune_lease=Some(self.prune_nonce);Ok(CommandPrune{identity:self.identity,revision:self.revision,nonce:self.prune_nonce,source_len:self.len,lane:1-self.lane,next:self.head,head:std::ptr::null_mut(),tail:std::ptr::null_mut(),kept:0,processed:0,closed:false})}
+    pub fn begin_prune(&mut self)->Result<CommandPrune,CommandAppendRefusal>{if self.closing{return Err(CommandAppendRefusal::Closed);}if self.prune_lease.is_some()||!self.retire_page.is_null(){return Err(CommandAppendRefusal::Busy);}if self.revision==u64::MAX||self.prune_nonce==u64::MAX{return Err(CommandAppendRefusal::Closed);}self.prune_nonce+=1;self.prune_lease=Some(self.prune_nonce);Ok(CommandPrune{identity:self.identity,revision:self.revision,nonce:self.prune_nonce,source_len:self.len,lane:1-self.lane,next:self.head,head:std::ptr::null_mut(),tail:std::ptr::null_mut(),kept:0,processed:0,closed:false})}
     fn validate_prune(&self,prune:&CommandPrune)->Result<(),CommandAppendRefusal>{if prune.identity!=self.identity{return Err(CommandAppendRefusal::Foreign);}if self.closing||prune.closed{return Err(CommandAppendRefusal::Closed);}if self.prune_lease!=Some(prune.nonce){return Err(CommandAppendRefusal::Busy);}if self.revision!=prune.revision||self.len!=prune.source_len{return Err(CommandAppendRefusal::Stale);}Ok(())}
-    pub(crate) fn prune_current(&self,prune:&CommandPrune)->Result<Option<&CommandLogEntry>,CommandAppendRefusal>{self.validate_prune(prune)?;Ok(if prune.next.is_null(){None}else{Some(unsafe{(*prune.next).record.assume_init_ref()})})}
+    pub fn prune_current(&self,prune:&CommandPrune)->Result<Option<&CommandLogEntry>,CommandAppendRefusal>{self.validate_prune(prune)?;Ok(if prune.next.is_null(){None}else{Some(unsafe{(*prune.next).record.assume_init_ref()})})}
     /// 🧩️ Writes one candidate link while all original live records remain visible and owned.
-    pub(crate) fn advance_prune(&mut self,prune:&mut CommandPrune,keep:bool,grant:RetainedCloneGrant)->Result<RetainedCloneStep,CommandAppendRefusal>{self.validate_prune(prune)?;if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}if prune.next.is_null(){return Ok(RetainedCloneStep::Complete(Default::default()));}unsafe{let slot=&mut*prune.next;let next=slot.links[self.lane][1];slot.visible[prune.lane]=keep;slot.links[prune.lane]=[std::ptr::null_mut();2];if keep{slot.links[prune.lane][0]=prune.tail;if !prune.tail.is_null(){(*prune.tail).links[prune.lane][1]=prune.next;}else{prune.head=prune.next;}prune.tail=prune.next;prune.kept+=1;}prune.next=next;}prune.processed+=1;Ok(MountedGroupReceipt::progress(0,0))}
-    pub(crate) fn commit_prune(&mut self,prune:&mut CommandPrune)->Result<usize,CommandAppendRefusal>{self.validate_prune(prune)?;if !prune.next.is_null()||prune.processed!=prune.source_len{return Err(CommandAppendRefusal::Incomplete);}let removed=self.len-prune.kept;self.head=prune.head;self.tail=prune.tail;self.lane=prune.lane;self.len=prune.kept;self.revision+=1;self.prune_lease=None;prune.closed=true;if removed!=0{self.retire_page=self.oldest;self.retire_slot=0;self.retire_field=0;}Ok(removed)}
-    pub(crate) fn cancel_prune(&mut self,prune:&mut CommandPrune,maximum_items:usize)->Result<bool,CommandAppendRefusal>{if prune.identity!=self.identity{return Err(CommandAppendRefusal::Foreign);}if prune.closed{return Ok(true);}if maximum_items==0{return Ok(false);}if self.prune_lease==Some(prune.nonce){self.prune_lease=None;}prune.closed=true;Ok(true)}
+    pub fn advance_prune(&mut self,prune:&mut CommandPrune,keep:bool,grant:RetainedCloneGrant)->Result<RetainedCloneStep,CommandAppendRefusal>{self.validate_prune(prune)?;if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}if prune.next.is_null(){return Ok(RetainedCloneStep::Complete(Default::default()));}unsafe{let slot=&mut*prune.next;let next=slot.links[self.lane][1];slot.visible[prune.lane]=keep;slot.links[prune.lane]=[std::ptr::null_mut();2];if keep{slot.links[prune.lane][0]=prune.tail;if !prune.tail.is_null(){(*prune.tail).links[prune.lane][1]=prune.next;}else{prune.head=prune.next;}prune.tail=prune.next;prune.kept+=1;}prune.next=next;}prune.processed+=1;Ok(MountedGroupReceipt::progress(0,0))}
+    pub fn commit_prune(&mut self,prune:&mut CommandPrune)->Result<usize,CommandAppendRefusal>{self.validate_prune(prune)?;if !prune.next.is_null()||prune.processed!=prune.source_len{return Err(CommandAppendRefusal::Incomplete);}let removed=self.len-prune.kept;self.head=prune.head;self.tail=prune.tail;self.lane=prune.lane;self.len=prune.kept;self.revision+=1;self.prune_lease=None;prune.closed=true;if removed!=0{self.retire_page=self.oldest;self.retire_slot=0;self.retire_field=0;}Ok(removed)}
+    pub fn cancel_prune(&mut self,prune:&mut CommandPrune,maximum_items:usize)->Result<bool,CommandAppendRefusal>{if prune.identity!=self.identity{return Err(CommandAppendRefusal::Foreign);}if prune.closed{return Ok(true);}if maximum_items==0{return Ok(false);}if self.prune_lease==Some(prune.nonce){self.prune_lease=None;}prune.closed=true;Ok(true)}
     fn value_demand(value:&DslValue,depth:usize)->Result<usize,ValueError>{
         if depth>64{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"command inverse exceeds its retained structural depth"));}
         Ok(match value{DslValue::String(text)=>text.capacity(),DslValue::Bytes(bytes)=>bytes.capacity(),DslValue::Array(values)=>match values.last(){Some(value)=>Self::value_demand(value,depth+1)?,None=>values.capacity()*size_of::<DslValue>()},DslValue::Object(values)=>match values.last(){Some((key,value))=>if key.capacity()!=0||!key.is_empty(){key.capacity()}else{Self::value_demand(value,depth+1)?},None=>values.capacity()*size_of::<(String,DslValue)>()},_=>0})
@@ -89,10 +117,10 @@ impl PagedCommandLog{
     }
     fn unlink_visible(&mut self,slot:*mut CommandSlot){unsafe{let previous=(*slot).links[self.lane][0];let next=(*slot).links[self.lane][1];if previous.is_null(){self.head=next;}else{(*previous).links[self.lane][1]=next;}if next.is_null(){self.tail=previous;}else{(*next).links[self.lane][0]=previous;}(*slot).visible[self.lane]=false;self.len-=1;}}
     fn remove_empty_page(&mut self,pointer:*mut CommandPage){unsafe{let newer=(*pointer).next;let mut page=if newer.is_null(){self.newest.take().unwrap()}else{(*newer).previous.take().unwrap()};assert_eq!(&mut*page as*mut CommandPage,pointer);let mut older=page.previous.take();if let Some(older)=older.as_mut(){older.next=newer;}if self.oldest==pointer{self.oldest=newer;}if newer.is_null(){*self.newest=older;}else{(*newer).previous=older;}drop(page);}}
-    pub(crate) fn next_pruned_record(&self)->Option<&CommandLogEntry>{if self.retire_page.is_null()||self.retire_slot>=COMMAND_PAGE_RECORDS{return None;}unsafe{let slot=&(*self.retire_page).slots[self.retire_slot];if slot.initialized&&!slot.visible[self.lane]{Some(slot.record.assume_init_ref())}else{None}}}
-    pub(crate) fn next_pruned_close_byte_demand(&self)->Result<usize,ValueError>{if self.retire_page.is_null(){return Ok(0);}unsafe{let page=&*self.retire_page;if page.used==0{return Ok(size_of::<CommandPage>());}match self.next_pruned_record(){Some(record)=>Self::record_demand(record,self.retire_field),None=>Ok(0)}}}
+    pub fn next_pruned_record(&self)->Option<&CommandLogEntry>{if self.retire_page.is_null()||self.retire_slot>=COMMAND_PAGE_RECORDS{return None;}unsafe{let slot=&(*self.retire_page).slots[self.retire_slot];if slot.initialized&&!slot.visible[self.lane]{Some(slot.record.assume_init_ref())}else{None}}}
+    pub fn next_pruned_close_byte_demand(&self)->Result<usize,ValueError>{if self.retire_page.is_null(){return Ok(0);}unsafe{let page=&*self.retire_page;if page.used==0{return Ok(size_of::<CommandPage>());}match self.next_pruned_record(){Some(record)=>Self::record_demand(record,self.retire_field),None=>Ok(0)}}}
     /// 🍂️ Closes one discarded original leaf and frees only a completely empty physical page.
-    pub(crate) fn pruned_retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn pruned_retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.retire_page.is_null() { return Ok(Default::default()); }
         unsafe {
             let page=&*self.retire_page;
@@ -100,11 +128,11 @@ impl PagedCommandLog{
             match self.next_pruned_record() { Some(record)=>mounted_nested_retirement_demand(Self::record_retirement_demands(record,self.retire_field)?,1),None=>Ok(RetirementDemand {depth:1,..Default::default()}) }
         }
     }
-    pub(crate) fn close_pruned_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.retire_page.is_null(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.pruned_retirement_demands()?;let bytes=demand.release_bytes;if !plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}unsafe{let page=&mut*self.retire_page;if page.used==0{let next=page.next;self.remove_empty_page(self.retire_page);self.retire_page=next;self.retire_slot=0;}else if self.retire_slot==COMMAND_PAGE_RECORDS{self.retire_page=page.next;self.retire_slot=0;}else{let slot=&mut page.slots[self.retire_slot];if !slot.initialized||slot.visible[self.lane]{self.retire_slot+=1;}else if self.retire_field==8{slot.record.assume_init_drop();slot.initialized=false;page.used-=1;self.retire_slot+=1;self.retire_field=0;}else if Self::record_close_one(slot.record.assume_init_mut(),self.retire_field,grant.maximum_release_bytes)?{self.retire_field+=1;}}}Ok(MountedGroupReceipt::progress(0,bytes))}
-    pub(crate) fn pruned_terminal_is_empty(&self)->bool{self.retire_page.is_null()}
-    fn next_close_byte_demand(&self)->Result<usize,ValueError>{match self.newest.as_ref(){Some(page)if page.used!=0=>Self::record_demand(unsafe{page.slots.iter().rev().find(|slot|slot.initialized).unwrap().record.assume_init_ref()},self.close_field),Some(_)=>Ok(size_of::<CommandPage>()),None=>Ok(0)}}
+    pub fn close_pruned_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.retire_page.is_null(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.pruned_retirement_demands()?;let bytes=demand.release_bytes;if !plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}unsafe{let page=&mut*self.retire_page;if page.used==0{let next=page.next;self.remove_empty_page(self.retire_page);self.retire_page=next;self.retire_slot=0;}else if self.retire_slot==COMMAND_PAGE_RECORDS{self.retire_page=page.next;self.retire_slot=0;}else{let slot=&mut page.slots[self.retire_slot];if !slot.initialized||slot.visible[self.lane]{self.retire_slot+=1;}else if self.retire_field==8{slot.record.assume_init_drop();slot.initialized=false;page.used-=1;self.retire_slot+=1;self.retire_field=0;}else if Self::record_close_one(slot.record.assume_init_mut(),self.retire_field,grant.maximum_release_bytes)?{self.retire_field+=1;}}}Ok(MountedGroupReceipt::progress(0,bytes))}
+    pub fn pruned_terminal_is_empty(&self)->bool{self.retire_page.is_null()}
+    pub fn next_close_byte_demand(&self)->Result<usize,ValueError>{match self.newest.as_ref(){Some(page)if page.used!=0=>Self::record_demand(unsafe{page.slots.iter().rev().find(|slot|slot.initialized).unwrap().record.assume_init_ref()},self.close_field),Some(_)=>Ok(size_of::<CommandPage>()),None=>Ok(0)}}
     /// ♻️ Closes all remaining original slots and pages without recursive whole-history destruction.
-    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         match self.newest.as_ref() {
             Some(page) if page.used!=0 => {
                 let slot=page.slots.iter().rev().find(|slot|slot.initialized).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"command page lost its retained original record"))?;
@@ -114,8 +142,8 @@ impl PagedCommandLog{
             None=>Ok(Default::default()),
         }
     }
-    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.newest.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.retirement_demands()?;let bytes=demand.release_bytes;if !plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}self.closing=true;self.retire_page=std::ptr::null_mut();self.prune_lease=None;let page=self.newest.as_mut().unwrap();if page.used!=0{let slot=page.slots.iter_mut().rev().find(|slot|slot.initialized).unwrap();if self.close_field==8{let pointer=slot as*mut CommandSlot;let visible=slot.visible[self.lane];unsafe{slot.record.assume_init_drop()};slot.initialized=false;page.used-=1;if visible{self.unlink_visible(pointer);}self.close_field=0;}else if Self::record_close_one(unsafe{slot.record.assume_init_mut()},self.close_field,grant.maximum_release_bytes)?{self.close_field+=1;}}else{let pointer=&mut**page as*mut CommandPage;self.remove_empty_page(pointer);}if self.newest.is_none(){self.head=std::ptr::null_mut();self.tail=std::ptr::null_mut();}Ok(MountedGroupReceipt::progress(0,bytes))}
-    pub(crate) fn terminal_is_empty(&self)->bool{self.newest.is_none()&&self.len==0}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.newest.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.retirement_demands()?;let bytes=demand.release_bytes;if !plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}self.closing=true;self.retire_page=std::ptr::null_mut();self.prune_lease=None;let page=self.newest.as_mut().unwrap();if page.used!=0{let slot=page.slots.iter_mut().rev().find(|slot|slot.initialized).unwrap();if self.close_field==8{let pointer=slot as*mut CommandSlot;let visible=slot.visible[self.lane];unsafe{slot.record.assume_init_drop()};slot.initialized=false;page.used-=1;if visible{self.unlink_visible(pointer);}self.close_field=0;}else if Self::record_close_one(unsafe{slot.record.assume_init_mut()},self.close_field,grant.maximum_release_bytes)?{self.close_field+=1;}}else{let pointer=&mut**page as*mut CommandPage;self.remove_empty_page(pointer);}if self.newest.is_none(){self.head=std::ptr::null_mut();self.tail=std::ptr::null_mut();}Ok(MountedGroupReceipt::progress(0,bytes))}
+    pub fn terminal_is_empty(&self)->bool{self.newest.is_none()&&self.len==0}
 }
 /// 🧶️ Root ownership covers every stable slot and its internal borrowed visibility links.
 unsafe impl Send for PagedCommandLog{}
@@ -128,8 +156,9 @@ impl Drop for PagedCommandLog{fn drop(&mut self){assert!(std::thread::panicking(
 #[cfg(test)]
 include!("🧪️tests/🦀️.rs");
 
+#[doc(hidden)]
 #[path = "📄️entry/🦀️.rs"]
-pub(crate) mod entry;
-pub(crate) use entry::{MountedCommandEntry, MountedCommandEntrySource};
+pub mod entry;
+pub use crate::mounted_child_group_receipt_group::command::entry::{MountedCommandEntry, MountedCommandEntrySource};
 #[cfg(test)]
-pub(crate) use entry::MountedCommandEntryRefusal;
+pub(crate) use crate::mounted_child_group_receipt_group::command::entry::MountedCommandEntryRefusal;

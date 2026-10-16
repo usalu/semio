@@ -16,7 +16,7 @@ use super::*;
 /// A node's `key` is its own authored id when it has one (so hits and bindings address the control by
 /// the id React uses), else a positional `n<seq>` key inside the surface, which is stable because the
 /// walk order is.
-pub(crate) fn panel_ui_records(surface_id: &str, root: &UiNode) -> Result<Vec<ui_contract::UiNodeRecord>, String> {
+pub fn panel_ui_records(surface_id: &str, root: &UiNode) -> Result<Vec<ui_contract::UiNodeRecord>, String> {
     let mut projection = PanelProjection { surface_id, records: Vec::new(), key_seq: 0 };
     projection.node(root)?;
     projection.records.into_iter().collect::<Option<Vec<_>>>().ok_or_else(|| format!("panel '{surface_id}' projection left a reserved record unplaced"))
@@ -26,7 +26,7 @@ pub(crate) fn panel_ui_records(surface_id: &str, root: &UiNode) -> Result<Vec<ui
 /// every other shell-owned leaf publishes, so the two Display leaves need no new paint path.
 /// 🪟️ Whether a shell-owned body streams a windowed Tree section — such a body IS its scroll viewport (the window streams against
 /// it, its spacers give it the whole extent), so it publishes as a scroll root (`panel_ui_scroll_records`).
-pub(crate) fn ui_node_is_windowed(node: &UiNode) -> bool {
+pub fn ui_node_is_windowed(node: &UiNode) -> bool {
     match node {
         UiNode::Tree(tree) => tree.sections.iter().any(|section| section.window.is_some()),
         UiNode::Stack(stack) => stack.children.iter().any(ui_node_is_windowed),
@@ -36,9 +36,9 @@ pub(crate) fn ui_node_is_windowed(node: &UiNode) -> bool {
 
 /// 📝️ One staged command argument as a labelled row — [`staged_arg_row`] dispatching `stageCommandArg`, so the
 /// value buffers in {@link ShellState::staged_command_args} and nothing fires until Execute.
-pub(crate) fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
+pub fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
     let id = format!("command.{}.arg.{}", command_key.replace(':', "."), arg.id);
-    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageCommandArg".into(), args: crate::action_args_json!({ "command": command_key.to_string(), "arg": arg.id.clone() }) };
+    let stage = ActionDescriptor { controller_id: "framework".into(), action: "stageCommandArg".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "command": command_key.to_string(), "arg": arg.id.clone() }) };
     staged_arg_row(id.clone(), &id, arg, value, &stage, selection, terminology, locale)
 }
 
@@ -56,7 +56,7 @@ pub(crate) fn staged_command_arg_row(command_key: &str, arg: &semio_framework::A
 /// reference list's removable chips plus its "use current selection" button, which stages the live selection of the
 /// argument's domain.
 #[allow(clippy::too_many_arguments, reason = "one staged row: its two ids, the definition, the value, its stage verb and the live selection")]
-pub(crate) fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, stage: &ActionDescriptor, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
+pub fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, stage: &ActionDescriptor, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
     use ui_wgpu::wgpu::component::ui::UiControlNode as Control;
     let label = arg.label.resolve(terminology, locale).to_string();
     let description = arg.description.as_ref().map(|description| description.resolve(terminology, locale).to_string());
@@ -287,7 +287,7 @@ pub(crate) fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_frame
 }
 
 /// 🧮️ A staged value read as a number — a number, or the text a number field committed.
-pub(super) fn staged_number(value: &Value) -> Option<f64> {
+pub fn staged_number(value: &Value) -> Option<f64> {
     value.as_f64().or_else(|| value.as_str().and_then(|text| text.trim().parse::<f64>().ok())).filter(|number| number.is_finite())
 }
 
@@ -298,24 +298,6 @@ fn staged_arg_args(base: Option<&DslValue>, extra: Value) -> Option<DslValue> {
         args.extend(extra);
     }
     Some(semio_framework_value::DslValue::from(Value::Object(args)))
-}
-
-/// 🎯️ The ids "use current selection" stages for a reference argument: the live selection of its `domain` (or, when
-/// it names none, of the one domain that selects anything), kept only at its `granularity` when it declares one.
-pub(crate) fn reference_selection_ids(selection: &HashMap<String, semio_framework::DomainSelection>, domain: Option<&str>, granularity: Option<&str>) -> Vec<String> {
-    let picked = match domain {
-        Some(domain) => selection.get(domain),
-        None => {
-            let mut live = selection.values().filter(|selected| !selected.ids.is_empty());
-            let first = live.next();
-            if live.next().is_some() {
-                None
-            } else {
-                first
-            }
-        }
-    };
-    picked.filter(|selected| granularity.is_none_or(|granularity| selected.granularity == granularity)).map(|selected| selected.ids.clone()).unwrap_or_default()
 }
 
 //#endregion 🧾️PanelRecordsAssembler
@@ -332,7 +314,7 @@ pub(crate) fn reference_selection_ids(selection: &HashMap<String, semio_framewor
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md`).
 ///
 /// A new instance always re-claims, so switching app instance still refetches exactly once.
-pub(crate) fn claim_app_catalogue_fetch(recorded: &mut Option<u32>, instance_id: u32) -> bool {
+pub fn claim_app_catalogue_fetch(recorded: &mut Option<u32>, instance_id: u32) -> bool {
     if *recorded == Some(instance_id) {
         return false;
     }

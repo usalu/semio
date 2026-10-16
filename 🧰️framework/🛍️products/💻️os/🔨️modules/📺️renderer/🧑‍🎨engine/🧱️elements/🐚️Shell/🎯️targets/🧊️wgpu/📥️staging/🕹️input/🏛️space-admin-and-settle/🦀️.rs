@@ -18,22 +18,22 @@ pub enum PointerHitOwner {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct PresentedInputCandidateWitness(pub(crate) u64);
+pub struct PresentedInputCandidateWitness(pub u64);
 
-pub(crate) struct PresentedInputGeometry {
-    pub(crate) retained_body_rects: Vec<(String, Rect)>,
-    pub(crate) media_owners: Vec<(String, Option<crate::media_slots::PresentedMediaOwner>)>,
-    pub(crate) media_blocked: bool,
-    pub(crate) retained_surfaces: Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)>,
-    pub(crate) dock_canvas_bounds: Rect,
-    pub(crate) dock_axis_separator: f32,
-    pub(crate) dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
-    pub(crate) dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
-    pub(crate) dock_window_plan: Vec<(String, Rect)>,
-    pub(crate) window_content_rects: HashMap<String, Rect>,
-    pub(crate) window_silhouettes: HashMap<String, WindowSilhouette>,
-    pub(crate) modal: bool,
-    pub(crate) panel_rects: Vec<Rect>,
+pub struct PresentedInputGeometry {
+    pub retained_body_rects: Vec<(String, Rect)>,
+    pub media_owners: Vec<(String, Option<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaOwner>)>,
+    pub media_blocked: bool,
+    pub retained_surfaces: Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)>,
+    pub dock_canvas_bounds: Rect,
+    pub dock_axis_separator: f32,
+    pub dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
+    pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
+    pub dock_window_plan: Vec<(String, Rect)>,
+    pub window_content_rects: HashMap<String, Rect>,
+    pub window_silhouettes: HashMap<String, WindowSilhouette>,
+    pub modal: bool,
+    pub panel_rects: Vec<Rect>,
 }
 
 impl Default for PresentedInputGeometry {
@@ -58,3 +58,68 @@ impl Default for PresentedInputGeometry {
 
 //#endregion ShellTypes
 
+//#region ShellTypes
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PointerCaptureSlot {
+    pub pointer_id: ui_render::PointerId,
+    pub owner: PointerHitOwner,
+    pub position: [f32; 2],
+}
+
+impl PointerCapture {
+    pub fn press(&mut self, pointer_id: ui_render::PointerId, owner: PointerHitOwner, x: f32, y: f32) -> Option<PointerHitOwner> {
+        let index = self.slots.iter().position(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id)).or_else(|| self.slots.iter().position(Option::is_none))?;
+        self.slots[index] = Some(PointerCaptureSlot { pointer_id, owner, position: [x, y] });
+        Some(owner)
+    }
+
+    /// 🖱️⬆️ Ends the sequence and answers the layer that owned it. A release with no press before it
+    /// — the pointer entered the canvas already down — is the surface's, as it is in the DOM.
+    pub fn release(&mut self, pointer_id: ui_render::PointerId) -> PointerHitOwner {
+        self.slots.iter_mut().find(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id)).and_then(Option::take).map_or(PointerHitOwner::Surface, |slot| slot.owner)
+    }
+
+    pub fn owner_of_move(&self, pointer_id: ui_render::PointerId, under_pointer: PointerHitOwner) -> PointerHitOwner {
+        self.holder(pointer_id).unwrap_or(under_pointer)
+    }
+
+    pub fn holder(&self, pointer_id: ui_render::PointerId) -> Option<PointerHitOwner> {
+        self.slots.iter().flatten().find(|slot| slot.pointer_id == pointer_id).map(|slot| slot.owner)
+    }
+
+    pub fn position(&self, pointer_id: ui_render::PointerId) -> Option<[f32; 2]> {
+        self.slots.iter().flatten().find(|slot| slot.pointer_id == pointer_id).map(|slot| slot.position)
+    }
+
+    pub fn advance(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32) -> Option<(f32, f32)> {
+        let slot = self.slots.iter_mut().flatten().find(|slot| slot.pointer_id == pointer_id)?;
+        let delta = (x - slot.position[0], y - slot.position[1]);
+        slot.position = [x, y];
+        Some(delta)
+    }
+
+    pub fn any_active(&self) -> bool {
+        self.slots.iter().any(Option::is_some)
+    }
+}
+
+/// 🎯️🖱️ The layer that owns the pointer SEQUENCE in flight — the DOM's implicit pointer capture,
+/// which the wgpu target has to keep itself because it has one canvas and no event targets.
+///
+/// ⚖️ A press captures the layer it landed on and every move and the release belong to it until the
+/// release ends the sequence. Both directions matter: a press on chrome keeps the whole gesture away
+/// from the engine surface under it (React's `pointerdown` on a `<button>` means the canvas never
+/// sees that `pointerup`), and a press on the surface keeps an orbit drag on the surface even where
+/// it sweeps over a panel (three's `OrbitControls` calls `setPointerCapture` on the canvas).
+///
+/// 🩸️ Without it every chrome click ALSO reached the world pane painted under it — the reference
+/// journals one `noteShellCommand` for a navbar panel tab where wgpu journalled
+/// `noteShellCommand` + `interactionHover` + `interactionSelect`, and the stray
+/// `interactionSelect` carried empty `targets`, i.e. pressing a panel tab CLEARED the world
+/// selection (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w11a-prepared-world-mesh-missing.md` §6 family A).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct PointerCapture {
+    pub slots: [Option<PointerCaptureSlot>; semio_framework_os_renderer_wgpu_contracts::SCENE_POINTER_OWNER_CAPACITY],
+}
+//#endregion ShellTypes

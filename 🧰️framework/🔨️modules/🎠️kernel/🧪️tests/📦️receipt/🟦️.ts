@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import ts from "typescript";
 import Ajv from "ajv";
@@ -12,17 +12,22 @@ import { readDescriptorText } from "../../📇️descriptor/📥️text/🟦️.
 import iconv from "iconv-lite";
 
 test("the general kernel imports no specific receipt implementation", () => {
-  const path = resolve(import.meta.dir, "../../🟦️.ts"), source = readFileSync(path, "utf8"), parsed = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
-  const imports: string[] = [];
-  const visit = (node: ts.Node): void => {
-    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) imports.push(node.moduleSpecifier.text);
-    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) imports.push(node.arguments[0].text);
-    ts.forEachChild(node, visit);
-  };
-  visit(parsed);
-  const oracle = ts.preProcessFile(source, true, true).importedFiles.map(row => row.fileName);
-  expect(imports).toEqual(oracle);
-  for (const imported of imports.filter(value => value.startsWith("."))) expect(resolve(dirname(path), imported).includes("/🛍️products/")).toBe(false);
+  const kernel = resolve(import.meta.dir, "../..");
+  const paths = [resolve(kernel, "📦️packages/🟦️typescript/🟦️.ts"), ...readdirSync(kernel, { withFileTypes: true }).filter(entry => entry.isDirectory() && !["🧪️tests", "🧫️fixtures", "📦️packages", "node_modules"].includes(entry.name)).map(entry => resolve(kernel, entry.name, "🟦️.ts")).filter(existsSync)];
+  expect(paths.length).toBeGreaterThan(30);
+  for (const path of paths) {
+    const source = readFileSync(path, "utf8"), parsed = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
+    const imports: string[] = [];
+    const visit = (node: ts.Node): void => {
+      if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) imports.push(node.moduleSpecifier.text);
+      if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) imports.push(node.arguments[0].text);
+      ts.forEachChild(node, visit);
+    };
+    visit(parsed);
+    const oracle = ts.preProcessFile(source, true, true).importedFiles.map(row => row.fileName);
+    expect(imports, path).toEqual(oracle);
+    for (const imported of imports.filter(value => value.startsWith("."))) expect(resolve(dirname(path), imported).includes("/🛍️products/"), path + " imports " + imported).toBe(false);
+  }
 });
 
 test("descriptor text bounds every arriving chunk and releases its stream", async () => {
@@ -102,7 +107,7 @@ test("descriptor cancellation interrupts a pending progress publication", async 
 });
 
 test("descriptor header refusal cancels its unread response body", async () => {
-  const { fetchDescriptorManifest } = await import("../../🟦️.ts");
+  const { fetchDescriptorManifest } = await import("../../🛂️descriptor-admission/🟦️.ts");
   const reason = Error(textFixture.headerRefusalMessage), originalFetch = globalThis.fetch;
   let cancelled: unknown;
   const response = new Response(new ReadableStream<Uint8Array>({ cancel(value) { cancelled = value; } }, { highWaterMark: 0 }));
@@ -116,7 +121,8 @@ test("descriptor header refusal cancels its unread response body", async () => {
 });
 
 test("an explicit future receipt source binds package identity with the original signal and progress", async () => {
-  const { fetchPackageDescriptor, SemioFaultError } = await import("../../🟦️.ts");
+  const { fetchPackageDescriptor } = await import("../../🛂️descriptor-admission/🟦️.ts");
+  const { SemioFaultError } = await import("../../🚨️fault/🟦️.ts");
   const fetchDescriptor = fetchPackageDescriptor;
   const controller = new AbortController(), originalFetch = globalThis.fetch, moduleUrl = "/future/module.js", requested: string[] = [];
   let reads = 0, progress = 0;

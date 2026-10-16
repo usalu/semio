@@ -6,15 +6,15 @@ use super::*;
 //#region 🔖️ChromeOverlaysAndTour
 //#region 🧯️TransientNoticeAndAgentOverlays
 /// ⚔️ The notice code a hub refusal naming no history transition is told under — React's `sync.command.rejected`.
-pub(super) const SYNC_COMMAND_REJECTED_NOTICE_CODE: &str = "sync.command.rejected";
+pub const SYNC_COMMAND_REJECTED_NOTICE_CODE: &str = "sync.command.rejected";
 
 /// 🔀️ The notice code of a batch the hub applied in adjusted form — React's `sync.command.transformed`.
-pub(crate) const SYNC_COMMAND_TRANSFORMED_NOTICE_CODE: &str = "sync.command.transformed";
+pub const SYNC_COMMAND_TRANSFORMED_NOTICE_CODE: &str = "sync.command.transformed";
 
 /// 🚫️ The notice code, chrome line and severity of each local refusal — React's `LOCAL_COMMAND_REJECTION_NOTICES_V1`: one
 /// the human can wait out or cannot act on here is a warning, one meaning this device produced a change it cannot send is
 /// an error. `None` for the hub's own two codes.
-pub(super) fn local_command_rejection_notice(code: store_sync::sync::CommandRejectionCode) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
+pub fn local_command_rejection_notice(code: store_sync::sync::CommandRejectionCode) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
     use semio_framework::Severity;
     use store_sync::sync::CommandRejectionCode as Code;
     Some(match code {

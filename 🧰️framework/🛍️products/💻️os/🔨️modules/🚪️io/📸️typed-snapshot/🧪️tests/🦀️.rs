@@ -1,5 +1,5 @@
 //! 🪙️ Genuine original native prefix credit cannot authorize a cold SQL allocation before birth.
-use crate::io::io_mechanism::TypedFileSettlement;
+use crate::os_store::space_history::io::sqlite::snapshot::settlement::TypedFileSettlement;
 use crate::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SqliteSnapshotPhase};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use std::{cell::Cell,mem::size_of};

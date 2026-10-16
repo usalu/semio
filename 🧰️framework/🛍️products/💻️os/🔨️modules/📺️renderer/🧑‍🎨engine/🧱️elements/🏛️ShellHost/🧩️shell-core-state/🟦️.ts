@@ -57,7 +57,7 @@ import {
   useShellScope
 } from "@semio-tech/ui-react";
 import { readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../../🎚️UiPreferences/🟦️.ts";
-import { type TreeWindowContextValue } from "../../🗣️Interpreter/🟦️.tsx";
+import { type TreeWindowContextValue } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import { LocalDocumentOwnerRegistryV1 } from "../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type AppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";

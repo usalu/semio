@@ -1,7 +1,7 @@
 /** 🔤️ Semio text's authored run and inline mark relationships. */
 import type {SemioTextSnapshot,SemioTextMark as Mark,SemioTextMarkKind as MarkKind,SemioTextRun as Run} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 
 export const SEMIO_TEXT_SQLITE_SCHEMA=`CREATE TABLE semio_text_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_text_run (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_text_document(id), ordinal INTEGER NOT NULL CHECK(ordinal >= 0), language TEXT NOT NULL, content TEXT NOT NULL);

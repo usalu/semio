@@ -1,8 +1,8 @@
 /** 🌀️ Explicit typed support for the two actual procedural owned snapshot pairs. */
-import{ArtifactSqliteProjection,type ArtifactSqliteOptions}from"../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type{SqliteDatabase,SqliteValue}from"../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type{SqliteDatabase,SqliteValue}from"@semio-tech/framework/io/sqlite-snapshot";
 import{validateProceduralSnapshotForProjection}from"./🛡️validation/🟦️.ts";
 import {compareProceduralText as compare} from "../🧬️schema/📸️snapshot/🛡️admission/🟦️.ts";
 import type{ProceduralSnapshot,NeuralDictionary,GenerationValue,FlowTree,FlowUi}from"../🧬️schema/📸️snapshot/🟦️.ts";

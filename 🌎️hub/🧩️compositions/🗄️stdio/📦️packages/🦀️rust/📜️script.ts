@@ -31,6 +31,7 @@ import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️pro
 import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1, type NativeCodecPublicationReceiptV1 } from "../../📇️publication/♻️native-receipt/🟦️.ts";
 
 import { prepareStdioComposition } from "../../🧩️composition/🟦️.ts";
+import { runCompositionContributionChecks } from "../../🧩️composition/📋️contract/🧪️tests/🟦️.ts";
 
 const PACKAGE_NAME = "semio-hub-stdio";
 const PLUGIN_ID = "stdio";
@@ -937,7 +938,11 @@ class CompositionScript extends BundleScript {
       completeCargoPreparationObservationV1();
       return;
     }
-    if (segments.length !== 2 || !["removal-check", "removal-test-check"].includes(segments[0]!) || !isAbsolute(segments[1]!)) throw new Error("composition prepare|removal-check|removal-test-check <absolute-snapshot>");
+    if (segments.length === 1 && segments[0] === "contribution-check") {
+      console.log(`stdio composition contribution contract: checks=${runCompositionContributionChecks()}`);
+      return;
+    }
+    if (segments.length !== 2 || !["removal-check", "removal-test-check"].includes(segments[0]!) || !isAbsolute(segments[1]!)) throw new Error("composition prepare|contribution-check|removal-check|removal-test-check <absolute-snapshot>");
     const tests = segments[0] === "removal-test-check";
     const snapshot = realpathSync(segments[1]!), artifact = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi";
     const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -1228,12 +1233,12 @@ class SnapshotSqliteTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "census") {
       if (segments[1] === "check") {
-        await runRepositoryTestCommand(process.execPath, ["x", "tsc", join(this.repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts"), "--noEmit", "--allowImportingTsExtensions", "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: this.repoRoot });
+        await runRepositoryTestCommand(process.execPath, ["x", "tsc", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts"), "--noEmit", "--allowImportingTsExtensions", "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: this.repoRoot });
         console.log("[DEBUG] primary Stdio Snapshot payload Source suite strict TypeScript check completed");
         return;
       }
       if (segments[1] === "source") {
-        await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts")], { cwd: this.repoRoot });
+        await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🚢️shipped-fleet/🪶️sqlite/🟦️.ts")], { cwd: this.repoRoot });
         return;
       }
       if (segments[1] === "all") resolveTestLevel(segments.slice(2), "long");

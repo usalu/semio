@@ -109,8 +109,12 @@
   ],
   "consumers": [
     {
-      "path": "📜️script.ts",
-      "owners": ["🔍️discovery/📖️source-access/🟦️.ts", "🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts", "🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"]
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+      "owners": [
+        "🔍️discovery/📖️source-access/🟦️.ts",
+        "🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts",
+        "🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"
+      ]
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🪪️field-parity/🟦️.ts",

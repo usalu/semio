@@ -1,5 +1,5 @@
 /** 🧫️ Authored finite native JSON fixtures admitted into the Grid2d owned word model. */
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 import type {Grid2dSnapshot,WfcColor,WfcPoint2,WfcPathSegment,WfcTileMedia2d,WfcTile2d,WfcAdjacencyRule2d,WfcCell2d,WfcPinnedCell2d,WfcDirection2d} from "../../../📸️snapshot/🟦️.ts";
 import type {Grid2dDiff,Grid2dRows,Grid2dRowPatch,Grid2dTilePatch,Grid2dRulePatch,Grid2dPinnedPatch,Grid2dMaskedPatch,Grid2dOptional} from "../../../🔺️diff/🟦️.ts";
 function record(v:unknown):Record<string,unknown>{if(!v||typeof v!=="object"||Array.isArray(v))throw Error("fixture record");return v as Record<string,unknown>;}

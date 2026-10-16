@@ -45,11 +45,11 @@ pub struct ShellSurfaceFault {
 //#endregion 🧯️BootProgramSelection
 /// 📥️ One parked `Effect::InvokeExtension`, awaiting the flush that can publish its answer.
 #[cfg(target_arch = "wasm32")]
-pub(crate) struct PendingExtensionInvocation {
-    pub(crate) req: u64,
-    pub(crate) extension_id: String,
-    pub(crate) capability: String,
-    pub(crate) request_json: String,
+pub struct PendingExtensionInvocation {
+    pub req: u64,
+    pub extension_id: String,
+    pub capability: String,
+    pub request_json: String,
 }
 
 //#endregion ShellTypes

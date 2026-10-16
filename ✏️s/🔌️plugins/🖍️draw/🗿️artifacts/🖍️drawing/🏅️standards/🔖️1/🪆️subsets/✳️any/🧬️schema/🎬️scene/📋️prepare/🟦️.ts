@@ -1,22 +1,22 @@
 import {parseDrawingFontFamily,type DrawingFontFamily} from "../../📝️text/🔤️family/🟦️.ts";
 /** 📋️ Complete authored documents become private typed preparation plans under work grants. */
-import {binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "@semio-tech/framework/value/ieee754";
 import type {DrawingArtifact,DrawingLayerNode,DrawingPathSegment} from "../../🟦️.ts";
 import {DRAWING_BLEND_MODES,drawingDrawingArtifactGuardRefusal} from "../../🟦️.ts";
 import {drawingTransformToMatrix} from "../../🧮️geometry/↗️affine/🟦️.ts";
 import type {RasterSceneAsset,RasterSceneGroup,RasterSceneNode,RasterSceneInput,RasterSceneContent} from "../📷️raster/🟦️.ts";
 import {RasterSceneJob,type RasterSceneProgress} from "../📷️raster/🟦️.ts";
-import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
+import type {PixelImage} from "@semio-tech/framework/pixels/editing";
 import type {PathRasterStroke} from "../../🧮️geometry/📷️raster/🟦️.ts";
 import type {Fill,Color} from "../../🎨️fill/🟦️.ts";
-import type {PathSegment} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import type {PathSegment} from "@semio-tech/framework/2d";
 import {DocumentBooleanJob,type DocumentBooleanLimits,type DocumentBooleanProgress} from "../🔀️booleans/🟦️.ts";
 import {DocumentTraceJob,type DocumentTraceLimits,type DocumentTraceProgress} from "../🔍️trace/🟦️.ts";
 import {ScenePlanCloseJob} from "../🧹️retire/🟦️.ts";
 import {DocumentTextJob} from "../🔤️text/🟦️.ts";
-import {loadBuiltinUnicodeSource} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts";
-import {loadBuiltinFontSources,FONT_CATALOG_DEFAULT_FAMILY,type FontByteSource,type FontByteProvider} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";
-import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {loadBuiltinUnicodeSource} from "@semio-tech/framework/2d/text/font/shape/unicode";
+import {loadBuiltinFontSources,FONT_CATALOG_DEFAULT_FAMILY,type FontByteSource,type FontByteProvider} from "@semio-tech/framework/2d/text/font/catalog";
+import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
 /** 👁️ Actual roots and assets supply scene work without a fabricated complete document. */
 export type DrawingSceneSource=Pick<DrawingArtifact,"layers"|"assets">&{rootVisible?:(index:number)=>boolean};
 export type DocumentSceneRetirement=WorkRetirement;

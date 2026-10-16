@@ -1,4 +1,4 @@
-import { toolJobFemLiveVisualPublicationExact } from "../../../../../📜️script.ts";
+import { toolJobFemLiveVisualPublicationExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts";
 
 /** 🧪️ Executes tool job fem live visual publication policy assertions. */
 export function toolJobFemLiveVisualPublicationSelfTests(

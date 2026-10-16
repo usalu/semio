@@ -48,10 +48,13 @@ import {
   type UiStatus,
   type UiTheme,
 } from "@semio-tech/ui-styling";
+import { ephemeralBox, ephemeralMap } from "../../../🫧️transient/🟦️.ts";
 // 🚧️W3-interim: explicit re-export so 🧱️elements/<Element>/ leaf files (which only ever import from
 // this barrel, never straight from "@semio-tech/ui-styling") can resolve these — a bare `import {...}
 // from "@semio-tech/ui-styling"` above does not itself make a name part of this module's public surface.
 export { resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, themeColorVar, tokenVar, uiSpacingPx };
+import { type StoragePort, createBrowserStoragePort, createMemoryStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
+import { type DockSkeleton, type DockTabSkeleton } from "../../🔨️modules/🐳️dock-skeleton/🟦️.ts";
 import {
   CANVAS_HOVER_SOURCE_CANVAS,
   CANVAS_HOVER_SOURCE_PICK_MENU,
@@ -66,8 +69,6 @@ import {
   type CanvasPickRequest,
   type CanvasPickTarget,
   type DialogDefinition,
-  type DockSkeleton,
-  type DockTabSkeleton,
   type IntroductionCursor,
   type IntroductionDefinition,
   type IntroductionDemonstration,
@@ -79,12 +80,6 @@ import {
   type IntroductionStepDefinition,
   type ShellLocale,
   type ShellTerminology,
-  type StoragePort,
-  createBrowserStoragePort,
-  createMemoryStoragePort,
-  panelTabFirstDraggableElementId,
-  panelTabElementId,
-  windowElementId,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
   START_TUTORIAL_ACTION_ID,
@@ -102,8 +97,6 @@ import {
   type TutorialGestureCue,
   type TutorialOverlayRect,
   type WindowLayout,
-  ephemeralBox,
-  ephemeralMap,
 } from "@semio-tech/framework";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
@@ -971,9 +964,10 @@ export type CanvasPickMenuProps = {
 };
 
 export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework";
-export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "@semio-tech/framework";
+export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework";
-export type { DockSkeleton, DockTabSkeleton, IntroductionStepDefinition, TutorialCameraKeyframe, TutorialDefinition } from "@semio-tech/framework";
+export type { DockSkeleton, DockTabSkeleton } from "../../🔨️modules/🐳️dock-skeleton/🟦️.ts";
+export type { IntroductionStepDefinition, TutorialCameraKeyframe, TutorialDefinition } from "@semio-tech/framework";
 
 /** @emoji 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
@@ -4852,7 +4846,7 @@ export const windowMeasureToggleCompactClass =
 // #endregion 🎈️Level Context
 
 // #region 🐹️Element
-import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
+import { type ElementProps, panelTabFirstDraggableElementId, panelTabElementId, windowElementId } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 export type { ElementProps };
 
 //#region 🧭️ElementState

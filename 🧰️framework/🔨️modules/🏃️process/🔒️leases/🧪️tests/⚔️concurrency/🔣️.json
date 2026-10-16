@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "kind": "reader",
+      "runtime": "bun",
+      "mode": "shared",
+      "expected": {
+        "gateBusy": false,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": null,
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "writer",
+      "runtime": "node",
+      "mode": "exclusive",
+      "expected": {
+        "gateBusy": false,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": null,
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "opened-waiter",
+      "runtime": "bun",
+      "mode": "shared",
+      "expected": {
+        "gateBusy": true,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": null,
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "idle-recreate",
+      "runtime": "node",
+      "mode": "exclusive",
+      "expected": {
+        "gateBusy": false,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": null,
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "cancel-waiter",
+      "runtime": "bun",
+      "mode": "shared",
+      "expected": {
+        "gateBusy": true,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": null,
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "cleanup-undefined",
+      "runtime": "node",
+      "mode": "shared",
+      "expected": {
+        "gateBusy": false,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": "undefined",
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "cleanup-frozen",
+      "runtime": "bun",
+      "mode": "exclusive",
+      "expected": {
+        "gateBusy": false,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": "frozen",
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "claim-reader",
+      "runtime": "node",
+      "mode": "shared",
+      "expected": {
+        "gateBusy": false,
+        "activeRetired": 0,
+        "settledRetired": 1,
+        "primary": null,
+        "cleanup": true
+      }
+    },
+    {
+      "kind": "node-retirement",
+      "runtime": "node",
+      "mode": "shared",
+      "expected": {
+        "gateBusy": false,
+        "activeRetired": null,
+        "settledRetired": 1,
+        "primary": null,
+        "cleanup": true
+      }
+    }
+  ]
+}

@@ -428,6 +428,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invoc
     if (typeof Bun === "undefined" || Bun.version !== "1.3.14" || JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(packageManagerBytes)).packageManager !== "bun@1.3.14") throw new Error("browser actor artifact: unqualified build runtime");
     if (!(component instanceof Uint8Array) || component.byteLength < 8 || component.byteLength > browserActorMaximumBytes || ![0, 97, 115, 109, 13, 0, 1, 0].every((value, index) => component[index] === value)) throw new Error("browser actor artifact: component header or byte bound");
     snapshot = Uint8Array.from(component);
+    const componentByteLength=snapshot.byteLength;
     const actorRuntime = captureBrowserActorRuntime(import.meta.dir, check);
     const componentSha256 = createHash("sha256").update(snapshot).digest("hex");
     control.progress?.("snapshot", snapshot.byteLength, snapshot.byteLength);
@@ -490,7 +491,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invoc
         writeFileSync(join(outputRoot, name), bytes, { mode: 0o600 });
       }
       process.stdout.write(JSON.stringify({ version, runtime: "bun@" + Bun.version, importInterfaces: result.imports.sort(), files: files.map(([name]) => name).sort() }));
-    `, componentPath, codegenDirectory, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(snapshot.byteLength)], { invocation:actual, cwd: browserActorRepoRoot, env: environment, budgetMs: compilerAdmissionBudgetV1(phase), maxOutputBytes: 64 * 1024, stdoutPath: join(codegenDirectory, "codegen.stdout.json"), stderrPath: join(codegenDirectory, "codegen.stderr") })));
+    `, componentPath, codegenDirectory, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(componentByteLength)], { invocation:actual, cwd: browserActorRepoRoot, env: environment, budgetMs: compilerAdmissionBudgetV1(phase), maxOutputBytes: 64 * 1024, stdoutPath: join(codegenDirectory, "codegen.stdout.json"), stderrPath: join(codegenDirectory, "codegen.stderr") })));
     check();
     if (canonicalJson(exactExecutableFingerprint(executable.path, { cancelled: control.cancelled })) !== canonicalJson(executable)) throw new Error("browser actor artifact: build runtime changed");
     if (generated.status !== 0) throw new Error(`browser actor artifact: codegen ${generated.reason}: ${generated.stderr.slice(0, 4096)}`);

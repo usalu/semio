@@ -21,15 +21,23 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit", "semio-framework-os-renderer-wgpu-shell-async/testkit", "semio-framework-os-renderer-wgpu-shell-chrome-state/testkit", "semio-framework-os-renderer-wgpu-shell-history/testkit", "semio-framework-os-renderer-wgpu-shell-prefs/testkit", "semio-framework-os-renderer-wgpu-shell-surfaces/testkit"]
+
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-doors = { path = "../../../🛂️doors/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-hub-contracts = { path = "../../../🔐️hub-contracts/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-hub-workspace = { path = "../../../🏘️hub-workspace/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-chrome-state = { path = "../../../🎚️shell-chrome-state/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-directory = { path = "../../../📒️shell-directory/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-history = { path = "../../../⏪️shell-history/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-plugins = { path = "../../../🧲️shell-plugins/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-surfaces = { path = "../../../🫧️shell-surfaces/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-vocab = { path = "../../../📖️shell-vocab/📦️packages/🦀️rust" }
 base64 = "0.22.1"
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }

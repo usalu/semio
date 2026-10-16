@@ -1,5 +1,6 @@
 use super::app_router_tests::{dialect, fixture_app};
 use super::*;
+use semio_framework::PluginManifest;
 
 #[semio_framework_async_macros::async_test]
 async fn step1_explicit_default_still_in_router_wins() {

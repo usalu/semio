@@ -9,7 +9,7 @@
       "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs — FlowHost::connect_ports, port_value_types_compatible, widget_port_value_types",
       "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/⚙️engine/🦀️.rs — Handle::value_types, is_valid_connection, wire_drag_type_refusal",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🔌️port-types/🦀️.rs — the Rust twin over the live registry",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts — the TypeScript twin over the same rows"
+      "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔎️renderer-twins/🟦️.ts — the TypeScript twin over the same rows"
     ],
     "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END"
   },

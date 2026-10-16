@@ -1,7 +1,7 @@
 /** 📋️ Incrementally own all mutable scene metadata while borrowing immutable source text. */
 import type {DocumentSceneNode,DocumentSceneContent} from "../🟦️.ts";
 import {validateSceneSourceAddress} from "../🟦️.ts";
-import type {PathSegment,Vec2} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import type {PathSegment,Vec2} from "@semio-tech/framework/2d";
 import type {Fill,Color} from "../../../🎨️fill/🟦️.ts";
 import type {PathRasterStroke} from "../../../🧮️geometry/📷️raster/🟦️.ts";
 function invalid(message:string):never{throw new RangeError(message);}

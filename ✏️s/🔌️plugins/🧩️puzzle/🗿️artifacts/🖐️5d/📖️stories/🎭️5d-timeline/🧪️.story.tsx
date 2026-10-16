@@ -7,7 +7,7 @@
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { HistoryColumn } from "@semio-tech/ui-react";
+import type { HistoryColumn } from "@semio-tech/framework/ui/targets/react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
 import { GraphTimelineHost, World3dHost } from "@semio-tech/framework-renderer-react";

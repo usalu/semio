@@ -164,7 +164,7 @@ def widen_members(text, used_outside, tuple_access=False):
             if kind == 'impl':
                 if toks[sig[r]][1] in ('fn', 'const', 'type') and r + 1 < hi: name = toks[sig[r + 1]][1]
             elif opener == '{':
-                if r + 1 < hi and toks[sig[r + 1]][1] == ':': name = toks[sig[r]][1]
+                if r + 2 < hi and toks[sig[r + 1]][1] == ':' and toks[sig[r + 2]][1] != ':': name = toks[sig[r]][1]
             else:
                 name = None
                 if tuple_access: name = '<tuple>'

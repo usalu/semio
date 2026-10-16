@@ -5,8 +5,8 @@ interface PackageFields<Entry> {parts:OpcPart[];contentTypes:{defaults:Entry[];o
 interface MetadataFields<Entry> {name(entry:Entry):string;contentType(entry:Entry):string;construct(name:string,contentType:string):Entry}
 const PAIRS:MetadataFields<[string,string]>={name:entry=>entry[0],contentType:entry=>entry[1],construct:(name,contentType)=>[name,contentType]};
 const RECORDS:MetadataFields<RetainedOpcMetadataEntry>={name:entry=>entry.name,contentType:entry=>entry.contentType,construct:(name,contentType)=>({name,contentType})};
-import {artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteValueBudget,artifactSqliteValueByteLengthControlled,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteDatabase,SqliteRow,SqliteValue}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteValueBudget,artifactSqliteValueByteLengthControlled,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteDatabase,SqliteRow,SqliteValue}from"@semio-tech/framework/io/sqlite-snapshot";
 /** 🗂️ Individually declared OPC table vocabulary. */
 export interface OpcSqliteTables{readonly package:string;readonly part:string;readonly defaultType:string;readonly overrideType:string;readonly relationshipOwner:string;readonly relationship:string}
 function rowsLimit(rows:number,options:ArtifactSqliteOptions):void{if(!Number.isSafeInteger(rows)||rows>(options.maxRows??1_000_000))throw new Error("OPC row limit");}

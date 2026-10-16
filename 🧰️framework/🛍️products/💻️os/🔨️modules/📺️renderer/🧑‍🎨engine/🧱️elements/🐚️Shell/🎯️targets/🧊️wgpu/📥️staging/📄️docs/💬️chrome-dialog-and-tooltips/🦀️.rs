@@ -9,7 +9,7 @@ impl DocumentState {
     /// 🎓️ The currently active introduction step (if a tour is running and its index still resolves) —
     /// shared by every wgpu tour touchpoint beyond painting (reveal, advance-by-doing, keyboard) so they
     /// can never drift on what "the active step" means.
-    pub(crate) fn chrome_tour_active_step(&self, chrome: &ChromeState) -> Option<semio_framework::onboarding::IntroductionStepDefinition> {
+    pub fn chrome_tour_active_step(&self, chrome: &ChromeState) -> Option<semio_framework::onboarding::IntroductionStepDefinition> {
         let session = self.session.as_ref()?;
         let intro = session.app.introduction.as_ref()?;
         let step_index = chrome.chrome_build.tour_state.as_ref().map(|state| state.step_index)?;
@@ -21,14 +21,14 @@ impl DocumentState {
     /// a step's matching `Action`/`Utility` interaction completes the instant the described behavior
     /// actually happens, mirroring the React shell's own advance-by-doing wiring. No-operations when no tour is
     /// active or nothing in the active step's `interactions` matches what was performed.
-    pub(crate) fn chrome_tour_note_action_performed(&mut self, action_id: &str, chrome: &mut ChromeState) {
+    pub fn chrome_tour_note_action_performed(&mut self, action_id: &str, chrome: &mut ChromeState) {
         let Some(step) = self.chrome_tour_active_step(chrome) else {
             return;
         };
         self.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Action(action) if action.as_str() == action_id), chrome);
     }
 
-    pub(crate) fn chrome_tour_note_utility_performed(&mut self, utility_id: &str, chrome: &mut ChromeState) {
+    pub fn chrome_tour_note_utility_performed(&mut self, utility_id: &str, chrome: &mut ChromeState) {
         let Some(step) = self.chrome_tour_active_step(chrome) else {
             return;
         };
@@ -39,7 +39,7 @@ impl DocumentState {
     /// interaction matching `matches` (respecting `step.ordered` — only the next in-order interaction may
     /// complete), records it, and advances the step once every interaction is done. Mirrors the React
     /// shell's `completeIntroductionInteraction`.
-    pub(crate) fn chrome_tour_complete_interaction(&mut self, step: &semio_framework::onboarding::IntroductionStepDefinition, matches: impl Fn(&semio_framework::onboarding::IntroductionInteractionKind) -> bool, chrome: &mut ChromeState) {
+    pub fn chrome_tour_complete_interaction(&mut self, step: &semio_framework::onboarding::IntroductionStepDefinition, matches: impl Fn(&semio_framework::onboarding::IntroductionInteractionKind) -> bool, chrome: &mut ChromeState) {
         if step.interactions.is_empty() {
             return;
         }
@@ -65,7 +65,7 @@ impl DocumentState {
         }
     }
 
-    pub(crate) fn chrome_tour_advance_current_step(&mut self, step: &semio_framework::onboarding::IntroductionStepDefinition, chrome: &mut ChromeState) {
+    pub fn chrome_tour_advance_current_step(&mut self, step: &semio_framework::onboarding::IntroductionStepDefinition, chrome: &mut ChromeState) {
         let Some(session) = self.session.as_ref() else {
             return;
         };

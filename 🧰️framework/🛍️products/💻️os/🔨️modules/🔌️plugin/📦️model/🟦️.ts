@@ -3,7 +3,7 @@ import {captureOwnedCommandV1} from "../../../../../🔨️modules/🏃️proces
 import {readScriptProcessJsonV1} from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 import groupSchema from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📚️group/🧬️schema/🔣️.json" with {type:"json"};
 import {withArtifactDescriptorSlotV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📥️inspection/📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";

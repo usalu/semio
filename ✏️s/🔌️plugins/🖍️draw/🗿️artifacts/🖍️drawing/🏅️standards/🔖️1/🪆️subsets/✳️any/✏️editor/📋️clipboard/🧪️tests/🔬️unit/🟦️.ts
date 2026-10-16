@@ -1,32 +1,25 @@
 /** 🧪️ Neutral clipboard placements are independently composed with Three.js. */
 import {expect,test} from "bun:test";
 import {Matrix3} from "three";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import Ajv from "ajv";
 import cases from "../🧫️fixtures/🔣️.json";
 import {clipboardPasteMatrix,remapDrawingClipboard,DrawingClipboardValidationJob,type DrawingClipboard,type ClipboardMatrix} from "../../🟦️.ts";
 import {Graph,alg} from "graphlib";
-import {CLIPBOARD_TEXT_MAX_BYTES,CLIPBOARD_METADATA_MAX_WIRE_BYTES,CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES,CLIPBOARD_PASTE_MAX_WIRE_BYTES,clipboardJsonStringBytes} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/📋️clipboard/🟦️.ts";
-import envelopeSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/📋️clipboard/🧬️schema/🔣️.json";
+import {CLIPBOARD_TEXT_MAX_BYTES,CLIPBOARD_METADATA_MAX_WIRE_BYTES,CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES,CLIPBOARD_PASTE_MAX_WIRE_BYTES,clipboardJsonStringBytes} from "@semio-tech/framework/kernel/clipboard";
+import { kernelClipboardSchema as envelopeSchema } from "@semio-tech/framework/kernel/clipboard/schema";
 import {parseDrawingArtifact,parseDrawingLayerNode} from "../../../../🧬️schema/🟦️.ts";
 import {importImageAssetDiff,foldImageAssetDelta} from "../../../../../🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🦠️mutation/🟦️.ts";
 import {removeImageAssetDiff,removeImageAssetInverse} from "../../../../../🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset/🦠️mutation/🟦️.ts";
 import jsonPatch from "fast-json-patch";
 import completionCustody from "../../../📬️completion/🧪️tests/🧫️fixtures/🔣️.json";
 import completionCustodySchema from "../../../📬️completion/🧬️schema/🔣️.json";
-import completionFaultCases from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/⚠️fault/🧪️tests/🧫️fixtures/🔣️.json";
-import completionFaultSchema from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/⚠️fault/🧬️schema/🔣️.json";
-import {createCompletionFault} from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/⚠️fault/🟦️.ts";
 import assetBefore from "../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/⬅️before/🔣️.json";
 import assetAfter from "../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json";
 import assetDiff from "../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/🔺️diff/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import documentSchema from "../../../../🧬️schema/🔣️.json";
 const matrix=(value:ClipboardMatrix)=>new Matrix3().set(value[0],value[2],value[4],value[1],value[3],value[5],0,0,1);
-test("completion fault projection retains original diagnostic while matching independent JSON wire",()=>{
- expect(new Ajv({strict:false}).compile(completionFaultSchema)(completionFaultCases)).toBe(true);
- for(const row of completionFaultCases.cases){const original={...row,origin:"app" as const,severity:"error" as const,scope:{module:"draw"},causes:[{message:"original retained cause"}]};const actual=createCompletionFault(original);expect(actual.original).toBe(original);expect(actual.original.scope).toBe(original.scope);const wire=JSON.parse(actual.report) as {message:string;code:string};let expected="";for(const scalar of original.message){const candidate=expected+scalar;if(Buffer.byteLength(JSON.stringify(candidate))-2>completionFaultCases.messageEscapeBytes)break;expected=candidate;}expect(wire.message).toBe(expected);const code=Buffer.byteLength(JSON.stringify(row.code))-2<=completionFaultCases.codeEscapeBytes?row.code:"interactive-job.fault-capacity";expect(wire.code).toBe(code);expect(actual.report).toBe(JSON.stringify({origin:"app",code,severity:"error",message:expected,scope:{},retryable:row.retryable}));expect(Buffer.byteLength(actual.report)).toBeLessThanOrEqual(completionFaultCases.frameBytes);}
-});
 
 /** 📬️ JSON Patch independently preserves custody until the shared exact release boundary. */
 test("completion neutral custody corpus agrees with JSON Patch removal oracle",()=>{

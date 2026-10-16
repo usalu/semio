@@ -13,13 +13,15 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Imports
-import type { Effect, SpawnedJobCompletion, SpawnedJobStep } from "../../🎠️kernel/🟦️.ts";
+import type { Effect } from "../../🎠️kernel/⚡️effect/🟦️.ts";
+import type { SpawnedJobCompletion, SpawnedJobStep } from "../../🎠️kernel/🛠️spawned-job/🟦️.ts";
 // 🧵️ The spawned-job drive RULE is the kernel's (Rust `kernel::spawned_job_completion` and this
 // twin), not this module's: the wire layer recovers a `spawn-job` off the boundary and pumps it, the
 // kernel alone decides what a transcript of `step-job` observations means. A value import, unlike
-// `decodePackValue`'s injected codec, because nothing in `🎠️kernel/🟦️.ts`'s own import graph reaches
+// `decodePackValue`'s injected codec, because nothing in `🎠️kernel`'s own import graph reaches
 // back here — verified, not assumed.
-import { jobPlacementFromWireName, spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING, videoRenderProgramFromWire } from "../../🎠️kernel/🟦️.ts";
+import { jobPlacementFromWireName, spawnedJobCompletion, SPAWNED_JOB_DEADLINE_MS, SPAWNED_JOB_FUEL, SPAWNED_JOB_STEP_CEILING } from "../../🎠️kernel/🛠️spawned-job/🟦️.ts";
+import { videoRenderProgramFromWire } from "../../🎠️kernel/🎥️video-render-program/🟦️.ts";
 import { parseWitColdPairIngressStatus, type ColdPairIngressStatus } from "../📥️cold-pair/🟦️.ts";
 // #endregion 🔌️Imports
 
@@ -857,7 +859,7 @@ export function wireSpawnedJobs(effects: readonly WireVariant[]): readonly Extra
 //#endregion 🧵️SpawnedJob
 
 /** 🚧️ Best-effort conversion of a raw WIT `effect` variant into the friendly `Effect` union
- * `🎠️kernel/🟦️.ts` already declares — Rust `kernel::Effect`'s externally-tagged serde shape,
+ * `🎠️kernel` already declares — Rust `kernel::Effect`'s externally-tagged serde shape,
  * which every downstream consumer already expects. Covers the effect kinds a renderer commonly
  * branches on; an effect kind with no case here degrades to an honest console-logged drop rather
  * than guessing an unverified shape. */

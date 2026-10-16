@@ -9,7 +9,7 @@ use super::*;
 /// 🩺️ One refresh pass's scope, short enough to read in a console line — which surfaces a settle
 /// asked for is the only thing that separates "the guest re-rendered the previous document" from
 /// "this pass never looked at that surface".
-pub(crate) fn refresh_scope_label(scope: &UiDirtyScope) -> String {
+pub fn refresh_scope_label(scope: &UiDirtyScope) -> String {
     match scope {
         UiDirtyScope::Full => "full".to_string(),
         UiDirtyScope::None => "none".to_string(),
@@ -29,7 +29,7 @@ pub(crate) fn refresh_scope_label(scope: &UiDirtyScope) -> String {
 /// progress subscriber). Its own scope when it has one; a COMPLETION that patched history and dirtied nothing else still
 /// owes the reserved History body the row it minted; progress with a patch alone moves the band and re-renders nothing;
 /// a lossy lane (`resync`) owes everything.
-pub(crate) fn operation_publication_refresh(publication: &crate::program_bridge::OperationPublication) -> UiDirtyScope {
+pub fn operation_publication_refresh(publication: &semio_framework_os_renderer_wgpu_program_bridge::OperationPublication) -> UiDirtyScope {
     if publication.resync {
         return UiDirtyScope::Full;
     }

@@ -33,24 +33,24 @@ impl ShellDockState {
     /// chrome, and only then acknowledges them. Answering the gateway before the dock moved is the
     /// exact defect slice M7 measured on the React host, where the bridge reduced against a private
     /// mirror and reported `ok` while nothing on screen changed.
-    pub(super) fn apply_inbound_agent_shell_commands(&mut self, chrome: &mut ChromeState, windows: &mut WindowState) -> bool {
+    pub fn apply_inbound_agent_shell_commands(&mut self, chrome: &mut ChromeState, windows: &mut WindowState) -> bool {
         let mut changed = false;
         for inbound in chrome.chrome_build.agent.take_inbound_shell_commands() {
             let seq = inbound.seq();
             let (ok, fault) = match inbound {
-                crate::agent_bridge::InboundShellCommand::FocusWindow { window_id, .. } => {
+                semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::FocusWindow { window_id, .. } => {
                     windows.active_window_id = window_id;
                     changed = true;
                     (true, None)
                 }
-                crate::agent_bridge::InboundShellCommand::RevealPanelTab { tab_id, .. } => match self.reveal_dock_tab(&tab_id) {
+                semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::RevealPanelTab { tab_id, .. } => match self.reveal_dock_tab(&tab_id) {
                     Some(_) => {
                         changed = true;
                         (true, None)
                     }
                     None => (false, Some(format!("this shell's dock hosts no `{tab_id}` panel tab"))),
                 },
-                crate::agent_bridge::InboundShellCommand::Acknowledge { .. } => (true, None),
+                semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::InboundShellCommand::Acknowledge { .. } => (true, None),
             };
             chrome.chrome_build.agent.settle_shell_command(seq, ok, fault);
         }

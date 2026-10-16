@@ -5,7 +5,17 @@ import { dirname, join } from "node:path";
 import { z } from "zod";
 import union from "lodash/union.js";
 import deepEqual from "fast-deep-equal";
-import { mergeUiDirtyScopes, resolveUiDirtyScope, uiDirtyScopeAsksForNothing, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtyScope, type UiDirtySection } from "../../🟦️.ts";
+import {
+  mergeUiDirtyScopes,
+  resolveUiDirtyScope,
+  uiDirtyScopeAsksForNothing,
+  uiDirtyScopeWantsCatalogue,
+  uiDirtyScopeWantsPanelBody,
+  uiDirtyScopeWantsSection,
+  uiDirtyScopeWantsWindowBody,
+  type UiDirtyScope,
+  type UiDirtySection
+} from "../../🎯️ui-dirty-scope/🟦️.ts";
 
 /** 🐢️ TypeScript twin of `🧪️tests/🐢️ui-dirty-scope/🦀️.rs`, driven from the SAME fixture
  * (`🧫️fixtures/🐢️ui-dirty-scope/🔣️.json`): a settle re-renders EXACTLY the surfaces its

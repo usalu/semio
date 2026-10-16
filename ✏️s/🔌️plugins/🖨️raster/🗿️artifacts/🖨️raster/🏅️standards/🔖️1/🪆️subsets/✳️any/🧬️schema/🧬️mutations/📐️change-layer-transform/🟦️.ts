@@ -1,6 +1,6 @@
 /** 📐️ Complete layer-transform mutation wire contract. */
 import {parseRasterTransform,rasterTransformNumbers,type RasterTransform} from "../../🟦️.ts";
-import {inverse} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts";
+import {inverse} from "@semio-tech/framework/pixels/compositing";
 export type ChangeLayerTransform={layerId:string;expected:RasterTransform;transform:RasterTransform};
 export function parseChangeLayerTransform(value:unknown):ChangeLayerTransform {
   if(!value||typeof value!=="object"||Array.isArray(value))throw new TypeError("Invalid transform mutation");

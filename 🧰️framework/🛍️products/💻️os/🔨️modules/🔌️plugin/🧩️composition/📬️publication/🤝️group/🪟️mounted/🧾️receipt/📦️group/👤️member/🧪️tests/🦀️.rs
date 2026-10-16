@@ -2,7 +2,7 @@ pub(crate) struct MemberReceiptOperation(pub(crate) String);
 impl store::ArtifactCanonicalJson for MemberReceiptOperation {
     fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> { if path.is_empty() { Ok(store::ArtifactCanonicalJsonNode::String(&self.0)) } else { Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "neutral receipt operation has only its original string root")) } }
 }
-pub(crate) struct MemberReceiptPublication { pub(crate) edit: String, pub(crate) forward: Vec<MemberReceiptOperation>, inverse: Vec<MemberReceiptOperation>, metadata: Vec<protocol::MutationMeta>, schemas: Vec<(String,String)> }
+pub(crate) struct MemberReceiptPublication { pub edit: String, pub forward: Vec<MemberReceiptOperation>, pub inverse: Vec<MemberReceiptOperation>, pub metadata: Vec<protocol::MutationMeta>, pub schemas: Vec<(String,String)> }
 impl store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
     fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase { store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing }

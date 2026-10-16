@@ -180,8 +180,8 @@ async fn manifest(fixture: &Value) -> App {
 
 /// 📜️ The edit rows of `app` in log order with their action id and English and German label.
 async fn edit_rows(app: &mut LabelReloadInstance) -> Vec<(String, String, String)> {
-    app.refresh_cache().await.expect("history refresh");
-    let mut rows: Vec<_> = app.history_patch(true).await.expect("history patch").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
+    app.render_ctx().refresh_cache().await.expect("history refresh");
+    let mut rows: Vec<_> = app.render_ctx().history_patch(true).await.expect("history patch").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
     rows.sort_by_key(|row| row.seq);
     rows.into_iter().map(|row| (row.action_id.clone(), row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string())).collect()
 }

@@ -1,4 +1,4 @@
-import { interactivityPuzzleFillP4eFailures } from "../../../../../📜️script.ts";
+import { interactivityPuzzleFillP4eFailures } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 
 /** 🧫️ A FillBuilder miniature that satisfies every P4e law surviving the tool-run conversion: cooperative preparation, fixed owners with cap/+1 evidence, resumable spatial index, danger step before a capacity fault. */
 const CLEAN = {

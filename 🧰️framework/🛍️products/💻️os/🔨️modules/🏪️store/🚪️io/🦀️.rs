@@ -9,7 +9,7 @@ use semio_framework_value::ValueError;
 use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use semio_framework_os_vcs::VcsError;
 use semio_framework_diagnostic::TextError;
-use semio_framework_os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError};
+use semio_framework_os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions};
 use semio_framework_os_pack::pack_rt;
 use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
 use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
@@ -18,6 +18,16 @@ use semio_framework_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use semio_framework_os_store_backbone::local_storage_backbone_key;
 use crate::text_format::ArtifactTextFiles;
+#[doc(hidden)]
+pub use semio_framework_diagnostic as __diagnostic;
+#[doc(hidden)]
+pub use semio_framework_pack_json as __pack_json;
+#[doc(hidden)]
+pub use semio_framework_value as __value;
+#[doc(hidden)]
+pub use semio_framework_os_pack as os_pack;
+pub use semio_framework_os_pack::PackError;
+pub use semio_framework_os_spr::{OpBinary, OpText, ProtocolError};
 
 /// 🏪️ Explicit OS application capabilities authored independently of snapshot encoding.
 pub trait ArtifactStoreSnapshot: pack::snapshot::ArtifactPack {

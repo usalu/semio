@@ -1,5 +1,5 @@
-import { type Binary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary32 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary32 } from "@semio-tech/framework/value/ieee754";
 /** 🎚️ Typed primary WAV format chunk. */
 export type WavFmt = Readonly<{
   audioFormat: number;

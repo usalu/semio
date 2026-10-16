@@ -128,7 +128,8 @@ function assertFocusedBoundarySemantics() {
   ];
   const forbiddenRendererTargets = [
     "node_modules/three/build/three.module.js",
-    "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+    "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
+    "🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
     "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts",
@@ -190,6 +191,7 @@ function crossTechnologyRules() {
         to: {
           path: `^${to}/`,
           dependencyTypes: ["local"],
+          dependencyTypesNot: ["aliased-workspace"],
         },
       });
     }

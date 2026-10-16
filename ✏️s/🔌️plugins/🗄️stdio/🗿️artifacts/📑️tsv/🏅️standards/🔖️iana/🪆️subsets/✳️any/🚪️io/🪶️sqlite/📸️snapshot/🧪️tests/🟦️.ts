@@ -1,5 +1,5 @@
-import { semioSchemaAjvV1 as originalGrantAjv } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import originalGrantSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { semioSchemaAjvV1 as originalGrantAjv } from "@semio-tech/framework/schema/oracles/validator";
+import { retainedCloneWireSchema as originalGrantSchema } from "@semio-tech/framework/value/retained-clone/wire/schema";
 const admitOriginalGrant=originalGrantAjv({strict:true}).compile(originalGrantSchema);
 import {existsSync as hasTrialSchema} from "node:fs";
 test("current whole trial declarations remain absent",()=>{expect(hasTrialSchema(new URL("../🫴️receiving/🛂️validation/🧬️schema/🔣️.json",import.meta.url))).toBe(false);expect(hasTrialSchema(new URL("../🫴️receiving/🧬️schema/🔣️.json",import.meta.url))).toBe(false);});
@@ -15,7 +15,7 @@ import { expect, test } from "bun:test";
 import fixture from "./🧫️fixtures/🔣️.json";
 import { tsvSnapshotToSqliteDatabase, tsvSnapshotFromSqliteDatabase, TSV_SQLITE_SCHEMA } from "../🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework";
-import {parseRetainedCloneGrant} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
+import {parseRetainedCloneGrant} from "@semio-tech/framework/value/retained-clone/wire";
 
 const input = { ...fixture, lineEnding: "crlf" as const };
 
@@ -149,8 +149,8 @@ test("tsv one literal Unicode field remains exact through independent SQLite sto
 
 import backingFixture from "./🧫️fixtures/💰️backing/🔣️.json";
 
-import {NativeDecodeControl as BackingDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {SqliteAllocationControl as BackingAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {NativeDecodeControl as BackingDecodeControl} from "@semio-tech/framework/value/decode";
+import {SqliteAllocationControl as BackingAllocationControl} from "@semio-tech/framework/io/sqlite-snapshot";
 test("tsv authored relation indexes and literal octet admission have independent authorities",async()=>{
  expect(backingFixture["owner"]).toEqual("tsv");expect(backingFixture["policy"]["zeroOwnershipBytes"]).toEqual(0);expect(backingFixture["policy"]["refusalKind"]).toEqual("ownershipLimit");expect(backingFixture["policy"]["retirementRefund"]).toEqual(false);expect(backingFixture["policy"]["byteAuthority"]).toEqual("literalUTF8Bytes");expect(backingFixture["policy"]["indexAuthority"]).toEqual("authoredEntityRelations");
  const snapshot={schema:backingFixture.schema,trailingNewline:true,lineEnding:"crlf" as const,records:backingFixture.records.map(record=>backingFixture.fields.filter(field=>field.recordId===record.id).sort((a,b)=>a.ordinal-b.ordinal).map(field=>field.value))};
@@ -165,8 +165,8 @@ test("tsv authored relation indexes and literal octet admission have independent
  const exact=new BackingAllocationControl({maxAllocationBytes:bytes.length});{const copied=await exact.stage(maximum=>new BackingDecodeControl(maximum,()=>true),control=>control.copyBytes(bytes));expect(Buffer.from(copied)).toEqual(bytes);}expect(exact.remainingBytes()).toBe(0);await expect(exact.stage(maximum=>new BackingDecodeControl(maximum,()=>true),control=>control.copyBytes(Uint8Array.of(1)))).rejects.toMatchObject({kind:backingFixture.policy.refusalKind});expect(exact.remainingBytes()).toBe(0);
 });
 
-import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {NativeDecodeControl as BudgetDecodeControl} from "@semio-tech/framework/value/decode";
+import {SqliteAllocationControl as BudgetAllocationControl} from "@semio-tech/framework/io/sqlite-snapshot";
 
 import logicalOwnerFixture from "./🧫️fixtures/🧠️logical-owner/🔣️.json";
 
@@ -191,7 +191,7 @@ test("TSV complete logical owner preserves empty row and document metadata in in
  console.log("[DEBUG] TSV complete logical owners preserved schema, empty rows, literal fields and independent newline metadata through physical SQLite");
 });
 
-import {readClosedRecordPack,type ClosedValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🔮️pack/🟦️.ts";
+import {readClosedRecordPack,type ClosedValue} from "@semio-tech/framework/pack/value/testing/preflight/pack";
 import {readFileSync as readLogicalAsset} from "node:fs";
 import {createRequire as requireIndependentTable} from "node:module";
 const independentTable:{tsvParseRows:(text:string)=>string[][]}=requireIndependentTable(import.meta.url)("d3-dsv");
@@ -227,6 +227,7 @@ import RustSyntaxParser from "web-tree-sitter";
 import {dirname,join} from "node:path";
 
 import receivingPolicy from "../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 test("TSV closed original receiving contract agrees with independent SQLite constraints and literal octets",async()=>{
  const text=receivingPolicy.stringUnit.repeat(receivingPolicy.stringRepetitions);expect(Buffer.byteLength(text,"utf8")).toBe(receivingPolicy.stringBytes);
  for(const span of receivingPolicy.tokenScanning.spans){const independent=new Database(":memory:");try{const bytes=receivingPolicy.tokenScanning.bytes;const declaration=span==="whitespace"?" ".repeat(bytes)+TSV_SQLITE_SCHEMA:span==="identifier"?"x".repeat(bytes):span==="quotedLiteral"?"'"+"x".repeat(bytes)+"'":"'"+"''".repeat(bytes/2)+"'";if(span==="whitespace"){independent.exec(declaration);expect(independent.query("SELECT count(*) AS tables FROM sqlite_schema WHERE type='table'").get()).toEqual({tables:3});}else{expect(()=>independent.exec(declaration)).toThrow();}}finally{independent.close();}}
@@ -244,7 +245,7 @@ test("TSV closed original receiving contract agrees with independent SQLite cons
 
 test("TSV original typed receiving and bounded quote Rust syntax parses",async()=>{
  await RustSyntaxParser.init();const parser=new RustSyntaxParser();parser.setLanguage(await RustSyntaxParser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",import.meta.dir)),"out/tree-sitter-rust.wasm")));
- try{for(const relative of ["../🛂️admission/🦀️.rs","./🦀️.rs","../🫴️receiving/🦀️.rs","../🫴️receiving/🧪️tests/🦀️.rs","../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs"]){const tree=parser.parse(readLogicalAsset(new URL(relative,import.meta.url),"utf8"));const errors:unknown[]=[];const inspect=(node:RustSyntaxParser.SyntaxNode)=>{if(node.type==="ERROR"||node.isMissing())errors.push({type:node.type,start:node.startPosition,end:node.endPosition,text:node.text});for(const child of node.children)inspect(child);};if(tree)inspect(tree.rootNode);expect(tree?.rootNode.hasError(),relative+"\n"+JSON.stringify(errors)).toBe(false);tree?.delete();}}finally{parser.delete();}
+ try{for(const relative of ["../🛂️admission/🦀️.rs","./🦀️.rs","../🫴️receiving/🦀️.rs","../🫴️receiving/🧪️tests/🦀️.rs",frameworkSourcePath("🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🫴️receiving/🦀️.rs")]){const tree=parser.parse(readLogicalAsset(new URL(relative,import.meta.url),"utf8"));const errors:unknown[]=[];const inspect=(node:RustSyntaxParser.SyntaxNode)=>{if(node.type==="ERROR"||node.isMissing())errors.push({type:node.type,start:node.startPosition,end:node.endPosition,text:node.text});for(const child of node.children)inspect(child);};if(tree)inspect(tree.rootNode);expect(tree?.rootNode.hasError(),relative+"\n"+JSON.stringify(errors)).toBe(false);tree?.delete();}}finally{parser.delete();}
  expect(controlFixture.typedDestination.quoteCancelCheckpoint).toBe(3);
  console.log("[DEBUG] original TSV typed receiving and borrowed quote and paid relational receiving syntax5; no compiler or Native physical credit");
 });

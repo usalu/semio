@@ -9,7 +9,7 @@ use super::*;
 //#region 🧯️TransientNoticeAndAgentOverlays
 /// ✅️ One step of the approvals modal's flat paint program — the retained chrome step walks this
 /// list by index, so a glyph run that needs another opportunity simply does not advance the index.
-pub(crate) enum AgentApprovalPaintOp {
+pub enum AgentApprovalPaintOp {
     Scrim,
     Modal(Rect),
     Fill { rect: Rect, color: Rgba },
@@ -23,7 +23,7 @@ pub(crate) enum AgentApprovalPaintOp {
 /// 📒️ Records what a reader hears for one painted dialog control — its name, consequence text, role, pressed state,
 /// value and whether it is gated — in the registry the chrome accessibility projection reads. Both render paths go
 /// through here, so the published tree always describes the frame on screen.
-pub(crate) fn note_chrome_dialog_control(op: &ChromeDialogPaintOp) {
+pub fn note_chrome_dialog_control(op: &ChromeDialogPaintOp) {
     match op {
         ChromeDialogPaintOp::Hit { control_id, label, description, semantics, disabled, .. } => {
             note_chrome_control_name(control_id, Some(label));
@@ -46,7 +46,7 @@ pub(crate) fn note_chrome_dialog_control(op: &ChromeDialogPaintOp) {
 /// introduced/shown element's chrome unit above it via z-index; wgpu keeps the geometric subtraction
 /// because 3D window content lives in separate `scene_passes` that cannot be repainted above an
 /// overlay at all, so a cutout is the only way to leave the introduced element unveiled.
-pub(crate) fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
+pub fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
     let top = band.y.max(hole.y);
     let left = band.x.max(hole.x);
     let bottom = (band.y + band.h).min(hole.y + hole.h);
@@ -78,7 +78,7 @@ pub(crate) fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
 /// glass pass, so a window cap's own chips (`🛰️Dock`'s `begin_glass_content`) stay crisp over the
 /// veil where React blurs them. Ordering foreground content against a LATER glass region is a
 /// ladder-level change — see the packet report's hand-offs.
-pub(crate) fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rect> {
+pub fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rect> {
     let mut bands = vec![Rect::new(0.0, 0.0, width, height)];
     for cutout in cutouts {
         let x = cutout.x.clamp(0.0, width);
@@ -94,12 +94,12 @@ pub(crate) fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect])
     bands
 }
 
-pub(crate) const INTRODUCTION_INFO_BOX_GAP: f32 = 16.0;
+pub const INTRODUCTION_INFO_BOX_GAP: f32 = 16.0;
 
 /// 🎓️ Where the info box sits relative to `anchor` — byte-for-byte port of `resolveIntroductionPlacement`
 /// (`ui/js/react/index.tsx`). `auto` picks the side with the most free viewport space; `center` (and any
 /// anchor-less step) centers the box.
-pub(crate) fn resolve_introduction_placement(placement: semio_framework::onboarding::IntroductionPlacement, anchor: Option<Rect>, box_size: (f32, f32), viewport: (f32, f32)) -> (f32, f32) {
+pub fn resolve_introduction_placement(placement: semio_framework::onboarding::IntroductionPlacement, anchor: Option<Rect>, box_size: (f32, f32), viewport: (f32, f32)) -> (f32, f32) {
     use semio_framework::onboarding::IntroductionPlacement;
     let (box_w, box_h) = box_size;
     let (vw, vh) = viewport;
@@ -194,17 +194,17 @@ fn introduction_control_hotkey(overrides: &HashMap<String, String>, control_id: 
 /// with the chevron LAST. `leading_icon` is the one inversion React itself makes: `WindowChrome`'s
 /// `close` control paints its `CloseIcon` before the label, so Skip reads `✕ Skip`.
 struct ChromeTourChip {
-    pub(crate) rect: Rect,
-    pub(crate) label: &'static str,
-    pub(crate) hotkey: Option<String>,
-    pub(crate) icon_id: &'static str,
-    pub(crate) leading_icon: bool,
+    pub rect: Rect,
+    pub label: &'static str,
+    pub hotkey: Option<String>,
+    pub icon_id: &'static str,
+    pub leading_icon: bool,
     filled: bool,
 }
 
 /// 🎓️ Where one tour chip's leading or trailing icon sits — React's `ButtonGroupItem` puts the icon
 /// LAST, after the label and the chord badge, and only `WindowChrome`'s `close` control leads with it.
-pub(crate) fn chrome_tour_chip_icon_x(chip: &ChromeTourChip, theme: &Theme) -> f32 {
+pub fn chrome_tour_chip_icon_x(chip: &ChromeTourChip, theme: &Theme) -> f32 {
     if chip.leading_icon {
         chip.rect.x + theme.padding_standard * 2.0
     } else {
@@ -214,7 +214,7 @@ pub(crate) fn chrome_tour_chip_icon_x(chip: &ChromeTourChip, theme: &Theme) -> f
 
 /// 🎓️ The `(x, baseline, width)` one tour chip's inline label flows in — `px-double` from the chip's
 /// own edge, after a leading icon when it carries one.
-pub(crate) fn chrome_tour_chip_label_box(chip: &ChromeTourChip, atlas: &mut FontAtlas, theme: &Theme) -> (f32, f32, f32) {
+pub fn chrome_tour_chip_label_box(chip: &ChromeTourChip, atlas: &mut FontAtlas, theme: &Theme) -> (f32, f32, f32) {
     let leading = if chip.leading_icon { CHROME_ICON_TINY + theme.gap_standard } else { 0.0 };
     let x = chip.rect.x + theme.padding_standard * 2.0 + leading;
     let width = atlas.measure_text(chip.label, theme.font_size_small).0.max(1.0);
@@ -223,7 +223,7 @@ pub(crate) fn chrome_tour_chip_label_box(chip: &ChromeTourChip, atlas: &mut Font
 
 /// ⌨️ The chord badge box beside one tour chip's label — React's `ControlHotkeyBadge`, which sits
 /// BETWEEN the inline label and the icon (`🖱️ui/🧱️elements/🔳️ButtonGroup/🟦️.tsx:110-118`).
-pub(crate) fn chrome_tour_chip_hotkey_box(chip: &ChromeTourChip, atlas: &mut FontAtlas, theme: &Theme) -> Option<(String, (f32, f32, f32))> {
+pub fn chrome_tour_chip_hotkey_box(chip: &ChromeTourChip, atlas: &mut FontAtlas, theme: &Theme) -> Option<(String, (f32, f32, f32))> {
     let badge = chip.hotkey.clone()?;
     let (label_x, baseline, label_w) = chrome_tour_chip_label_box(chip, atlas, theme);
     let width = atlas.measure_text(&badge, theme.font_size_small).0.max(1.0);
@@ -233,7 +233,7 @@ pub(crate) fn chrome_tour_chip_hotkey_box(chip: &ChromeTourChip, atlas: &mut Fon
 /// 🎓️ The hairline outline every tour chip and the card's own title chip wear — React's
 /// `windowChromeTitleChipClass` box, four `--border-normal` strokes, the same idiom
 /// [`render_retained_chrome_group_item_step`] uses for a navbar chip.
-pub(crate) fn push_chrome_tour_chip_border(overlay: &mut DrawList, rect: Rect, theme: &Theme) {
+pub fn push_chrome_tour_chip_border(overlay: &mut DrawList, rect: Rect, theme: &Theme) {
     overlay.push_solid([rect.x, rect.y, rect.w, theme.stroke_hairline], theme.border_normal);
     overlay.push_solid([rect.x, rect.y + rect.h - theme.stroke_hairline, rect.w, theme.stroke_hairline], theme.border_normal);
     overlay.push_solid([rect.x, rect.y, theme.stroke_hairline, rect.h], theme.border_normal);
@@ -242,22 +242,22 @@ pub(crate) fn push_chrome_tour_chip_border(overlay: &mut DrawList, rect: Rect, t
 
 /// 🎓️ One tour step's whole geometry, measured once per walk step so the card, the veil holes and the
 /// hit targets can never disagree about where anything is.
-pub(crate) struct ChromeTourLayout {
-    pub(crate) card: Rect,
-    pub(crate) title: String,
-    pub(crate) title_chip: Rect,
-    pub(crate) title_rect: Rect,
-    pub(crate) grip: Rect,
-    pub(crate) skip: ChromeTourChip,
-    pub(crate) back: Option<ChromeTourChip>,
-    pub(crate) next: Option<ChromeTourChip>,
-    pub(crate) counter: Rect,
-    pub(crate) counter_text: String,
-    pub(crate) footer_rule: Rect,
-    pub(crate) paragraphs: Vec<(String, Rect)>,
-    pub(crate) checklist: Vec<(String, bool, Rect)>,
-    pub(crate) cutouts: Vec<Rect>,
-    pub(crate) veil_blocks_pointer: bool,
+pub struct ChromeTourLayout {
+    pub card: Rect,
+    pub title: String,
+    pub title_chip: Rect,
+    pub title_rect: Rect,
+    pub grip: Rect,
+    pub skip: ChromeTourChip,
+    pub back: Option<ChromeTourChip>,
+    pub next: Option<ChromeTourChip>,
+    pub counter: Rect,
+    pub counter_text: String,
+    pub footer_rule: Rect,
+    pub paragraphs: Vec<(String, Rect)>,
+    pub checklist: Vec<(String, bool, Rect)>,
+    pub cutouts: Vec<Rect>,
+    pub veil_blocks_pointer: bool,
 }
 
 /// 🎓️ Measures one step into a [`ChromeTourLayout`] — React's own card, term for term: Skip in the cap
@@ -273,7 +273,7 @@ pub(crate) struct ChromeTourLayout {
 /// 🧯️ React's `veilBlocksPointer`: only a screen-style step (`introduce == null`) or one whose
 /// target actually resolved owns every pointer — an unresolved target would otherwise trap the
 /// user behind an opaque veil with no way to reveal it (`UIIntroduction`).
-pub(crate) fn chrome_tour_layout(state: &OverlaysViewCtx<'_>, atlas: &mut FontAtlas, theme: &Theme, step: &semio_framework::onboarding::IntroductionStepDefinition, step_index: usize, step_count: usize, width: f32, height: f32) -> ChromeTourLayout {
+pub fn chrome_tour_layout(state: &OverlaysViewCtx<'_>, atlas: &mut FontAtlas, theme: &Theme, step: &semio_framework::onboarding::IntroductionStepDefinition, step_index: usize, step_count: usize, width: f32, height: f32) -> ChromeTourLayout {
     let is_de = state.prefs.locale_id == "de";
     let is_last = step_index + 1 == step_count;
     let advances_by_button = step.interactions.is_empty();

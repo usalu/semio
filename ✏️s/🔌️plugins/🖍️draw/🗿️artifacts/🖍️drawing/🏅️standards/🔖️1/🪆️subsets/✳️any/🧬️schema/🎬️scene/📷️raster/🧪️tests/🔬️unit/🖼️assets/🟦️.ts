@@ -10,8 +10,8 @@ import invalid from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene
 import schema from "../../../🧬️schema/🔣️.json";
 import pathSchema from "../../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput} from "../../../🟦️.ts";
-import {areaOracle,canvasOracle,delta} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts";
-import imageSchema from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🧬️schema/🔣️.json";
+import {areaOracle,canvasOracle,delta} from "@semio-tech/framework/pixels/sampling/affine/testing/oracles";
+import { imageDecodeSchema as imageSchema } from "@semio-tech/framework/pixels/image/decode/schema";
 const ajv=new Ajv({strict:true}).addMetaSchema(draft7);ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
 const complete=(value:RasterSceneInput,grant=4096)=>{const job=new RasterSceneJob(value);let work=0;for(let i=0;i<2000000;i++){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)return {image:job.result(),progress:p};}throw Error("Encoded scene did not finish");};
 async function reference(value:RasterSceneInput){

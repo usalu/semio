@@ -8,7 +8,16 @@ use super::*;
 /// 📏️ Bounded steps one `drain_retained_document_arenas` spends returning the previous refresh's
 /// retained documents and their `UiValue` pages. Finite so a registry that never settles is left
 /// behind rather than spinning the shell.
-pub(crate) const SHELL_DOCUMENT_RETIREMENT_STEPS: usize = 65_536;
+pub const SHELL_DOCUMENT_RETIREMENT_STEPS: usize = 65_536;
 
 //#endregion ShellTypes
 
+//#region ShellTypes
+/// 📏️ Bytes one retirement step may return. Kept under the guest contiguous request ceiling so a
+/// grant never asks an arena for a block `dlmalloc` cannot serve once fragmented.
+pub const SHELL_DOCUMENT_RETIREMENT_BYTES: usize = 32 * 1_024;
+
+/// 📏️ Items one retirement step may return. A page, never one item — the unit the rest of this
+/// shell's close ladder is already priced in (`📓️close-ladder-budget-2026-09-12.md` §3).
+pub const SHELL_DOCUMENT_RETIREMENT_ITEMS: usize = 1_024;
+//#endregion ShellTypes

@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 artifact-app-testing = []
@@ -50,5 +50,9 @@ semio-framework-job-publication = { path = "../../../../../../../🔨️modules/
 semio_framework_ui_contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-layout = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio_framework_ui_scene = { path = "../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+serde_json = "1.0.140"
 
 [dev-dependencies]
+semio-framework-plugin-app-builder = { path = "../../../🏗️builder/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-document-media = { path = "../../../🗃️document/📦️packages/🦀️rust" }

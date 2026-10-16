@@ -15,7 +15,7 @@ process.env.RUST_MIN_STACK ??= String(8 * 1024 * 1024);
 //#region 🌉️BoardSessionPackage
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryWasmWebV1({invocation:this.invocation,consume:verifyProducedWasmPackageV1, control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
+    await buildRepositoryWasmWebV1({invocation:this.invocation,producer:"browser-module",consume:verifyProducedWasmPackageV1, control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
       rsDir: this.root, componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"), logPrefix: "puzzle/board", wasmBaseName: "semio_puzzle",
       pkg: { name: "@semio-tech/puzzle-wasm", files: ["semio_puzzle_bg.wasm", "semio_puzzle.js", "semio_puzzle.d.ts", "semio_puzzle_bg.wasm.d.ts"], main: "semio_puzzle.js", module: "semio_puzzle.js", types: "semio_puzzle.d.ts" },
     });
@@ -143,7 +143,7 @@ function declaredMutations(target: ArtifactTarget) {
   // (`Group(group::mutation::GroupNodes)`). Matching on the variant name instead reports false gaps.
   const variants = [...allVariantText.matchAll(/^\s+([A-Z][A-Za-z0-9]*)\(\s*([A-Za-z0-9_:]+)/gm)].map((match) => ({
     name: match[1],
-    payload: match[2].split("::").pop() as string,
+    payload: (()=>{const payload=match[2]?.split("::").pop();if(payload===undefined)throw Error("Mutation payload capture missing");return payload;})(),
   }));
   void enumBody;
 

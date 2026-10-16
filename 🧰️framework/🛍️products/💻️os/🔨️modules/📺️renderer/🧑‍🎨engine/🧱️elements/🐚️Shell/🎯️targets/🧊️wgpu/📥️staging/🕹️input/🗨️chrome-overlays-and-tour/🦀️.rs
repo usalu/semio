@@ -7,30 +7,20 @@ use super::*;
 //#region ShellChrome
 //#region 🔖️ChromeOverlaysAndTour
 //#region 🗨️ChromeDialog
-/// 🎯️ One focus stop of the dialog, in visiting order. `Chip(field, index)` is one removable reference of a
-/// reference field.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ChromeDialogStop {
-    Field(usize),
-    Chip(usize, usize),
-    Cancel,
-    Choice(usize),
-    Confirm,
-}
 
 /// ♿️ What a reader hears beyond a control's name: its role, pressed state and value.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct ChromeDialogSemantics {
-    pub(crate) role: Option<&'static str>,
-    pub(crate) pressed: Option<bool>,
-    pub(crate) value_text: Option<String>,
-    pub(crate) value_range: Option<[f64; 3]>,
+pub struct ChromeDialogSemantics {
+    pub role: Option<&'static str>,
+    pub pressed: Option<bool>,
+    pub value_text: Option<String>,
+    pub value_range: Option<[f64; 3]>,
 }
 
 /// 🖌️ One step of the dialog's flat paint program — the retained chrome step walks it by index, so a
 /// glyph run that needs another opportunity simply does not advance. `Segment` and `Nudge` are the pressable
 /// parts of a segmented and a stepper field.
-pub(crate) enum ChromeDialogPaintOp {
+pub enum ChromeDialogPaintOp {
     Scrim,
     Modal(Rect),
     Fill { rect: Rect, color: Rgba },
@@ -43,7 +33,7 @@ pub(crate) enum ChromeDialogPaintOp {
 
 /// 👆️ What one click on the open dialog landed on.
 #[derive(Clone, Copy, Debug)]
-pub(crate) enum ChromeDialogPress {
+pub enum ChromeDialogPress {
     Stop { stop: ChromeDialogStop, enabled: bool, rect: Rect },
     Segment { field: usize, option: usize },
     Nudge { field: usize, sign: f64 },
@@ -52,10 +42,18 @@ pub(crate) enum ChromeDialogPress {
 //#endregion 🗨️ChromeDialog
 /// 🆔️ React's `panelTabElementId` (`🖥️platform/🟦️.ts`): the id an introduction step names a panel tab
 /// by. The tab id is already dotted, so it is appended verbatim — no `element_id_segment` pass.
-pub(crate) fn panel_tab_introduction_element_id(tab_id: &str) -> String {
+pub fn panel_tab_introduction_element_id(tab_id: &str) -> String {
     format!("framework.panelTab.{tab_id}")
 }
 
 //#endregion 🔖️ChromeOverlaysAndTour
 //#endregion ShellChrome
 
+//#region ShellChrome
+//#region 🔖️ChromeOverlaysAndTour
+//#region 🧯️TransientNoticeAndAgentOverlays
+/// 📜️ The suffix of a retained panel's whole-content scroll region id (`framework.panel.history.scroll`).
+pub const RETAINED_PANEL_SCROLL_SUFFIX: &str = ".scroll";
+//#endregion 🧯️TransientNoticeAndAgentOverlays
+//#endregion 🔖️ChromeOverlaysAndTour
+//#endregion ShellChrome

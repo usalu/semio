@@ -26,7 +26,9 @@ import {
 } from "@semio-tech/framework-os";
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework-replication";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { activationReasonForAppId, descriptorPackageAssets, fetchDescriptorManifest, type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { activationReasonForAppId } from "../../../../../../../../🔨️modules/🎠️kernel/🚦️activation-reason/🟦️.ts";
+import { descriptorPackageAssets, fetchDescriptorManifest } from "../../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
+import { type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
 import { settleFailedInstanceOpen, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedUiInstance } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";

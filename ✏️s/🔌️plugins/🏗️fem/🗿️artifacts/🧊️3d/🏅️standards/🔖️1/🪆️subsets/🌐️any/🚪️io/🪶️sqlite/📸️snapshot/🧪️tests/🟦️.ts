@@ -7,7 +7,7 @@ import * as diff from "../../../../🧬️schema/🔺️diff/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {fem3dSnapshotToSqliteDatabase,fem3dSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import type {FemDof} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
 const bits=(word:string)=>({bits:BigInt("0x"+word)});
 function dof(value:string):FemDof{switch(value){case"Tx":case"Ty":case"Tz":case"Rx":case"Ry":case"Rz":return value;default:throw Error("fixture DOF")}}
 function state():snapshot.Fem3dSnapshot{

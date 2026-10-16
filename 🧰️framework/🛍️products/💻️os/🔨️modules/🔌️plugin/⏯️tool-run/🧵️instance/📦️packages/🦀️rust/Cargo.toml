@@ -38,6 +38,9 @@ semio-framework-plugin-instance-extension = { path = "../../../../🧵️instanc
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-history = { path = "../../../../🧵️instance/📜️history/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-render = { path = "../../../../🧵️instance/🖼️render/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

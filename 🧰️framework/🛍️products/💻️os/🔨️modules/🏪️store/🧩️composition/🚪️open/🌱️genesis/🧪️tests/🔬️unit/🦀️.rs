@@ -30,7 +30,7 @@ async fn member_genesis_envelope_streams_exact_canonical_bytes_with_bounded_work
         let segment = row["initialPackHex"].as_str().unwrap().as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect::<Vec<_>>();
         let pack = segment.repeat(row["packRepeats"].as_u64().unwrap() as usize);
         let source = MemberGenesisEnvelopeSource { schema: row["schema"].as_str().unwrap(), expected: &expected, owner: &owner, initial_pack: &pack };
-        let canonical = crate::os_store::text_format::genesis_member_envelope_pack(source.schema, &expected, &owner, &pack).await.unwrap();
+        let canonical = semio_framework_os_store_text_io::text_format::genesis_member_envelope_pack(source.schema, &expected, &owner, &pack).await.unwrap();
         let mut encoder = MemberGenesisEnvelopeEncoder::new();
         let birth = encoder.next_capacity_byte_demand(source).unwrap();
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant(maximum, birth, 0) }, grant(maximum, birth - 1, 0)] {
@@ -67,9 +67,9 @@ async fn member_genesis_envelope_streams_exact_canonical_bytes_with_bounded_work
         assert_eq!(position, canonical.len());
         assert_eq!(output, canonical);
         assert_eq!(semio_framework_hash::hex_lower(&semio_framework_hash::Sha256::digest(&output)), row["expectedSha256"].as_str().unwrap(), "independent Node Buffer/noble BLAKE3 complete wire oracle");
-        let (decoded_pack, history) = crate::os_store::serialization::decode_document_pack_bytes(&output).await.unwrap();
+        let (decoded_pack, history) = semio_framework_os_store_text_io::decode_document_pack_bytes(&output).await.unwrap();
         assert_eq!(decoded_pack, pack);
-        let log = crate::os_spr::decode_history(&history, &crate::os_spr::DecodeOptions::default()).await.unwrap();
+        let log = semio_framework_os_spr::decode_history(&history, &semio_framework_os_spr::DecodeOptions::default()).await.unwrap();
         assert_eq!((&log.doc_id, &log.schema), (&expected.artifact_id, &source.schema.to_owned()));
         assert!(log.edits.is_empty());
         close(&mut encoder);

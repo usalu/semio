@@ -10,7 +10,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// memo): panel tabs, window kinds, resolved commands, then the host-app verbs. Declaration order is
     /// what the ranker breaks ties on and what a cold (empty-query) palette shows, so it is part of the
     /// contract, not an accident.
-    pub(super) fn build_search_items(&self) -> Vec<SearchPaletteItem> {
+    pub fn build_search_items(&self) -> Vec<SearchPaletteItem> {
         let is_de = self.prefs.locale_id == "de";
         let Some(session) = &self.docs.session else {
             return Vec::new();
@@ -22,7 +22,7 @@ impl<'ctx> SessionCtx<'ctx> {
                 label: tab.label.resolve(self.prefs.active_terminology(), self.prefs.active_locale()).to_string(),
                 description: None,
                 group: shell_chrome_string("palette.group.panels", is_de).into(),
-                dispatch_action: Some(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab.id() }) }),
+                dispatch_action: Some(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": tab.id() }) }),
                 action: None,
                 category: None,
             });
@@ -49,7 +49,7 @@ impl<'ctx> SessionCtx<'ctx> {
                     label: format!("{} {breadcrumb}", shell_chrome_string("palette.spawnPrefix", is_de)),
                     description: None,
                     group: shell_chrome_string("palette.group.catalogue", is_de).into(),
-                    dispatch_action: Some(ActionDescriptor { controller_id: controller_id.clone(), action: "spawnApp".into(), args: crate::action_args_json!({ "pluginId": program.plugin_id }) }),
+                    dispatch_action: Some(ActionDescriptor { controller_id: controller_id.clone(), action: "spawnApp".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "pluginId": program.plugin_id }) }),
                     action: None,
                     category: None,
                 });
@@ -74,7 +74,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🔍️ The palette's visible rows — ranked by the SAME algorithm, fields, weights, threshold and
     /// limit React's `UISearch` passes `rankFuzzyItems` (`🔎️ShellSearch/🟦️.tsx`): `label` ×2,
     /// `description` ×1, the group heading ×0.5, threshold `0.4`, limit `20`.
-    pub(crate) fn filtered_search_items(&self) -> Vec<SearchPaletteItem> {
+    pub fn filtered_search_items(&self) -> Vec<SearchPaletteItem> {
         rank_fuzzy_items(
             self.build_search_items(),
             &self.commands.search_query,
@@ -88,7 +88,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// publication, accessibility and input routing. Its dimensions are React's authored
     /// `CommandDialog` contract: `sm:max-w-lg`, `h-large`, `max-h-layout-command`, group `p-single`,
     /// heading `py-single`, and item `py-tiny`.
-    pub(crate) fn command_palette_plan(&self, theme: &Theme, width: f32, height: f32) -> Option<ShellPalettePlan> {
+    pub fn command_palette_plan(&self, theme: &Theme, width: f32, height: f32) -> Option<ShellPalettePlan> {
         let kind = match self.input.overlay_state {
             OverlayState::Search => ShellPaletteKind::Search,
             OverlayState::Find => ShellPaletteKind::Find,
@@ -188,11 +188,11 @@ impl<'ctx> SessionCtx<'ctx> {
     /// (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1475-1485`) is: the tab's own chip, the `mod+shift+w` chord
     /// and any future caller collapse the layout by the same rule, refocus `children[0]`, and tear
     /// down whatever the window was hosting.
-    pub(crate) fn close_dock_window(&mut self, window_id: &str) -> bool {
+    pub fn close_dock_window(&mut self, window_id: &str) -> bool {
         if self.dock.dock.window_kind_id(window_id).is_none() {
             return false;
         }
-        if !crate::interpreter::request_ui_document_close(window_id) {
+        if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id) {
             return false;
         }
         if !self.dock.dock.close_window(window_id) {
@@ -201,8 +201,8 @@ impl<'ctx> SessionCtx<'ctx> {
         self.windows.window_icon_overrides.remove(window_id);
         self.windows.window_title_overrides.remove(window_id);
         self.windows.active_window_id = self.dock.dock.active_window_id.clone();
-        crate::scenes::request_canvas_pointer_gesture_cancel_for_window(window_id);
-        crate::scenes::cancel_scene_list_transfer_for_window(window_id);
+        semio_framework_os_renderer_wgpu_scene_render::request_canvas_pointer_gesture_cancel_for_window(window_id);
+        semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer_for_window(window_id);
         self.teardown_spawned_window(window_id);
         self.dock.persist_dock_layout();
         self.windows.owe_window_topology_refresh(&mut self.settle);
@@ -214,7 +214,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// forever behind a window that no longer exists (the teardown gap
     /// REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT documented). A window that hosts no spawned app is
     /// simply nothing to tear down.
-    pub(super) fn teardown_spawned_window(&mut self, window_id: &str) {
+    pub fn teardown_spawned_window(&mut self, window_id: &str) {
         let Some(session) = self.docs.session.as_ref() else {
             return;
         };
@@ -237,14 +237,14 @@ impl<'ctx> SessionCtx<'ctx> {
 
     /// 🪟️ `mod+shift+w` — closes the active window through [`Self::close_dock_window`], last window of
     /// the mode included.
-    pub(super) fn close_active_window(&mut self) -> bool {
+    pub fn close_active_window(&mut self) -> bool {
         let Some(window_id) = self.windows.active_window_id.clone() else {
             return false;
         };
         self.close_dock_window_and_arm(&window_id, "ui.window.close")
     }
 
-    pub(crate) fn close_dock_window_and_arm(&mut self, window_id: &str, control_id: &str) -> bool {
+    pub fn close_dock_window_and_arm(&mut self, window_id: &str, control_id: &str) -> bool {
         if !self.close_dock_window(window_id) {
             return false;
         }
@@ -255,7 +255,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// ⌨️ Applies the shell verbs that are pure chrome-state transitions (no guest round-trip, no os
     /// command) — the synchronous half of the one [`SHELL_SHORTCUT_ROWS`] table. Returns whether the key
     /// was consumed; an unconsumed key falls through to the rest of `handle_keyboard` untouched.
-    pub(super) fn apply_sync_shell_shortcut(&mut self, shortcut: ShellShortcut, palette_open: bool, input: &mut InputState<ActionDescriptor>) -> bool {
+    pub fn apply_sync_shell_shortcut(&mut self, shortcut: ShellShortcut, palette_open: bool, input: &mut InputState<ActionDescriptor>) -> bool {
         match shortcut {
             ShellShortcut::ToggleSearch => {
                 self.commands.search_open = !self.commands.search_open;

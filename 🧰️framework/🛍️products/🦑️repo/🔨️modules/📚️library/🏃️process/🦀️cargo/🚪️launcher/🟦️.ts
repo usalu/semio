@@ -7,7 +7,7 @@ import {randomBytes} from "node:crypto";
 import {copyFileSync,mkdirSync,readdirSync,rmSync} from "node:fs";
 import {availableParallelism,constants,totalmem} from "node:os";
 import {dirname,join,resolve} from "node:path";
-import {checkResourceLeaseControl,acquireResourceLease,resourceLeasePathV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {captureOwnedCommandResultV1,runOwnedCommand,OwnedCommandFailure,type OwnedCommandCaptureV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import type {BuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import {acquireCompilerCapacityLeaseV1,scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
@@ -63,10 +63,10 @@ export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{st
  requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();
  const directory=requireNativeStoragePathV1(options.storage.backing.root,join(options.base,policy.isolatedDirectory)),pattern=new RegExp(policy.isolatedNoncePattern,"u");mkdirSync(directory,{recursive:true});
  const claim=(nonce:string)=>acquireResourceLease({directory,resource:nonce,mode:"exclusive",signal:options.control.signal,control:options.control,timeoutMs:0});
- const retire=(nonce:string,lease:ResourceLease)=>{try{rmSync(join(directory,nonce),{recursive:true,force:true});}finally{lease.release();rmSync(resourceLeasePathV1(directory,nonce),{force:true});}};
- for(const nonce of readdirSync(directory).filter(name=>pattern.test(name))){let lease:ResourceLease;try{lease=await claim(nonce);}catch(error){if(error instanceof Error&&error.message.startsWith("Resource lease timed out: "))continue;throw error;}retire(nonce,lease);process.stderr.write(`[repo cargo] swept isolated store ${nonce} of a settled owner\n`);}
- const nonce=randomBytes(6).toString("hex"),lease=await claim(nonce),root=join(directory,nonce),store=Object.freeze({root,target:join(root,"target"),build:join(root,"build"),temporary:join(root,"tmp")});
- try{for(const path of[store.target,store.build,store.temporary]){requireNativeStoragePathV1(options.storage.backing.root,path);mkdirSync(path,{recursive:true});}return await body(store);}finally{retire(nonce,lease);}
+ const retire=async(nonce:string,lease:ResourceLease)=>{let failed=false,failure:unknown;try{rmSync(join(directory,nonce),{recursive:true,force:true});}catch(error){failed=true;failure=error;}try{lease.release();}catch(error){if(!failed){failed=true;failure=error;}}try{await retireResourceLeaseV1(directory,nonce,options.control,0);}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;};
+ for(const nonce of readdirSync(directory).filter(name=>pattern.test(name))){let lease:ResourceLease;try{lease=await claim(nonce);}catch(error){if(error instanceof Error&&error.message.startsWith("Resource lease timed out: "))continue;throw error;}await retire(nonce,lease);process.stderr.write(`[repo cargo] swept isolated store ${nonce} of a settled owner\n`);}
+ const nonce=randomBytes(6).toString("hex"),lease=await claim(nonce),root=join(directory,nonce),store=Object.freeze({root,target:join(root,"target"),build:join(root,"build"),temporary:join(root,"tmp")});let result:T|undefined,failed=false,failure:unknown;
+ try{for(const path of[store.target,store.build,store.temporary]){requireNativeStoragePathV1(options.storage.backing.root,path);mkdirSync(path,{recursive:true});}result=await body(store);}catch(error){failed=true;failure=error;}try{await retire(nonce,lease);}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;return result as T;
 }
 
 /** 📍️ Selects the manifest Cargo itself would read: `--manifest-path` or the working directory's `Cargo.toml`. */

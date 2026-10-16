@@ -3,7 +3,7 @@ import type { PdfOutlineItem,PdfNamedDestination,PdfPageLabelRange,PdfPageLabelS
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type Binary64 } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfDestination,readPdfDestination,writePdfAction,readPdfAction } from "../🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 function style(value:string|null|undefined):PdfPageLabelStyle|null{switch(value){case undefined:case null:return null;case "decimal":return "decimal";case "romanUpper":return "romanUpper";case "romanLower":return "romanLower";case "lettersUpper":return "lettersUpper";case "lettersLower":return "lettersLower";default:throw new Error("Unknown PDF page label style");}}
 async function writeShallow(out:PdfProjection,value:PdfOutlineItem):Promise<bigint>{const destination=value.destination==null?null:await writePdfDestination(out,value.destination);const action=value.action==null?null:await writePdfAction(out,value.action);const extra=await writePdfDictionary(out,value.extra??[]);if(value.color!=null&&value.color.length!==3)throw new Error("PDF outline color requires three components");return out.insert("pdf_outline",[value.title,destination,action,...(value.color??[null,null,null]),value.italic?1n:0n,value.bold?1n:0n,value.open?1n:0n,extra]);}

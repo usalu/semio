@@ -19,9 +19,14 @@ export type { FetchTimeoutOptions, FetchTimeoutResponse } from "../../🔨️mod
 /** 📦️ `@semio-tech/framework` — package glue (reexports + inline vitest). */
 export * from "../../🔨️modules/🎯️action-bus/🟦️.ts";
 export { blake3Hex, Blake3Hasher } from "../../🔨️modules/🔏️hash/🟦️.ts";
+export { TransientStore, defaultTransientStore, ephemeralBox, ephemeralMap, ephemeralSet, ephemeralWeakMap, type EphemeralBox } from "../../🔨️modules/🫧️transient/🟦️.ts";
 export * from "../../🔨️modules/🧩️action-argument-resolution/🟦️.ts";
 export * from "../../🔨️modules/🧬️schema/🟦️.ts";
 export * from "../../🔨️modules/🖥️platform/🟦️.ts";
+export { createBrowserStoragePort, createMemoryStoragePort, createScopedStoragePort } from "../../🔨️modules/🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts";
+export type { StoragePort } from "../../🔨️modules/🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts";
+export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "../../🔨️modules/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts";
+export type { DockSkeleton, DockTabSkeleton } from "../../🔨️modules/🖱️ui/🔨️modules/🐳️dock-skeleton/🟦️.ts";
 export * from "../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
 export { parseViewport2d } from "../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
 export type { Viewport2d } from "../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
@@ -65,7 +70,7 @@ export {
   zoomAboutPoint,
 } from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
 export type { GesturePointer, GesturePointers, GestureRecognizerState, GestureTransition, GestureVerdict, OrbitPose, OrbitProjection, OrbitVector, PinchFrame, PinchStep, ZoomBounds, ZoomNotchFactors } from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
-export * from "../../🔨️modules/🎠️kernel/🟦️.ts";
+export * from "../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts";
 export * from "../../🔨️modules/🔄️machine/🟦️.ts";
 export { NumericIndex, NumericIndexEdit, NumericIndexReader, NumericIndexRetirement } from "../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 export type { NumericIndexGrant, NumericIndexStep, NumericIndexReadStep, NumericIndexOrdinal } from "../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";

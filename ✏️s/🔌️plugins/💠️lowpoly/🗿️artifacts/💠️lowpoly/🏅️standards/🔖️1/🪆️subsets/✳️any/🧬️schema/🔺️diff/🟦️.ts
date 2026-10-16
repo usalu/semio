@@ -1,8 +1,8 @@
 import{parseLowpolyMeshAttribute,parseLowpolyMeshState,type LowpolyMeshAttribute,type LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
 /** 🧬️ Lowpoly diff schema — sparse field delta. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { type Binary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary32 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary32 } from "@semio-tech/framework/value/ieee754";
 import { parseLowpolyObject, parseLowpolyPaintLayer, type LowpolyObject, type LowpolyPaintLayer } from "../🟦️.ts";
 
 export interface LowpolyDiff {

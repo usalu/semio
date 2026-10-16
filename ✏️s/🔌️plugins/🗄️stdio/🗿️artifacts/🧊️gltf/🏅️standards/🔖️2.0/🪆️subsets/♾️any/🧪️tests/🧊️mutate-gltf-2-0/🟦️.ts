@@ -7,7 +7,7 @@
  *  nothing: each row's expected document is COMMITTED — the row's `➡️after.glb` for a mutation, the real input `🧊️.glb`
  *  itself for its inverse and for the identity round trip — handed to the `gltf-2-0-three-compare-v1` pipeline as
  *  `expected-gltf`, where three's GLTFLoader reads it and the subject's `actual-gltf`. */
-import { defineTestAdapter } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 /** 🟦️ glTF 2.0 artifact-root mutation case — the ORACLE half, `three-gltf-2-0-mutate-reader`. A reader oracle computes
  *  nothing: each row's expected document is COMMITTED — the row's `➡️after.glb` for a mutation, the real input `🧊️.glb`
  *  itself for its inverse and for the identity round trip — handed to the `gltf-2-0-three-compare-v1` pipeline as

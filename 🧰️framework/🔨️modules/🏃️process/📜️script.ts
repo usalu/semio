@@ -25,7 +25,7 @@ class TestScript extends BundleScript {
     if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("Process contract tests require explicit SEMIO_TEST_ARTIFACT_DIR");
     const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR);
     mkdirSync(output, { recursive: true });
-    if(segments[0]==="resource-leases"){await (await import("./🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts")).testResourceLeases(output,scriptCompilerAdmissionControlV1(this.invocation,"test:resource-leases",0));return;}
+    if(segments[0]==="resource-leases"){await (await import("./🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts")).testResourceLeases(output,scriptCompilerAdmissionControlV1(this.invocation,"test:resource-leases",0),this.invocation);return;}
     const functionSuites: Readonly<Record<string, readonly [string, string]>> = {
       "cargo-build-lease": ["📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts", "proveCargoBuildLeasesV1"],
       "native-artifact-publication": ["📦️artifacts/🏗️native-build/🧪️tests/📦️publication/🟦️.ts", "testCargoArtifactPublication"],

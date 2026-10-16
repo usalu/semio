@@ -1,4 +1,4 @@
-import { toolJobReservedSpecs } from "../../../../../../../../../📜️script.ts";
+import { toolJobReservedSpecs } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { applyPatch } from "fast-json-patch";

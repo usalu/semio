@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { oklabMix, rgba8ToLinear, linearToOklab, type Rgba8 } from "../🌗️mixing/🟦️.ts";
 import { parseUiTheme, resolveThemeGeometry, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "../🌓️theme/🏛️model/🟦️.ts";
 import { SEMIO_ASSET_ROUTE } from "../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
-import { writeGeneratedFileIfChanged } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { loadFontCatalog, resolveFontSource } from "../🔤️fonts/🟦️.ts";
 
 const moduleRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
@@ -629,8 +628,11 @@ function validateStylingOutputManifest(artifacts: readonly StylingArtifact[]): v
   if (JSON.stringify(declared) !== JSON.stringify(rendered)) throw new Error(`styling adapter manifest mismatch:\ndeclared=${JSON.stringify(declared)}\nrendered=${JSON.stringify(rendered)}`);
 }
 
-/** 🎨️ Writes all styling artifacts from the same byte plan used by the freshness check. */
-export function generateStylingArtifacts(): void {
+/** 🪶️ Port through which the composition root persists one planned styling artifact. */
+export type StylingArtifactWriterV1 = (path: string, content: string) => unknown;
+
+/** 🎨️ Writes all styling artifacts from the same byte plan used by the freshness check, through the supplied writer. */
+export function generateStylingArtifacts(write: StylingArtifactWriterV1): void {
   const artifacts = renderStylingArtifacts();
   validateStylingOutputManifest(artifacts);
   const ownedDirectories = new Set([generatedCssDir, paletteDir, tokenDir, ...artifacts.map((artifact) => dirname(artifact.path)).filter((path) => path !== stylingOwnerRoot)]);
@@ -640,7 +642,7 @@ export function generateStylingArtifacts(): void {
     for (const name of readdirSync(root)) if (!expected.has(join(root, name))) rmSync(join(root, name), { recursive: true, force: true });
   }
   for (const artifact of artifacts) {
-    writeGeneratedFileIfChanged(artifact.path, artifact.content);
+    write(artifact.path, artifact.content);
   }
   for (const root of obsoleteGeneratedRoots) rmSync(root, { recursive: true, force: true });
   validatePremadeThemes();

@@ -405,9 +405,11 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
           {
-            package: "semio-framework-plugin-host",
+            package: "semio-framework-plugin-host-imports",
             target: { kind: "lib" },
-            laws: ["component::imports::effect_conversion_tests::request_inference_proposal_preserves_the_closed_kind"],
+            laws: [
+              "effect_conversion_tests::request_inference_proposal_preserves_the_closed_kind",
+            ],
           },
           {
             package: "semio-framework-os-host-media-raster",

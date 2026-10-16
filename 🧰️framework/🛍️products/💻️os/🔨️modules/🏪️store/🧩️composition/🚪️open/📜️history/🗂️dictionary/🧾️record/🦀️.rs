@@ -26,37 +26,37 @@ enum Stage {
 }
 
 /// 🔡️ Constant-space UTF-8/LEB128 cursor with one payload byte per fuel and retained events.
-pub(super) struct RetainedDictionaryDelta {
-    position: u64,
-    end: u64,
-    stage: Stage,
+pub struct RetainedDictionaryDelta {
+    pub position: u64,
+    pub end: u64,
+    pub stage: Stage,
     number: u64,
     digits: u8,
-    base: u64,
-    entries: u64,
-    remaining: u64,
+    pub base: u64,
+    pub entries: u64,
+    pub remaining: u64,
     entry_start: u64,
     entry_length: u64,
     utf8: [u8; 4],
     utf8_used: usize,
     utf8_expected: usize,
-    event: Option<DictionaryDeltaEvent>,
-    diagnostic: Option<DictionaryDeltaError>,
-    closed: bool,
+    pub event: Option<DictionaryDeltaEvent>,
+    pub diagnostic: Option<DictionaryDeltaError>,
+    pub closed: bool,
 }
 
 impl RetainedDictionaryDelta {
-    pub(super) fn new(start: u64, end: u64) -> Result<Self, DictionaryDeltaError> {
+    pub fn new(start: u64, end: u64) -> Result<Self, DictionaryDeltaError> {
         if start >= end {
             return Err(DictionaryDeltaError::Malformed);
         }
         Ok(Self { position: start, end, stage: Stage::Format, number: 0, digits: 0, base: 0, entries: 0, remaining: 0, entry_start: 0, entry_length: 0, utf8: [0; 4], utf8_used: 0, utf8_expected: 0, event: None, diagnostic: None, closed: false })
     }
 
-    fn reject<T>(&mut self, diagnostic: DictionaryDeltaError) -> Result<T, DictionaryDeltaError> {
+    pub fn reject<T>(&mut self, diagnostic: DictionaryDeltaError) -> Result<T, DictionaryDeltaError> {
         Err(*self.diagnostic.get_or_insert(diagnostic))
     }
-    fn check(&self) -> Result<(), DictionaryDeltaError> {
+    pub fn check(&self) -> Result<(), DictionaryDeltaError> {
         if self.closed {
             return Err(DictionaryDeltaError::State);
         }
@@ -72,11 +72,11 @@ impl RetainedDictionaryDelta {
         self.check()?;
         Ok(self.event.take())
     }
-    pub(super) fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.diagnostic.get_or_insert(DictionaryDeltaError::Cancelled);
     }
 
-    pub(super) fn push(&mut self, byte: u8, fuel: &mut usize) -> Result<bool, DictionaryDeltaError> {
+    pub fn push(&mut self, byte: u8, fuel: &mut usize) -> Result<bool, DictionaryDeltaError> {
         self.check()?;
         if *fuel == 0 {
             return Ok(false);
@@ -95,7 +95,7 @@ impl RetainedDictionaryDelta {
         Ok(true)
     }
 
-    fn byte(&mut self, byte: u8) -> Result<(), DictionaryDeltaError> {
+    pub fn byte(&mut self, byte: u8) -> Result<(), DictionaryDeltaError> {
         match self.stage {
             Stage::Format => {
                 if byte != 1 {
@@ -195,7 +195,7 @@ impl RetainedDictionaryDelta {
         self.stage = if self.entries == 0 { Stage::Done } else { Stage::Length };
     }
 
-    pub(super) fn finish(&mut self) -> Result<(), DictionaryDeltaError> {
+    pub fn finish(&mut self) -> Result<(), DictionaryDeltaError> {
         self.check()?;
         if self.event.is_some() {
             return self.reject(DictionaryDeltaError::State);
@@ -218,10 +218,10 @@ impl RetainedDictionaryDelta {
         }
         count
     }
-    pub(super) fn retained_scratch_bytes(&self) -> usize {
+    pub fn retained_scratch_bytes(&self) -> usize {
         self.utf8_used
     }
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.closed && self.utf8_used == 0 && self.event.is_none()
     }
 }

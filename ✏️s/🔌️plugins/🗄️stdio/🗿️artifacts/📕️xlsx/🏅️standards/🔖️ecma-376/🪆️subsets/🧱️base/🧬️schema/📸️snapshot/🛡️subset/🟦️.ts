@@ -1,7 +1,7 @@
 /** 🛡️ Exact owned XLSX namespace and relationship profile diagnostics. */
 import type{XlsxSnapshot}from"../🟦️.ts";
-import {NativeDecodeControl,type NativeDecodeProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {textUtf8ByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts";
+import {NativeDecodeControl,type NativeDecodeProgress} from "@semio-tech/framework/value/decode";
+import {textUtf8ByteLength} from "@semio-tech/framework/value/text";
 export interface XlsxProfileOptions{readonly maximumBytes?:number;readonly signal?:AbortSignal;readonly onProgress?:(progress:NativeDecodeProgress)=>void}
 export interface XlsxProfileDiagnostic{readonly code:string;readonly severity:"error"|"warning";readonly message:string}
 const OFFICE="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",OFFICE_STRICT="http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",SHEET="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",SHEET_STRICT="http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet",VML="application/vnd.openxmlformats-officedocument.vmlDrawing",WORKSHEET="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml";

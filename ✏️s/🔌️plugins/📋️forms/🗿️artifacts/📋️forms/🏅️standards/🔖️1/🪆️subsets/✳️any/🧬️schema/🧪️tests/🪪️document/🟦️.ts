@@ -1,13 +1,13 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import {parseFormsJsonArtifact,formsArtifactJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {parseFormsJsonDiff} from "../../../🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyFormsDiff } from "../../🔺️diff/🟦️.ts";
 import assert from "node:assert/strict";
-import { assertDocumentContractOracle, declaredChildDialectSchema } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
+import { assertDocumentContractOracle, declaredChildDialectSchema } from "@semio-tech/framework/schema/oracles/document";
 /** 🧪️ Forms persisted fields and child identities agree with independent JSON Schema validation. */
 import { fileURLToPath } from "node:url";
-import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };

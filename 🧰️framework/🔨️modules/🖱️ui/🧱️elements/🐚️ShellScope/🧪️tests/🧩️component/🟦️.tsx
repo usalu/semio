@@ -2,7 +2,7 @@
 import * as React from "react";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { createMemoryStoragePort } from "@semio-tech/framework";
+import { createMemoryStoragePort } from "../../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { currentStylingAppearanceName, resolveSemanticColorHex, setStylingAppearanceRoot } from "@semio-tech/ui-styling";
 import { act, fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";

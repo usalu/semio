@@ -420,7 +420,7 @@ where
                 return Err(AcceptanceSeedFault::Operation(index, "the seed edit leaves no applied operation".into()));
             }
         }
-        app.refresh_cache().await.map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the history does not backfill".into())))
+        app.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the history does not backfill".into())))
     }
     .await;
     match seeded {
@@ -633,7 +633,7 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let target = app.stores.store.mutation_ops().map_err(|error| format!("{error:?}"))?.first().map(|op| op.mutation_id.0.clone()).unwrap_or_default();
-    let patch = app.history_patch(true).await.map_err(|fault| AcceptanceError::from(fault).context("the history does not project".into()))?;
+    let patch = app.render_ctx().history_patch(true).await.map_err(|fault| AcceptanceError::from(fault).context("the history does not project".into()))?;
     let row = patch.upserts.iter().flat_map(|entry| entry.mutations.iter()).find(|mutation| mutation.mutation_id == target).ok_or_else(|| "the edited mutation has no history row".to_string())?;
     let (en, de) = (row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string());
     if en.trim().is_empty() || de.trim().is_empty() || en == edited.print_op() || de == edited.print_op() {
@@ -1134,7 +1134,7 @@ where
             }
         }
         PluginApp::acknowledge_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION).map_err(|fault| AcceptanceError::from(fault).context("the archive load is not acknowledged".into()))?;
-        reloaded.refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the reloaded history does not backfill".into()))
+        reloaded.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the reloaded history does not backfill".into()))
     }
     .await;
     match loaded {
@@ -1228,7 +1228,7 @@ where
                 acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))],cx).await.map_err(|refusal|refusal.context("the app's own example route does not load it".into()))?;
                 crate::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await)?;
             }
-            saved.refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))?;
+            saved.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))?;
             let before = acceptance_document_view(&mut saved, manifest,cx).await?;
             let mut reloaded = acceptance_reloaded(&saved, manifest,cx).await?;
             let after = acceptance_document_view(&mut reloaded, manifest,cx).await;
@@ -1261,7 +1261,7 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let patch = app.history_patch(true).await.map_err(|fault| AcceptanceError::from(fault).context("the history does not project".into()))?;
+    let patch = app.render_ctx().history_patch(true).await.map_err(|fault| AcceptanceError::from(fault).context("the history does not project".into()))?;
     let Some(row) = patch.upserts.iter().filter(|entry| entry.applied).flat_map(|entry| entry.mutations.iter()).find(|row| row.store.is_some() && row.editable && !row.superseded && !row.withdrawn && !row.pending) else {
         return Ok(None);
     };
@@ -1291,7 +1291,7 @@ where
             acceptance_verb(&mut app, action, args.iter().map(|(key, value)| (key.as_str(), value.clone())).collect(),cx).await?;
             crate::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await).map_err(|fault|AcceptanceError::from(fault).context(format!("the seed gesture {action} does not publish")))?;
         }
-        app.refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))
+        app.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))
     }
     .await;
     match seeded {

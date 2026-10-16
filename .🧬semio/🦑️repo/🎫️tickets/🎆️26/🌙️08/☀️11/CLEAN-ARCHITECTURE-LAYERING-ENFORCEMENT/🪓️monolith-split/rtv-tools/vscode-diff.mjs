@@ -1,0 +1,30 @@
+import { plugin } from "bun";
+const deep = () => new Proxy(class {}, { get: (t, k) => (k === "prototype" ? t.prototype : k === Symbol.toPrimitive ? () => "" : k === "then" ? undefined : deep()), apply: () => deep(), construct: () => ({}) });
+plugin({ name: "vscode-stub", setup(b) { b.module("vscode", () => ({ exports: { CancellationToken: deep(), CodeLens: deep(), CodeLensProvider: deep(), Command: deep(), DecorationOptions: deep(), Diagnostic: deep(), DiagnosticCollection: deep(), DiagnosticSeverity: deep(), DocumentSymbol: deep(), EventEmitter: deep(), ExtensionContext: deep(), OutputChannel: deep(), Position: deep(), ProgressLocation: deep(), QuickPickItem: deep(), Range: deep(), Selection: deep(), SymbolInformation: deep(), SymbolKind: deep(), TextDocument: deep(), TextEditor: deep(), TextEditorDecorationType: deep(), ThemeIcon: deep(), TreeDataProvider: deep(), TreeItem: deep(), TreeItemCollapsibleState: deep(), Uri: deep(), ViewColumn: deep(), WorkspaceEdit: deep(), commands: deep(), env: deep(), executeDocumentSymbolProvider: deep(), languages: deep(), open: deep(), packages: deep(), window: deep(), workspace: deep() }, loader: "object" })); } });
+const which = process.argv[2];
+const C = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/";
+const out = {};
+const rec = (name, fn) => { try { out[name] = JSON.stringify(fn()); } catch (e) { out[name] = "THROWS " + String(e.message).slice(0, 80); } };
+let m;
+if (which === "base") { const x = await import(C + "🧩️rtv-vscode-base/🟦️.ts"); m = { tree: x, uri: x, util: x, emoji: x, types: x }; }
+else { const V = C + "🧩️vscode/"; m = { tree: await import(V + "🌳️tree-providers/🟦️.ts"), uri: await import(V + "🏬️uri-resolution/🟦️.ts"), util: await import(V + "🎼️utilities/🟦️.ts"), emoji: await import(V + "🌪️entity-emoji-registry/🟦️.ts") }; }
+const { uri, util, emoji, tree } = m;
+out.baseExportCount = which === "base" ? Object.keys(m.tree).length : -1;
+rec("slugify", () => ["Hello World", "ÄÖ x_y--z", "", "  a  b  "].map(uri.slugify));
+rec("extractLeadingEmoji", () => ["🧪️tests/x", "plain", "🧑‍💻dev rest", "📝️draft"].map(uri.extractLeadingEmoji));
+rec("parseUri", () => ["repo://ticket/26/10/16/SLUG", "repo://bundle/x", "nonsense", "repo://file/a/b.ts"].map(uri.parseUri));
+const nodes = [{ id: "🧪️a", name: "A", kind: "bundle", uri: "repo://bundle/a", root: "x", children: [] }, { id: "t", name: "T", kind: "ticket", status: "OPEN", uri: "repo://ticket/1" }];
+rec("treeNodeDisplayLabel", () => nodes.map(uri.treeNodeDisplayLabel));
+rec("treeNodeContextValue", () => nodes.map(uri.treeNodeContextValue));
+rec("treeNodeCommand", () => nodes.map(uri.treeNodeCommand));
+rec("parseRepoEvents", () => util.parseRepoEvents('{"kind":"a"}\n{"kind":"result","result":{"x":1}}\nnot json\n'));
+rec("extractRepoResult", () => util.extractRepoResult([{ kind: "result", result: { a: 1 } }, { kind: "error", error: { message: "m" } }]));
+rec("extractRepoResult2", () => util.extractRepoResult([{ kind: "x" }]));
+rec("hasRepoAccess", () => typeof util.hasRepoAccess);
+rec("resolveRepoBinaryPath", () => typeof util.resolveRepoBinaryPath);
+rec("entityPattern", () => emoji.buildEntityEmojiPattern().length);
+rec("entityRegex", () => { const r = emoji.buildEntityIdRegex(); return ["see 🧪️abc-def here", "[🎫️x](repo://t/1)", "none"].map((s) => [...s.matchAll(r)].map((x) => x[0])); });
+rec("ENTITY_EMOJIS", () => [...emoji.ENTITY_EMOJIS].slice(0, 20));
+rec("ENTITY_ID_REGEX", () => emoji.ENTITY_ID_REGEX.source.length + ":" + emoji.ENTITY_ID_REGEX.flags);
+rec("buildCliTreeArgs", () => typeof tree.buildCliTreeArgs);
+console.log(JSON.stringify(out, null, 1));

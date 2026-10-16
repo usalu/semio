@@ -9,7 +9,7 @@ import * as associative from "../../🔗️associativity/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgBodyKind } from "../../✏️drawing/🟦️.ts";
 import fixture from "../🧫️fixtures/📦️objects/🔣️.json";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 import { dwgObjectBodies as bodies } from "../🧰️support/📦️objects/🟦️.ts";
 const max=18446744073709551615n;

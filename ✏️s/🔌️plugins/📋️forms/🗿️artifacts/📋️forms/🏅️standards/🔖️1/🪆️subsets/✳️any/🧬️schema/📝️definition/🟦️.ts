@@ -1,6 +1,6 @@
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import type { DslValue, FormExpr, FormQuestion, FormStep } from "../🧬️mutations/🟦️.ts";
-import{parseIntrinsicValue}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import{parseIntrinsicValue}from"@semio-tech/framework/value/schema";
 
 /** 📝️ Authoritative form content survives standalone document reloads. */
 export interface FormsDefinition { steps: FormStep[] }

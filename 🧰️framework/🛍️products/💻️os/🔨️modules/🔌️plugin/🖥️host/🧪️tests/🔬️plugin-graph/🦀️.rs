@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework::PluginManifest;
 
 async fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> PluginManifest {
     let mut dependencies = Vec::with_capacity(deps.len());

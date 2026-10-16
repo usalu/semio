@@ -8,7 +8,7 @@ import { isDeepStrictEqual } from "node:util";
 import fixture from "../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json";
 import replay from "../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json";
 import schema from "../🔣️.json";
-import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
+import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import snapshotSchema from "../../📸️snapshot/🔣️.json";
 import { parsePdfAdmittedStreamRole, resolveIdentity, validateRoleInputs, validateRoleTransition, pageContent } from "../🟦️.ts";
 import type { PdfIndirectObject } from "../../📸️snapshot/🟦️.ts";

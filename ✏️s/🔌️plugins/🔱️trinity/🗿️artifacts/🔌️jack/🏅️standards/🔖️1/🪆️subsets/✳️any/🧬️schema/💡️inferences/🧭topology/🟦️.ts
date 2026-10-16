@@ -1,7 +1,7 @@
 /** 🧭️ Topology reads retained graph queries and propagates intrinsic owner refusal. */
 import type {JackArtifact} from "../../🟦️.ts";
 import {retainedJackGraph,type JackGraphQuery} from "../🪆️graph-query/🟦️.ts";
-import {ValueError} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "@semio-tech/framework/value/refusal";
 import type {JackTopology} from "../🟦️.ts";
 export type {JackTopology};
 /** 🪆️ Child ownership and endpoint validity precede Kahn traversal. */

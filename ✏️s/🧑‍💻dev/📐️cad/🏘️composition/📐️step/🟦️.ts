@@ -1,6 +1,6 @@
 /** 📐️ CAD development composition explicitly binds STEP geometry operations and browser publication. */
 import { SemioBrepKernel } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts";
-import { SemioGeometrySession } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🟦️.ts";
+import { SemioGeometrySession, requireBrowserGeometrySessionV1 } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🟦️.ts";
 import type { Model } from "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 async function initializeBindings() {
   const bindings=await import("../../📦️packages/🦀️rust/🕸️bindings/cad_geometry.js");
@@ -11,7 +11,7 @@ async function initializeBindings() {
 }
 let initialization:ReturnType<typeof initializeBindings> | undefined;
 /** 🌊️ One explicit outward session owns both general geometry authority and STEP codec operations. */
-export function createStepGeometrySession():SemioGeometrySession { return new SemioGeometrySession(async() => new (await(initialization ??= initializeBindings())).BrowserSession()); }
+export function createStepGeometrySession():SemioGeometrySession { return new SemioGeometrySession(async() => requireBrowserGeometrySessionV1(new (await(initialization ??= initializeBindings())).BrowserSession())); }
 /** 🧊️ Constructs a kernel with explicit format contribution ownership. */
 export function createStepGeometryKernel():SemioBrepKernel { return new SemioBrepKernel(createStepGeometrySession()); }
 /** 📤️ Exports a model through the STEP owner while retaining the kernel's derived geometry claims. */

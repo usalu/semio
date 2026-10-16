@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
+import { cleanup, fireEvent, render, screen } from "@semio-tech/framework/ui/targets/react/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { InferencePortPanel } from "../../🪟️presentation/🟦️.tsx";
 import type { GisMapInferencePortStatusV1 } from "../../🧬️schema/🟦️.ts";

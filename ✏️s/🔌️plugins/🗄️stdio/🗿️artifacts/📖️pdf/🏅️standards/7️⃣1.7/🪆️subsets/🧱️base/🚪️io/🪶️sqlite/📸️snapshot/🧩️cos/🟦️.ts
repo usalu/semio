@@ -2,7 +2,7 @@ import {writePdfDate,readPdfDate} from "../📇️metadata/📆️date/🟦️.t
 /** 🧩️ Handwritten COS values, ordered dictionary members and ten intrinsic stream filters. */
 import type { PdfObject, PdfDictEntry, PdfStreamFilter, PdfPredictor } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, pdfNullExcept, type ArtifactSqliteOptions, type SqliteDatabase, type SqliteRow, type SqliteValue } from "../🧩️entity/🟦️.ts";
-import { artifactSqliteInteger, artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger, artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 /** 🏛️ Independently interpretable PDF COS entities, matching the native owner's schema. */
 export const PDF_COS_SQLITE_SCHEMA = `CREATE TABLE pdf_date (id INTEGER PRIMARY KEY, year INTEGER NOT NULL, month INTEGER NOT NULL, day INTEGER NOT NULL, hour INTEGER NOT NULL, minute INTEGER NOT NULL, second INTEGER NOT NULL, offset_minutes INTEGER);

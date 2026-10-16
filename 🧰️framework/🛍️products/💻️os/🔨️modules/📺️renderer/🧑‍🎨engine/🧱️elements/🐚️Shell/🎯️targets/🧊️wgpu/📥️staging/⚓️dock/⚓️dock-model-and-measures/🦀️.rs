@@ -6,107 +6,9 @@ use super::*;
 
 //#region ShellLifecycle
 //#region 🧭️PanelAnchorModel
-/// 🧭️ The framework's generic 8-anchor panel positioning model — mirrors `PanelGroup::anchor()`
-/// (`🔨️modules/🛂️manifest/🦀️.rs`) and React's `Anchor`/`ANCHORS`
-/// (`🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`). Every anchor is an independent floating panel slot
-/// carrying its own tab tree ({@link ShellDock}) and its own open/size/active-path chrome state
-/// ({@link PanelAnchorState}) — the same `PanelDock`/`PanelState` pair React's `Layout` maps over.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum PanelAnchor {
-    TopLeft,
-    TopMiddle,
-    TopRight,
-    RightMiddle,
-    BottomRight,
-    BottomMiddle,
-    BottomLeft,
-    LeftMiddle,
-}
-
-impl PanelAnchor {
-    pub const ALL: [PanelAnchor; 8] = [PanelAnchor::TopLeft, PanelAnchor::TopMiddle, PanelAnchor::TopRight, PanelAnchor::RightMiddle, PanelAnchor::BottomRight, PanelAnchor::BottomMiddle, PanelAnchor::BottomLeft, PanelAnchor::LeftMiddle];
-
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            PanelAnchor::TopLeft => "top-left",
-            PanelAnchor::TopMiddle => "top-middle",
-            PanelAnchor::TopRight => "top-right",
-            PanelAnchor::RightMiddle => "right-middle",
-            PanelAnchor::BottomRight => "bottom-right",
-            PanelAnchor::BottomMiddle => "bottom-middle",
-            PanelAnchor::BottomLeft => "bottom-left",
-            PanelAnchor::LeftMiddle => "left-middle",
-        }
-    }
-
-    /// 🧭️ Parses one of the eight `ANCHORS` ids — the read side of every persisted dock document.
-    pub fn from_str(value: &str) -> Option<PanelAnchor> {
-        PanelAnchor::ALL.into_iter().find(|anchor| anchor.as_str() == value)
-    }
-
-    /// 🧭️ This anchor's slot in every `[_; 8]` the dock keys by anchor, in `ALL` order.
-    pub fn index(&self) -> usize {
-        match self {
-            PanelAnchor::TopLeft => 0,
-            PanelAnchor::TopMiddle => 1,
-            PanelAnchor::TopRight => 2,
-            PanelAnchor::RightMiddle => 3,
-            PanelAnchor::BottomRight => 4,
-            PanelAnchor::BottomMiddle => 5,
-            PanelAnchor::BottomLeft => 6,
-            PanelAnchor::LeftMiddle => 7,
-        }
-    }
-
-    /// 🧭️ `"top"`/`"middle"`/`"bottom"` row of this anchor — the Rust twin of React's `anchorVertical`.
-    pub fn vertical(&self) -> &'static str {
-        match self {
-            PanelAnchor::TopLeft | PanelAnchor::TopMiddle | PanelAnchor::TopRight => "top",
-            PanelAnchor::BottomLeft | PanelAnchor::BottomMiddle | PanelAnchor::BottomRight => "bottom",
-            PanelAnchor::LeftMiddle | PanelAnchor::RightMiddle => "middle",
-        }
-    }
-
-    /// 🧭️ `"left"`/`"middle"`/`"right"` column of this anchor — the Rust twin of React's `anchorHorizontal`.
-    pub fn horizontal(&self) -> &'static str {
-        match self {
-            PanelAnchor::TopLeft | PanelAnchor::BottomLeft | PanelAnchor::LeftMiddle => "left",
-            PanelAnchor::TopRight | PanelAnchor::BottomRight | PanelAnchor::RightMiddle => "right",
-            PanelAnchor::TopMiddle | PanelAnchor::BottomMiddle => "middle",
-        }
-    }
-
-    /// 🧭️ Mirrors `PanelGroup::anchor()`'s corner mapping exactly; a group never maps to a middle anchor.
-    /// 🧭️ This anchor as the shared `ui_contract::Anchor` vocabulary React's `flowFromAnchor` reads.
-    /// `Left`/`Right` are the physical edges this target names its anchors by; `Start`/`End` are the
-    /// logical ones the contract names them by, and in an LTR shell they coincide — which is exactly
-    /// the mapping `🖼️Panel/🟦️.tsx`'s own `anchorHorizontal` makes.
-    pub fn contract_anchor(&self) -> ui_contract::Anchor {
-        match self {
-            PanelAnchor::TopLeft => ui_contract::Anchor::TopStart,
-            PanelAnchor::TopMiddle => ui_contract::Anchor::Top,
-            PanelAnchor::TopRight => ui_contract::Anchor::TopEnd,
-            PanelAnchor::RightMiddle => ui_contract::Anchor::End,
-            PanelAnchor::BottomRight => ui_contract::Anchor::BottomEnd,
-            PanelAnchor::BottomMiddle => ui_contract::Anchor::Bottom,
-            PanelAnchor::BottomLeft => ui_contract::Anchor::BottomStart,
-            PanelAnchor::LeftMiddle => ui_contract::Anchor::Start,
-        }
-    }
-
-    /// 🧭️ The logical flow a panel docked here presents its content in — React's
-    /// `flowFromAnchor(anchor)`, fed to the `FlowProvider` that wraps every `Panel`.
-    pub fn flow(&self) -> ui_contract::UiFlow {
-        ui_contract::UiFlow::for_anchor(self.contract_anchor())
-    }
-
-    pub fn from_group(group: PanelGroup) -> PanelAnchor {
-        PanelAnchor::from_str(group.anchor()).unwrap_or(PanelAnchor::TopLeft)
-    }
-}
 
 /// 🧭️ Reserves an anchor's tab bar on the logical block end, then applies the retained-body inset.
-pub(crate) fn flowed_anchor_content_rect(block: ui_contract::FlowBlock, panel: Rect, bar_height: f32, inset: f32) -> Rect {
+pub fn flowed_anchor_content_rect(block: ui_contract::FlowBlock, panel: Rect, bar_height: f32, inset: f32) -> Rect {
     let content_height = (panel.h - bar_height).max(0.0);
     let content_y = if block.is_reversed() { panel.y } else { panel.y + bar_height };
     Rect::new(panel.x, content_y, panel.w, content_height).inset(inset)
@@ -183,8 +85,6 @@ impl ShellDock {
     }
 }
 
-pub(crate) const DOCK_SKELETON_VERSION: u8 = 3;
-
 /// 🧭️ One anchor's chrome state — React's `PanelState` (`🐚️Shell/🟦️.tsx`'s `SET_PANEL_VISIBLE`/
 /// `SET_PANEL_SIZE`/`SET_PANEL_PATH` reducer trio) plus the folded/collapsed branch set the tab bar
 /// paints from.
@@ -218,14 +118,14 @@ pub struct PanelAnchorSnapshot {
 }
 
 /// ↔ Shared starting width for every panel anchor, one compact step wider than the former 280px Document panel.
-pub(crate) const DEFAULT_PANEL_WIDTH_PX: f32 = 300.0;
+pub const DEFAULT_PANEL_WIDTH_PX: f32 = 300.0;
 
 /// 🗄️ **Dedup note**: panel layout used to be its own `semio.panelLayout.v1` preference carrying a
 /// tab-separated left/right pair, which no React shell could ever read. Both dock documents now live
 /// in the one `semio.os.config` document React's `OsShellConfig` owns (`🔨️modules/🖥️platform/🟦️.ts`),
 /// under `dockLayouts` (the arrangement) and `dockUi` (the chrome) — one authority, one storage key,
 /// and a dock rearranged in one renderer opens rearranged in the other.
-pub(super) fn os_shell_config_document() -> Value {
+pub fn os_shell_config_document() -> Value {
     raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)
         .filter(|raw| raw.len() <= OS_SHELL_CONFIG_MAX_BYTES)
         .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
@@ -243,7 +143,7 @@ fn write_os_shell_config_document(config: &Value) {
 
 /// 🗄️ Writes (or, with `None`, removes) one dock layer in an `semio.os.config` document — React's
 /// `DockLayoutStore::save`/`saveOs`, pure over the document for the same reason as its reader.
-pub(crate) fn write_os_shell_config_layer_in<T: Serialize>(config: &mut Value, section: &str, app_id: Option<&str>, value: Option<&T>) {
+pub fn write_os_shell_config_layer_in<T: Serialize>(config: &mut Value, section: &str, app_id: Option<&str>, value: Option<&T>) {
     if !config.get(section).is_some_and(Value::is_object) {
         config[section] = serde_json::json!({ "apps": {} });
     }
@@ -274,13 +174,13 @@ fn write_os_shell_config_layer<T: Serialize>(section: &str, app_id: Option<&str>
 }
 
 /// 🗄️ Persists (or, with `None`, removes) the dock arrangement at `app_id`'s layer — React's `DockLayoutStore::save`.
-pub(crate) fn save_dock_skeleton_to_store(app_id: Option<&str>, skeleton: Option<&DockSkeleton>) {
+pub fn save_dock_skeleton_to_store(app_id: Option<&str>, skeleton: Option<&DockSkeleton>) {
     write_os_shell_config_layer("dockLayouts", app_id, skeleton);
 }
 
 /// 🖥️ The app a saved layout is filed under — React's Display host `focusedApp?.id ?? "framework-os"`
 /// (`🏛️ShellHost/🟦️.tsx`, `displayLayoutAppId`).
-pub(crate) const NAMED_LAYOUT_STORE_FALLBACK_APP_ID: &str = "framework-os";
+pub const NAMED_LAYOUT_STORE_FALLBACK_APP_ID: &str = "framework-os";
 
 fn named_layout_store_app_id(app_id: Option<&str>) -> String {
     app_id.filter(|id| !id.is_empty()).unwrap_or(NAMED_LAYOUT_STORE_FALLBACK_APP_ID).to_string()
@@ -289,7 +189,7 @@ fn named_layout_store_app_id(app_id: Option<&str>) -> String {
 /// 🖥️ This app's USER layouts, projected from the replayed `os.config.ui-preferences` preferences — React's
 /// `displayUserLayouts`: `namedLayouts[appId]` sorted by layout id, each `origin: "user"`. A saved arrangement this
 /// renderer cannot type is left out rather than failing the roster.
-pub(crate) fn user_named_layouts(preferences: &UiPreferences, app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
+pub fn user_named_layouts(preferences: &UiPreferences, app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
     let mut layouts: Vec<ui_wgpu::wgpu::NamedLayout> = preferences
         .named_layouts
         .get(&named_layout_store_app_id(app_id))
@@ -307,7 +207,7 @@ pub(crate) fn user_named_layouts(preferences: &UiPreferences, app_id: Option<&st
 /// 🖥️ The `setNamedLayout` events that turn `preferences`' saved layouts of this app into `layouts` — one per
 /// added, changed or removed user layout, none for an unchanged roster and never one for a builtin (React's
 /// `onSaveUserLayout`/`onDeleteUserLayout`, one event per gesture).
-pub(crate) fn named_layout_events(preferences: &UiPreferences, app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) -> Vec<UiPreferencesConfigMutation> {
+pub fn named_layout_events(preferences: &UiPreferences, app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) -> Vec<UiPreferencesConfigMutation> {
     let key = named_layout_store_app_id(app_id);
     let before = preferences.named_layouts.get(&key).cloned().unwrap_or_default();
     let after: HashMap<String, UserNamedLayout> = layouts
@@ -320,22 +220,38 @@ pub(crate) fn named_layout_events(preferences: &UiPreferences, app_id: Option<&s
 }
 
 /// 🖥️ The persisted user layouts for `app_id`, off the replayed preference log.
-pub(crate) fn load_named_layouts_from_store(app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
+pub fn load_named_layouts_from_store(app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
     user_named_layouts(&read_ui_preferences(), app_id)
 }
 
 /// 🖥️ Appends the events that make `layouts` this app's saved roster to the preference log.
-pub(crate) fn save_named_layouts_to_store(app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) {
+pub fn save_named_layouts_to_store(app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) {
     commit_ui_preferences_write(|log| {
         let events = named_layout_events(&replay_ui_preferences(log), app_id, layouts);
         log.events.extend(events);
     });
 }
 
-pub(crate) fn save_dock_ui_to_store(app_id: Option<&str>, state: Option<&DockUiState>) {
+pub fn save_dock_ui_to_store(app_id: Option<&str>, state: Option<&DockUiState>) {
     write_os_shell_config_layer("dockUi", app_id, state);
 }
 
 //#endregion 🧭️PanelAnchorModel
 //#endregion ShellLifecycle
 
+//#region ShellLifecycle
+//#region 🧭️PanelAnchorModel
+pub fn dock_tab_path(nodes: &[DockTabNode], tab_id: &str) -> Option<Vec<String>> {
+    for node in nodes {
+        if node.id == tab_id {
+            return Some(vec![node.id.clone()]);
+        }
+        if let Some(mut rest) = dock_tab_path(&node.children, tab_id) {
+            rest.insert(0, node.id.clone());
+            return Some(rest);
+        }
+    }
+    None
+}
+//#endregion 🧭️PanelAnchorModel
+//#endregion ShellLifecycle

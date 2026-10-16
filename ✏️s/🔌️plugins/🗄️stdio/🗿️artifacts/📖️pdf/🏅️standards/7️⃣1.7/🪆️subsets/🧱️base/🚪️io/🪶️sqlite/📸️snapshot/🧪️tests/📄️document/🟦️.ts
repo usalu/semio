@@ -23,7 +23,7 @@ import { Database } from "bun:sqlite";
 import { parsePdfSnapshot } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { pdfSnapshotFromNativeJson } from "../../../../📝️text/📸️snapshot/🪪️native-json/📄️document/🟦️.ts";
 import { pdf17SnapshotToSqliteDatabase,pdf17SnapshotFromSqliteDatabase } from "../../🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("PDF complete page fields preserve every exceptional IEEE word and optional presence",async()=>{
   const fixture=JSON.parse(await Bun.file(new URL("../../📄️document/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text());const cases=JSON.parse(await Bun.file(new URL("../🧫️fixtures/🔢ieee.json",import.meta.url)).text());for(const item of cases.binary64){const value=pdfSnapshotFromNativeJson(fixture);const word={bits:BigInt(`0x${item.bits}`)};const page=value.pages[0]!;page.mediaBox=[word,word,word,word];page.cropBox=[word,word,word,word];page.bleedBox=[word,word,word,word];page.trimBox=[word,word,word,word];page.artBox=[word,word,word,word];page.userUnit=word;page.duration=word;const bytes=await exportSqliteDatabase(await pdf17SnapshotToSqliteDatabase(value));const sql=Database.deserialize(bytes);expect(sql.query("SELECT CAST(user_unit_bits AS TEXT) AS bits,user_unit_class AS class,user_unit IS NULL AS nullQuery FROM pdf_page").get()).toEqual({bits:BigInt.asIntN(64,word.bits).toString(),class:item.class,nullQuery:item.class==="nan"?1:0});expect(await pdf17SnapshotFromSqliteDatabase(await importSqliteDatabase(bytes))).toEqual(value);sql.close();}

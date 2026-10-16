@@ -10,7 +10,8 @@
     "waitPublished",
     "waitCompleted",
     "waitEntered",
-    "safetyExpired"
+    "safetyExpired",
+    "parentArguments"
   ],
   "properties": {
     "purpose": {
@@ -36,6 +37,12 @@
     },
     "safetyExpired": {
       "const": false
+    },
+    "parentArguments": {
+      "const": [
+        "original",
+        "productsPhase"
+      ]
     }
   },
   "definitions": {

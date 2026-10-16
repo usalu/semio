@@ -1,4 +1,4 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import {fileURLToPath as shootingIndependentFixturePath} from "node:url";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
@@ -8,13 +8,13 @@ import fixture from "./🧫️fixtures/🔣️.json";
 
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
-import ioSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import childSchema from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
+import type {ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 type V3=[Binary64,Binary64,Binary64];
 type V4=[Binary64,Binary64,Binary64,Binary64];
 type Asset=Omit<owner.ShootingAsset,"origin"|"orientation"|"scale">&{origin:V3;orientation?:V4;scale?:V3};

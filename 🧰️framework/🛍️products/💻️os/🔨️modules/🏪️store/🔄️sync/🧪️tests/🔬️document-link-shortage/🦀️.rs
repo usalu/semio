@@ -4,7 +4,7 @@
 //! worker cannot drift into three reconnect-and-expiry rules again (ticket 26/09/23 audit P2-2).
 
 use super::{document_admission_refuses_access, document_link_terminal_message, DocumentLink, DocumentLinkEvent, DocumentLinkShortagePolicy, DocumentLinkStatus, DOCUMENT_LINK_ACCESS_REFUSED_STATUSES, DOCUMENT_LINK_SHORTAGE_POLICY};
-use crate::os_directory::client::{DirectoryClientError, TransportError};
+use semio_framework_os_directory_client::{DirectoryClientError, TransportError};
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/document-link-shortage-v1/🔣️.json");
 

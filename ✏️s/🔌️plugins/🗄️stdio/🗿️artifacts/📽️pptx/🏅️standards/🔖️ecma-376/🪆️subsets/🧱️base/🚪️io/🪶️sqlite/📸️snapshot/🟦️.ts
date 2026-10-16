@@ -12,8 +12,8 @@ import {
   artifactSqliteTextBytes,
   artifactSqliteValueBudget,
   type ArtifactSqliteOptions,
-} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase, SqliteRow } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase, SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 import { measureXmlDocuments, projectXmlDocuments, reconstructXmlDocuments, type XmlSqliteTables } from "../../../../../../../../📰️xml/🟦️.ts";
 import { measureOpcPackage, projectOpcPackage, reconstructOpcPackage, type OpcSqliteTables } from "../../../../../../../../🎒️zip/📦️opc/🪶️sqlite/🟦️.ts";
 

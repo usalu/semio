@@ -1,4 +1,16 @@
-use super::*;
+
+use semio_framework::kernel::{Budget, MessageEndpoint, TurnStatus};
+use semio_framework_plugin_host_guest_runtime::{GUEST_JOB_WATCHDOG_MS, PackageRef, WasmtimeRuntime, classify_guest_trap};
+use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
+use semio_framework_plugin_host_post_turn_relay::RELAY_JOB_BUDGET;
+use semio_framework_plugin_host_engine::SharedEngineConfig;
+use semio_framework_plugin_guest_contract::TurnFault;
+use semio_framework_plugin_host_wit::conversion::{kernel_message_endpoint_to_wit, wit_effect_to_kernel, wit_message_endpoint_to_kernel, wit_turn_status_to_kernel};
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_plugin_host_engine::minimal_component_without_actor_world;
+use semio_framework_plugin_host_wit::wit_effects;
+use semio_framework_plugin_host_wit::wit_reactor;
+use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
 
 #[semio_framework_async_macros::async_test]
 async fn compile_accepts_a_deterministic_component_and_caches_it() {

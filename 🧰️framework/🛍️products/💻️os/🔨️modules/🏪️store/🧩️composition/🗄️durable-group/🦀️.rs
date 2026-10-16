@@ -1,7 +1,7 @@
 //! 🗺️ Closed codec and admission fence for one durable parent+drawing+value Store decision.
-use super::one_item_publication::ArtifactStoreOneItemPreparedParts;
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparedParts;
 
-use super::CursorRevisionAccumulator;
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use semio_framework_dsl_record::DslField;
 use semio_framework_value::DslValue;
@@ -9,63 +9,47 @@ use semio_framework_dsl_record::FieldValue;
 use semio_framework_value::FromValue as ValueFromValue;
 use semio_framework_dsl_record::Shape;
 use semio_framework_value::ToValue as ValueToValue;
-use crate::os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
-use crate::os_store::{ArtifactStore, StoreParts, StorePartsRef, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError};
-use crate::os_pack::pack_rt;
+use semio_framework_os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
+use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel};
+use semio_framework_diagnostic::TextError;
+use semio_framework_os_pack::pack_rt;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 use std::mem::size_of;
 use semio_framework_value::ErasedSnapshotRetirement as _;
 use std::collections::BTreeMap;
+pub use semio_framework_os_store_durable_group_wire::lifted_durable_group::{ArtifactStoreDurableGroupRootV1, DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1, DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1, DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, DURABLE_OWNED_GROUP_ID_MAX_BYTES, DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, DURABLE_OWNED_GROUP_SHAPE_V1, DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, DurableOwnedGroupAnchorV1, DurableOwnedGroupDecisionError, DurableOwnedGroupJournalAdvanceV1, DurableOwnedGroupJournalCommitV1, DurableOwnedGroupJournalReceiptV1, DurableOwnedGroupJournalSinkV1, DurableOwnedGroupMapFrontiersV1, DurableOwnedGroupMapHandlesV1, DurableOwnedGroupMemberV1, DurableOwnedGroupVerifiedThreeEditsV1, DurableOwnedMapMemberAdmissionV1, DurableOwnedMapRecoveryAdvanceV1, DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedThreeStoreCommitPhaseV1, DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedThreeStoreMapAssemblyFailureV1, DurableOwnedThreeStoreMapAssemblyPhaseV1, DurableOwnedThreeStoreSnapshotV1, DurableStorePreparedOutcomeV1, DurableStorePreparedOutcomesV1, DurableStoreVerifiedOutcomeV1, StagedRootRetirement};
+use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DRAWING_RECOVERY_SCHEMA, DRAWING_ROLE, DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1, DurableBoundOneItemOutcomeV1, DurableMemberRecoveryFrontier, DurableOwnedThreeMemberUnsignedV1, DurableUnboundOneItemOutcomeV1, PARENT_RECOVERY_SCHEMA, PARENT_ROLE, VALUE_RECOVERY_SCHEMA, VALUE_ROLE, close_assembly_publication, close_journal_owner, durable_group_test_bind_member, durable_group_test_member, durable_group_test_outcome, member_identity_matches, member_matches, parse_canonical_json_value, take_assembly_prepared, unsigned_member, valid_hash, valid_reference};
+use semio_framework_os_store_engine_stage::lifted_durable_group::{DurableStorePreparedOwnerV1, bound_member, clear_adopted_store_member, prepared_base_matches_store, prepared_member, recovery_frontier, retire_unstaged_store_member, stage_store_member, store_member_identity, validate_adopted_store_member, verify_bound_member_edit};
+pub use semio_framework_os_store_engine_stage::lifted_durable_group::{DurableStoreBoundOutcomeV1, abort_staged_store_member, adopt_staged_store_member, stage_prebuilt_batch_root};
 
-pub const DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1: &str = "semio.store.durable-owned-three-member-decision.v1";
-pub const DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1: &str = "semio.store.owned-three-member-anchor.v1";
-pub const DURABLE_OWNED_GROUP_SHAPE_V1: &str = "parent-drawing-value";
-pub const DURABLE_OWNED_GROUP_EVENT_MAX_BYTES: usize = 491_520;
-pub const DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES: usize = 162_000;
-pub const DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES: usize = 4_096;
-pub const DURABLE_OWNED_GROUP_ID_MAX_BYTES: usize = 256;
-const DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1: &str = "semio.store.unbound-one-item-outcome.v1";
-const DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1: &str = "semio.store.bound-one-item-outcome.v1";
-const DURABLE_OWNED_GROUP_JSON_MAX_DEPTH: usize = 32;
-const DURABLE_OWNED_GROUP_JSON_MAX_ITEMS: usize = 65_536;
 
-const PARENT_ROLE: &str = "parent";
-const DRAWING_ROLE: &str = "drawing";
-const VALUE_ROLE: &str = "value";
-const PARENT_RECOVERY_SCHEMA: &str = "semio.store.one-item-outcome.gis-gismap-v1";
-const DRAWING_RECOVERY_SCHEMA: &str = "semio.store.one-item-outcome.stdio-drawing-v1";
-const VALUE_RECOVERY_SCHEMA: &str = "semio.store.one-item-outcome.stdio-value-v1";
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct DurableOwnedGroupAnchorV1 {
-    pub(crate) schema: String,
-    pub(crate) parent: semio_framework_artifact_reference::ArtifactRef,
-    pub(crate) shape: String,
-}
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct DurableOwnedGroupMemberV1 {
-    pub(crate) role: String,
-    pub(crate) reference: semio_framework_artifact_reference::ArtifactRef,
-    pub(crate) owner: Option<OwnerRef>,
-    pub(crate) expected_generation: u64,
-    pub(crate) expected_revision: [u8; 32],
-    pub(crate) recovery_schema: String,
-    pub(crate) recovery_pack: Vec<u8>,
-    pub(crate) recovery_pack_sha256: String,
-    pub(crate) unbound_outcome_sha256: String,
-    pub(crate) post_generation: u64,
-    pub(crate) post_revision: [u8; 32],
-}
 
-pub(super) struct DurableStorePreparedOutcomesV1 {
-    pub(super) parent: DurableStorePreparedOutcomeV1,
-    pub(super) drawing: DurableStorePreparedOutcomeV1,
-    pub(super) value: DurableStorePreparedOutcomeV1,
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 macro_rules! value_field {
     ($kind:ty) => {
@@ -89,36 +73,14 @@ macro_rules! value_field {
 value_field!(DurableOwnedGroupAnchorV1);
 value_field!(DurableOwnedGroupMemberV1);
 
-impl semio_framework_dsl_record::BorrowedDslField for DurableOwnedGroupAnchorV1{
- const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;
-}
-impl semio_framework_dsl_record::BorrowedDslField for DurableOwnedGroupMemberV1{
- const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;
-}
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue)]
-#[value(rename_all = "camelCase")]
-struct DurableOwnedThreeMemberUnsignedMemberV1 {
-    role: String,
-    reference: semio_framework_artifact_reference::ArtifactRef,
-    owner: Option<OwnerRef>,
-    expected_generation: u64,
-    expected_revision: [u8; 32],
-    recovery_schema: String,
-    unbound_outcome_sha256: String,
-}
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue)]
-#[value(rename_all = "camelCase")]
-struct DurableOwnedThreeMemberUnsignedV1 {
-    schema: String,
-    anchor: DurableOwnedGroupAnchorV1,
-    parent: DurableOwnedThreeMemberUnsignedMemberV1,
-    drawing: DurableOwnedThreeMemberUnsignedMemberV1,
-    value: DurableOwnedThreeMemberUnsignedMemberV1,
-}
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
+
+
+
+
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact(id = "store.durable-owned-three-member-decision")]
 pub struct DurableOwnedThreeMemberDecisionV1 {
@@ -131,142 +93,44 @@ pub struct DurableOwnedThreeMemberDecisionV1 {
     pub(crate) value: DurableOwnedGroupMemberV1,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DurableOwnedGroupDecisionError {
-    InvalidSchema,
-    InvalidIdentity,
-    InvalidOwner,
-    InvalidFrontier,
-    InvalidHash,
-    InvalidOutcome,
-    NonCanonical,
-    RecoveryPackTooLarge,
-    EventTooLarge,
-    Codec(String),
-    Retirement(semio_framework_value::ValueError),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+pub struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+    pub parent: DurableStorePreparedOwnerV1<ParentP, ParentMutation>,
+    pub drawing: DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>,
+    pub value: DurableStorePreparedOwnerV1<ValueP, ValueMutation>,
 }
 
-impl std::fmt::Display for DurableOwnedGroupDecisionError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidSchema => formatter.write_str("durable owned group schema is invalid"),
-            Self::InvalidIdentity => formatter.write_str("durable owned group identity is invalid"),
-            Self::InvalidOwner => formatter.write_str("durable owned group owner is invalid"),
-            Self::InvalidFrontier => formatter.write_str("durable owned group frontier is invalid"),
-            Self::InvalidHash => formatter.write_str("durable owned group hash is invalid"),
-            Self::InvalidOutcome => formatter.write_str("durable owned group prepared outcome is invalid"),
-            Self::NonCanonical => formatter.write_str("durable owned group encoding is not canonical"),
-            Self::RecoveryPackTooLarge => formatter.write_str("durable owned group recovery pack exceeds its member bound"),
-            Self::EventTooLarge => formatter.write_str("durable owned group decision exceeds its event bound"),
-            Self::Codec(message) => formatter.write_str(message),
-            Self::Retirement(error) => std::fmt::Display::fmt(error, formatter),
-        }
-    }
-}
-
-impl std::error::Error for DurableOwnedGroupDecisionError {}
-
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[artifact(id = "store.unbound-one-item-outcome")]
-struct DurableUnboundOneItemOutcomeV1 {
-    schema: String,
-    recovery_schema: String,
-    operation: u64,
-    base_generation: u64,
-    base_revision: [u8; 32],
-    base_applied_edit_count: u64,
-    next_sequence_number: i32,
-    #[dsl(base64)]
-    next_clock_canonical_json: Vec<u8>,
-    actor: semio_framework_value::SharedUtf8,
-    #[dsl(base64)]
-    edit_without_group_canonical_json: Vec<u8>,
-    #[dsl(base64)]
-    post_snapshot_pack: Vec<u8>,
-}
-
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, crate::os_dsl::DslArtifact)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-#[artifact(id = "store.bound-one-item-outcome")]
-struct DurableBoundOneItemOutcomeV1 {
-    schema: String,
-    recovery_schema: String,
-    operation: u64,
-    base_generation: u64,
-    base_revision: [u8; 32],
-    base_applied_edit_count: u64,
-    next_sequence_number: i32,
-    #[dsl(base64)]
-    next_clock_canonical_json: Vec<u8>,
-    actor: semio_framework_value::SharedUtf8,
-    group_id: String,
-    #[dsl(base64)]
-    edit_canonical_json: Vec<u8>,
-    #[dsl(base64)]
-    post_snapshot_pack: Vec<u8>,
-    edit_digest: [u8; 32],
-    post_generation: u64,
-    post_revision: [u8; 32],
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct DurableStorePreparedOutcomeV1 {
-    recovery_schema: String,
-    pack: Vec<u8>,
-    sha256: String,
-}
-
-pub(super) struct DurableStoreVerifiedOutcomeV1<P, Mutation> {
-    pub(super) authority: Arc<ArtifactStoreOneItemLiveAuthority>,
-    pub(super) edit: Box<Edit<Mutation>>,
-    pub(super) post_snapshot: Arc<P>,
-}
-
-struct DurableStorePreparedOwnerV1<P, Mutation> {
-    prepared: ArtifactStoreOneItemPrepared<P, Mutation>,
-    unbound: DurableStorePreparedOutcomeV1,
-}
-
-pub(super) struct DurableStoreBoundOutcomeV1<P, Mutation> {
-    prepared: ArtifactStoreOneItemPrepared<P, Mutation>,
-    unbound_sha256: String,
-    recovery_schema: String,
-    recovery_pack: Vec<u8>,
-    recovery_pack_sha256: String,
-    expected_generation: u64,
-    expected_revision: [u8; 32],
-    post_generation: u64,
-    post_revision: [u8; 32],
-}
-
-pub(super) struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
-    parent: DurableStorePreparedOwnerV1<ParentP, ParentMutation>,
-    drawing: DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>,
-    value: DurableStorePreparedOwnerV1<ValueP, ValueMutation>,
-}
-
-pub(super) struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
-    pub(super) decision: DurableOwnedThreeMemberDecisionV1,
-    pub(super) parent: DurableStoreBoundOutcomeV1<ParentP, ParentMutation>,
-    pub(super) drawing: DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>,
-    pub(super) value: DurableStoreBoundOutcomeV1<ValueP, ValueMutation>,
+pub struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+    pub decision: DurableOwnedThreeMemberDecisionV1,
+    pub parent: DurableStoreBoundOutcomeV1<ParentP, ParentMutation>,
+    pub drawing: DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>,
+    pub value: DurableStoreBoundOutcomeV1<ValueP, ValueMutation>,
 }
 
 #[expect(clippy::large_enum_variant, reason = "Recovery hands back all three exact preadmitted store outcomes without allocating at the ownership transition.")]
-pub(super) enum DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+pub enum DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     Apply(DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     AlreadyApplied,
 }
 
-/// 🧾️ Trusted durable-boundary witness returned only after the decision transaction is synced.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DurableOwnedGroupJournalReceiptV1 {
-    pub anchor_sha256: String,
-    pub decision_sha256: String,
-    pub transaction_id: u64,
-    pub segment_index: u64,
-}
+
 
 /// 🔐️ Store-admitted decision event whose private bytes and identities can only come from
 /// one fully verified canonical fixed-three decision Pack.
@@ -280,41 +144,9 @@ pub struct DurableOwnedGroupJournalRecordV1 {
     parent_post_revision: [u8; 32],
 }
 
-/// 🔎️ Immutable typed edits projected only after Store verifies every bound fixed-three outcome.
-pub struct DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation> {
-    decision_sha256: String,
-    anchor_sha256: String,
-    document: semio_framework_artifact_reference::ArtifactRef,
-    parent: Edit<ParentMutation>,
-    drawing: Edit<DrawingMutation>,
-    value: Edit<ValueMutation>,
-}
 
-impl<ParentMutation, DrawingMutation, ValueMutation> DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation> {
-    pub fn decision_sha256(&self) -> &str {
-        &self.decision_sha256
-    }
 
-    pub fn anchor_sha256(&self) -> &str {
-        &self.anchor_sha256
-    }
 
-    pub fn document(&self) -> &semio_framework_artifact_reference::ArtifactRef {
-        &self.document
-    }
-
-    pub fn parent(&self) -> &Edit<ParentMutation> {
-        &self.parent
-    }
-
-    pub fn drawing(&self) -> &Edit<DrawingMutation> {
-        &self.drawing
-    }
-
-    pub fn value(&self) -> &Edit<ValueMutation> {
-        &self.value
-    }
-}
 
 impl DurableOwnedGroupJournalRecordV1 {
     /// 🔏️ Admits one canonical decision Pack and derives its decision identity exclusively from
@@ -376,11 +208,11 @@ impl DurableOwnedGroupJournalRecordV1 {
     /// exposing immutable edit projections; no publication seal or binding authority escapes.
     pub fn verify_fixed_three_edits<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(&self) -> Result<DurableOwnedGroupVerifiedThreeEditsV1<ParentMutation, DrawingMutation, ValueMutation>, DurableOwnedGroupDecisionError>
     where
-        ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+        ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
         ParentMutation: ValueToValue + ValueFromValue,
-        DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+        DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
         DrawingMutation: ValueToValue + ValueFromValue,
-        ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+        ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
         ValueMutation: ValueToValue + ValueFromValue,
     {
         let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&self.canonical_pack)?;
@@ -406,11 +238,11 @@ impl DurableOwnedGroupJournalRecordV1 {
         value: ArtifactStore<ValueP, ValueMutation>,
     ) -> Result<DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>
     where
-        ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
         ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-        DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
         DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-        ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+        ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
         ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
     {
         let rejected = |error, parent, drawing, value| DurableOwnedMapRecoveryRejectedV1 { error, parent, drawing, value };
@@ -440,580 +272,53 @@ impl DurableOwnedGroupJournalRecordV1 {
     }
 }
 
-/// 🧭️ One retained journal turn. `Rejected` proves that no mailbox/WAL transfer began,
-/// while `Absent` proves an accepted cancellation left no durable record. An error remains an
-/// uncertain external state and must be resolved by the same retained owner.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DurableOwnedGroupJournalAdvanceV1 {
-    Pending,
-    Absent,
-    Rejected(String),
-    Committed(DurableOwnedGroupJournalReceiptV1),
-}
 
-/// 🧯️ Retained, cancellable owner for one durable decision attempt and its recovery resolution.
-pub trait DurableOwnedGroupJournalCommitV1: semio_framework_value::ErasedSnapshotRetirement {
-    fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String>;
-    fn cancel(&mut self);
-    fn begin_close(&mut self);
-    fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError>;
-}
 
-/// 🎟️ Closes the retained journal body and its original Box allocation in separate admitted turns.
-fn close_journal_owner(owner: &mut Option<Box<dyn DurableOwnedGroupJournalCommitV1>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-    use semio_framework_value::retained_clone::RetainedCloneStep;
-    if owner.is_none() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-    let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes)?;
-    if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    semio_framework_value::close_factory_ticket(owner, grant)
-}
 
-/// 🗄️ Kernel-owned journal port implemented by a storage owner with an exclusive writer permit.
-/// Construction is an infallible, non-I/O owner transfer; every fallible or externally visible
-/// journal action begins in the returned retained operation's first `advance` turn.
-pub trait DurableOwnedGroupJournalSinkV1: Send {
-    fn begin_commit(&mut self, decision_pack: Vec<u8>, decision_sha256: String) -> Box<dyn DurableOwnedGroupJournalCommitV1>;
-}
 
-pub(super) struct ArtifactStoreDurableGroupRootV1<P, Mutation> {
-    pub(super) visibility: Arc<crate::os_vcs::ArtifactGroupVisibility>,
-    pub(super) current: Option<Arc<P>>,
-    pub(super) generation: u64,
-    pub(super) content_revision: [u8; 32],
-    pub(super) applied_edit_ids: crate::os_vcs::HistoryPageStack<String>,
-    pub(super) redo_edit_ids: crate::os_vcs::HistoryPageStack<String>,
-    pub(super) last_projection_cause: Option<super::ArtifactProjectionCause>,
-    edit_sequence: i32,
-    clock: HybridLogicalTimestamp,
-    pub(super) revision_accumulator: Option<CursorRevisionAccumulator>,
-    tail_undo_cache: Option<(String, Arc<P>)>,
-    authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
-    displaced_reservation: Option<super::ArtifactStoreDisplacedOwnerReservation>,
-    retirement: Option<Box<StagedRootRetirement<P, Mutation>>>,
-    pub(super) adopted: bool,
-}
 
-pub(super) struct StagedRootRetirement<P, Mutation> {
-    edit: Option<super::ArtifactStoreDecodedEditRetirement<Mutation>>,
-    external_strings: [Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>; 2],
-    cursor: Option<super::ArtifactStoreCursorRetirement>,
-    applied: Option<super::ArtifactStoreStringVectorRetirement>,
-    redo: Option<super::ArtifactStoreStringVectorRetirement>,
-    revision: Option<super::ArtifactStoreRevisionAccumulatorRetirement>,
-    report: Option<super::ArtifactStorePendingReportRetirement>,
-    tail_id: Option<super::ArtifactStoreStringRetirement>,
-    authority: Option<super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement>,
-    snapshots: [Option<Arc<P>>; 2],
-    active: Option<Box<dyn super::ErasedSnapshotRetirement>>,
-    factory: Option<Arc<dyn super::SnapshotRetirementFactory<P>>>,
-    factory_close: Option<semio_framework_value::FactoryAuthority>,
-    phase: u8,
-}
 
-impl<P, Mutation> StagedRootRetirement<P, Mutation> {
-    fn new(factory: Arc<dyn super::SnapshotRetirementFactory<P>>) -> Self {
-        Self { edit: None, external_strings: Default::default(), cursor: None, applied: None, redo: None, revision: None, report: None, tail_id: None, authority: None, snapshots: [None, None], active: None, factory: Some(factory), factory_close: None, phase: 0 }
-    }
 
-    fn inline_owner(&self) -> Option<&dyn super::ErasedSnapshotRetirement> {
-        match self.phase {
-            0 => self.cursor.as_ref().map(|owner| owner as _),
-            1 => self.applied.as_ref().map(|owner| owner as _),
-            2 => self.redo.as_ref().map(|owner| owner as _),
-            3 => self.revision.as_ref().map(|owner| owner as _),
-            4 => self.report.as_ref().map(|owner| owner as _),
-            5 => self.tail_id.as_ref().map(|owner| owner as _),
-            6 => self.authority.as_ref().map(|owner| owner as _),
-            _ => None,
-        }
-    }
 
-    fn inline_owner_mut(&mut self) -> Option<&mut dyn super::ErasedSnapshotRetirement> {
-        match self.phase {
-            0 => self.cursor.as_mut().map(|owner| owner as _),
-            1 => self.applied.as_mut().map(|owner| owner as _),
-            2 => self.redo.as_mut().map(|owner| owner as _),
-            3 => self.revision.as_mut().map(|owner| owner as _),
-            4 => self.report.as_mut().map(|owner| owner as _),
-            5 => self.tail_id.as_mut().map(|owner| owner as _),
-            6 => self.authority.as_mut().map(|owner| owner as _),
-            _ => None,
-        }
-    }
 
-    fn clear_inline(&mut self) {
-        match self.phase {
-            0 => { self.cursor = None; }
-            1 => { self.applied = None; }
-            2 => { self.redo = None; }
-            3 => { self.revision = None; }
-            4 => { self.report = None; }
-            5 => { self.tail_id = None; }
-            6 => { self.authority = None; }
-            _ => {}
-        }
-    }
-}
 
-impl<P: Send + Sync, Mutation: Send + 'static> StagedRootRetirement<P, Mutation> {
-    fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
-        let nested = |mut demand: RetirementDemand| { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "staged root child depth overflow"))?; Ok(demand) };
-        if let Some(active) = self.active.as_ref() { return nested(super::artifact_retirement_box_demands(active, maximum_body_bytes)?); }
-        if self.edit.is_some() { return super::retirement_owner_demands(&self.edit, maximum_body_bytes); }
-        if self.external_strings.iter().any(Option::is_some) { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>(), depth: 2, ..Default::default() }); }
-        if let Some(owner) = self.inline_owner() { return nested(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
-        if (7..9).contains(&self.phase) {
-            if let Some(snapshot) = self.snapshots[usize::from(self.phase - 7)].as_ref() { return Ok(RetirementDemand { capacity_bytes: self.factory.as_ref().expect("staged root retains its snapshot factory").retirement_birth_bytes(snapshot), depth: 2, ..Default::default() }); }
-        }
-        if self.phase >= 9 && self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
-        if let Some(factory) = self.factory_close.as_ref() { return nested(factory.demands(maximum_body_bytes)?); }
-        Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
-    }
-}
 
-impl<P: Send + Sync, Mutation: Send + 'static> super::ErasedSnapshotRetirement for StagedRootRetirement<P, Mutation> {
-    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.copy_bytes) }
-    fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(maximum_body_bytes)?.capacity_bytes) }
-    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.release_bytes) }
-    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.demands(0)?.depth) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        let demand = self.demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "staged root exceeds admitted depth")); }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if self.edit.is_some() { return super::retirement_owner_close(&mut self.edit, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if let Some(slot)=self.external_strings.iter_mut().find(|slot|slot.is_some()){let original=slot.take().unwrap();return match semio_framework_value::retirement::admit_owned_retirement(original,child){Ok((owner,receipt))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original))=>{*slot=Some(original);Err(error)}};}
-        if let Some(owner) = self.inline_owner_mut() {
-            if !owner.terminal_is_empty() {
-                let step = owner.close_step(child)?;
-                return semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "staged inline owner").map(|step| RetainedCloneStep::Progress(step.progress()));
-            }
-            self.clear_inline();
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
-        }
-        if (7..9).contains(&self.phase) {
-            let index = usize::from(self.phase - 7);
-            if let Some(snapshot) = self.snapshots[index].take() {
-                return match self.factory.as_ref().expect("staged root retains its snapshot factory").retire(snapshot, child) {
-                    Ok((owner, progress)) => { self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "staged snapshot constructor")?; Ok(RetainedCloneStep::Progress(progress)) },
-                    Err((error, snapshot)) => { self.snapshots[index] = Some(snapshot); Err(error) },
-                };
-            }
-        }
-        if self.phase < 9 { self.phase += 1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty })); }
-        if let Some(factory) = self.factory.take() {
-            let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
-            self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), ..empty }));
-        }
-        if let Some(factory) = self.factory_close.as_mut() {
-            let step = factory.step(child)?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "staged snapshot factory")?;
-            if factory.terminal_is_empty() { self.factory_close = None; }
-            return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
-        }
-        Ok(RetainedCloneStep::Complete(empty))
-    }
-    fn terminal_is_empty(&self) -> bool { self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none() }
-}
 
-impl<P, Mutation> Drop for StagedRootRetirement<P, Mutation> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || (self.edit.is_none() && self.external_strings.iter().all(Option::is_none) && self.cursor.is_none() && self.applied.is_none() && self.redo.is_none() && self.revision.is_none() && self.report.is_none() && self.tail_id.is_none() && self.authority.is_none() && self.snapshots.iter().all(Option::is_none) && self.active.is_none() && self.factory.is_none() && self.factory_close.is_none()), "staged root retirement dropped before all exact outgoing owners were closed");
-    }
-}
 
-fn retained_string_stack(source: impl IntoIterator<Item = String>, appended: Option<&str>) -> Result<crate::os_vcs::HistoryPageStack<String>, DurableOwnedGroupDecisionError> {
-    let mut values = crate::os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
-    for value in source {
-        values.try_push(value).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
-    }
-    if let Some(value) = appended {
-        values.try_push(value.to_string()).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
-    }
-    Ok(values)
-}
 
-fn retained_revision_stack(source: impl IntoIterator<Item = super::CursorRevisionRecord>) -> Result<crate::os_vcs::HistoryPageStack<super::CursorRevisionRecord>, DurableOwnedGroupDecisionError> {
-    let mut values = crate::os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
-    for value in source {
-        values.try_push(value).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
-    }
-    Ok(values)
-}
 
-fn stage_store_member<P, Mutation>(
-    store: &mut StoreParts<'_, P, Mutation>,
-    outcome: DurableStoreBoundOutcomeV1<P, Mutation>,
-    visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>,
-    grant: super::ArtifactStoreOneItemGrant,
-) -> Result<(), (DurableOwnedGroupDecisionError, DurableStoreBoundOutcomeV1<P, Mutation>)>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-{
-    let reject = |reason, outcome| Err((reason, outcome));
-    if !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mutation>>() { return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome); }
 
-    if store.wire.durable_group_root.is_some()
-        || !visibility.pending()
-        || store.wire.backbone.is_some()
-        || store.owners.snapshot_retirement_factory.is_none()
-        || store.owners.mutation_retirement_factory.is_none()
-        || store.log.envelope.vcs.edits.group_visibility().is_some()
-        || store.log.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some())
-    {
-        return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
-    }
-    if outcome.prepared.authority().validate_prepared(&outcome.prepared).is_err()
-        || store.cursor.generation != outcome.expected_generation
-        || store.cursor.content_revision != outcome.expected_revision
-        || outcome.expected_generation.checked_add(1) != Some(outcome.post_generation)
-        || outcome.prepared.authority().generation().0 != outcome.expected_generation
-        || outcome.prepared.authority().base_revision() != outcome.expected_revision
-        || outcome.prepared.authority().base_applied_edit_count() != store.log.applied_edit_ids.len()
-        || !outcome.prepared.applied_edit_id.eq_str(&outcome.prepared.edit().id)
-        || !outcome.prepared.tail_edit_id.eq_str(&outcome.prepared.edit().id)
-        || outcome.prepared.edit().sequence_number != outcome.prepared.authority().next_sequence_number()
-        || outcome.prepared.next_clock() != outcome.prepared.authority().next_clock()
-        || !store.log.applied_edit_ids.admits_one()
-    {
-        return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome);
-    }
-    let group_id = outcome.prepared.authority().group_id().unwrap_or_default();
-    if !valid_hash(group_id) || outcome.prepared.edit().mutation_meta.first().and_then(|meta| meta.group_id.as_deref()) != Some(group_id) {
-        return reject(DurableOwnedGroupDecisionError::InvalidHash, outcome);
-    }
-    let applied_edit_ids = match retained_string_stack(store.log.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
-        Ok(values) => values,
-        Err(error) => return reject(error, outcome),
-    };
-    let redo_edit_ids = match retained_string_stack(std::iter::empty(), None) {
-        Ok(values) => values,
-        Err(error) => return reject(error, outcome),
-    };
-    let cursor_owners = super::ArtifactCursorOwners {
-        applied_edit_ids: match retained_string_stack(store.log.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
-            Ok(values) => values,
-            Err(error) => return reject(error, outcome),
-        },
-        redo_edit_ids: match retained_string_stack(std::iter::empty(), None) {
-            Ok(values) => values,
-            Err(error) => return reject(error, outcome),
-        },
-        checkpoint_id: (*store.log.current_checkpoint_id).clone(),
-    };
-    let mut revision_accumulator = CursorRevisionAccumulator {
-        identity_digest: store.cursor.revision_accumulator.identity_digest,
-        applied: match retained_revision_stack(store.cursor.revision_accumulator.applied.iter().cloned()) {
-            Ok(values) => values,
-            Err(error) => return reject(error, outcome),
-        },
-        redo: match retained_revision_stack(std::iter::empty()) {
-            Ok(values) => values,
-            Err(error) => return reject(error, outcome),
-        },
-        applied_tail_chains: None,
-        mutation_positions: store.cursor.revision_accumulator.mutation_positions.clone(),
-        indexed_edits: store.cursor.revision_accumulator.indexed_edits.clone(),
-        unit_flags: store.cursor.revision_accumulator.unit_flags.clone(),
-    };
-    revision_accumulator.index_applied_edit::<P, Mutation>(applied_edit_ids.len() - 1, &outcome.prepared.edit());
-    let edit_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit().id.as_bytes()]);
-    for (index, operation) in outcome.prepared.edit().forwards.iter().enumerate().filter(|(_, op)| op.may_emit_foreign_steps()) {
-        let presence = match operation.foreign_step_source(&store.live.current, 0) { Ok(source) => source.is_some(), Err(_) => return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome) };
-        revision_accumulator.unit_flags.insert((edit_digest, index), presence);
-    }
-    let previous = revision_accumulator.applied.last().map_or(revision_accumulator.identity_digest, |record| record.prefix_digest);
-    revision_accumulator.applied.push(super::CursorRevisionRecord {
-        ledger_key: None,
-        id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit().id.as_bytes()]),
-        edit_digest: outcome.prepared.edit_digest(),
-        prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest()]),
-    });
-    if revision_accumulator.revision(store.log.current_checkpoint_id.as_deref()) != outcome.post_revision {
-        return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
-    }
-    let displaced_reservation = match store.owners.displaced_retirements.reserve_owner_slots(12) {
-        Ok(reservation) => reservation,
-        Err(_) => return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome),
-    };
-    let history_reservation = match store.log.envelope.vcs.edits.reserve_group_one(visibility) {
-        Ok(reservation) => reservation,
-        Err(_) => {
-            store.owners.displaced_retirements.release_owner_slots(displaced_reservation).expect("unconsumed durable group retirement reservation remains exact");
-            return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
-        }
-    };
-    store.log.envelope.cursor.as_mut().expect("durable group stage preflight retained its cursor").stage_group_owned(cursor_owners, visibility).expect("durable group cursor stage remains exact after exclusive preflight");
-    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.owners.snapshot_retirement_factory.as_ref().expect("validated staged snapshot factory"))));
-    let post_revision = outcome.post_revision;
-    let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
-    let ArtifactStoreOneItemPreparedParts { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, authority, .. } = prepared.into_parts();
-    retirement.external_strings = [local_actor, Some(applied_edit_id.into())];
-    let ledger_key = store.log.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
-    let mut tail = revision_accumulator.applied.pop().expect("staged revision retains its exact tail");
-    tail.ledger_key = Some(ledger_key);
-    revision_accumulator.applied.push(tail);
-    *store.wire.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
-        visibility: Arc::clone(visibility),
-        current: Some(post_snapshot),
-        generation: store.cursor.generation + 1,
-        content_revision: post_revision,
-        applied_edit_ids,
-        redo_edit_ids,
-        last_projection_cause: Some(super::ArtifactProjectionCause::Apply),
-        edit_sequence: authority.next_sequence_number(),
-        clock: next_clock,
-        revision_accumulator: Some(revision_accumulator),
-        tail_undo_cache: Some((tail_edit_id.to_string_owner(), Arc::clone(&store.live.current))),
-        authority: Some(authority),
-        displaced_reservation: Some(displaced_reservation),
-        retirement: Some(retirement),
-        adopted: false,
-    });
-    Ok(())
-}
 
-/// 🧱️ Transfers already copied catalogs and exact reserved owners without traversing history.
-pub(super) fn stage_prebuilt_batch_root<P, Mu>(store: &mut StoreParts<'_, P, Mu>, publication: &mut super::ArtifactStoreBatchPublication<P, Mu>, grant: super::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::RetainedCloneProgress, String>
-where P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-      Mu: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-{
-    if store.wire.durable_group_root.is_some() || store.log.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) { return Err("batch group final root transfer lost its exclusive cursor frontier".into()); }
-    let capacity=size_of::<StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();
-    if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_release_bytes < release { return Err("batch staged original retirement and edit frames are not funded".into()); }
-    store.cursor.generation.checked_add(1).ok_or_else(|| "batch group generation is exhausted".to_string())?;
-    let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| "batch group final transfer lost its authority".to_string())?);
-    let group = publication.group_preparation.as_mut().ok_or_else(|| "batch group final transfer lost its retained preparation".to_string())?;
-    let visibility = group.visibility();
-    let history = group.history.as_ref().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
-    store.log.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| "batch group history reservation is stale".to_string())?;
-    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.owners.snapshot_retirement_factory.as_ref().ok_or("batch group lacks original snapshot factory")?)));
-    let history = group.history.take().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
-    let displaced = group.displaced.take().expect("copied group admits its displaced owner catalog");
-    let cursor = super::ArtifactCursorOwners { applied_edit_ids: std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty()), redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(), checkpoint_id: group.checkpoint.take() };
-    let applied = std::mem::replace(&mut group.applied, crate::os_vcs::HistoryPageStack::empty());
-    let mut revision = group.revision.take().expect("copied group retains its complete revision and indexes");
-    let stage = publication.stage.as_mut().expect("copied group retains its complete typed candidate");
-    let edit = stage.edit.take().expect("staged original edit owner");
-    let post=stage.post.take();let next_clock=stage.next_clock;let local_actor=stage.local_actor.take();let tail_edit_id=std::mem::take(&mut stage.tail_edit_id);
-    store.log.envelope.cursor.as_mut().expect("exclusive group transfer retains its cursor").stage_group_owned(cursor, &visibility).unwrap_or_else(|_| panic!("exclusive copied group cursor transfer must retain its exact owners"));
-    let ledger = store.log.envelope.vcs.edits.stage_group_reserved(history.history, *edit, &visibility).unwrap_or_else(|_| panic!("exclusive copied group edit transfer must retain its reserved slot"));
-    store.owners.displaced_retirements.release_owner_slots(history.rejected_owner).expect("exclusive copied group retains its exact rejected-owner reservation");
-    retirement.external_strings = [local_actor, None];
-    let mut tail = revision.applied.pop().expect("copied group retains its new revision tail");
-    tail.ledger_key = Some(ledger); revision.applied.push(tail);
-    let content_revision = revision.revision(store.log.current_checkpoint_id.as_deref());
-    *store.wire.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
-        visibility, current: post, generation: store.cursor.generation + 1, content_revision,
-        applied_edit_ids: applied, redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(),
-        last_projection_cause: Some(super::ArtifactProjectionCause::Apply), edit_sequence: authority.next_sequence_number(),
-        clock: next_clock, revision_accumulator: Some(revision), tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.live.current))),
-        authority: Some(authority), displaced_reservation: Some(displaced), retirement: Some(retirement), adopted: false,
-    });
-    Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,released_bytes:release,..Default::default()})
-}
 
-fn retain_displaced_owner(store: &mut super::ArtifactStoreDisplacedRetirements, reservation: &mut super::ArtifactStoreDisplacedOwnerReservation, owner: Box<dyn super::ErasedSnapshotRetirement>) {
-    if let Err(owner) = store.push_owner_reserved(reservation, owner) {
-        store.push_reserved(owner);
-    }
-}
 
-pub(super) fn abort_staged_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-{
-    let Some(root) = store.wire.durable_group_root.as_ref() else { return Ok(()) };
-    if !Arc::ptr_eq(&root.visibility, visibility) || root.adopted || visibility.pending() || visibility.committed() {
-        return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
-    }
-    let mutation_factory = (*store.owners.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if root.retirement.is_none() || root.displaced_reservation.is_none() { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
-    let edit = store.log.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if store.log.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.is_some() { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
-    let cursor = store.log.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.abort_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let mut root = store.wire.durable_group_root.take().expect("validated aborted durable group root remains owned");
-    let mut reservation = root.displaced_reservation.take().expect("validated original abort reservation");
-    let mut retirement = root.retirement.take().expect("validated preborn abort cursor");
-    retirement.edit = Some(super::ArtifactStoreDecodedEditRetirement::new(edit, mutation_factory));
-    retirement.cursor = Some(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(cursor)));
-    retirement.snapshots[0] = root.current.take();
-    retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
-    retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
-    retirement.revision = root.revision_accumulator.take().map(super::ArtifactStoreRevisionAccumulatorRetirement::new);
-    if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() { retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id)); if !Arc::ptr_eq(&snapshot, &store.live.current) && !std::ptr::eq(snapshot.as_ref(), store.log.envelope.vcs.genesis.facts().snapshot()) { retirement.snapshots[1] = Some(snapshot); } }
-    retirement.authority = root.authority.take().map(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new);
-    retain_displaced_owner(&mut store.owners.displaced_retirements, &mut reservation, retirement);
-    store.owners.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    Ok(())
-}
 
-/// 🪢️ Staging cached the pre-commit snapshot as this group's tail-undo entry
-/// (`Arc::clone(&store.current)`), so the outgoing current and the incoming tail are the SAME
-/// owner. Displacing it here would queue a retirement the tail cache still aliases, and the
-/// close cursor drains displaced owners nine phases BEFORE `TailSnapshot` — it would meet an
-/// `Arc` it cannot unwrap and answer `Blocked` forever. The tail cache keeps the owner instead,
-/// exactly as the symmetric guards below and in `commit_document_roots_retained` do.
-pub(super) fn adopt_staged_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-{
-    let Some(root) = store.wire.durable_group_root.as_ref() else { return Err(DurableOwnedGroupDecisionError::InvalidFrontier) };
-    if !Arc::ptr_eq(&root.visibility, visibility) || root.adopted || !visibility.committed() {
-        return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
-    }
-    let factory = store.owners.snapshot_retirement_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if root.retirement.as_ref().and_then(|retirement| retirement.factory.as_ref()).is_none_or(|prepared| !Arc::ptr_eq(prepared, factory)) {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    store.log.envelope.vcs.edits.adopt_group(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let displaced_cursor = store.log.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.adopt_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let mut root = store.wire.durable_group_root.take().expect("validated committed durable group root remains owned");
-    let mut reservation = root.displaced_reservation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let mut retirement = root.retirement.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    retirement.cursor = Some(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(displaced_cursor)));
-    retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.log.applied_edit_ids, std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
-    retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.log.redo_edit_ids, std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
-    let next_revision = root.revision_accumulator.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    retirement.revision = Some(super::ArtifactStoreRevisionAccumulatorRetirement::new(std::mem::replace(&mut *store.cursor.revision_accumulator, next_revision)));
-    let previous_current = std::mem::replace(&mut *store.live.current, root.current.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
-    let next_tail = root.tail_undo_cache.take();
-    if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) || std::ptr::eq(previous_current.as_ref(), store.log.envelope.vcs.genesis.facts().snapshot()) {
-        drop(previous_current);
-    } else {
-        retirement.snapshots[0] = Some(previous_current);
-    }
-    if let Some((edit_id, snapshot)) = store.live.tail_undo_cache.take() {
-        retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id));
-        if !Arc::ptr_eq(&snapshot, &store.live.current) && !std::ptr::eq(snapshot.as_ref(), store.log.envelope.vcs.genesis.facts().snapshot()) {
-            retirement.snapshots[1] = Some(snapshot);
-        }
-    }
-    *store.live.tail_undo_cache = next_tail;
-    retirement.report = Some(super::ArtifactStorePendingReportRetirement::new(std::mem::take(&mut *store.replay.pending_report)));
-    if let Some(authority) = root.authority.take() {
-        retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(authority));
-    }
-    retain_displaced_owner(&mut store.owners.displaced_retirements, &mut reservation, retirement);
-    store.cursor.generation = root.generation;
-    store.cursor.content_revision = root.content_revision;
-    store.live.fold_frontier = None;
-    store.log.edit_sequence = root.edit_sequence;
-    store.log.clock = root.clock;
-    store.cursor.last_projection_cause = root.last_projection_cause;
-    store.owners.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    root.adopted = true;
-    *store.wire.durable_group_root = Some(root);
-    Ok(())
-}
 
-fn validate_adopted_store_member<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
-where
-    P: Clone + ValueToValue + ValueFromValue,
-    Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue,
-{
-    let root = store.wire.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    if !root.adopted
-        || !Arc::ptr_eq(&root.visibility, visibility)
-        || root.current.is_some()
-        || root.revision_accumulator.is_some()
-        || root.tail_undo_cache.is_some()
-        || root.authority.is_some()
-        || root.retirement.is_some()
-        || root.displaced_reservation.is_some()
-        || !root.applied_edit_ids.is_empty()
-        || !root.redo_edit_ids.is_empty()
-    {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    Ok(())
-}
 
-fn clear_adopted_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
-where
-    P: Clone + ValueToValue + ValueFromValue,
-    Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue,
-{
-    validate_adopted_store_member(&store.shared(), visibility)?;
-    drop(store.wire.durable_group_root.take());
-    Ok(())
-}
 
-fn retire_unstaged_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, slot: &mut Option<DurableStoreBoundOutcomeV1<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<(), DurableOwnedGroupDecisionError>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-{
-    if slot.is_none() || !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mutation>>() { return Err(DurableOwnedGroupDecisionError::InvalidFrontier); }
-    let mutation_factory = (*store.owners.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let snapshot_factory = (*store.owners.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let mut reservation = store.owners.displaced_retirements.reserve_owner_slots(1).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let DurableStoreBoundOutcomeV1 { prepared, .. } = slot.take().expect("validated unstaged outcome");
-    let ArtifactStoreOneItemPreparedParts { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, authority, .. } = prepared.into_parts();
-    let mut retirement = Box::new(StagedRootRetirement::new(snapshot_factory));
-    retirement.edit = Some(super::ArtifactStoreDecodedEditRetirement::new(*edit, mutation_factory));
-    retirement.snapshots[0] = Some(post_snapshot);
-    retirement.external_strings = [local_actor, Some(applied_edit_id)];
-    retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(tail_edit_id.to_string_owner()));
-    retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(authority));
-    retain_displaced_owner(&mut store.owners.displaced_retirements, &mut reservation, retirement);
-    store.owners.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)
-}
 
-/// 🚦️ Observable retained commit phase; no phase after `Journal` can regain abort authority.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DurableOwnedThreeStoreCommitPhaseV1 {
-    StagingParent,
-    StagingDrawing,
-    StagingValue,
-    StartingJournal,
-    Journal,
-    PublishingParentLease,
-    PublishingDrawingLease,
-    PublishingValueLease,
-    AdoptingParent,
-    AdoptingDrawing,
-    AdoptingValue,
-    ClearingParent,
-    ClearingDrawing,
-    ClearingValue,
-    AwaitingAck,
-    AbortingValue,
-    AbortingDrawing,
-    AbortingParent,
-    ClosingJournal,
-    Complete,
-}
 
-/// 📡️ One bounded coordinator result.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DurableOwnedThreeStoreCommitAdvanceV1 {
-    Progress(DurableOwnedThreeStoreCommitPhaseV1),
-    Blocked,
-    AwaitingAck(DurableOwnedGroupJournalReceiptV1),
-    Complete,
-}
 
-/// 📸️ One cross-store snapshot projection selected by one captured shared decision.
-pub struct DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP> {
-    pub parent: Arc<ParentP>,
-    pub drawing: Arc<DrawingP>,
-    pub value: Arc<ValueP>,
-    pub generations: [u64; 3],
-    pub revisions: [[u8; 32]; 3],
-}
 
-fn captured_store_snapshot<P, Mutation>(store: &ArtifactStore<P, Mutation>, visibility: Option<&Arc<crate::os_vcs::ArtifactGroupVisibility>>, committed: bool) -> Result<(Arc<P>, u64, [u8; 32]), DurableOwnedGroupDecisionError>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fn captured_store_snapshot<P, Mutation>(store: &ArtifactStore<P, Mutation>, visibility: Option<&Arc<semio_framework_os_vcs::ArtifactGroupVisibility>>, committed: bool) -> Result<(Arc<P>, u64, [u8; 32]), DurableOwnedGroupDecisionError>
 where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue,
@@ -1038,7 +343,7 @@ where
     Ok((Arc::clone(&*store.live.current), store.cursor.generation, store.cursor.content_revision))
 }
 
-pub(super) fn capture_store_owned_three_snapshot<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+pub fn capture_store_owned_three_snapshot<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
     parent_store: &ArtifactStore<ParentP, ParentMutation>,
     drawing_store: &ArtifactStore<DrawingP, DrawingMutation>,
     value_store: &ArtifactStore<ValueP, ValueMutation>,
@@ -1068,19 +373,19 @@ where
 
 /// 🧷️ Store-owned fixed-three coordinator retaining all candidates through journal resolution.
 pub(super) struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
-    parent: Option<DurableStoreBoundOutcomeV1<ParentP, ParentMutation>>,
-    drawing: Option<DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>>,
-    value: Option<DurableStoreBoundOutcomeV1<ValueP, ValueMutation>>,
-    decision: Option<DurableOwnedThreeMemberDecisionV1>,
-    decision_pack: Option<Vec<u8>>,
-    decision_sha256: String,
-    visibility_owner: Option<crate::os_vcs::ArtifactGroupVisibilityOwner>,
-    visibility: Option<Arc<crate::os_vcs::ArtifactGroupVisibility>>,
+    pub parent: Option<DurableStoreBoundOutcomeV1<ParentP, ParentMutation>>,
+    pub drawing: Option<DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>>,
+    pub value: Option<DurableStoreBoundOutcomeV1<ValueP, ValueMutation>>,
+    pub decision: Option<DurableOwnedThreeMemberDecisionV1>,
+    pub decision_pack: Option<Vec<u8>>,
+    pub decision_sha256: String,
+    visibility_owner: Option<semio_framework_os_vcs::ArtifactGroupVisibilityOwner>,
+    pub visibility: Option<Arc<semio_framework_os_vcs::ArtifactGroupVisibility>>,
     journal: Option<Box<dyn DurableOwnedGroupJournalCommitV1>>,
-    receipt: Option<DurableOwnedGroupJournalReceiptV1>,
-    phase: DurableOwnedThreeStoreCommitPhaseV1,
+    pub receipt: Option<DurableOwnedGroupJournalReceiptV1>,
+    pub phase: DurableOwnedThreeStoreCommitPhaseV1,
     recovery_committed: bool,
-    cancel_requested: bool,
+    pub cancel_requested: bool,
     cancel_forwarded: bool,
     journal_close_started: bool,
 }
@@ -1096,11 +401,11 @@ where
     ValueP: Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
-    parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
-    drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
-    value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
+    pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
+    pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
+    pub value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
     coordinator: std::mem::ManuallyDrop<Option<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
-    sink: std::mem::ManuallyDrop<Option<Box<dyn DurableOwnedGroupJournalSinkV1>>>,
+    pub sink: std::mem::ManuallyDrop<Option<Box<dyn DurableOwnedGroupJournalSinkV1>>>,
 }
 
 /// 🏠️ Fixed host slot for one retained Map publication. The mounted operation is never exposed
@@ -1114,7 +419,7 @@ where
     ValueP: Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
-    operation: std::mem::ManuallyDrop<Option<DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+    pub operation: std::mem::ManuallyDrop<Option<DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
 
 /// 🧳 Exact live owners returned after one retained Map publication reaches terminal emptiness.
@@ -1144,9 +449,9 @@ where
     ValueP: Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
-    parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
-    drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
-    value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
+    pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
+    pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
+    pub value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
 }
 
 /// ♻️ Exact three Store owners returned by committed recovery after terminal publication or an idempotent post-frontier match.
@@ -1189,9 +494,9 @@ where
     ValueP: Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
-    parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
-    drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
-    value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
+    pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
+    pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
+    pub value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
     coordinator: std::mem::ManuallyDrop<Option<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
 
@@ -1205,7 +510,7 @@ where
     ValueP: Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
-    operation: std::mem::ManuallyDrop<Option<DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+    pub operation: std::mem::ManuallyDrop<Option<DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
 
 /// 🔀 Either the exact committed decision still needs Store publication or all three Stores already match its post-frontier.
@@ -1223,23 +528,15 @@ where
     AlreadyApplied(DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
 }
 
-/// ⏭️ One bounded lower restoration turn; it deliberately exposes no receipt or durable approval acknowledgement.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DurableOwnedMapRecoveryAdvanceV1 {
-    Progress(DurableOwnedThreeStoreCommitPhaseV1),
-    Blocked,
-    Fault(DurableOwnedGroupDecisionError),
-    AwaitingAcknowledgement,
-    Complete,
-}
+
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn new(parent: ArtifactStore<ParentP, ParentMutation>, drawing: ArtifactStore<DrawingP, DrawingMutation>, value: ArtifactStore<ValueP, ValueMutation>) -> Self {
@@ -1282,56 +579,15 @@ where
     }
 }
 
-/// 🎫 One exact unbound Store admission. No group identity can enter before the private bind.
-pub struct DurableOwnedMapMemberAdmissionV1<Mutation> {
-    pub operation: semio_framework_job::OperationId,
-    pub expected_generation: u64,
-    pub expected_revision: [u8; 32],
-    pub actor: semio_framework_value::SharedUtf8,
-    mutation: Option<Mutation>,
-}
 
-impl<Mutation> DurableOwnedMapMemberAdmissionV1<Mutation> {
-    pub fn new(operation: semio_framework_job::OperationId, expected_generation: u64, expected_revision: [u8; 32], actor: semio_framework_value::SharedUtf8, mutation: Mutation) -> Self {
-        Self { operation, expected_generation, expected_revision, actor, mutation: Some(mutation) }
-    }
-}
 
-/// 🚫 Terminal pre-journal assembly outcome. Every variant still returns all three Stores and the sink.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DurableOwnedThreeStoreMapAssemblyFailureV1 {
-    Cancelled,
-    Admission { role: &'static str, reason: String },
-    Preparation { role: &'static str, reason: String },
-    Binding(DurableOwnedGroupDecisionError),
-}
 
-/// 🧭 Observable retained assembly phase. `Mounted` contains the existing fixed host and no loose Store.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DurableOwnedThreeStoreMapAssemblyPhaseV1 {
-    AdmittingParent,
-    AdmittingDrawing,
-    AdmittingValue,
-    PreparingParent,
-    PreparingDrawing,
-    PreparingValue,
-    ClosingValue,
-    ClosingDrawing,
-    ClosingParent,
-    Binding,
-    Mounted,
-    Terminal,
-    Empty,
-}
 
-/// ⏭️ One bounded assembly turn.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DurableOwnedThreeStoreMapAssemblyAdvanceV1 {
-    Progress(DurableOwnedThreeStoreMapAssemblyPhaseV1),
-    Blocked,
-    Mounted,
-    Terminal,
-}
+
+
+
+
+
 
 /// 🧳 Exact owners returned after a pre-journal rejection or cancellation reaches terminal emptiness.
 pub struct DurableOwnedThreeStoreMapAssemblyOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
@@ -1363,56 +619,37 @@ where
     ValueP: Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
-    parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
-    drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
-    value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
-    parent_admission: Option<DurableOwnedMapMemberAdmissionV1<ParentMutation>>,
-    drawing_admission: Option<DurableOwnedMapMemberAdmissionV1<DrawingMutation>>,
-    value_admission: Option<DurableOwnedMapMemberAdmissionV1<ValueMutation>>,
-    parent_factory: Option<Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>>,
-    drawing_factory: Option<Arc<dyn super::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>>,
-    value_factory: Option<Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>>,
-    parent_publication: std::mem::ManuallyDrop<Option<super::ArtifactStoreBatchPublication<ParentP, ParentMutation>>>,
-    drawing_publication: std::mem::ManuallyDrop<Option<super::ArtifactStoreBatchPublication<DrawingP, DrawingMutation>>>,
-    value_publication: std::mem::ManuallyDrop<Option<super::ArtifactStoreBatchPublication<ValueP, ValueMutation>>>,
-    prepared: std::mem::ManuallyDrop<Option<DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
-    host: std::mem::ManuallyDrop<Option<DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
-    sink: std::mem::ManuallyDrop<Option<Box<dyn DurableOwnedGroupJournalSinkV1>>>,
-    phase: DurableOwnedThreeStoreMapAssemblyPhaseV1,
-    failure: Option<DurableOwnedThreeStoreMapAssemblyFailureV1>,
+    pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
+    pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
+    pub value: std::mem::ManuallyDrop<Option<ArtifactStore<ValueP, ValueMutation>>>,
+    pub parent_admission: Option<DurableOwnedMapMemberAdmissionV1<ParentMutation>>,
+    pub drawing_admission: Option<DurableOwnedMapMemberAdmissionV1<DrawingMutation>>,
+    pub value_admission: Option<DurableOwnedMapMemberAdmissionV1<ValueMutation>>,
+    pub parent_factory: Option<Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>>,
+    pub drawing_factory: Option<Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>>,
+    pub value_factory: Option<Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>>,
+    parent_publication: std::mem::ManuallyDrop<Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<ParentP, ParentMutation>>>,
+    drawing_publication: std::mem::ManuallyDrop<Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<DrawingP, DrawingMutation>>>,
+    value_publication: std::mem::ManuallyDrop<Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<ValueP, ValueMutation>>>,
+    pub prepared: std::mem::ManuallyDrop<Option<DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+    pub host: std::mem::ManuallyDrop<Option<DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
+    pub sink: std::mem::ManuallyDrop<Option<Box<dyn DurableOwnedGroupJournalSinkV1>>>,
+    pub phase: DurableOwnedThreeStoreMapAssemblyPhaseV1,
+    pub failure: Option<DurableOwnedThreeStoreMapAssemblyFailureV1>,
 }
 
-fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<super::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
-    use semio_framework_value::retained_clone::{RetainedCloneStep, admit_retained_clone_close};
-    let Some(owner) = publication.as_mut() else { return Ok(true) };
-    let grant = grant.retained_grant();
-    let codec = DurableOwnedGroupDecisionError::Retirement;
-    let step = owner.close_step(grant).map_err(codec)?;
-    match admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "durable group publication").map_err(codec)? {
-        RetainedCloneStep::Complete(_) => {
-            drop(publication.take());
-            Ok(true)
-        }
-        RetainedCloneStep::Progress(_) => Ok(false),
-    }
-}
 
-fn take_assembly_prepared<P, Mutation>(publication: &mut Option<super::ArtifactStoreBatchPublication<P, Mutation>>) -> Result<ArtifactStoreOneItemPrepared<P, Mutation>, DurableOwnedGroupDecisionError> {
-    let publication = publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if publication.phase() != super::ArtifactStoreOneItemPublicationPhase::Publishing {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    publication.take_staged_prepared().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)
-}
+
+
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    ParentMutation: StoreMutation<ParentP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    DrawingMutation: StoreMutation<DrawingP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    ValueMutation: StoreMutation<ValueP> + crate::os_spr::OpBinary + crate::os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentMutation: StoreMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingMutation: StoreMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueMutation: StoreMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -1422,9 +659,9 @@ where
         parent_admission: DurableOwnedMapMemberAdmissionV1<ParentMutation>,
         drawing_admission: DurableOwnedMapMemberAdmissionV1<DrawingMutation>,
         value_admission: DurableOwnedMapMemberAdmissionV1<ValueMutation>,
-        parent_factory: Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>,
-        drawing_factory: Arc<dyn super::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>,
-        value_factory: Arc<dyn super::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>,
+        parent_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ParentP, ParentMutation>>,
+        drawing_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<DrawingP, DrawingMutation>>,
+        value_factory: Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<ValueP, ValueMutation>>,
         sink: Box<dyn DurableOwnedGroupJournalSinkV1>,
     ) -> Self {
         Self {
@@ -1456,7 +693,7 @@ where
     /// failure — every `cancel()` a maintenance driver issues before its bounded turn — must never
     /// rewind that sequence, or the close cursor restarts at the value publication on every turn and
     /// the parent publication is never reached.
-    fn fail(&mut self, failure: DurableOwnedThreeStoreMapAssemblyFailureV1) {
+    pub fn fail(&mut self, failure: DurableOwnedThreeStoreMapAssemblyFailureV1) {
         if self.failure.is_none() {
             self.failure = Some(failure);
         }
@@ -1488,7 +725,7 @@ where
         }
     }
 
-    pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedGroupDecisionError> {
+    pub fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreMapAssemblyAdvanceV1, DurableOwnedGroupDecisionError> {
         if !grant.permits_one() {
             return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);
         }
@@ -1498,7 +735,7 @@ where
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let store = self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.parent_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], super::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_framework_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.parent_publication = Some(publication);
                         self.parent_admission = None;
@@ -1517,7 +754,7 @@ where
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let store = self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.drawing_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], super::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_framework_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.drawing_publication = Some(publication);
                         self.drawing_admission = None;
@@ -1536,7 +773,7 @@ where
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let store = self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.value_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], super::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], semio_framework_os_store_space_schema::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.value_publication = Some(publication);
                         self.value_admission = None;
@@ -1554,8 +791,8 @@ where
                 let store = self.parent.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.parent_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 match store.advance_apply_batch(publication, grant) {
-                    Ok(super::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing,
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(_) if publication.phase() == semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingDrawing,
                     Ok(_) => {}
                     Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: PARENT_ROLE, reason: error.to_string() }),
                 }
@@ -1564,8 +801,8 @@ where
                 let store = self.drawing.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.drawing_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 match store.advance_apply_batch(publication, grant) {
-                    Ok(super::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue,
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(_) if publication.phase() == semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing => self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingValue,
                     Ok(_) => {}
                     Err(error) => self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Preparation { role: DRAWING_ROLE, reason: error.to_string() }),
                 }
@@ -1574,8 +811,8 @@ where
                 let store = self.value.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let publication = self.value_publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 match store.advance_apply_batch(publication, grant) {
-                    Ok(super::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
-                    Ok(_) if publication.phase() == super::ArtifactStoreOneItemPublicationPhase::Publishing => {
+                    Ok(semio_framework_os_store_one_item_publication::ArtifactStoreOneItemAdvance::Blocked) => return Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked),
+                    Ok(_) if publication.phase() == semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing => {
                         let parent = take_assembly_prepared(&mut self.parent_publication)?;
                         let drawing = take_assembly_prepared(&mut self.drawing_publication)?;
                         let value = take_assembly_prepared(&mut self.value_publication)?;
@@ -1658,7 +895,7 @@ where
     /// never reaches `Terminal` reports the same `Progress(<phase>)` every turn with no way to say
     /// WHICH owner refuses to retire. This names it.
     pub fn closing_witness(&self) -> String {
-        fn owner<P, Mutation>(publication: &Option<super::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
+        fn owner<P, Mutation>(publication: &Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
             publication.as_ref().map_or_else(
                 || "retired".to_string(),
                 |publication| {
@@ -1757,14 +994,14 @@ where
 }
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
-    pub(super) fn begin_retained_commit(self) -> Result<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
+    pub fn begin_retained_commit(self) -> Result<DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
         self.decision.validate()?;
         let decision_pack = self.decision.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
         if decision_pack.len() > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
         }
         let decision_sha256 = self.decision.decision_sha256.clone();
-        let visibility_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let visibility_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = visibility_owner.view();
         Ok(DurableOwnedThreeStoreCommitV1 {
             parent: Some(self.parent),
@@ -1791,7 +1028,7 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
             return Err(DurableOwnedGroupDecisionError::InvalidHash);
         }
         let decision_sha256 = self.decision.decision_sha256.clone();
-        let visibility_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+        let visibility_owner = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = visibility_owner.view();
         Ok(DurableOwnedThreeStoreCommitV1 {
             parent: Some(self.parent),
@@ -1815,18 +1052,18 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
-    pub(super) fn phase(&self) -> DurableOwnedThreeStoreCommitPhaseV1 {
+    pub fn phase(&self) -> DurableOwnedThreeStoreCommitPhaseV1 {
         self.phase
     }
 
-    pub(super) fn cancel(&mut self) -> bool {
+    pub fn cancel(&mut self) -> bool {
         if self.recovery_committed {
             return false;
         }
@@ -1852,14 +1089,14 @@ where
     }
 
     fn begin_abort(&mut self) -> Result<(), DurableOwnedGroupDecisionError> {
-        if !self.visibility_owner.as_mut().is_some_and(crate::os_vcs::ArtifactGroupVisibilityOwner::abort) {
+        if !self.visibility_owner.as_mut().is_some_and(semio_framework_os_vcs::ArtifactGroupVisibilityOwner::abort) {
             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
         }
         self.phase = DurableOwnedThreeStoreCommitPhaseV1::AbortingValue;
         Ok(())
     }
 
-    fn visibility(&self) -> Result<Arc<crate::os_vcs::ArtifactGroupVisibility>, DurableOwnedGroupDecisionError> {
+    pub fn visibility(&self) -> Result<Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, DurableOwnedGroupDecisionError> {
         self.visibility.as_ref().map(Arc::clone).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)
     }
 
@@ -1873,7 +1110,7 @@ where
         }
     }
 
-    pub(super) fn acknowledge(&mut self, receipt: &DurableOwnedGroupJournalReceiptV1) -> bool {
+    pub fn acknowledge(&mut self, receipt: &DurableOwnedGroupJournalReceiptV1) -> bool {
         if self.phase != DurableOwnedThreeStoreCommitPhaseV1::AwaitingAck || self.receipt.as_ref() != Some(receipt) {
             return false;
         }
@@ -1882,7 +1119,7 @@ where
         true
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.phase == DurableOwnedThreeStoreCommitPhaseV1::Complete
             && self.parent.is_none()
             && self.drawing.is_none()
@@ -1896,7 +1133,7 @@ where
             && self.receipt.is_none()
     }
 
-    pub(super) fn mount_map(
+    pub fn mount_map(
         self,
         parent: ArtifactStore<ParentP, ParentMutation>,
         drawing: ArtifactStore<DrawingP, DrawingMutation>,
@@ -1914,13 +1151,13 @@ where
         }
     }
 
-    pub(super) fn advance(
+    pub fn advance(
         &mut self,
         parent_store: &mut ArtifactStore<ParentP, ParentMutation>,
         drawing_store: &mut ArtifactStore<DrawingP, DrawingMutation>,
         value_store: &mut ArtifactStore<ValueP, ValueMutation>,
         sink: &mut dyn DurableOwnedGroupJournalSinkV1,
-        grant: super::ArtifactStoreOneItemGrant,
+        grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,
     ) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         self.advance_with_sink(parent_store, drawing_store, value_store, Some(sink), grant)
     }
@@ -1930,7 +1167,7 @@ where
         parent_store: &mut ArtifactStore<ParentP, ParentMutation>,
         drawing_store: &mut ArtifactStore<DrawingP, DrawingMutation>,
         value_store: &mut ArtifactStore<ValueP, ValueMutation>,
-        grant: super::ArtifactStoreOneItemGrant,
+        grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,
     ) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         self.advance_with_sink(parent_store, drawing_store, value_store, None, grant)
     }
@@ -1941,7 +1178,7 @@ where
         drawing_store: &mut ArtifactStore<DrawingP, DrawingMutation>,
         value_store: &mut ArtifactStore<ValueP, ValueMutation>,
         sink: Option<&mut dyn DurableOwnedGroupJournalSinkV1>,
-        grant: super::ArtifactStoreOneItemGrant,
+        grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,
     ) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         if self.phase == DurableOwnedThreeStoreCommitPhaseV1::Complete {
             return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Complete);
@@ -2001,7 +1238,7 @@ where
                     if receipt.decision_sha256 != self.decision_sha256 || self.decision.as_ref().is_none_or(|decision| receipt.anchor_sha256 != decision.anchor_sha256) {
                         return Err(DurableOwnedGroupDecisionError::InvalidHash);
                     }
-                    if !self.visibility_owner.as_mut().is_some_and(crate::os_vcs::ArtifactGroupVisibilityOwner::commit) {
+                    if !self.visibility_owner.as_mut().is_some_and(semio_framework_os_vcs::ArtifactGroupVisibilityOwner::commit) {
                         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
                     }
                     self.phase = DurableOwnedThreeStoreCommitPhaseV1::PublishingParentLease;
@@ -2021,7 +1258,7 @@ where
                     journal.cancel();
                     self.cancel_forwarded = true;
                 }
-                match journal.advance(super::ArtifactStoreOneItemGrant { maximum_items: 1, ..grant }).map_err(DurableOwnedGroupDecisionError::Codec)? {
+                match journal.advance(semio_framework_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, ..grant }).map_err(DurableOwnedGroupDecisionError::Codec)? {
                     DurableOwnedGroupJournalAdvanceV1::Pending => return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(self.phase)),
                     DurableOwnedGroupJournalAdvanceV1::Absent => {
                         self.begin_abort()?;
@@ -2034,7 +1271,7 @@ where
                         if receipt.decision_sha256 != self.decision_sha256 || self.decision.as_ref().is_none_or(|decision| receipt.anchor_sha256 != decision.anchor_sha256) {
                             return Err(DurableOwnedGroupDecisionError::InvalidHash);
                         }
-                        if !self.visibility_owner.as_mut().is_some_and(crate::os_vcs::ArtifactGroupVisibilityOwner::commit) {
+                        if !self.visibility_owner.as_mut().is_some_and(semio_framework_os_vcs::ArtifactGroupVisibilityOwner::commit) {
                             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
                         }
                         self.receipt = Some(receipt);
@@ -2165,18 +1402,18 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
-    fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
+    pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
         self.coordinator.as_ref().map(DurableOwnedThreeStoreCommitV1::phase)
     }
 
-    fn capture_snapshot(&self) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError> {
+    pub fn capture_snapshot(&self) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError> {
         capture_store_owned_three_snapshot(
             self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
             self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
@@ -2184,7 +1421,7 @@ where
         )
     }
 
-    fn cancel(&mut self) -> bool {
+    pub fn cancel(&mut self) -> bool {
         self.coordinator.as_mut().is_some_and(DurableOwnedThreeStoreCommitV1::cancel)
     }
 
@@ -2193,7 +1430,7 @@ where
         self.coordinator.as_mut().is_some_and(|coordinator| coordinator.acknowledge(&receipt))
     }
 
-    fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
+    pub fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         let coordinator = self.coordinator.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
         let parent = self.parent.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
         let drawing = self.drawing.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
@@ -2202,7 +1439,7 @@ where
         coordinator.advance(parent, drawing, value, sink.as_mut(), grant)
     }
 
-    fn take_terminal_owners(&mut self) -> Option<DurableOwnedMapCommitOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+    pub fn take_terminal_owners(&mut self) -> Option<DurableOwnedMapCommitOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
         if !self.coordinator.as_ref().is_some_and(DurableOwnedThreeStoreCommitV1::terminal_is_empty) || self.parent.is_none() || self.drawing.is_none() || self.value.is_none() || self.sink.is_none() {
             return None;
         }
@@ -2215,7 +1452,7 @@ where
         })
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none() && self.sink.is_none()
     }
 }
@@ -2236,11 +1473,11 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
@@ -2259,7 +1496,7 @@ where
         self.operation.as_mut().is_some_and(DurableOwnedMapCommitOperationV1::acknowledge_retained)
     }
 
-    pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
+    pub fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         self.operation.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.advance(grant)
     }
 
@@ -2276,18 +1513,18 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
-    fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
+    pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
         self.coordinator.as_ref().map(DurableOwnedThreeStoreCommitV1::phase)
     }
 
-    fn capture_snapshot(&self) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError> {
+    pub fn capture_snapshot(&self) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError> {
         capture_store_owned_three_snapshot(
             self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
             self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
@@ -2295,12 +1532,12 @@ where
         )
     }
 
-    fn acknowledge(&mut self) -> bool {
+    pub fn acknowledge(&mut self) -> bool {
         let Some(receipt) = self.coordinator.as_ref().and_then(|coordinator| coordinator.receipt.clone()) else { return false };
         self.coordinator.as_mut().is_some_and(|coordinator| coordinator.acknowledge(&receipt))
     }
 
-    fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
+    pub fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedGroupDecisionError> {
         self.coordinator.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?.advance_recovery(
             self.parent.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
             self.drawing.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?,
@@ -2309,7 +1546,7 @@ where
         )
     }
 
-    fn take_terminal_owners(&mut self) -> Option<DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
+    pub fn take_terminal_owners(&mut self) -> Option<DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
         if !self.coordinator.as_ref().is_some_and(DurableOwnedThreeStoreCommitV1::terminal_is_empty) || self.parent.is_none() || self.drawing.is_none() || self.value.is_none() {
             return None;
         }
@@ -2321,7 +1558,7 @@ where
         })
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none()
     }
 }
@@ -2342,11 +1579,11 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ParentMutation: StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     DrawingMutation: StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
@@ -2367,7 +1604,7 @@ where
         operation.acknowledge()
     }
 
-    pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> DurableOwnedMapRecoveryAdvanceV1 {
+    pub fn advance(&mut self, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> DurableOwnedMapRecoveryAdvanceV1 {
         let Some(operation) = self.operation.as_mut() else { return DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidOutcome) };
         match operation.advance(grant) {
             Ok(DurableOwnedThreeStoreCommitAdvanceV1::Progress(phase)) => DurableOwnedMapRecoveryAdvanceV1::Progress(phase),
@@ -2417,546 +1654,38 @@ where
     }
 }
 
-impl DurableUnboundOneItemOutcomeV1 {
-    fn decode_canonical_pack(bytes: &[u8]) -> Result<Self, DurableOwnedGroupDecisionError> {
-        if bytes.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
-            return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-        }
-        let options = PackDecodeOptions {
-            verification: PackVerificationLevel::Full,
-            preserve_unknown: true,
-            limits: crate::os_pack::PackLimits {
-                max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_symbols: 128,
-                max_depth: 32,
-                max_items: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-            },
-        };
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(DurableOwnedGroupDecisionError::InvalidSchema);
-        }
-        let file = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        let manifest = file.manifest().ok_or_else(|| DurableOwnedGroupDecisionError::Codec("unbound outcome manifest is absent".into()))?;
-        if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64 {
-            return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-        }
-        if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 11 || manifest.schema_hash != crate::os_pack::schema_hash(&Self::__dsl_spec()) {
-            return Err(DurableOwnedGroupDecisionError::NonCanonical);
-        }
-        let outcome = <Self as ArtifactPack>::decode_pack_with(bytes, &options).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if outcome.schema != DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1
-            || !valid_identity(&outcome.recovery_schema)
-            || !valid_identity(&outcome.actor)
-            || outcome.post_snapshot_pack.is_empty()
-            || outcome.post_snapshot_pack.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES
-            || outcome.encode_pack() != bytes
-        {
-            return Err(DurableOwnedGroupDecisionError::NonCanonical);
-        }
-        Ok(outcome)
-    }
-}
 
-impl DurableStorePreparedOutcomeV1 {
-    fn from_prepared<P, Mutation>(recovery_schema: &str, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> Result<Self, DurableOwnedGroupDecisionError>
-    where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
-        Mutation: ValueToValue + ValueFromValue,
-    {
-        let authority = &prepared.authority();
-        if !valid_identity(recovery_schema) || authority.group_id().is_some() || !valid_edit_identities(prepared.edit()) {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        authority.validate_prepared(prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        let post_snapshot_pack = prepared.post_snapshot().encode_pack();
-        if post_snapshot_pack.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
-            return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-        }
-        let outcome = DurableUnboundOneItemOutcomeV1 {
-            schema: DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1.into(),
-            recovery_schema: recovery_schema.into(),
-            operation: authority.operation().0,
-            base_generation: authority.generation().0,
-            base_revision: authority.base_revision(),
-            base_applied_edit_count: authority.base_applied_edit_count().try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-            next_sequence_number: authority.next_sequence_number(),
-            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock()).into_bytes(),
-            actor: authority.actor_utf8().clone(),
-            edit_without_group_canonical_json: semio_framework_pack_json::to_json_string(prepared.edit()).into_bytes(),
-            post_snapshot_pack,
-        };
-        let pack = outcome.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if pack.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
-            return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-        }
-        let owned = Self { recovery_schema: recovery_schema.into(), sha256: semio_framework_hash::sha256_hex(&pack), pack };
-        let verified = owned.verify_inverse::<P, Mutation>()?;
-        if verified.authority.operation() != authority.operation()
-            || verified.authority.generation() != authority.generation()
-            || verified.authority.base_revision() != authority.base_revision()
-            || verified.authority.base_applied_edit_count() != authority.base_applied_edit_count()
-            || verified.authority.next_sequence_number() != authority.next_sequence_number()
-            || verified.authority.next_clock() != authority.next_clock()
-            || verified.authority.actor() != authority.actor()
-            || semio_framework_value::ToValue::to_value(verified.edit.as_ref()) != semio_framework_value::ToValue::to_value(prepared.edit())
-            || verified.post_snapshot.encode_pack() != prepared.post_snapshot().encode_pack()
-        {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        Ok(owned)
-    }
 
-    pub(super) fn verify_inverse<P, Mutation>(&self) -> Result<DurableStoreVerifiedOutcomeV1<P, Mutation>, DurableOwnedGroupDecisionError>
-    where
-        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
-        Mutation: ValueToValue + ValueFromValue,
-    {
-        if self.sha256 != semio_framework_hash::sha256_hex(&self.pack) {
-            return Err(DurableOwnedGroupDecisionError::InvalidHash);
-        }
-        let outcome = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&self.pack)?;
-        if outcome.recovery_schema != self.recovery_schema {
-            return Err(DurableOwnedGroupDecisionError::InvalidSchema);
-        }
-        let next_clock: HybridLogicalTimestamp = parse_canonical_json_value(&outcome.next_clock_canonical_json)?;
-        let edit: Edit<Mutation> = parse_canonical_json_value(&outcome.edit_without_group_canonical_json)?;
-        if !valid_edit_identities(&edit) {
-            return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
-        }
-        let post_options = PackDecodeOptions {
-            verification: PackVerificationLevel::Full,
-            preserve_unknown: true,
-            limits: crate::os_pack::PackLimits {
-                max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_symbols: 128,
-                max_depth: 32,
-                max_items: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-            },
-        };
-        let post_snapshot = P::decode_pack_with(&outcome.post_snapshot_pack, &post_options).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if post_snapshot.encode_pack() != outcome.post_snapshot_pack {
-            return Err(DurableOwnedGroupDecisionError::NonCanonical);
-        }
-        let base_applied_edit_count = outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
-            semio_framework_job::OperationId(outcome.operation),
-            semio_framework_job::Generation(outcome.base_generation),
-            outcome.base_revision,
-            base_applied_edit_count,
-            outcome.next_sequence_number,
-            next_clock,
-            outcome.actor,
-            edit.line.clone(),
-            None,
-            None,
-        ));
-        authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        Ok(DurableStoreVerifiedOutcomeV1 { authority, edit: Box::new(edit), post_snapshot: Arc::new(post_snapshot) })
-    }
-}
 
-impl<P, Mutation> DurableStorePreparedOwnerV1<P, Mutation>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
-    Mutation: ValueToValue + ValueFromValue,
-{
-    /// 🧷️ Seals one Store-prepared owner with its verified unbound outcome under the member's recovery schema.
-    fn unbound(prepared: ArtifactStoreOneItemPrepared<P, Mutation>, recovery_schema: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
-        let unbound = DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)?;
-        Ok(Self { prepared, unbound })
-    }
-}
 
-fn parse_canonical_json_value<T>(bytes: &[u8]) -> Result<T, DurableOwnedGroupDecisionError>
-where
-    T: ValueToValue + ValueFromValue,
-{
-    validate_json_budget(bytes)?;
-    let json = std::str::from_utf8(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-    let value = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-    if semio_framework_pack_json::to_json_string(&value).as_bytes() != bytes {
-        return Err(DurableOwnedGroupDecisionError::NonCanonical);
-    }
-    Ok(value)
-}
 
-fn validate_json_budget(bytes: &[u8]) -> Result<(), DurableOwnedGroupDecisionError> {
-    if bytes.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
-        return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-    }
-    let mut depth = 0usize;
-    let mut items = usize::from(!bytes.is_empty());
-    let mut in_string = false;
-    let mut escaped = false;
-    for byte in bytes.iter().copied() {
-        if in_string {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == b'"' {
-                in_string = false;
-            } else if byte < 0x20 {
-                return Err(DurableOwnedGroupDecisionError::NonCanonical);
-            }
-            continue;
-        }
-        match byte {
-            b'"' => in_string = true,
-            b'{' | b'[' => {
-                depth = depth.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                if depth > DURABLE_OWNED_GROUP_JSON_MAX_DEPTH {
-                    return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-                }
-            }
-            b'}' | b']' => {
-                depth = depth.checked_sub(1).ok_or(DurableOwnedGroupDecisionError::NonCanonical)?;
-            }
-            b',' => {
-                items = items.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                if items > DURABLE_OWNED_GROUP_JSON_MAX_ITEMS {
-                    return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-                }
-            }
-            _ => {}
-        }
-    }
-    if depth != 0 || in_string || escaped {
-        return Err(DurableOwnedGroupDecisionError::NonCanonical);
-    }
-    Ok(())
-}
 
-fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
-    valid_identity(&edit.id)
-        && edit.actor.as_deref().is_none_or(valid_identity)
-        && edit.mutation_meta.iter().all(|meta| {
-            meta.mutation_id.as_ref().is_none_or(|id| valid_identity(&id.0))
-                && meta.dependencies.iter().all(|id| valid_identity(&id.0))
-                && meta.author_id.as_ref().is_none_or(|id| valid_identity(&id.0))
-                && meta.semantic_kind.as_ref().is_none_or(|id| valid_identity(&id.0))
-                && meta.group_id.as_deref().is_none_or(valid_identity)
-        })
-}
 
-fn verify_bound_member_edit<P, Mutation>(member: &DurableOwnedGroupMemberV1, decision_sha256: &str) -> Result<Edit<Mutation>, DurableOwnedGroupDecisionError>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
-    Mutation: ValueToValue + ValueFromValue,
-{
-    let outcome = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack)?;
-    if outcome.recovery_schema != member.recovery_schema
-        || outcome.group_id != decision_sha256
-        || outcome.base_generation != member.expected_generation
-        || outcome.base_revision != member.expected_revision
-        || outcome.post_generation != member.post_generation
-        || outcome.post_revision != member.post_revision
-        || semio_framework_hash::sha256_hex(&outcome.unbound_pack::<Mutation>()?) != member.unbound_outcome_sha256
-    {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    let next_clock: HybridLogicalTimestamp = parse_canonical_json_value(&outcome.next_clock_canonical_json)?;
-    let edit: Edit<Mutation> = parse_canonical_json_value(&outcome.edit_canonical_json)?;
-    if !valid_edit_identities(&edit) || CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest {
-        return Err(DurableOwnedGroupDecisionError::InvalidHash);
-    }
-    let authority = ArtifactStoreOneItemLiveAuthority::mint(
-        semio_framework_job::OperationId(outcome.operation),
-        semio_framework_job::Generation(outcome.base_generation),
-        outcome.base_revision,
-        outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-        outcome.next_sequence_number,
-        next_clock,
-        outcome.actor,
-        edit.line.clone(),
-        Some(decision_sha256.into()),
-        None,
-    );
-    authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let snapshot = P::decode_pack_with(
-        &outcome.post_snapshot_pack,
-        &PackDecodeOptions {
-            verification: PackVerificationLevel::Full,
-            preserve_unknown: true,
-            limits: crate::os_pack::PackLimits {
-                max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_symbols: 128,
-                max_depth: 32,
-                max_items: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-            },
-        },
-    )
-    .map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-    if snapshot.encode_pack() != outcome.post_snapshot_pack {
-        return Err(DurableOwnedGroupDecisionError::NonCanonical);
-    }
-    Ok(edit)
-}
 
-fn store_post_revision<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, authority: &ArtifactStoreOneItemLiveAuthority, edit_digest: [u8; 32]) -> Result<[u8; 32], DurableOwnedGroupDecisionError>
-where
-    P: Clone + ValueToValue + ValueFromValue,
-    Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
-{
-    if store.cursor.generation != authority.generation().0
-        || store.cursor.content_revision != authority.base_revision()
-        || store.log.applied_edit_ids.len() != authority.base_applied_edit_count()
-        || store.cursor.revision_accumulator.applied.len() != authority.base_applied_edit_count()
-    {
-        return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
-    }
-    let previous = store.cursor.revision_accumulator.applied.last().map_or(store.cursor.revision_accumulator.identity_digest, |record| record.prefix_digest);
-    let applied = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &edit_digest]);
-    let applied_len = authority.base_applied_edit_count().checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)? as u64;
-    let empty_len = 0_u64;
-    Ok(CursorRevisionAccumulator::hash_record(b"cursor", &[&applied, &applied_len.to_be_bytes(), &store.cursor.revision_accumulator.identity_digest, &empty_len.to_be_bytes(), store.log.current_checkpoint_id.as_deref().unwrap_or_default().as_bytes()]))
-}
 
-impl<P, Mutation> DurableStorePreparedOwnerV1<P, Mutation>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
-    Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
-{
-    fn bind(self, store: &ArtifactStore<P, Mutation>, group_id: &str) -> Result<DurableStoreBoundOutcomeV1<P, Mutation>, DurableOwnedGroupDecisionError> {
-        if !valid_hash(group_id) {
-            return Err(DurableOwnedGroupDecisionError::InvalidHash);
-        }
-        let base_authority = Arc::clone(self.prepared.authority());
-        base_authority.validate_prepared(&self.prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        if base_authority.group_id().is_some() {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        let expected_generation = base_authority.generation().0;
-        let expected_revision = base_authority.base_revision();
-        let post_generation = expected_generation.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-        let ArtifactStoreOneItemPreparedParts { mut edit, post_snapshot, local_actor, applied_edit_id, tail_edit_id, .. } = self.prepared.into_parts();
-        if edit.mutation_meta.len() != 1 {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        let meta = edit.mutation_meta.first_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        if meta.group_id.is_some() {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        meta.group_id = Some(group_id.into());
-        if !valid_edit_identities(edit.as_ref()) {
-            return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
-        }
-        let authority = Arc::new(base_authority.rebind_group(group_id.into()));
-        let edit_digest = authority.prepared_edit_digest(edit.as_ref()).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        let post_revision = store_post_revision(store, &authority, edit_digest)?;
-        let outcome = DurableBoundOneItemOutcomeV1 {
-            schema: DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1.into(),
-            recovery_schema: self.unbound.recovery_schema.clone(),
-            operation: authority.operation().0,
-            base_generation: expected_generation,
-            base_revision: expected_revision,
-            base_applied_edit_count: authority.base_applied_edit_count().try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-            next_sequence_number: authority.next_sequence_number(),
-            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock()).into_bytes(),
-            actor: authority.actor_utf8().clone(),
-            group_id: group_id.into(),
-            edit_canonical_json: semio_framework_pack_json::to_json_string(edit.as_ref()).into_bytes(),
-            post_snapshot_pack: post_snapshot.encode_pack(),
-            edit_digest,
-            post_generation,
-            post_revision,
-        };
-        let recovery_pack = outcome.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if recovery_pack.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
-            return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-        }
-        let actor = local_actor.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        if !actor.eq_str(&authority.actor()) || !applied_edit_id.eq_str(&edit.id) || !tail_edit_id.eq_str(&edit.id) {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        let prepared = authority.seal_prepared_owned(edit, post_snapshot, edit_digest, [actor, applied_edit_id, tail_edit_id]);
-        let recovery_pack_sha256 = semio_framework_hash::sha256_hex(&recovery_pack);
-        Ok(DurableStoreBoundOutcomeV1 { prepared, unbound_sha256: self.unbound.sha256, recovery_schema: self.unbound.recovery_schema, recovery_pack, recovery_pack_sha256, expected_generation, expected_revision, post_generation, post_revision })
-    }
-}
 
-impl DurableBoundOneItemOutcomeV1 {
-    fn decode_canonical_pack(bytes: &[u8]) -> Result<Self, DurableOwnedGroupDecisionError> {
-        if bytes.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
-            return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-        }
-        let options = PackDecodeOptions {
-            verification: PackVerificationLevel::Full,
-            preserve_unknown: true,
-            limits: crate::os_pack::PackLimits {
-                max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_symbols: 128,
-                max_depth: 32,
-                max_items: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-            },
-        };
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(DurableOwnedGroupDecisionError::InvalidSchema);
-        }
-        let file = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        let manifest = file.manifest().ok_or_else(|| DurableOwnedGroupDecisionError::Codec("bound outcome manifest is absent".into()))?;
-        if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64 {
-            return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
-        }
-        if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 15 || manifest.schema_hash != crate::os_pack::schema_hash(&Self::__dsl_spec()) {
-            return Err(DurableOwnedGroupDecisionError::NonCanonical);
-        }
-        let outcome = <Self as ArtifactPack>::decode_pack_with(bytes, &options).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if outcome.schema != DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1
-            || !valid_identity(&outcome.recovery_schema)
-            || !valid_identity(&outcome.actor)
-            || !valid_hash(&outcome.group_id)
-            || outcome.post_snapshot_pack.is_empty()
-            || outcome.post_snapshot_pack.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES
-            || outcome.encode_pack() != bytes
-        {
-            return Err(DurableOwnedGroupDecisionError::NonCanonical);
-        }
-        Ok(outcome)
-    }
 
-    fn unbound_pack<Mutation>(&self) -> Result<Vec<u8>, DurableOwnedGroupDecisionError>
-    where
-        Mutation: ValueToValue + ValueFromValue,
-    {
-        let mut edit: Edit<Mutation> = parse_canonical_json_value(&self.edit_canonical_json)?;
-        if edit.mutation_meta.len() != 1 {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        let meta = edit.mutation_meta.first_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        if meta.group_id.as_deref() != Some(self.group_id.as_str()) {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        meta.group_id = None;
-        if !valid_edit_identities(&edit) {
-            return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
-        }
-        let outcome = DurableUnboundOneItemOutcomeV1 {
-            schema: DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1.into(),
-            recovery_schema: self.recovery_schema.clone(),
-            operation: self.operation,
-            base_generation: self.base_generation,
-            base_revision: self.base_revision,
-            base_applied_edit_count: self.base_applied_edit_count,
-            next_sequence_number: self.next_sequence_number,
-            next_clock_canonical_json: self.next_clock_canonical_json.clone(),
-            actor: self.actor.clone(),
-            edit_without_group_canonical_json: semio_framework_pack_json::to_json_string(&edit).into_bytes(),
-            post_snapshot_pack: self.post_snapshot_pack.clone(),
-        };
-        outcome.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))
-    }
-}
 
-impl<P, Mutation> DurableStoreBoundOutcomeV1<P, Mutation>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
-    Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
-{
-    fn recover(store: &ArtifactStore<P, Mutation>, member: &DurableOwnedGroupMemberV1, group_id: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
-        if member.recovery_pack_sha256 != semio_framework_hash::sha256_hex(&member.recovery_pack) {
-            return Err(DurableOwnedGroupDecisionError::InvalidHash);
-        }
-        let outcome = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack)?;
-        if outcome.recovery_schema != member.recovery_schema
-            || outcome.group_id != group_id
-            || outcome.base_generation != member.expected_generation
-            || outcome.base_revision != member.expected_revision
-            || outcome.post_generation != member.post_generation
-            || outcome.post_revision != member.post_revision
-        {
-            return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-        }
-        let unbound_pack = outcome.unbound_pack::<Mutation>()?;
-        if member.unbound_outcome_sha256 != semio_framework_hash::sha256_hex(&unbound_pack) {
-            return Err(DurableOwnedGroupDecisionError::InvalidHash);
-        }
-        let next_clock: HybridLogicalTimestamp = parse_canonical_json_value(&outcome.next_clock_canonical_json)?;
-        let edit: Edit<Mutation> = parse_canonical_json_value(&outcome.edit_canonical_json)?;
-        if !valid_edit_identities(&edit) {
-            return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
-        }
-        if CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest {
-            return Err(DurableOwnedGroupDecisionError::InvalidHash);
-        }
-        let post_snapshot = Arc::new(
-            P::decode_pack_with(
-                &outcome.post_snapshot_pack,
-                &PackDecodeOptions {
-                    verification: PackVerificationLevel::Full,
-                    preserve_unknown: true,
-                    limits: crate::os_pack::PackLimits {
-                        max_file_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                        max_segment_len: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                        max_symbols: 128,
-                        max_depth: 32,
-                        max_items: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                        max_total_alloc: DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES as u64,
-                    },
-                },
-            )
-            .map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?,
-        );
-        if post_snapshot.encode_pack() != outcome.post_snapshot_pack {
-            return Err(DurableOwnedGroupDecisionError::NonCanonical);
-        }
-        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
-            semio_framework_job::OperationId(outcome.operation),
-            semio_framework_job::Generation(outcome.base_generation),
-            outcome.base_revision,
-            outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-            outcome.next_sequence_number,
-            next_clock,
-            outcome.actor,
-            edit.line.clone(),
-            Some(group_id.into()),
-            None,
-        ));
-        authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        if store_post_revision(store, &authority, outcome.edit_digest)? != outcome.post_revision || outcome.post_generation != outcome.base_generation.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)? {
-            return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
-        }
-        let mut admitted = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, &mut admitted);
-        let identities = [authority.actor(), edit.id.as_str(), edit.id.as_str()].map(|identity| semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::try_from_str_controlled(identity, &mut control));
-        let [actor, applied_edit_id, tail_edit_id] = identities;
-        let identities = [actor, applied_edit_id, tail_edit_id].map(|identity| identity.map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string())));
-        let [actor, applied_edit_id, tail_edit_id] = identities;
-        let prepared = authority.seal_prepared_owned(Box::new(edit), post_snapshot, outcome.edit_digest, [actor?, applied_edit_id?, tail_edit_id?]);
-        Ok(Self {
-            prepared,
-            unbound_sha256: member.unbound_outcome_sha256.clone(),
-            recovery_schema: member.recovery_schema.clone(),
-            recovery_pack: member.recovery_pack.clone(),
-            recovery_pack_sha256: member.recovery_pack_sha256.clone(),
-            expected_generation: member.expected_generation,
-            expected_revision: member.expected_revision,
-            post_generation: member.post_generation,
-            post_revision: member.post_revision,
-        })
-    }
-}
+
+
+
+
+
+
+
+
+
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
     ParentMutation: ValueToValue + ValueFromValue,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
     DrawingMutation: ValueToValue + ValueFromValue,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
     ValueMutation: ValueToValue + ValueFromValue,
 {
-    pub(super) fn from_store_prepared(
+    pub fn from_store_prepared(
         parent: ArtifactStoreOneItemPrepared<ParentP, ParentMutation>,
         drawing: ArtifactStoreOneItemPrepared<DrawingP, DrawingMutation>,
         value: ArtifactStoreOneItemPrepared<ValueP, ValueMutation>,
@@ -2965,53 +1694,23 @@ where
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum DurableMemberRecoveryFrontier {
-    Base,
-    Post,
-}
 
-fn recovery_frontier<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, member: &DurableOwnedGroupMemberV1, group_id: &str) -> Result<DurableMemberRecoveryFrontier, DurableOwnedGroupDecisionError>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
-    Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
-{
-    if (store.cursor.generation, store.cursor.content_revision) == (member.expected_generation, member.expected_revision) {
-        return Ok(DurableMemberRecoveryFrontier::Base);
-    }
-    if (store.cursor.generation, store.cursor.content_revision) != (member.post_generation, member.post_revision) {
-        return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
-    }
-    let outcome = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack)?;
-    let edit: Edit<Mutation> = parse_canonical_json_value(&outcome.edit_canonical_json)?;
-    let tail = store.log.applied_edit_ids.last().and_then(|id| store.log.envelope.vcs.edits.iter().find(|candidate| candidate.id == *id)).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let accumulator = store.cursor.revision_accumulator.applied.last().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    if outcome.group_id != group_id
-        || !valid_edit_identities(&edit)
-        || outcome.unbound_pack::<Mutation>().map(|pack| semio_framework_hash::sha256_hex(&pack))? != member.unbound_outcome_sha256
-        || CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest
-        || accumulator.edit_digest != outcome.edit_digest
-        || semio_framework_pack_json::to_json_string(tail).as_bytes() != outcome.edit_canonical_json
-        || store.live.current.encode_pack() != outcome.post_snapshot_pack
-    {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    Ok(DurableMemberRecoveryFrontier::Post)
-}
+
+
 
 impl DurableOwnedThreeMemberDecisionV1 {
-    pub(super) fn recover_store_owned<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
+    pub fn recover_store_owned<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
         &self,
         parent_store: &ArtifactStore<ParentP, ParentMutation>,
         drawing_store: &ArtifactStore<DrawingP, DrawingMutation>,
         value_store: &ArtifactStore<ValueP, ValueMutation>,
     ) -> Result<DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError>
     where
-        ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
+        ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
         ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-        DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
+        DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
         DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-        ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
+        ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
         ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
     {
         self.validate()?;
@@ -3037,71 +1736,24 @@ impl DurableOwnedThreeMemberDecisionV1 {
     }
 }
 
-fn store_member_identity<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<OwnerRef>), DurableOwnedGroupDecisionError>
-where
-    P: Clone + ValueToValue + ValueFromValue,
-    Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
-{
-    let envelope = &store.log.envelope;
-    let dialect = envelope.dialect.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
-    Ok((semio_framework_artifact_reference::ArtifactRef { artifact_id: envelope.id.clone(), dialect }, envelope.owner.clone()))
-}
 
-fn prepared_member<P, Mutation>(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, prepared: &DurableStorePreparedOwnerV1<P, Mutation>) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
-    let authority = &prepared.prepared.authority();
-    authority.validate_prepared(&prepared.prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if authority.group_id().is_some() {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    Ok(DurableOwnedGroupMemberV1 {
-        role: role.into(),
-        reference,
-        owner,
-        expected_generation: authority.generation().0,
-        expected_revision: authority.base_revision(),
-        recovery_schema: prepared.unbound.recovery_schema.clone(),
-        recovery_pack: Vec::new(),
-        recovery_pack_sha256: String::new(),
-        unbound_outcome_sha256: prepared.unbound.sha256.clone(),
-        post_generation: authority.generation().0.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?,
-        post_revision: [0; 32],
-    })
-}
 
-fn bound_member<P, Mutation>(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, bound: &DurableStoreBoundOutcomeV1<P, Mutation>) -> DurableOwnedGroupMemberV1 {
-    DurableOwnedGroupMemberV1 {
-        role: role.into(),
-        reference,
-        owner,
-        expected_generation: bound.expected_generation,
-        expected_revision: bound.expected_revision,
-        recovery_schema: bound.recovery_schema.clone(),
-        recovery_pack: bound.recovery_pack.clone(),
-        recovery_pack_sha256: bound.recovery_pack_sha256.clone(),
-        unbound_outcome_sha256: bound.unbound_sha256.clone(),
-        post_generation: bound.post_generation,
-        post_revision: bound.post_revision,
-    }
-}
 
-fn prepared_base_matches_store<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, member: &DurableOwnedGroupMemberV1, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> bool
-where
-    P: Clone + ValueToValue + ValueFromValue,
-    Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
-{
-    store.cursor.generation == member.expected_generation && store.cursor.content_revision == member.expected_revision && store.log.applied_edit_ids.len() == prepared.authority().base_applied_edit_count()
-}
+
+
+
+
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
 {
-    pub(super) fn bind_store_owned(
+    pub fn bind_store_owned(
         self,
         parent_store: &ArtifactStore<ParentP, ParentMutation>,
         drawing_store: &ArtifactStore<DrawingP, DrawingMutation>,
@@ -3142,155 +1794,35 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 }
 
-impl ArtifactDsl for DurableUnboundOneItemOutcomeV1 {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
 
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
 
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = crate::os_store::semio_format::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
 
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid unbound outcome envelope");
-        crate::os_store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl ArtifactPack for DurableUnboundOneItemOutcomeV1 {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
-    }
 
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unbound outcome pack envelope mismatch")));
-        }
-        let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::serialization::text_error_to_pack_error)
-    }
 
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DurableUnboundOneItemOutcomeV1 {
 
-}
 
-impl ArtifactDsl for DurableBoundOneItemOutcomeV1 {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
 
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
 
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = crate::os_store::semio_format::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
 
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid bound outcome envelope");
-        crate::os_store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
-    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
-    }
 
-    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
-            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "bound outcome pack envelope mismatch")));
-        }
-        let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::serialization::text_error_to_pack_error)
-    }
 
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DurableBoundOneItemOutcomeV1 {
 
-}
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct DurableOwnedGroupMapHandlesV1 {
-    pub(crate) drawing: semio_framework_artifact_reference::ArtifactRef,
-    pub(crate) value: semio_framework_artifact_reference::ArtifactRef,
-}
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct DurableOwnedGroupMapFrontiersV1 {
-    pub(crate) parent_generation: u64,
-    pub(crate) parent_revision: [u8; 32],
-    pub(crate) drawing_generation: u64,
-    pub(crate) drawing_revision: [u8; 32],
-    pub(crate) value_generation: u64,
-    pub(crate) value_revision: [u8; 32],
-}
 
-fn valid_hash(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
-}
 
-fn valid_identity(value: &str) -> bool {
-    !value.is_empty() && value.len() <= DURABLE_OWNED_GROUP_ID_MAX_BYTES && !value.chars().any(char::is_control)
-}
 
-fn valid_reference(reference: &semio_framework_artifact_reference::ArtifactRef) -> bool {
-    valid_identity(&reference.artifact_id) && valid_identity(&reference.dialect.artifact_kind) && valid_identity(&reference.dialect.standard) && valid_identity(&reference.dialect.subset)
-}
 
-fn unsigned_member(member: &DurableOwnedGroupMemberV1) -> DurableOwnedThreeMemberUnsignedMemberV1 {
-    DurableOwnedThreeMemberUnsignedMemberV1 {
-        role: member.role.clone(),
-        reference: member.reference.clone(),
-        owner: member.owner.clone(),
-        expected_generation: member.expected_generation,
-        expected_revision: member.expected_revision,
-        recovery_schema: member.recovery_schema.clone(),
-        unbound_outcome_sha256: member.unbound_outcome_sha256.clone(),
-    }
-}
 
-fn member_identity_matches(member: &DurableOwnedGroupMemberV1, role: &str, recovery_schema: &str, reference_uri: &str, anchor: &DurableOwnedGroupAnchorV1) -> bool {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-    if member.role != role || member.recovery_schema != recovery_schema || member.reference.to_uri() != reference_uri || !valid_reference(&member.reference) || !valid_identity(&member.recovery_schema) {
-        return false;
-    }
-    match (role, &member.owner) {
-        (PARENT_ROLE, None) => member.reference == anchor.parent,
-        (DRAWING_ROLE, Some(owner)) => owner.parent == anchor.parent && owner.slot == DRAWING_ROLE && owner.child_id == "gismap-drawing",
-        (VALUE_ROLE, Some(owner)) => owner.parent == anchor.parent && owner.slot == VALUE_ROLE && owner.child_id == "gismap-value",
-        _ => false,
-    }
-}
 
-fn member_matches(member: &DurableOwnedGroupMemberV1, role: &str, recovery_schema: &str, reference_uri: &str, anchor: &DurableOwnedGroupAnchorV1) -> bool {
-    member_identity_matches(member, role, recovery_schema, reference_uri, anchor) && member.expected_generation.checked_add(1) == Some(member.post_generation) && member.post_revision != member.expected_revision
-}
+
 
 impl DurableOwnedThreeMemberDecisionV1 {
     #[cfg(any(test, feature = "durable-group-testing"))]
-    fn seal_fixture(
+    pub fn seal_fixture(
         anchor: DurableOwnedGroupAnchorV1,
         mut parent: DurableOwnedGroupMemberV1,
         mut drawing: DurableOwnedGroupMemberV1,
@@ -3343,11 +1875,11 @@ impl DurableOwnedThreeMemberDecisionV1 {
         Ok(decision)
     }
 
-    pub(crate) fn canonical_json(&self) -> String {
+    pub fn canonical_json(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }
 
-    pub(crate) fn canonical_unsigned_json(&self) -> String {
+    pub fn canonical_unsigned_json(&self) -> String {
         semio_framework_pack_json::to_json_string(&DurableOwnedThreeMemberUnsignedV1 {
             schema: self.schema.clone(),
             anchor: self.anchor.clone(),
@@ -3357,7 +1889,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
         })
     }
 
-    pub(crate) fn parse_canonical_json(json: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
+    pub fn parse_canonical_json(json: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
         if json.len() > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
         }
@@ -3373,18 +1905,18 @@ impl DurableOwnedThreeMemberDecisionV1 {
         Ok(decision)
     }
 
-    pub(crate) fn decode_canonical_pack(bytes: &[u8]) -> Result<Self, DurableOwnedGroupDecisionError> {
+    pub fn decode_canonical_pack(bytes: &[u8]) -> Result<Self, DurableOwnedGroupDecisionError> {
         if bytes.len() > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
         }
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
+        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let options = PackDecodeOptions {
             verification: PackVerificationLevel::Full,
             preserve_unknown: true,
-            limits: crate::os_pack::PackLimits {
+            limits: semio_framework_os_pack::PackLimits {
                 max_file_len: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64,
                 max_segment_len: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64,
                 max_symbols: 128,
@@ -3393,7 +1925,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
                 max_total_alloc: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64,
             },
         };
-        let file = ::semio_framework_async::poll::resolve_ready(crate::os_pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
+        let file = ::semio_framework_async::poll::resolve_ready(pack::format::PackFile::open_manifest(inner.as_slice(), &options.limits, options.verification)).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
         let manifest = file.manifest().ok_or_else(|| DurableOwnedGroupDecisionError::Codec("durable group manifest is absent".into()))?;
         if manifest.uncompressed_body_len > DURABLE_OWNED_GROUP_EVENT_MAX_BYTES as u64 {
             return Err(DurableOwnedGroupDecisionError::EventTooLarge);
@@ -3401,7 +1933,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
         if manifest.doc_frame_count != 1 || manifest.chunk_count != 0 || file.chunk_count() != 0 || manifest.field_count != 7 {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
-        if manifest.schema_hash != crate::os_pack::schema_hash(&Self::__dsl_spec()) {
+        if manifest.schema_hash != semio_framework_os_pack::schema_hash(&Self::__dsl_spec()) {
             return Err(DurableOwnedGroupDecisionError::InvalidSchema);
         }
         let decision = <Self as ArtifactPack>::decode_pack_with(bytes, &options).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -3412,7 +1944,7 @@ impl DurableOwnedThreeMemberDecisionV1 {
         Ok(decision)
     }
 
-    pub(crate) fn validate(&self) -> Result<(), DurableOwnedGroupDecisionError> {
+    pub fn validate(&self) -> Result<(), DurableOwnedGroupDecisionError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _,DialectCoordinateText as _};
 
         if self.schema != DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1 || self.anchor.schema != DURABLE_OWNED_GROUP_ANCHOR_SCHEMA_V1 || self.anchor.shape != DURABLE_OWNED_GROUP_SHAPE_V1 {
@@ -3459,7 +1991,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         Ok(())
     }
 
-    pub(crate) fn admit_map(&self, handles: &DurableOwnedGroupMapHandlesV1, frontiers: &DurableOwnedGroupMapFrontiersV1) -> Result<(), DurableOwnedGroupDecisionError> {
+    pub fn admit_map(&self, handles: &DurableOwnedGroupMapHandlesV1, frontiers: &DurableOwnedGroupMapFrontiersV1) -> Result<(), DurableOwnedGroupDecisionError> {
         self.validate()?;
         if handles.drawing != self.drawing.reference || handles.value != self.value.reference {
             return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
@@ -3480,36 +2012,36 @@ impl ArtifactDsl for DurableOwnedThreeMemberDecisionV1 {
         Self::__DSL_ENVELOPE_ID
     }
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let body = crate::os_store::semio_format::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
+        let body = semio_framework_os_semio::split_text_preamble(text).map(|(_, body)| body).unwrap_or(text);
         let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid durable group envelope");
-        crate::os_store::semio_format::wrap_text(&envelope, &body)
+        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid durable group envelope");
+        semio_framework_os_semio::wrap_text(&envelope, &body)
     }
 }
 
 impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
-        Ok(crate::os_store::semio_format::wrap_binary(&envelope, &inner))
+        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let (envelope, inner) = crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Pack, 1) {
+        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "durable group pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::serialization::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(semio_framework_os_store_text_io::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DurableOwnedThreeMemberDecisionV1 {
+impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DurableOwnedThreeMemberDecisionV1 {
 
 }
 
@@ -3556,92 +2088,13 @@ pub fn durable_owned_group_journal_test_record(snapshot_json: &str) -> DurableOw
     DurableOwnedGroupJournalRecordV1::admit(decision.encode_pack(), &decision.decision_sha256).expect("fixture journal record")
 }
 
-#[cfg(feature = "durable-group-testing")]
-fn durable_group_test_revision(bytes: &[u8]) -> [u8; 32] {
-    let digest = semio_framework_hash::sha256_hex(bytes);
-    std::array::from_fn(|index| u8::from_str_radix(&digest[index * 2..index * 2 + 2], 16).expect("SHA-256 hexadecimal byte"))
-}
 
-#[cfg(feature = "durable-group-testing")]
-fn durable_group_test_outcome<P, Mutation>(recovery_schema: &str, ordinal: u64, edit: Edit<Mutation>, post_snapshot: P) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError>
-where
-    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
-    Mutation: ValueToValue + ValueFromValue,
-{
-    let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
-    let meta = edit.mutation_meta.first().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
-        semio_framework_job::OperationId(10_000 + ordinal),
-        semio_framework_job::Generation(ordinal),
-        durable_group_test_revision(format!("durable-group-test-base-{ordinal}").as_bytes()),
-        0,
-        edit.sequence_number,
-        meta.timestamp,
-        actor,
-        edit.line.clone(),
-        meta.group_id.clone(),
-        None,
-    ));
-    let prepared = authority.prepare_one_item(edit, Arc::new(post_snapshot)).map_err(DurableOwnedGroupDecisionError::Codec)?;
-    DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)
-}
 
-#[cfg(feature = "durable-group-testing")]
-fn durable_group_test_member(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, outcome: &DurableStorePreparedOutcomeV1) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-    let unbound = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack)?;
-    let post_revision = durable_group_test_revision(format!("{}:{}:{}", role, reference.to_uri(), outcome.sha256).as_bytes());
-    Ok(DurableOwnedGroupMemberV1 {
-        role: role.into(),
-        reference,
-        owner,
-        expected_generation: unbound.base_generation,
-        expected_revision: unbound.base_revision,
-        recovery_schema: outcome.recovery_schema.clone(),
-        recovery_pack: Vec::new(),
-        recovery_pack_sha256: String::new(),
-        unbound_outcome_sha256: outcome.sha256.clone(),
-        post_generation: unbound.base_generation.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?,
-        post_revision,
-    })
-}
 
-#[cfg(feature = "durable-group-testing")]
-fn durable_group_test_bind_member<Mutation>(member: &mut DurableOwnedGroupMemberV1, outcome: &DurableStorePreparedOutcomeV1, decision_sha256: &str) -> Result<(), DurableOwnedGroupDecisionError>
-where
-    Mutation: ValueToValue + ValueFromValue,
-{
-    let unbound = DurableUnboundOneItemOutcomeV1::decode_canonical_pack(&outcome.pack)?;
-    let mut edit: Edit<Mutation> = parse_canonical_json_value(&unbound.edit_without_group_canonical_json)?;
-    if edit.mutation_meta.len() != 1 {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    let meta = edit.mutation_meta.first_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if meta.group_id.replace(decision_sha256.into()).is_some() {
-        return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
-    }
-    let bound = DurableBoundOneItemOutcomeV1 {
-        schema: DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1.into(),
-        recovery_schema: unbound.recovery_schema,
-        operation: unbound.operation,
-        base_generation: unbound.base_generation,
-        base_revision: unbound.base_revision,
-        base_applied_edit_count: unbound.base_applied_edit_count,
-        next_sequence_number: unbound.next_sequence_number,
-        next_clock_canonical_json: unbound.next_clock_canonical_json,
-        actor: unbound.actor,
-        group_id: decision_sha256.into(),
-        edit_canonical_json: semio_framework_pack_json::to_json_string(&edit).into_bytes(),
-        post_snapshot_pack: unbound.post_snapshot_pack,
-        edit_digest: CursorRevisionAccumulator::edit_digest(&edit),
-        post_generation: member.post_generation,
-        post_revision: member.post_revision,
-    };
-    member.recovery_pack = bound.encode_pack();
-    member.recovery_pack_sha256 = semio_framework_hash::sha256_hex(&member.recovery_pack);
-    Ok(())
-}
+
+
+
 
 /// 🧪️ Builds a typed fixed-three decision Event for downstream WAL laws; production code cannot
 /// fabricate this record and must obtain it from the retained Store-owned assembly.
@@ -3656,11 +2109,11 @@ pub fn durable_owned_group_journal_test_record_from_edits<ParentP, ParentMutatio
     value_post_snapshot: ValueP,
 ) -> Result<DurableOwnedGroupJournalRecordV1, DurableOwnedGroupDecisionError>
 where
-    ParentP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
     ParentMutation: ValueToValue + ValueFromValue,
-    DrawingP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
     DrawingMutation: ValueToValue + ValueFromValue,
-    ValueP: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot,
     ValueMutation: ValueToValue + ValueFromValue,
 {
     let parent_outcome = durable_group_test_outcome(PARENT_RECOVERY_SCHEMA, 1, parent_edit, parent_post_snapshot)?;
@@ -3686,6 +2139,4 @@ where
     DurableOwnedGroupJournalRecordV1::admit_canonical(decision.encode_pack())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

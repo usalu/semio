@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellChrome
 impl OpeningState {
-    pub(crate) fn shell_uri(&self, docs: &DocumentState) -> String {
+    pub fn shell_uri(&self, docs: &DocumentState) -> String {
         self.uri_history.get(self.uri_index).cloned().unwrap_or_else(|| docs.session.as_ref().map(|s| format!("os://{}/{}", s.plugin_id, s.app.id)).unwrap_or_else(|| "os://home".into()))
     }
 }

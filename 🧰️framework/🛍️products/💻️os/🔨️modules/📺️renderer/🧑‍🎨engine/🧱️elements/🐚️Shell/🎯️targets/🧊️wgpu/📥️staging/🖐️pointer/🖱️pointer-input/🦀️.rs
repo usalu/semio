@@ -12,7 +12,7 @@ use super::*;
 /// `KeyDown` (so `c`/`x`/`v` clipboard chords reach `route_edit_key` instead of being literally
 /// inserted as text). A focused Select owns printable typeahead and the Space press as `KeyDown`;
 /// editable controls keep plain characters as `TextInput`.
-pub(crate) fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, focused_select: bool) -> Option<ui_wgpu::wgpu::UiEvent> {
+pub fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, focused_select: bool) -> Option<ui_wgpu::wgpu::UiEvent> {
     let event_modifiers = ui_wgpu::wgpu::EventModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta };
     match action {
         ui_wgpu::wgpu::KeyAction::Char(ch) => {
@@ -42,14 +42,14 @@ pub(crate) fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifi
 }
 
 /// 🌳️ Whether this frame painted a fold chevron for `item_id` — the row has children.
-pub(super) fn tree_row_has_chevron(input: &InputState<ActionDescriptor>, item_id: &str) -> bool {
+pub fn tree_row_has_chevron(input: &InputState<ActionDescriptor>, item_id: &str) -> bool {
     let chevron = format!("tree.chevron.{item_id}");
     input.hits().iter().chain(input.staged_hits().iter()).any(|hit| hit.control_id.as_deref() == Some(chevron.as_str()))
 }
 
 //#region 🫥️HostWindowBlur
 /// 🫥️ Whether a host window blur waits for the shell's drain.
-pub(crate) fn host_window_blur_pending() -> bool {
+pub fn host_window_blur_pending() -> bool {
     *HOST_WINDOW_BLUR_PENDING.borrow()
 }
 
@@ -61,12 +61,12 @@ impl<'ctx> PointerCtx<'ctx> {
     }
 
     pub fn handle_pointer_cancel_for(&mut self, pointer_id: ui_render::PointerId, input: &mut InputState<ActionDescriptor>) {
-        let retained_cancelled = crate::interpreter::retained_pointer_capture_window(pointer_id);
+        let retained_cancelled = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_pointer_capture_window(pointer_id);
         if let Some(window_id) = retained_cancelled.as_ref() {
-            crate::interpreter::dispatch_ui_pointer_event(&window_id, pointer_id, ui_wgpu::wgpu::UiEvent::PointerCancel, input);
+            semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, ui_wgpu::wgpu::UiEvent::PointerCancel, input);
         }
         let (pointer_x, pointer_y) = (input.pointer_x, input.pointer_y);
-        let cancelled_scenes = crate::interpreter::cancel_scene_pointer(pointer_id, input);
+        let cancelled_scenes = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::cancel_scene_pointer(pointer_id, input);
         let scene_cancelled = !cancelled_scenes.is_empty();
         let mut capture_lost: Vec<&str> = retained_cancelled.iter().map(String::as_str).chain(cancelled_scenes.iter().map(|cancelled| cancelled.window_id.as_str())).collect();
         capture_lost.sort_unstable();
@@ -84,14 +84,14 @@ impl<'ctx> PointerCtx<'ctx> {
                     }
                 }
                 ui_wgpu::wgpu::SurfaceKind::NodeGraph => {
-                    crate::engine_canvas::node_graph_pointer_cancel_into(&cancelled.host_id);
+                    semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_cancel_into(&cancelled.host_id);
                 }
                 ui_wgpu::wgpu::SurfaceKind::Board2d => {
-                    crate::engine_canvas::board2d_pointer_cancel_into(&cancelled.host_id, input);
+                    semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_cancel_into(&cancelled.host_id, input);
                 }
                 ui_wgpu::wgpu::SurfaceKind::TiledMap => {
                     if let Some(surface) = self.surfaces.tiled_map_states.get(&cancelled.host_id).filter(|surface| surface.window_id == cancelled.window_id) {
-                        if let Err(fault) = crate::scenes::tiled_map_pointer_cancel_into(&cancelled.host_id, &surface.controller_id, surface.bounds, pointer_x, pointer_y, &mut *input) {
+                        if let Err(fault) = semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_cancel_into(&cancelled.host_id, &surface.controller_id, surface.bounds, pointer_x, pointer_y, &mut *input) {
                             input.record_action_fault(fault);
                         }
                     }
@@ -99,8 +99,8 @@ impl<'ctx> PointerCtx<'ctx> {
                 _ => {}
             }
         }
-        let canvas_cancelled = crate::scenes::cancel_canvas_pointer_gesture_for(pointer_id, input);
-        let transfer_cancelled = crate::scenes::cancel_scene_list_transfer_for_pointer(pointer_id);
+        let canvas_cancelled = semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture_for(pointer_id, input);
+        let transfer_cancelled = semio_framework_os_renderer_wgpu_scene_render::cancel_scene_list_transfer_for_pointer(pointer_id);
         let chrome_cancelled = self.input.chrome_pointer_owner == Some(pointer_id);
         if chrome_cancelled {
             self.input.chrome_pointer_owner = None;
@@ -172,7 +172,7 @@ impl<'ctx> PointerCtx<'ctx> {
         });
         if let Some(ref drag_data) = tree_drag_payload {
             let graph_surfaces = self.surfaces.node_graph_states.iter().map(|(id, surface)| (id.as_str(), surface.bounds)).collect::<Vec<_>>();
-            crate::engine_canvas::node_graph_sync_flow_widget_ghost(x, y, drag_data, &graph_surfaces);
+            semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_sync_flow_widget_ghost(x, y, drag_data, &graph_surfaces);
             drop(graph_surfaces);
             self.surfaces.sync_world3d_catalogue_drop_preview(x, y, drag_data);
         } else {
@@ -180,12 +180,12 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         let retained_drag_data = tree_drag_payload
             .is_none()
-            .then(|| crate::interpreter::active_retained_drag_sessions())
-            .and_then(|sessions| sessions.into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME)));
+            .then(|| semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions())
+            .and_then(|sessions| sessions.into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(semio_framework_os_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME)));
         if let Some(drag_data) = tree_drag_payload.as_ref().or(retained_drag_data.as_ref()) {
             self.input.sync_canvas2d_catalogue_drag(x, y, drag_data, input);
         } else {
-            crate::scenes::cancel_canvas_catalogue_drag(input);
+            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
         }
         if let Some(drag) = &mut self.input.tree_drag {
             if let Some(hit) = input.hit_at(x, y) {
@@ -271,7 +271,7 @@ impl<'ctx> PointerCtx<'ctx> {
 
     /// 🎯️ An abandoned or refused drop is simply nothing: the committed tree was never touched, so
     /// there is no snapshot to re-apply and no `sync_dock` to pay for.
-    pub(crate) async fn finish_dock_drag(&mut self, x: f32, y: f32, input: &InputState<ActionDescriptor>) -> Result<(), String> {
+    pub async fn finish_dock_drag(&mut self, x: f32, y: f32, input: &InputState<ActionDescriptor>) -> Result<(), String> {
         let Some(mut drag) = self.dock.dock_drag.take() else {
             return Ok(());
         };
@@ -323,8 +323,8 @@ impl<'ctx> PointerCtx<'ctx> {
         Ok(())
     }
 
-    pub(crate) async fn handle_accessibility_event(&mut self, target: &ui_render::AccessibilityTarget, event: &ui_render::AccessibilityEvent, input: &mut InputState<ActionDescriptor>) -> Result<bool, String> {
-        if target.window_id != crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID {
+    pub async fn handle_accessibility_event(&mut self, target: &ui_render::AccessibilityTarget, event: &ui_render::AccessibilityEvent, input: &mut InputState<ActionDescriptor>) -> Result<bool, String> {
+        if target.window_id != semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID {
             let event = match event {
                 ui_render::AccessibilityEvent::Focus => ui_wgpu::wgpu::AccessibilityUiEvent::Focus,
                 ui_render::AccessibilityEvent::Blur => ui_wgpu::wgpu::AccessibilityUiEvent::Blur,
@@ -332,7 +332,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 ui_render::AccessibilityEvent::Value(value) => ui_wgpu::wgpu::AccessibilityUiEvent::Value(value.clone()),
             };
             let focused = matches!(event, ui_wgpu::wgpu::AccessibilityUiEvent::Focus);
-            let Some(commands) = crate::interpreter::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, event, input) else { return Ok(false) };
+            let Some(commands) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, event, input) else { return Ok(false) };
             self.chrome.chrome_build.note_content_focus_commands(&commands);
             if focused && !self.as_session().retained_surface_is_panel(&target.window_id) {
                 let owner = window_pane_owner(&target.window_id).unwrap_or(&target.window_id).to_string();
@@ -508,7 +508,7 @@ impl<'ctx> PointerCtx<'ctx> {
                     let base = target.node_key.trim_end_matches(".input");
                     if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
                         if let Ok(value) = value.parse::<f64>() {
-                            self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: crate::action_args_json!({ "value": value }) }).await?;
+                            self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_absolute.controller_id, action: meta.on_absolute.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": value }) }).await?;
                         }
                         return Ok(true);
                     }
@@ -575,7 +575,7 @@ impl<'ctx> PointerCtx<'ctx> {
     ///
     /// 🔀️ The picked value is MERGED into whatever the node authored, never
     /// substituted for it — see `merge_committed_args` (packet W15d).
-    pub(crate) async fn handle_shell_hit(&mut self, hit: &HitTarget<ActionDescriptor>, input: &InputState<ActionDescriptor>) -> Result<bool, String> {
+    pub async fn handle_shell_hit(&mut self, hit: &HitTarget<ActionDescriptor>, input: &InputState<ActionDescriptor>) -> Result<bool, String> {
         let Some(id) = hit.control_id.as_deref() else {
             return Ok(false);
         };
@@ -669,7 +669,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 self.plugins.active_example_id = Some(example_id.to_string());
                 self.input.overlay_state = OverlayState::None;
                 if let Some(controller_id) = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()) {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: crate::action_args_json!({ "exampleId": example_id }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "exampleId": example_id }) }).await?;
                 }
                 return Ok(true);
             }
@@ -777,7 +777,7 @@ impl<'ctx> PointerCtx<'ctx> {
             }
             id if id.starts_with("shell.mode.") => {
                 let mode_id = id.trim_start_matches("shell.mode.");
-                ({ let __arg0 = ActionDescriptor { controller_id: self.docs.session.as_ref().map(|s| s.app.controller_id.clone()).unwrap_or_default(), action: "setMode".into(), args: crate::action_args_json!({ "modeId": mode_id }) }; self.as_actions().dispatch_action(__arg0) }).await?;
+                ({ let __arg0 = ActionDescriptor { controller_id: self.docs.session.as_ref().map(|s| s.app.controller_id.clone()).unwrap_or_default(), action: "setMode".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "modeId": mode_id }) }; self.as_actions().dispatch_action(__arg0) }).await?;
                 return Ok(true);
             }
             id if id.starts_with("framework.settings.appearance.") => {
@@ -906,21 +906,21 @@ impl<'ctx> PointerCtx<'ctx> {
             }
             id if self.input.widget_maps.toggle_metas.contains_key(id) => {
                 if let Some((pressed, action)) = self.input.widget_maps.toggle_metas.get(id).cloned() {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: crate::action_args_json!({ "pressed": !pressed }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "pressed": !pressed }) }).await?;
                     return Ok(true);
                 }
             }
             id if id.ends_with(".minus") => {
                 let base = id.trim_end_matches(".minus");
                 if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: crate::action_args_json!({ "delta": -meta.step }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "delta": -meta.step }) }).await?;
                     return Ok(true);
                 }
             }
             id if id.ends_with(".plus") => {
                 let base = id.trim_end_matches(".plus");
                 if let Some(meta) = self.input.widget_maps.stepper_metas.get(base).cloned() {
-                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: crate::action_args_json!({ "delta": meta.step }) }).await?;
+                    self.as_actions().dispatch_action(ActionDescriptor { controller_id: meta.on_delta.controller_id, action: meta.on_delta.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "delta": meta.step }) }).await?;
                     return Ok(true);
                 }
             }
@@ -1077,7 +1077,7 @@ impl<'ctx> PointerCtx<'ctx> {
     ///
     /// 🪟️ The row belongs to THIS window instance, so its dispatch must be addressed to it
     /// rather than to whatever window happens to be focused.
-    pub(crate) async fn route_retained_pointer_press(
+    pub async fn route_retained_pointer_press(
         &mut self,
         window_id: &str,
         body: Rect,
@@ -1103,7 +1103,7 @@ impl<'ctx> PointerCtx<'ctx> {
             } else {
                 ui_wgpu::wgpu::UiEvent::PointerUp { x: x - body.x, y: y - body.y, button: retained_pointer_button(button), modifiers: retained_event_modifiers(input) }
             };
-            let commands = crate::interpreter::dispatch_presented_ui_pointer_event(window_id, pointer_id, event, input);
+            let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_presented_ui_pointer_event(window_id, pointer_id, event, input);
             self.chrome.chrome_build.note_content_focus_commands(&commands);
         } else if !down {
             if let Some(mut action) = action {

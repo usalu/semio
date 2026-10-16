@@ -207,6 +207,19 @@
         "validControl": true,
         "cancelled": false
       }
+    },
+    {
+      "name": "cancelled-before",
+      "failed": true,
+      "preserved": "cancelled",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": true
+      }
     }
   ]
 }

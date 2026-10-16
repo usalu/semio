@@ -3,7 +3,7 @@ import type { PdfImage,PdfImageBody,PdfImageMask } from "../../../../🧬️sche
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfColorSpace,readPdfColorSpace,writePdfReals,readPdfReals } from "../🌈️color/🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import {writePdfArtifactReference,readPdfArtifactReference} from "../📦️artifact-reference/🟦️.ts";
 export { pdfResourceNumberColumns } from "./🔢️number/🟦️.ts";
 

@@ -8,7 +8,7 @@ import { PdfProjection,PdfReader } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { writePdfDestination,readPdfDestination,writePdfAction,readPdfAction,pdfNavigationNumberColumns } from "../../🎯️navigation/🟦️.ts";
 import { writePdfOutline,readPdfOutline,writePdfNamedDestination,readPdfNamedDestination,writePdfLabel,readPdfLabel,writePdfOpenAction,readPdfOpenAction } from "../../🎯️navigation/🔖️bookmark/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("Native JSON navigation enters the canonical owned floating point domain",async()=>{
   const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text());const destination=parsePdfDestination(pdfDestinationFromNativeJson(fixture.destination));if(destination.kind!=="page"||destination.fit.kind!=="xyz")throw new Error("Fixture destination");expect(destination.fit.left).toEqual({bits:0x3ff0000000000000n});

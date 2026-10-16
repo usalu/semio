@@ -2,7 +2,7 @@
 import type { PdfAcroForm,PdfOptionalContent,PdfFormField,PdfFormFieldKind } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,pdfNullExcept,type PdfCell } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary,writePdfObject,readPdfObject } from "../🧩️cos/🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 async function writeNames(out:PdfProjection,key:bigint,role:string,names:readonly string[]):Promise<void>{for(let ordinal=0;ordinal<names.length;ordinal++)await out.insert("pdf_field_name",[key,BigInt(ordinal),role,names[ordinal]!]);}
 async function readNames(reader:PdfReader,key:bigint,role:string):Promise<string[]>{const result:string[]=[];for(const child of await reader.children("pdf_field_name",1,2,key,3,role)){const row=await reader.take("pdf_field_name",child.rowid,5);result.push(await reader.text(row,4));}return result;}

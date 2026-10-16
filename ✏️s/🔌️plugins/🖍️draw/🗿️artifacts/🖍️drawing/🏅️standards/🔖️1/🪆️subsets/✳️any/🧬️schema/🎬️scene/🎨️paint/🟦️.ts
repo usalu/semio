@@ -1,9 +1,9 @@
 /** 🎨️ Reusable world-space painted contours carry their preparation precision explicitly. */
-import {PathFlattenJob,type FlatContour} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts";
-import {StrokeOutlineJob,type StrokeGeometryStyle} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts";
-import type {PathSegment as KernelPathSegment} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
-import {BooleanJob} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔀️booleans/🟦️.ts";
-import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {PathFlattenJob,type FlatContour} from "@semio-tech/framework/2d/path/flatten";
+import {StrokeOutlineJob,type StrokeGeometryStyle} from "@semio-tech/framework/2d/path/stroke";
+import type {PathSegment as KernelPathSegment} from "@semio-tech/framework/2d";
+import {BooleanJob} from "@semio-tech/framework/2d/booleans";
+import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
 import type {PathGeometrySegment} from "../../🟦️.ts";
 import type {PaintedPathStroke} from "../../🧮️geometry/🎯️picking/🎨️paint/🟦️.ts";
 import type {DocumentSceneNode} from "../📋️prepare/🟦️.ts";

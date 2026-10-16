@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 /** 🪜️ Independent category grammar oracle and physical policy ownership witness. */
 export function runDefinitionHierarchyChecks(): number {
@@ -19,7 +20,7 @@ export function runDefinitionHierarchyChecks(): number {
     const validate = ajv.compile({ type: "string", anyOf: row.standards.map((standard: string) => ({ pattern: "^" + standard.replaceAll(".", "\\.") + "\\." + suffix + "$" })) });
     assert.equal(validate(row.identity), row.accepted, row.identity);
   }
-  const source = readFileSync(new URL("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs", import.meta.url), "utf8");
+  const source = readFileSync(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
   assert(!/stdio_artifact|is_stdio_|stdio_capability/.test(source), "general SDK contains Stdio-owned policy");
   return corpus.cases.length + corpus.runtimeCases.length + 2;
 }

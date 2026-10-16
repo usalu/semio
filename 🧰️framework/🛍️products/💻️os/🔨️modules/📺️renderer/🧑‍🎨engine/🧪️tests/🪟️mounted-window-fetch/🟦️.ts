@@ -6,11 +6,11 @@
  *
  * 🧫️ Read from `🛠️ShellHelpers/🧫️fixtures/🪟️mounted-window-fetch.json`, the neutral declaration the
  * wgpu shell's own `refresh_ui` window walk is pinned against too. The rule itself lives in
- * `🔨️modules/🎠️kernel/🟦️.ts`, beside the other `UiDirtyScope` predicates both shells share.
+ * `🔨️modules/🎠️kernel`, beside the other `UiDirtyScope` predicates both shells share.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🪟️mounted-window-fetch.json" with { type: "json" };
-import { partitionRefreshWindowInstancesV1, windowLayoutWindowIdsV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { partitionRefreshWindowInstancesV1, windowLayoutWindowIdsV1 } from "../../../../../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
 
 
 import React, { act, useEffect } from "react";

@@ -6,13 +6,6 @@ use super::*;
 
 //#region ActionPanelAndUtilities
 //#region 🎬️WindowActionsAndSearchPanes
-/// 🔎️ The reserved body key of the per-window SEARCH pane. React mounts it as a second `Pane` fed by
-/// the SAME `WindowEngagement` (`windowEngagementToSearchSpec`, `🛠️ShellHelpers/🟦️.tsx:1826`), so it
-/// has no `UiRefreshSection` of its own and takes the engagements key with its own suffix.
-pub(crate) const WINDOW_SEARCH_BODY_KEY: &str = "framework.section.engagements.search";
-
-/// 🔀️ Reserved retained surface suffix for the World Projection pane's Tree body.
-pub(crate) const WINDOW_PROJECTION_BODY_KEY: &str = "framework.worldOrbit.projection.body";
 
 //#endregion 🎬️WindowActionsAndSearchPanes
 //#region ⌨️WindowScope
@@ -20,20 +13,20 @@ pub(crate) const WINDOW_PROJECTION_BODY_KEY: &str = "framework.worldOrbit.projec
 /// `WindowScopeStackV1` (`🏛️ShellHost/⌨️window-scope/🟦️.ts`), driven by the same fixture
 /// (`🏛️ShellHost/🧫️fixtures/⌨️window-scope/🔣️.json`).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct WindowScopeStackV1 {
+pub struct WindowScopeStackV1 {
     pub window_ids: Vec<String>,
     pub active_window_id: Option<String>,
 }
 
 /// 🪟️ Flattens a dock tree into its tab stacks, in layout order — twin of `modeLayoutStacksV1`.
-pub(crate) fn mode_layout_stacks_v1(node: &crate::dock::DockNode) -> Vec<WindowScopeStackV1> {
+pub fn mode_layout_stacks_v1(node: &semio_framework_os_renderer_wgpu_dock::DockNode) -> Vec<WindowScopeStackV1> {
     match node {
-        crate::dock::DockNode::Stack { windows, active } => {
+        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, active } => {
             let window_ids: Vec<String> = windows.iter().map(|tab| tab.window_id.clone()).collect();
             let active_window_id = if active.is_empty() { window_ids.first().cloned() } else { Some(active.clone()) };
             vec![WindowScopeStackV1 { window_ids, active_window_id }]
         }
-        crate::dock::DockNode::Row(children) | crate::dock::DockNode::Column(children) => children.iter().flat_map(|(child, _)| mode_layout_stacks_v1(child)).collect(),
+        semio_framework_os_renderer_wgpu_dock::DockNode::Row(children) | semio_framework_os_renderer_wgpu_dock::DockNode::Column(children) => children.iter().flat_map(|(child, _)| mode_layout_stacks_v1(child)).collect(),
     }
 }
 
@@ -41,7 +34,7 @@ pub(crate) fn mode_layout_stacks_v1(node: &crate::dock::DockNode) -> Vec<WindowS
 /// alone — twin of `dockSeedActiveWindowIdV1`. A mode with windows always has exactly one active
 /// window, so every window-scoped verb, chord badge and Actions rail has an owner before the user's
 /// first click.
-pub(crate) fn dock_seed_active_window_id_v1(stacks: &[WindowScopeStackV1], active_window_id: Option<&str>) -> Option<String> {
+pub fn dock_seed_active_window_id_v1(stacks: &[WindowScopeStackV1], active_window_id: Option<&str>) -> Option<String> {
     let all: Vec<&String> = stacks.iter().flat_map(|stack| stack.window_ids.iter()).collect();
     if all.is_empty() {
         return None;
@@ -66,7 +59,7 @@ pub(crate) fn dock_seed_active_window_id_v1(stacks: &[WindowScopeStackV1], activ
 //#region ⌨️ShellShortcutTable
 /// ⌨️ The verb one [`SHELL_SHORTCUT_ROWS`] row asks for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ShellShortcut {
+pub enum ShellShortcut {
     ToggleSearch,
     ToggleFind,
     NavBack,
@@ -85,7 +78,7 @@ pub(crate) enum ShellShortcut {
 impl ShellShortcut {
     /// ⌨️ Whether this verb needs the async dispatch funnel (a guest round-trip or an os command) —
     /// `false` means `handle_keyboard`'s synchronous chrome-state arms answer it.
-    pub(crate) fn is_async(self) -> bool {
+    pub fn is_async(self) -> bool {
         matches!(self, ShellShortcut::ModeStep(_) | ShellShortcut::SurfaceRole(_) | ShellShortcut::TimeTravel(_))
     }
 }
@@ -96,7 +89,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// the same `publish_window_measures` ingress every window overlay uses (revision-keyed, so an
     /// unchanged category pays no ingress). This is what makes the `bottom-middle` Command anchor a real
     /// painted panel rather than a builder with no reader.
-    pub(super) fn publish_command_panel_document(&mut self, tab_id: &str, category_id: &str) -> Result<Option<UiDocumentLease>, String> {
+    pub fn publish_command_panel_document(&mut self, tab_id: &str, category_id: &str) -> Result<Option<UiDocumentLease>, String> {
         let node = self.build_command_category_ui(category_id);
         let records = panel_ui_records(tab_id, &node)?;
         self.windows.publish_surface_records(tab_id, records).map(Some)
@@ -106,7 +99,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// {@link panel_ui_records} + {@link ShellState::publish_surface_records} — the same revision-keyed
     /// ingress every window overlay uses, so an unchanged body pays no ingress. `None` for a leaf whose
     /// builder has nothing to show (React's own "no rows, no tree" case).
-    pub(crate) fn publish_shell_panel_document(&mut self, tab_id: &str) -> Result<Option<UiDocumentLease>, String> {
+    pub fn publish_shell_panel_document(&mut self, tab_id: &str) -> Result<Option<UiDocumentLease>, String> {
         if let Some(category) = tab_id.strip_prefix(FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX).map(ToOwned::to_owned) {
             return self.publish_command_panel_document(tab_id, &category);
         }
@@ -122,7 +115,7 @@ impl<'ctx> SessionCtx<'ctx> {
             FRAMEWORK_SYNC_PANEL_TAB_ID => self.sync.build_sync_attach_ui(&self.prefs),
             FRAMEWORK_TASK_MANAGER_PANEL_ID => self.opening.build_task_manager_ui(&self.prefs),
             FRAMEWORK_CHAT_PANEL_ID => self.directory.build_agent_chat_ui(&self.chrome, &self.prefs),
-            crate::hub_connection::FRAMEWORK_HUB_PANEL_ID => crate::hub_connection::build_hub_workspace_ui(&self.directory.hub_workspace, self.prefs.active_locale()),
+            semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID => semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::build_hub_workspace_ui(&self.directory.hub_workspace, self.prefs.active_locale()),
             other => match other.strip_prefix(FRAMEWORK_TOOL_PANEL_TAB_PREFIX) {
                 Some(tool_id) => self.windows.build_tool_panel_ui(tool_id, &self.prefs, &self.docs),
                 None => return Ok(None),
@@ -135,7 +128,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// ♻️ Replaces one mounted host-owned retained panel after its local authority changes, without
     /// asking the guest to refresh unrelated bodies. Retirement admission is reserved before the
     /// successor is published; the exact prior lease enters that reservation before the map swaps.
-    pub(crate) fn republish_shell_panel_document(&mut self, tab_id: &str) -> Result<(), String> {
+    pub fn republish_shell_panel_document(&mut self, tab_id: &str) -> Result<(), String> {
         if !self.docs.panel_documents.contains_key(tab_id) {
             return Ok(());
         }
@@ -165,7 +158,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🎛️ This is [`ShellState::expanded_command_id`]'s reader — the gap `📓️w1c` recorded. React's
     /// `autoExpandedSingleton` rule is honoured too: a category with exactly one arg-carrying command
     /// opens that command's form with no expansion write at all.
-    pub(crate) fn build_command_category_ui(&self, category_id: &str) -> UiNode {
+    pub fn build_command_category_ui(&self, category_id: &str) -> UiNode {
         let is_de = self.prefs.locale_id == "de";
         let terminology = self.prefs.active_terminology();
         let locale = self.prefs.active_locale();
@@ -198,7 +191,7 @@ impl<'ctx> SessionCtx<'ctx> {
                         id: Some(format!("command-{element_key}-execute")),
                         icon_id: IconName::Check,
                         label: Label::data(shell_chrome_string("common.execute", is_de)),
-                        action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedCommand".into(), args: crate::action_args_json!({ "value": key.clone() }) },
+                        action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": key.clone() }) },
                         style: None,
                         presence: UiPresence { state: if missing { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
                         menu: None,
@@ -207,7 +200,7 @@ impl<'ctx> SessionCtx<'ctx> {
                         id: Some(format!("command-{element_key}-reset")),
                         icon_id: IconName::Undo,
                         label: Label::data(shell_chrome_string("common.reset", is_de)),
-                        action: ActionDescriptor { controller_id: "framework".into(), action: "resetStagedCommand".into(), args: crate::action_args_json!({ "value": key.clone() }) },
+                        action: ActionDescriptor { controller_id: "framework".into(), action: "resetStagedCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": key.clone() }) },
                         style: None,
                         presence: UiPresence::default(),
                         menu: None,

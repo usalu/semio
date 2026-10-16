@@ -65,6 +65,7 @@ semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-jobs = { path = "../../../⚛️reactor/💼️jobs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-dispatch = { path = "../../📨️dispatch/📦️packages/🦀️rust" }
 semio-framework-ui-layout = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

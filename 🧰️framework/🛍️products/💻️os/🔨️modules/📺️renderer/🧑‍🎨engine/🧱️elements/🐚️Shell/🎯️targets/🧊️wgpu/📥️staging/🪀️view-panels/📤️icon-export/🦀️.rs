@@ -3,13 +3,13 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::icon_export::*;
 use super::{present_media_export_bytes_cancellable, shell_chrome_string, ShellDetached, ShellState};
-use crate::scenes::icon_export::{asset::IconExportAssetRequest, IconExportFault, IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected, IconGpuPngExport, IconGpuPngRejected, IconSvgExport, IconSvgRejected};
+use semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::IconExportAssetRequest;
+use semio_framework_os_renderer_wgpu_icon_host::icon_export::{IconExportFault, IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected, IconGpuPngExport, IconGpuPngRejected, IconSvgExport, IconSvgRejected};
 use semio_framework::kernel::IconRenderExportItem;
 
 impl<'ctx> PanelsViewCtx<'ctx> {
-    pub(super) fn render_icon_export_step(&mut self, cursor: &mut super::ShellChromeChildCursor, overlay: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, input: &mut ui_wgpu::wgpu::InputState<ui_wgpu::wgpu::ActionDescriptor>, theme: &ui_wgpu::wgpu::Theme, width: f32) -> bool {
+    pub fn render_icon_export_step(&mut self, cursor: &mut super::ShellChromeChildCursor, overlay: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, input: &mut ui_wgpu::wgpu::InputState<ui_wgpu::wgpu::ActionDescriptor>, theme: &ui_wgpu::wgpu::Theme, width: f32) -> bool {
         let Some(batch) = self.opening.icon_export.as_ref() else { return true };
         let is_de = self.prefs.locale_id == "de";
         let action_label = shell_chrome_string(if batch.running() { "icon.export.cancel" } else { "common.close" }, is_de);

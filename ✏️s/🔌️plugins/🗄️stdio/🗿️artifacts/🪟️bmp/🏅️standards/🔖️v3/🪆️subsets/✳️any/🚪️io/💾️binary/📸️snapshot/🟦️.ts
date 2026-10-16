@@ -1,5 +1,5 @@
 /** 💾️ BMP v3 admission and canonical emission of precise owned samples. */
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import {validateBmpImage,bmpBitsPerPixel,bmpMaskShift,type BmpSnapshot,type BmpProfile,type BmpPaletteEntry,type BmpNativeSample} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {bmpByteLayout,bmpWord} from "../../🧩️layout/🟦️.ts";
 export type BmpSnapshotBinary=Uint8Array;

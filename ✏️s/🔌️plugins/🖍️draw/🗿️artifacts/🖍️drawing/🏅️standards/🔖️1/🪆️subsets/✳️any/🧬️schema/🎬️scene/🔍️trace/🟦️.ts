@@ -1,11 +1,11 @@
 import {validateSceneSourceAddress} from "../📋️prepare/🟦️.ts";
 /** 🔍️ Actual encoded image records become private trace paths under grants. */
 import type {DocumentScenePlan,DocumentSceneNode} from "../📋️prepare/🟦️.ts";
-import {BitmapTraceJob,type BitmapTraceProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔍️trace/🟦️.ts";
-import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
-import type {PathSegment} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import {BitmapTraceJob,type BitmapTraceProgress} from "@semio-tech/framework/2d/trace";
+import type {PixelImage} from "@semio-tech/framework/pixels/editing";
+import type {PathSegment} from "@semio-tech/framework/2d";
 import type {RasterSceneAsset} from "../📷️raster/🟦️.ts";
-import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
 import {ScenePlanCloseJob} from "../🧹️retire/🟦️.ts";
 import {SceneNodeCopyJob} from "../📋️prepare/📋️copy/🟦️.ts";
 export type DocumentTraceRetirement=WorkRetirement;

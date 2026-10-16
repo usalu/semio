@@ -1,15 +1,16 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import fg from "fast-glob";
 import { applyPatch } from "fast-json-patch";
-import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
 import {transformFixture} from "../../../../✉️base/🧬️schema/🧮️geometry/🧪️tests/🧰️support/🟦️.ts";
-import { testSchemaRecordOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🧪️tests/🔬️unit/🟦️.ts";
+import { testSchemaRecordOracle } from "@semio-tech/framework/schema/record/testing/unit";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const ownedFixture = (value:any):any => value!==null&&typeof value==="object"&&Object.hasOwn(value,"transform")?{...value,transform:transformFixture(value.transform)}:value;
@@ -18,7 +19,7 @@ const ownedFixture = (value:any):any => value!==null&&typeof value==="object"&&O
 export function testSemioObjectDocumentContract(): void {
   testSchemaRecordOracle();
   const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
-  for (const path of ["../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json","../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json","../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
+  for (const path of [frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"),frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"),"../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
   const fixtures = read("../../../🧪️tests/🧫️fixtures/🪪️document-contract/🔣️.json");
   const childIdentity = (value: any): boolean => [["brep","brep"],["mesh","mesh"],["properties","value"]].every(([field,subset]) => !value[field!] || ajv.compile({const:{artifactKind:"s.stdio.semio",standard:"v1",subset}})(value[field!].target.dialect));
   const a = ajv.compile(read("../../🔣️.json"));

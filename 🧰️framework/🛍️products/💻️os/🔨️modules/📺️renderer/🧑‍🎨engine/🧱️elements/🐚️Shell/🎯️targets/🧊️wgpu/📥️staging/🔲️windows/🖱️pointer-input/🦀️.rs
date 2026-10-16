@@ -8,8 +8,8 @@ use super::*;
 /// 📨️ `hostEvent{windowId, kind}` on `controller_id`: the window fact the program answers by ending an open gesture there —
 /// the wgpu twin of React's `windowHostEventHandlersV1` (a pane that loses the activation is blurred, a cancelled pointer
 /// sequence loses its capture).
-pub(crate) fn window_host_event_action(controller_id: &str, window_id: &str, kind: &str) -> ActionDescriptor {
-    ActionDescriptor { controller_id: controller_id.to_string(), action: semio_framework::HOST_EVENT_ACTION_ID.into(), args: crate::action_args_json!({ "windowId": window_id, "kind": kind }) }
+pub fn window_host_event_action(controller_id: &str, window_id: &str, kind: &str) -> ActionDescriptor {
+    ActionDescriptor { controller_id: controller_id.to_string(), action: semio_framework::HOST_EVENT_ACTION_ID.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowId": window_id, "kind": kind }) }
 }
 
 //#endregion ShellInput

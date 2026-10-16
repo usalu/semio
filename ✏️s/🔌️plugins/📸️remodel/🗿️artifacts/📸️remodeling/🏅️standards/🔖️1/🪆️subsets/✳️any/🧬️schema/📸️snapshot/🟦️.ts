@@ -1,4 +1,4 @@
-import {binary32,binary64,parseBinary32,parseBinary64,type Binary32,type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32,binary64,parseBinary32,parseBinary64,type Binary32,type Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ Remodeling snapshot schema — TypeScript twin of `📸️snapshot/🦀️.rs`.
  *
  *  Field names are declared once in Rust `snake_case`; the JSON key is serde's `camelCase`

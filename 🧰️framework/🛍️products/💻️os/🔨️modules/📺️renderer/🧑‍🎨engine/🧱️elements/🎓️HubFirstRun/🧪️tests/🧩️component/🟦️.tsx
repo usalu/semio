@@ -38,7 +38,7 @@ import type { HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.
 
 //#region 🔌️jsdom polyfills
 // `UIIntroduction` measures its anchor and info box through ResizeObserver; jsdom does not implement
-// it. Same shim `🧪️tests/🔬️engine-contract` installs for the renderer hosts.
+// it. Same shim `🧪️tests/🧰️engine-contract-helpers` installs for the renderer hosts.
 class ResizeObserverMock {
   observe() {}
   unobserve() {}

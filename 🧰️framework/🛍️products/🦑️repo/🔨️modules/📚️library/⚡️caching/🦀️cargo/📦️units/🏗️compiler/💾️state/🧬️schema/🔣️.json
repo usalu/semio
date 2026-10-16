@@ -23,7 +23,8 @@
         "chargeFile": "compiler-state.json",
         "intentFile": "compiler-state.intent.json",
         "volumeDirectory": "v",
-        "initialCompilerFloorBytes": 4294967296
+        "initialCompilerFloorBytes": 4294967296,
+        "minimumAvailableBytes": 1073741824
       }
     },
     "Slot": {
@@ -35,7 +36,8 @@
         "content",
         "state",
         "sequence",
-        "digest"
+        "digest",
+        "retirement"
       ],
       "properties": {
         "slot": {
@@ -54,7 +56,8 @@
         "state": {
           "enum": [
             "clean",
-            "dirty"
+            "dirty",
+            "retiring"
           ]
         },
         "sequence": {
@@ -70,6 +73,33 @@
             },
             {
               "type": "null"
+            }
+          ]
+        },
+        "retirement": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "dev",
+                "ino"
+              ],
+              "properties": {
+                "dev": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "ino": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
             }
           ]
         }
@@ -104,7 +134,8 @@
               "content",
               "state",
               "sequence",
-              "digest"
+              "digest",
+              "retirement"
             ],
             "properties": {
               "slot": {
@@ -123,7 +154,8 @@
               "state": {
                 "enum": [
                   "clean",
-                  "dirty"
+                  "dirty",
+                  "retiring"
                 ]
               },
               "sequence": {
@@ -139,6 +171,33 @@
                   },
                   {
                     "type": "null"
+                  }
+                ]
+              },
+              "retirement": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "dev",
+                      "ino"
+                    ],
+                    "properties": {
+                      "dev": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "ino": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    }
                   }
                 ]
               }
@@ -190,7 +249,8 @@
                   "content",
                   "state",
                   "sequence",
-                  "digest"
+                  "digest",
+                  "retirement"
                 ],
                 "properties": {
                   "slot": {
@@ -209,7 +269,8 @@
                   "state": {
                     "enum": [
                       "clean",
-                      "dirty"
+                      "dirty",
+                      "retiring"
                     ]
                   },
                   "sequence": {
@@ -225,6 +286,33 @@
                       },
                       {
                         "type": "null"
+                      }
+                    ]
+                  },
+                  "retirement": {
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "dev",
+                          "ino"
+                        ],
+                        "properties": {
+                          "dev": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "ino": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        }
                       }
                     ]
                   }
@@ -477,6 +565,211 @@
         "settle-replace",
         "close"
       ]
+    },
+    "Pressure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "state",
+        "context",
+        "content",
+        "availableBytes",
+        "observations"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "state": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "sequence",
+            "slots"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740990
+            },
+            "slots": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "slot",
+                  "context",
+                  "content",
+                  "state",
+                  "sequence",
+                  "digest",
+                  "retirement"
+                ],
+                "properties": {
+                  "slot": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 7
+                  },
+                  "context": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "content": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "state": {
+                    "enum": [
+                      "clean",
+                      "dirty",
+                      "retiring"
+                    ]
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "digest": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "retirement": {
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "dev",
+                          "ino"
+                        ],
+                        "properties": {
+                          "dev": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "ino": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "context": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "content": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "observations": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "slot",
+              "digest",
+              "fingerprint",
+              "allocatedBytes",
+              "dev",
+              "ino"
+            ],
+            "properties": {
+              "slot": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 7
+              },
+              "digest": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fingerprint": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "allocatedBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "dev": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ino": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

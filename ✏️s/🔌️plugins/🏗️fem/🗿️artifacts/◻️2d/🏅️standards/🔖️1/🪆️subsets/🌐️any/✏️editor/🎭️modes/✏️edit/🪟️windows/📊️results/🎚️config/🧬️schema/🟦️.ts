@@ -1,4 +1,4 @@
-import { parseViewport2d, type Viewport2d } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+import { parseViewport2d, type Viewport2d } from "@semio-tech/framework/ui/viewport/2d/schema";
 import { parseResultMode, type ResultMode } from "../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🟦️.ts";
 import { parseFemResultsAnimation, type FemResultsAnimation } from "../../../../../../../../../../../../../⚙️engine/🖥️app-surface/🧬️schema/🔣️results-animation/🟦️.ts";
 /** 🧬️ Exact FEM 2D results window configuration. */

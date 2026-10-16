@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// wire word. `required` is what gives the `#[value]` codec the same "key must be present, value
 /// may be `null`" shape as the test-only `#[serde(deserialize_with = "required_option")]` bridge
 /// below, which is exactly what this leaf's own wire law measures.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_dsl::MutationLeaf)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]

@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import sharp from "sharp";
 import fixture from "../🧫️fixtures/🧱️preparation/🔣️.json";
-import {RasterStackJob,type RasterStackLayer} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts";
+import {RasterStackJob,type RasterStackLayer} from "@semio-tech/framework/pixels/compositing/layers";
 test("shared source image preparation preserves the composite",async()=>{
   const {width,height,pixel,references,maximumPixelsPerGrant}=fixture;
   const pixels=Uint8Array.from({length:width*height*4},(_,i)=>pixel[i%4]!);

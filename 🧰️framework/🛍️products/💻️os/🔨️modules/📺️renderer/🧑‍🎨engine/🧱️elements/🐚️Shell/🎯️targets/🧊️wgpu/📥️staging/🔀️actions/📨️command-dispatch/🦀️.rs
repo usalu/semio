@@ -39,7 +39,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     }
 
     /// 🧵️ A retained command keeps the exact session selected by its source document.
-    pub(crate) fn dispatch_session_command<'a>(&'a mut self, invocation: semio_framework::manifest::CommandInvocation, session: ActiveSession) -> ShellTurn<'a, Result<(), String>> {
+    pub fn dispatch_session_command<'a>(&'a mut self, invocation: semio_framework::manifest::CommandInvocation, session: ActiveSession) -> ShellTurn<'a, Result<(), String>> {
         shell_turn(async move {
             let owner_plugin_id = match &invocation.address.owner {
                 semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id } | semio_framework::manifest::CommandOwnerAddress::App { plugin_id, .. } | semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, .. } => plugin_id,
@@ -79,7 +79,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 📇️ ticket §C6/§3/§4 — dispatches a `ReplayShellCommand`'s `action_id`/`args` onto the directory funnel, the opening
     /// relay or the creation door; an `os.*` command this shell cannot serve is refused out loud ([`Self::refuse_replay`]) —
     /// the local studio catalog (`os.local-catalog.*`) until route B's native half lands, any unknown one as unrouted.
-    pub(crate) fn handle_replay_shell_command<'a>(&'a mut self, action_id: &'a str, args: Option<&'a DslValue>) -> ShellTurn<'a, ()> {
+    pub fn handle_replay_shell_command<'a>(&'a mut self, action_id: &'a str, args: Option<&'a DslValue>) -> ShellTurn<'a, ()> {
         shell_turn(async move {
             let args_json = args.map(dsl_value_as_json);
             if action_id == "os.directory.open-administration" {
@@ -116,7 +116,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// ShellHost's route: a signed-in identity, the index's own space, a choice the space's ready catalog offers
     /// ([`space_artifact_creation_replay_choice`]); the door then seals the intent under its minted key, submits it and opens the
     /// ready artifact ([`Self::pump_hub_artifact_creation`]). A busy or not-yet-ready door asks the user to try again.
-    pub(super) async fn replay_create_space_artifact(&mut self, args: Option<&Value>) -> Result<(), ReplayRefusalReasonV1> {
+    pub async fn replay_create_space_artifact(&mut self, args: Option<&Value>) -> Result<(), ReplayRefusalReasonV1> {
         if self.directory.identity.is_none() {
             return Err(ReplayRefusalReasonV1::SignInRequired);
         }
@@ -171,7 +171,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 📋️ `COPY_INVITE_LINK` is deliberately unreachable on this renderer: the surface only paints
     /// that control when `clipboard_available` is set, and the wgpu frame Worker owns no clipboard
     /// door (see this file's own note in the retained editor lane).
-    pub(crate) fn handle_hub_workspace_action<'a>(&'a mut self, verb: &'a str, args: Option<DslValue>) -> ShellTurn<'a, ()> {
+    pub fn handle_hub_workspace_action<'a>(&'a mut self, verb: &'a str, args: Option<DslValue>) -> ShellTurn<'a, ()> {
         shell_turn(async move {
             let value = args.as_ref().and_then(|args| args.get("value")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
             let space_id = args.as_ref().and_then(|args| args.get("spaceId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
@@ -241,8 +241,8 @@ impl<'ctx> ActionsCtx<'ctx> {
                 }
                 hub_action::CREATE_SPACE => {
                     let name = self.directory.hub_workspace.space_name_draft.clone();
-                    if let Some(command) = crate::space_browser::create_space_command(&name, DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private) {
-                        self.directory.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Submitting;
+                    if let Some(command) = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::create_space_command(&name, DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private) {
+                        self.directory.hub_workspace.phase = semio_framework_os_renderer_wgpu_hub_contracts::space_browser::SpaceBrowserPhase::Submitting;
                         self.directory.dispatch_directory_command(command).await;
                         self.directory.hub_workspace.space_name_draft.clear();
                         self.directory.start_hub_spaces_reload();
@@ -284,7 +284,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// it), never `Failed` — React's worker follows the same contract (`🌱️creation-polling`). A `409` on the
     /// submission means the catalog generation moved: the door re-reads the catalog instead of
     /// retrying. Answers whether the door changed.
-    pub(super) async fn pump_hub_artifact_creation(&mut self) -> bool {
+    pub async fn pump_hub_artifact_creation(&mut self) -> bool {
         let Some(operation) = self.directory.hub_workspace.creation.operation.clone() else { return false };
         if hub_artifact_creation_terminal(operation.phase) {
             if operation.ready.is_some() && operation.opening == HubArtifactOpening::Idle {
@@ -302,7 +302,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         }
         let Some(client) = self.directory.directory_client.clone() else { return false };
         let now_ms = directory_now_ms();
-        if crate::hub_connection::space_artifact_creation_unreachable(operation.last_answered_at_ms, now_ms) {
+        if semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::space_artifact_creation_unreachable(operation.last_answered_at_ms, now_ms) {
             if let Some(current) = self.directory.hub_workspace.creation.operation.as_mut() {
                 current.phase = SpaceArtifactCreationPhaseV1::Indeterminate;
             }
@@ -325,7 +325,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             current.submitted = true;
             current.cancel_sent |= cancellation;
             let answered_at_ms = directory_now_ms();
-            current.next_poll_at_ms = answered_at_ms.saturating_add(crate::hub_connection::space_artifact_creation_poll_delay_ms(current.polls));
+            current.next_poll_at_ms = answered_at_ms.saturating_add(semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::space_artifact_creation_poll_delay_ms(current.polls));
             current.polls = current.polls.saturating_add(1);
             if receipt.is_ok() {
                 current.last_answered_at_ms = answered_at_ms;
@@ -359,7 +359,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// The relay's open is frame-pumped, so the door stays `Opening` until it settles, and is `Opened`
     /// only when this shell's document binding then names the created artifact
     /// ([`Self::pump_hub_artifact_creation`]).
-    pub(super) async fn open_created_hub_artifact(&mut self) {
+    pub async fn open_created_hub_artifact(&mut self) {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let Some((ready, space_id)) = self.directory.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.clone().map(|ready| (ready, operation.space_id.clone()))) else { return };
@@ -385,7 +385,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// a hub that was showing `home` opened a cad document into `home`. The target's own app ref —
     /// or, when the caller has none, the kind's declared owner — decides the session, and the owner
     /// is installed on demand exactly as React's `openArtifactWithAppRef` installs it.
-    pub(super) async fn handle_open_artifact_relay(&mut self, action_id: &str, args: Option<&Value>) {
+    pub async fn handle_open_artifact_relay(&mut self, action_id: &str, args: Option<&Value>) {
         let target = match open_artifact_relay_target(action_id, args) {
             Ok(target) => target,
             Err(error) => {
@@ -442,7 +442,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🌱️ Starts the document half of an open in the mounted session: the host half is prepared on
     /// this turn, and the guest's genesis load runs detached; [`Self::advance_document_opening`] binds the
     /// document once it answers. A preparation that fails settles the open as failed.
-    pub(super) async fn begin_document_seed(&mut self, document: ShellDocumentOpenTarget) {
+    pub async fn begin_document_seed(&mut self, document: ShellDocumentOpenTarget) {
         let Some(session) = self.docs.session.clone() else {
             self.opening.fail_document_opening("document open has no mounted session".to_string(), &mut self.chrome, &self.prefs);
             return;
@@ -461,7 +461,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let seed_cancel = prepared.seed.as_ref().map(|seed| seed.ctx.cancel.clone());
         let pending = ShellDetached::spawn({
             let (plugin, instance_id, seed) = (prepared.plugin.clone(), prepared.session.instance_id, prepared.seed.clone());
-            async move { seed_hub_document(plugin, instance_id, seed).await.map(ShellDocumentOpenAnswer::Seeded).map_err(crate::program_bridge::ProgramFault::from) }
+            async move { seed_hub_document(plugin, instance_id, seed).await.map(ShellDocumentOpenAnswer::Seeded).map_err(semio_framework_os_renderer_wgpu_program_bridge::ProgramFault::from) }
         });
         let mut opening = opening.unwrap_or_else(|| ShellDocumentOpening::new(label, ShellDocumentOpenPhase::Seeding, session.plugin_id.clone(), session.app.id.clone(), None, None));
         opening.phase = ShellDocumentOpenPhase::Seeding;
@@ -476,7 +476,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// is created on it; a local program that already is the lease's component seeds the document into the
     /// mounted session when it runs the app already.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) async fn continue_resolved_open(&mut self, mut opening: ShellDocumentOpening, resolved: Option<ProgramBridgeEntry>) {
+    pub async fn continue_resolved_open(&mut self, mut opening: ShellDocumentOpening, resolved: Option<ProgramBridgeEntry>) {
         let fresh = resolved.is_some();
         if let Some(program) = resolved {
             self.plugins.plugins.retain(|entry| entry.plugin_id != program.plugin_id);
@@ -513,7 +513,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// as the session (or is destroyed when the open was cancelled), a seeded document binds, and every
     /// render the open owes goes to the settle lane. Called once per frame from [`Self::pump_sync_events`];
     /// answers whether the open moved.
-    pub(crate) async fn advance_document_opening(&mut self) -> bool {
+    pub async fn advance_document_opening(&mut self) -> bool {
         let Some(answer) = self.opening.document_opening.as_ref().and_then(|opening| opening.pending.as_ref()).and_then(ShellDetached::take) else { return false };
         let Some(mut opening) = self.opening.document_opening.take() else { return false };
         opening.pending = None;
@@ -605,7 +605,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🏛️ One bounded administration turn per frame: the retained operation never spins, because
     /// `pump_space_administration` answers `false` the moment it reaches `Idle` or a terminal phase.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) async fn pump_directory_events(&mut self) -> bool {
+    pub async fn pump_directory_events(&mut self) -> bool {
         self.sync.poll_identity_bootstrap(&mut self.chrome, &mut self.directory);
         let inference_changed = self.directory.pump_inference_port();
         let bridge_changed = self.dock.pump_agent_bridge(&mut self.chrome, &mut self.directory, &mut self.windows);
@@ -685,7 +685,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     }
                     Err(DirectoryClientError::Transport(TransportError::Io(_) | TransportError::DeadlineExceeded | TransportError::BudgetExhausted) | DirectoryClientError::Http { status: 500..=599, .. }) => {
                         if let Some(home) = self.directory.directory_home.as_mut() {
-                            home.retry_at_ms = crate::renderer_worker_pool().now_ms().saturating_add(DirectoryHomeProjection::RETRY_DELAY_MS);
+                            home.retry_at_ms = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().now_ms().saturating_add(DirectoryHomeProjection::RETRY_DELAY_MS);
                         }
                     }
                     Err(DirectoryClientError::Cancelled | DirectoryClientError::Transport(TransportError::Cancelled)) => {}
@@ -737,7 +737,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                                 self.chrome.error = Some(detail);
                             } else if rebootstrap {
                                 let _ = home.begin_epoch(0);
-                            } else if home.retry(crate::renderer_worker_pool().now_ms(), &expected.receipt_sha256).is_err() {
+                            } else if home.retry(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().now_ms(), &expected.receipt_sha256).is_err() {
                                 home.close();
                                 self.chrome.error = Some("retained Home directory rejection no longer matches the pending page".into());
                             }
@@ -783,7 +783,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reached nobody; both are now real `Effect` arms of the ONE host-effect funnel
     /// (`queue_host_effects`), which every dispatch path feeds
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub(crate) async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool, scope: UiDirtyScope, owner: Option<ActiveSession>) -> Result<(), String> {
+    pub async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool, scope: UiDirtyScope, owner: Option<ActiveSession>) -> Result<(), String> {
         let mut pending: Vec<String> = operations.to_vec();
         let mut view_state = owner.as_ref().map(|s| s.view_state.clone());
         let mut panel_rewritten = false;
@@ -815,7 +815,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                                 ShellIoCompletion::Actions(vec![ActionDescriptor {
                                     controller_id: session.app.controller_id,
                                     action: "bindSpaceFile".into(),
-                                    args: crate::action_args_json!({ "spaceId": space_id, "filePath": path.display().to_string() }),
+                                    args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "spaceId": space_id, "filePath": path.display().to_string() }),
                                 }])
                             });
                         }
@@ -880,7 +880,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// not decoration: `mountPluginHandles` skips a plugin whose module load faulted, and a boot
     /// that lost the HOST plugin that way used to answer `host program missing` for every later
     /// switch with no way back. One lazy install is the way back, on both targets.
-    pub(super) async fn switch_to_managed_app(&mut self, app_id: &str, view_state: Option<ViewModel>) -> Result<(), String> {
+    pub async fn switch_to_managed_app(&mut self, app_id: &str, view_state: Option<ViewModel>) -> Result<(), String> {
         let cfg = self.plugins.host_config().ok_or("host config missing")?;
         self.plugins.install_plugin(&cfg.plugin_id).await?;
         let semio_s_plugin_space = self.plugins.plugins.iter().find(|program| program.plugin_id == cfg.plugin_id).ok_or("host program missing")?;
@@ -949,7 +949,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `switchToSessionRole` (`🧱️elements/🏛️ShellHost/🟦️.tsx`). A role the dialect does not declare,
     /// and the role already mounted, are both no-operations: `role_switch_target` answers `None` and
     /// nothing is created, retired or refreshed.
-    pub(crate) async fn switch_to_session_role(&mut self, requested: semio_framework::manifest::AppRole) -> Result<(), String> {
+    pub async fn switch_to_session_role(&mut self, requested: semio_framework::manifest::AppRole) -> Result<(), String> {
         let Some(session) = self.docs.session.clone() else {
             return Ok(());
         };
@@ -970,7 +970,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// target's own shape of React's close ladder: every retained surface document of the outgoing
     /// app is driven to terminal before its instance goes, because the resident aggregate is a fixed
     /// process-wide permit and a leaked root refuses every later surface with `Capacity`.
-    pub(super) async fn run_session_app_switch(&mut self, program: &ProgramBridgeEntry, app: AppDefinition) -> Result<(), String> {
+    pub async fn run_session_app_switch(&mut self, program: &ProgramBridgeEntry, app: AppDefinition) -> Result<(), String> {
         let Some(previous) = self.docs.session.clone() else {
             return Ok(());
         };
@@ -1016,7 +1016,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(())
     }
 
-    pub(crate) async fn install_extension_from_store(&mut self, request: serde_json::Value) -> Result<bool, String> {
+    pub async fn install_extension_from_store(&mut self, request: serde_json::Value) -> Result<bool, String> {
         #[cfg(target_arch = "wasm32")]
         {
             let answer = extension_store_answer(request).await?;
@@ -1036,7 +1036,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
     }
 
-    pub(crate) fn set_extension_enabled<'a>(&'a mut self, extension_id: &'a str, enabled: bool) -> ShellTurn<'a, Result<bool, String>> {
+    pub fn set_extension_enabled<'a>(&'a mut self, extension_id: &'a str, enabled: bool) -> ShellTurn<'a, Result<bool, String>> {
 
         shell_turn(async move {
             let Some(index) = self.plugins.extensions.iter().position(|entry| entry.record.extension_id == extension_id) else { return Ok(false) };
@@ -1056,7 +1056,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     }
 
-    pub(crate) async fn uninstall_extension(&mut self, extension_id: &str) -> Result<bool, String> {
+    pub async fn uninstall_extension(&mut self, extension_id: &str) -> Result<bool, String> {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = extension_id;
@@ -1069,7 +1069,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             self.plugins.plugins.retain(|entry| entry.plugin_id != extension_id);
             self.as_window_actions().push_contributions().await?;
             self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
-            if let Err(error) = crate::program_bridge::retire_js_extension(extension_id).await {
+            if let Err(error) = semio_framework_os_renderer_wgpu_program_bridge::retire_js_extension(extension_id).await {
                 let recovery = self.plugins.load_extension_record(record.clone()).await;
                 self.as_window_actions().push_contributions().await?;
                 self.as_window_actions().refresh_ui(UiDirtyScope::Full).await?;
@@ -1101,7 +1101,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// an explicit `/spaces/:id` route.
     ///
     /// 🎠️ H3-wgpu-native — `load_app_document_pack` is now async.
-    pub(crate) fn apply_shell_uri<'a>(&'a mut self, uri: &'a str) -> ShellTurn<'a, Result<(), String>> {
+    pub fn apply_shell_uri<'a>(&'a mut self, uri: &'a str) -> ShellTurn<'a, Result<(), String>> {
 
         shell_turn(async move {
             let path = uri.split('?').next().unwrap_or(uri);
@@ -1154,7 +1154,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             let session = self.docs.session.clone().ok_or("space session missing")?;
             let program = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).ok_or("space program missing")?;
-            let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "openSpace".into(), args: crate::action_args_json!({ "spaceId": space_id }) };
+            let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "openSpace".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "spaceId": space_id }) };
             let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
             let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await.map_err(|refusal| self.prefs.note_refused_open(refusal, &mut self.chrome))?;
             for effect in &result.requested_effects {

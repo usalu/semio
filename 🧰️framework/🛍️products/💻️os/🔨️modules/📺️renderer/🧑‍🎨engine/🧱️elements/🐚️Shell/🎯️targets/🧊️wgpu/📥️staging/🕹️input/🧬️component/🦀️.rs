@@ -45,8 +45,8 @@ pub struct ShellInputState {
     /// is filling.
     pub retained_hit_windows: HashMap<String, (String, Rect)>,
     pub retained_hit_windows_staging: HashMap<String, (String, Rect)>,
-    pub retained_scene_hits: HashMap<String, (Rect, crate::element_contracts::ScenePointerTarget)>,
-    pub retained_scene_hits_staging: HashMap<String, (Rect, crate::element_contracts::ScenePointerTarget)>,
+    pub retained_scene_hits: HashMap<String, (Rect, semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget)>,
+    pub retained_scene_hits_staging: HashMap<String, (Rect, semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget)>,
     pub presented_input_epoch: u64,
     pub next_presented_input_epoch: Option<u64>,
     pub presented_input_candidate: Option<PresentedInputCandidateWitness>,

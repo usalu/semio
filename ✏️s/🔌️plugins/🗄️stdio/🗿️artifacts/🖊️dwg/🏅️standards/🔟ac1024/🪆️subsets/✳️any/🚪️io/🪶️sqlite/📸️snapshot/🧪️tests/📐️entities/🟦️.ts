@@ -6,7 +6,7 @@ import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectEntity,dwgReconstructEntity } from "../../📐️entities/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/📐️entities/🔣️.json";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import { dwgEntityFixtures as entities } from "../🧰️support/📐️entities/🟦️.ts";
 test("DWG all nineteen native entity variants preserve exact geometry, presence, colors and references",async()=>{
   const p=await DwgProjection.create(DWG_SQLITE_SCHEMA);await p.insert("dwg_document",["DWG.SQLite.semantic","AC1024",0n,0n]);await p.insert("dwg_drawing",[1n]);for(const[index,entity]of entities.entries()){const id=await p.insert("dwg_object",[1n,BigInt(index),0n,BigInt(index),0n,"","entity",null,null,null,null,"entity"]);await dwgProjectEntity(p,id,entity);}

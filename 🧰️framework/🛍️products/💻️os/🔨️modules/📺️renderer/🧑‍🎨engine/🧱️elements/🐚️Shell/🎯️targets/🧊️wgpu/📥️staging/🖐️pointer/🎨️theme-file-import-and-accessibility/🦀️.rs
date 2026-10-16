@@ -7,7 +7,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// 📥️ Dispatches the oldest import's next chunks, in order and one awaited at a time (the guest's staging refuses a
     /// gap), within [`IMPORT_TRANSFER_TURN_MS`]; a finished import leaves, and a refused chunk ends its import with the
     /// `import-failed` notice. Answers the chunks it dispatched.
-    pub(crate) async fn step_import_transfers(&mut self) -> usize {
+    pub async fn step_import_transfers(&mut self) -> usize {
         let started = chrome_now_ms();
         let mut sent = 0usize;
         while let Some(chunk) = self.opening.import_transfers.front_mut().and_then(|transfer| transfer.chunks.pop_front()) {

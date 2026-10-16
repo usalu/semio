@@ -13,8 +13,8 @@ import {
   SPAWNED_JOB_FUEL,
   SPAWNED_JOB_STEP_CEILING,
   type SpawnedJobCompletion,
-  type SpawnedJobStep,
-} from "../../🟦️.ts";
+  type SpawnedJobStep
+} from "../../🛠️spawned-job/🟦️.ts";
 import { driveSpawnedJob, spawnedJobCompletedEvent, wireEffectToFriendly, wireJobStep, wireSpawnedJobs, type SpawnedJobPort, type WireVariant } from "../../../🎭️actor/🖼️wire-turn/🟦️.ts";
 
 /** 🧵 TypeScript twin of `🧪️tests/🧵️spawned-job-drive/🦀️.rs`, driven from the SAME fixture

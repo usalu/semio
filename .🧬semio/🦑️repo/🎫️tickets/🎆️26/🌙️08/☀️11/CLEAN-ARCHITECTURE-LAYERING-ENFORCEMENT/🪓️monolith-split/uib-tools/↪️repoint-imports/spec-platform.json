@@ -1,0 +1,96 @@
+{
+ "moves": [
+  {
+   "names": [
+    "StoragePort",
+    "createBrowserStoragePort",
+    "createMemoryStoragePort",
+    "createScopedStoragePort"
+   ],
+   "target": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts",
+   "scope": [
+    "🧰️framework/🔨️modules/🖱️ui"
+   ],
+   "from": {
+    "specifiers": [
+     "@semio-tech/framework"
+    ]
+   }
+  },
+  {
+   "names": [
+    "StoragePort",
+    "createBrowserStoragePort",
+    "createMemoryStoragePort",
+    "createScopedStoragePort"
+   ],
+   "target": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts",
+   "from": {
+    "files": [
+     "🧰️framework/🔨️modules/🖥️platform/🟦️.ts"
+    ]
+   }
+  },
+  {
+   "names": [
+    "windowElementId",
+    "panelTabElementId",
+    "panelTabFirstDraggableElementId"
+   ],
+   "target": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts",
+   "scope": [
+    "🧰️framework/🔨️modules/🖱️ui"
+   ],
+   "from": {
+    "specifiers": [
+     "@semio-tech/framework"
+    ]
+   }
+  },
+  {
+   "names": [
+    "windowElementId",
+    "panelTabElementId",
+    "panelTabFirstDraggableElementId"
+   ],
+   "target": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts",
+   "from": {
+    "files": [
+     "🧰️framework/🔨️modules/🖥️platform/🟦️.ts"
+    ]
+   }
+  },
+  {
+   "names": [
+    "DockSkeleton",
+    "DockTabSkeleton"
+   ],
+   "target": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🐳️dock-skeleton/🟦️.ts",
+   "scope": [
+    "🧰️framework/🔨️modules/🖱️ui"
+   ],
+   "from": {
+    "specifiers": [
+     "@semio-tech/framework"
+    ]
+   }
+  },
+  {
+   "names": [
+    "DockSkeleton",
+    "DockTabSkeleton"
+   ],
+   "target": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🐳️dock-skeleton/🟦️.ts",
+   "from": {
+    "files": [
+     "🧰️framework/🔨️modules/🖥️platform/🟦️.ts"
+    ]
+   }
+  }
+ ],
+ "exclude": [
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu",
+  "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages"
+ ]
+}

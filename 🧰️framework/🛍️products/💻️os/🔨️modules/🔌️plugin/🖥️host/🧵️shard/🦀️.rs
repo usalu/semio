@@ -21,12 +21,7 @@
 //! DRR-computed, throttle-scaled per-turn budget now travels WITH the envelopes it grants
 //! ([`ShardFrame::Grant`]) instead of `pump` re-deriving one from local constants.
 
-// 🏃️ `ShardExecutor` — one `ShardLoop` per shard, scheduled onto the shared `WorkerPool` (P1c; no
-// dedicated OS thread since). Declared here (not in `🖥️host/🦀️.rs`, a file this packet's
-// boundary excludes) — `#[path]` on a submodule resolves relative to THIS file's own directory, so
-// this reaches `🧵️shard/🧵️executor/🦀️.rs` without any edit to the crate-root module tree.
-#[path = "🧵️executor/🦀️.rs"]
-pub mod executor;
+extern crate semio_framework_os_kernel as store;
 
 #[path = "🔁️lifecycle/🦀️.rs"]
 mod lifecycle;
@@ -44,16 +39,17 @@ pub mod grant;
 pub use identity::{OriginalShardIdentity,OriginalShardIdentityIssuer,ShardIdentityPolicy,native_identity_issuer};
 pub use lifecycle::{ShardActorAllocation, ShardRegistrationReason, ShardRegistrationRejected};
 
-use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
-#[cfg(test)]
-use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
+use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
+use semio_framework_plugin_guest_contract::{JobBudget, JobStep, PluginHostError, TurnFault};
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
 use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobReplayRequest, JobStepOutcome, JobTurn, Payload, ShardTransport};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
 use std::collections::{BTreeSet, HashMap};
 use std::mem::{MaybeUninit, size_of};
 use std::sync::Arc;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -160,12 +156,12 @@ impl ShardFrame {
 
 /// 📦️ OS scheduling resources remain a sibling of the original Actor-issued batch.
 #[derive(Debug,PartialEq)]
-struct IssuedShardTurn{budget:semio_framework_actor::Budget,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,original:semio_framework_actor::IssuedRetainedBatch}
+pub struct IssuedShardTurn{pub budget:semio_framework_actor::Budget,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,pub original:semio_framework_actor::IssuedRetainedBatch}
 impl IssuedShardTurn{
- fn new(budget:semio_framework_actor::Budget,input:semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,envelopes:usize)->Result<Self,semio_framework_value::ValueError>{if deadline_us==0||deadline_us>input.work.absolute_deadline_us||work_fuel>input.work.fuel||retained_policy.maximum_items>input.grant.maximum_items||retained_policy.maximum_copy_bytes>input.grant.maximum_copy_bytes||retained_policy.maximum_capacity_bytes>input.grant.maximum_capacity_bytes||retained_policy.maximum_release_bytes>input.grant.maximum_release_bytes||retained_policy.maximum_depth>input.grant.maximum_depth{return Err(Self::refusal("original shard policy exceeds its held total source authority"))}Ok(Self{budget,retained_policy,work_fuel,deadline_us,original:semio_framework_actor::IssuedRetainedBatch::new(input,envelopes)?})}
- fn envelope_recipient(&mut self,index:usize)->Result<IssuedShardRetainedRecipient<'_>,semio_framework_value::ValueError>{Ok(IssuedShardRetainedRecipient{original:self.original.envelope_recipient(index)?})}
+ pub fn new(budget:semio_framework_actor::Budget,input:semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,envelopes:usize)->Result<Self,semio_framework_value::ValueError>{if deadline_us==0||deadline_us>input.work.absolute_deadline_us||work_fuel>input.work.fuel||retained_policy.maximum_items>input.grant.maximum_items||retained_policy.maximum_copy_bytes>input.grant.maximum_copy_bytes||retained_policy.maximum_capacity_bytes>input.grant.maximum_capacity_bytes||retained_policy.maximum_release_bytes>input.grant.maximum_release_bytes||retained_policy.maximum_depth>input.grant.maximum_depth{return Err(Self::refusal("original shard policy exceeds its held total source authority"))}Ok(Self{budget,retained_policy,work_fuel,deadline_us,original:semio_framework_actor::IssuedRetainedBatch::new(input,envelopes)?})}
+ pub fn envelope_recipient(&mut self,index:usize)->Result<IssuedShardRetainedRecipient<'_>,semio_framework_value::ValueError>{Ok(IssuedShardRetainedRecipient{original:self.original.envelope_recipient(index)?})}
  fn resume_envelope_recipient(&mut self,index:usize)->Result<IssuedShardRetainedRecipient<'_>,semio_framework_value::ValueError>{Ok(IssuedShardRetainedRecipient{original:self.original.resume_envelope_recipient(index)?})}
- fn refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_actor::IssuedRetainedBatch::refusal(message)}
+ pub fn refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_actor::IssuedRetainedBatch::refusal(message)}
 }
 impl std::ops::Deref for IssuedShardTurn{type Target=semio_framework_actor::IssuedRetainedBatch;fn deref(&self)->&Self::Target{&self.original}}
 impl std::ops::DerefMut for IssuedShardTurn{fn deref_mut(&mut self)->&mut Self::Target{&mut self.original}}
@@ -179,7 +175,7 @@ impl semio_framework_os_services::ComputeRetainedRecipient for IssuedShardRetain
     fn record_progress(&mut self, progress: semio_framework_value::RetainedCloneProgress) -> Result<(), semio_framework_value::ValueError> { self.original.record_progress(progress) }
 }
 
-async fn turn_budget_from_grant(budget: &semio_framework_actor::Budget, retained: semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64) -> Budget {
+pub async fn turn_budget_from_grant(budget: &semio_framework_actor::Budget, retained: semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64) -> Budget {
     Budget { retained, retained_policy,work_fuel,fuel: budget.fuel, deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames }
 }
 
@@ -194,7 +190,7 @@ async fn job_budget_from_grant(budget: &semio_framework_actor::Budget) -> JobBud
 /// mid-call, owning the host's next call; the kernel host continues it by granting the actor an
 /// `Event::Wake`, which is exactly "resume with no events". Any OTHER event reaching a mid-flight
 /// turn is passed through unchanged, so the runtime refuses it loudly instead of dropping it.
-pub(crate) fn turn_events(event: &Event, in_flight: bool) -> &[Event] {
+pub fn turn_events(event: &Event, in_flight: bool) -> &[Event] {
     if in_flight && matches!(event, Event::Wake) {
         &[]
     } else {
@@ -288,7 +284,7 @@ const SHARD_TURN_ADMITTED_JOBS_MAXIMUM: usize = 1_024;
 pub enum ShardOutcome {
     OriginalMesh{actor:u64,input:semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,receiving_sequence:u64,source_spent:semio_framework_value::RetainedCloneProgress,source_work_units_spent:u64,bytes:[u8;semio_framework_ui_runtime::UI_NATIVE_MESH_MESSAGE_BYTES]},
     /// 🧾️ One original raw call is returned before the Kernel may issue a continuation.
-    OriginalCall{actor:u64,returned:OriginalActorGuestReturn,continuation:bool,call:Option<crate::original_actor_context::OriginalActorFixedCall>},
+    OriginalCall{actor:u64,returned:OriginalActorGuestReturn,continuation:bool,call:Option<semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedCall>},
     /// 🔁️ One granted turn's result, with the step authority of every live job the turn's
     /// `Effect::SpawnJob`s admitted — the host needs a job's exact `JobTurn` to grant its steps
     /// (`Payload::JobStep`), and only this shard mints it.
@@ -352,7 +348,7 @@ impl ShardOutcome {
         }
         match self {
             Self::OriginalMesh{actor,input,retained_policy,work_fuel,deadline_us,receiving_sequence,source_spent,source_work_units_spent,bytes}=>{semio_framework_actor::pack::write_u8(out,8).await;semio_framework_actor::pack::write_u64(out,*actor).await;semio_framework_actor::OriginalActorGuestReturn{input:*input,spent:*source_spent,work_units_spent:*source_work_units_spent,claimed_remaining:None,claimed_remaining_fuel:None}.pack_encode(out).await;semio_framework_actor::retained_turn::pack_encode_grant(out,*retained_policy).await;semio_framework_actor::pack::write_u64(out,*work_fuel).await;semio_framework_actor::pack::write_u64(out,*deadline_us).await;semio_framework_actor::pack::write_u64(out,*receiving_sequence).await;out.extend_from_slice(bytes);},
-            Self::OriginalCall{actor,returned,continuation,call}=>{semio_framework_actor::pack::write_u8(out,7).await;semio_framework_actor::pack::write_u64(out,*actor).await;returned.pack_encode(out).await;semio_framework_actor::pack::write_bool(out,*continuation).await;semio_framework_actor::pack::write_bool(out,call.is_some()).await;if let Some(call)=call{let mut receipt=crate::original_actor_context::OriginalActorFixedReceipt::empty();receipt.write(*call);out.extend_from_slice(receipt.bytes())}},
+            Self::OriginalCall{actor,returned,continuation,call}=>{semio_framework_actor::pack::write_u8(out,7).await;semio_framework_actor::pack::write_u64(out,*actor).await;returned.pack_encode(out).await;semio_framework_actor::pack::write_bool(out,*continuation).await;semio_framework_actor::pack::write_bool(out,call.is_some()).await;if let Some(call)=call{let mut receipt=semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedReceipt::empty();receipt.write(*call);out.extend_from_slice(receipt.bytes())}},
             Self::Turn { actor, result, jobs } => {
                 semio_framework_actor::pack::write_u8(out, 0).await;
                 semio_framework_actor::pack::write_u64(out, *actor).await;
@@ -438,7 +434,7 @@ impl ShardOutcome {
             4 => Ok(Self::Resumed { actor, operation: JobOperation::pack_decode(bytes, pos).await? }),
             5 => Ok(Self::Cancelled { actor }),
             6 => Ok(Self::Preempted { actor }),
-            7=>{let returned=OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let continuation=semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::continuation").await?;let call=if semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::fixed").await?{let end=pos.checked_add(136).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call extent overflow"))?;let source=bytes.get(*pos..end).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call is truncated"))?;let call=crate::original_actor_context::OriginalActorFixedReceipt::read(source).map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call header is malformed"))?;*pos=end;Some(call)}else{None};Ok(Self::OriginalCall{actor,returned,continuation,call})},
+            7=>{let returned=OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let continuation=semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::continuation").await?;let call=if semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::fixed").await?{let end=pos.checked_add(136).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call extent overflow"))?;let source=bytes.get(*pos..end).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call is truncated"))?;let call=semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedReceipt::read(source).map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call header is malformed"))?;*pos=end;Some(call)}else{None};Ok(Self::OriginalCall{actor,returned,continuation,call})},
             8=>{let raw=OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let retained_policy=semio_framework_actor::retained_turn::pack_decode_grant(bytes,pos).await?;let work_fuel=semio_framework_actor::pack::read_u64(bytes,pos,"OriginalMesh::work-fuel").await?;let deadline_us=semio_framework_actor::pack::read_u64(bytes,pos,"OriginalMesh::deadline-us").await?;let receiving_sequence=semio_framework_actor::pack::read_u64(bytes,pos,"OriginalMesh::sequence").await?;let end=pos.checked_add(semio_framework_ui_runtime::UI_NATIVE_MESH_MESSAGE_BYTES).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original mesh fixed extent overflow"))?;let source=bytes.get(*pos..end).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original mesh packet truncated"))?;let mut packet=[0;semio_framework_ui_runtime::UI_NATIVE_MESH_MESSAGE_BYTES];packet.copy_from_slice(source);*pos=end;Ok(Self::OriginalMesh{actor,input:raw.input,retained_policy,work_fuel,deadline_us,receiving_sequence,source_spent:raw.spent,source_work_units_spent:raw.work_units_spent,bytes:packet})},
             other => Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardOutcome", tag: other, offset: *pos }),
         }
@@ -451,11 +447,11 @@ impl ShardOutcome {
 pub struct ShardLoop {
     identity_issuer:OriginalShardIdentityIssuer,
     identities:HashMap<ShardActorAllocation,OriginalShardIdentity>,
-    runtime: Arc<GuestRuntimes>,
+    pub runtime: Arc<GuestRuntimes>,
     transport: ShardTransports,
-    instances: HashMap<u64, GuestInstance>,
-    allocations: HashMap<u64, ShardActorAllocation>,
-    next_registration: u64,
+    pub instances: HashMap<u64, GuestInstance>,
+    pub allocations: HashMap<u64, ShardActorAllocation>,
+    pub next_registration: u64,
     /// 💼️ `(actor, job)` pairs admitted from an `Effect::SpawnJob` and not yet `Done`/`Failed` —
     /// MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME J1, the generic host-side executor
     /// `📓️terra-M5-report.md` §4(a) found missing entirely: nothing previously read a
@@ -464,14 +460,14 @@ pub struct ShardLoop {
     /// calls directly. `pump()` steps every entry here exactly once per call — never loops a job
     /// to completion internally — so a job needing N steps needs N `pump()` calls, which is what
     /// proves resumability rather than a single-shot call.
-    running_jobs: BTreeSet<(u64, u64)>,
+    pub running_jobs: BTreeSet<(u64, u64)>,
     /// 🪪️ Active replay identity and sequence cursor for every running job.
-    job_turns: HashMap<(u64, u64), JobTurn>,
+    pub job_turns: HashMap<(u64, u64), JobTurn>,
     /// 📰️ Independently minted operation identity retained from spawn until terminal outcome.
-    job_authorities: HashMap<(u64, u64), JobAuthority>,
+    pub job_authorities: HashMap<(u64, u64), JobAuthority>,
     /// 📄️ Fixed, generation-qualified original spawn owners retained for live restart and replay.
-    replay_seeds: Box<[Option<MountedReplaySeed>]>,
-    replay_seed_refusals: Box<[Option<ReplaySpawnRefusal>]>,
+    pub replay_seeds: Box<[Option<MountedReplaySeed>]>,
+    pub replay_seed_refusals: Box<[Option<ReplaySpawnRefusal>]>,
     replay_seed_cursor: usize,
     next_job_operation: u64,
     /// 🚦 `JobPlacement` (inline/isolated/exclusive) captured per `running_jobs` entry at
@@ -482,7 +478,7 @@ pub struct ShardLoop {
     /// `ShardLoop` can give without a cross-shard/`Kernel`-level job-forwarding mechanism, which
     /// this packet's report flags as a `lease-request` rather than faking. Entries are removed
     /// alongside their matching `running_jobs` entry everywhere the latter is removed.
-    job_placement: HashMap<(u64, u64), JobPlacement>,
+    pub job_placement: HashMap<(u64, u64), JobPlacement>,
     /// 📨️ `Event::JobCompleted` synthesized when a `running_jobs` entry reaches `Done`/`Failed`,
     /// queued per originating actor and delivered at the TOP of the NEXT `pump()` call (merged
     /// into that call's `events_by_actor`) — so a job's own actor sees the completion on its next
@@ -492,7 +488,7 @@ pub struct ShardLoop {
     /// routing step).
     terminal_authorities: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
     /// ⚖️ Each actor retains one original issued batch ledger; resource views borrow its Budget.
-    granted_budgets: HashMap<u64, IssuedShardTurn>,
+    pub granted_budgets: HashMap<u64, IssuedShardTurn>,
     /// 🚦 terra-shard-lane (piece 1, `📓️terra-shard-lane-report.md`): the lane from the LAST
     /// [`Envelope`] this shard has dispatched for each actor (`Self::dispatch_envelope`, which
     /// sees every envelope bundled in a `ShardFrame::Grant` as well as every standalone
@@ -502,48 +498,48 @@ pub struct ShardLoop {
     /// breaking `ShardFrame::Grant` wire change (see [`Self::actor_lane`]'s own doc for why no
     /// field was added). Read by [`Self::actor_lane`]; an actor with no entry (never seen an
     /// envelope) falls back to Maintenance for queue classification.
-    actor_lanes: HashMap<u64, semio_framework_actor::Lane>,
-    pending_interactive: FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
-    pending_background: FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
-    rejected_frame: Option<(u64, Vec<u8>)>,
-    terminal_frames: FixedOwnerRing<Vec<u8>, SHARD_DEFERRED_ITEMS>,
-    terminal_frame_overflow: FixedOwnerRing<TerminalFrameOverflow, 1>,
+    pub actor_lanes: HashMap<u64, semio_framework_actor::Lane>,
+    pub pending_interactive: FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
+    pub pending_background: FixedOwnerRing<AdmittedAuthority, SHARD_DEFERRED_ITEMS>,
+    pub rejected_frame: Option<(u64, Vec<u8>)>,
+    pub terminal_frames: FixedOwnerRing<Vec<u8>, SHARD_DEFERRED_ITEMS>,
+    pub terminal_frame_overflow: FixedOwnerRing<TerminalFrameOverflow, 1>,
     next_frame_epoch: u64,
     last_drive_consumed_epoch: Option<u64>,
 }
 
 #[derive(Clone, Copy)]
-struct JobAuthority {
-    turn: JobTurn,
-    request: JobReplayRequest,
+pub struct JobAuthority {
+    pub turn: JobTurn,
+    pub request: JobReplayRequest,
 }
 
 //#region 📄️FixedReplaySeed
-const JOB_REPLAY_SEED_PAGE_BYTES: usize = semio_framework_actor::JOB_REPLAY_PAGE_BYTES;
-const JOB_REPLAY_KIND_PAGE_CAPACITY: usize = 16;
+pub const JOB_REPLAY_SEED_PAGE_BYTES: usize = semio_framework_actor::JOB_REPLAY_PAGE_BYTES;
+pub const JOB_REPLAY_KIND_PAGE_CAPACITY: usize = 16;
 const JOB_REPLAY_INPUT_PAGE_CAPACITY: usize = semio_framework_actor::JOB_REPLAY_RECORD_CAPACITY;
 const JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY: usize = semio_framework_actor::JOB_REPLAY_RECORD_CAPACITY;
-const JOB_REPLAY_SEED_SLOT_CAPACITY: usize = SHARD_DEFERRED_ITEMS;
-const JOB_REPLAY_REFUSAL_SLOT_CAPACITY: usize = 512;
+pub const JOB_REPLAY_SEED_SLOT_CAPACITY: usize = SHARD_DEFERRED_ITEMS;
+pub const JOB_REPLAY_REFUSAL_SLOT_CAPACITY: usize = 512;
 const JOB_REPLAY_SEED_PROCESS_PAGES: usize = semio_framework_actor::JOB_REPLAY_PROCESS_PAGE_CAPACITY;
 
-static JOB_REPLAY_SEED_PAGES: AtomicUsize = AtomicUsize::new(0);
-static JOB_REPLAY_ABI_BYTES: AtomicUsize = AtomicUsize::new(0);
-#[cfg(test)]
+pub static JOB_REPLAY_SEED_PAGES: AtomicUsize = AtomicUsize::new(0);
+pub static JOB_REPLAY_ABI_BYTES: AtomicUsize = AtomicUsize::new(0);
+#[cfg(any(test, feature = "testkit"))]
 static REPLAY_TEST_AUTHORITY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-#[cfg(test)]
-pub(super) struct ReplayTestAuthority;
+#[cfg(any(test, feature = "testkit"))]
+pub(crate) struct ReplayTestAuthority;
 
-#[cfg(test)]
-pub(super) fn replay_test_authority() -> ReplayTestAuthority {
+#[cfg(any(test, feature = "testkit"))]
+pub fn replay_test_authority() -> ReplayTestAuthority {
     while REPLAY_TEST_AUTHORITY.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
         std::thread::yield_now();
     }
     ReplayTestAuthority
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Drop for ReplayTestAuthority {
     fn drop(&mut self) {
         REPLAY_TEST_AUTHORITY.store(false, Ordering::Release);
@@ -685,7 +681,7 @@ impl FixedReplaySeed {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum ReplaySeedPhase {
+pub enum ReplaySeedPhase {
     CaptureKind,
     CaptureInput,
     Checkpoint,
@@ -713,7 +709,7 @@ enum ReplaySeedPhase {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum ReplaySeedCloseReason {
+pub enum ReplaySeedCloseReason {
     Completed,
     Cancelled,
     ActorLost,
@@ -725,29 +721,29 @@ enum ReplaySeedCloseReason {
 /// worker; a framework reserved tool job (`semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND`) is
 /// live-only and starts right after its kind and input pages — its hosts never replay it, and a whole
 /// guest checkpoint outgrows the fixed checkpoint pages (block2d's undo, ticket 26/09/23 slice WG8 §1.4).
-struct MountedReplaySeed {
-    actor: u64,
-    job: u64,
-    authority: JobTurn,
-    placement: JobPlacement,
+pub struct MountedReplaySeed {
+    pub actor: u64,
+    pub job: u64,
+    pub authority: JobTurn,
+    pub placement: JobPlacement,
     replayable: bool,
     worker_count: u16,
     worker_slot: u16,
-    phase: ReplaySeedPhase,
-    close_reason: Option<ReplaySeedCloseReason>,
-    seed: Option<FixedReplaySeed>,
-    kind_owner: Option<String>,
-    input_owner: Option<Vec<u8>>,
+    pub phase: ReplaySeedPhase,
+    pub close_reason: Option<ReplaySeedCloseReason>,
+    pub seed: Option<FixedReplaySeed>,
+    pub kind_owner: Option<String>,
+    pub input_owner: Option<Vec<u8>>,
     checkpoint_owner: Option<Vec<u8>>,
-    kind_cursor: usize,
-    input_cursor: usize,
+    pub kind_cursor: usize,
+    pub input_cursor: usize,
     checkpoint_cursor: usize,
-    materialized_kind: Option<Vec<u8>>,
+    pub materialized_kind: Option<Vec<u8>>,
     materialized_input: Option<Vec<u8>>,
     materialized_checkpoint: Option<Vec<u8>>,
     replay_kind_owner: Option<String>,
     materialize_page: usize,
-    abi_reserved: usize,
+    pub abi_reserved: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -758,24 +754,24 @@ enum ReplaySpawnRefusalPhase {
     RetireShell,
 }
 
-struct ReplaySpawnRefusal {
-    actor: u64,
-    job: u64,
-    reason: &'static [u8],
-    input: Option<Vec<u8>>,
-    kind: Option<String>,
-    phase: ReplaySpawnRefusalPhase,
-    publish: bool,
+pub struct ReplaySpawnRefusal {
+    pub actor: u64,
+    pub job: u64,
+    pub reason: &'static [u8],
+    pub input: Option<Vec<u8>>,
+    pub kind: Option<String>,
+    pub phase: ReplaySpawnRefusalPhase,
+    pub publish: bool,
 }
 
 impl ReplaySpawnRefusal {
-    fn new(actor: u64, job: u64, reason: &'static [u8], kind: String, input: Vec<u8>) -> Self {
+    pub fn new(actor: u64, job: u64, reason: &'static [u8], kind: String, input: Vec<u8>) -> Self {
         Self { actor, job, reason, input: Some(input), kind: Some(kind), phase: ReplaySpawnRefusalPhase::RetireInput, publish: true }
     }
 }
 
 impl MountedReplaySeed {
-    fn new(actor: u64, job: u64, authority: JobTurn, request: JobReplayRequest, placement: JobPlacement, kind: String, input: Vec<u8>) -> Result<Self, (String, Vec<u8>)> {
+    pub fn new(actor: u64, job: u64, authority: JobTurn, request: JobReplayRequest, placement: JobPlacement, kind: String, input: Vec<u8>) -> Result<Self, (String, Vec<u8>)> {
         let seed = match FixedReplaySeed::new(request, kind.len(), input.len()) {
             Ok(seed) => seed,
             Err(()) => return Err((kind, input)),
@@ -823,7 +819,7 @@ impl Drop for MountedReplaySeed {
     }
 }
 
-fn try_replay_abi_buffer(bytes: usize) -> Result<Vec<u8>, ()> {
+pub fn try_replay_abi_buffer(bytes: usize) -> Result<Vec<u8>, ()> {
     JOB_REPLAY_ABI_BYTES.try_update(Ordering::AcqRel, Ordering::Acquire, |owned| owned.checked_add(bytes).filter(|owned| *owned <= SHARD_DEFERRED_BYTES)).map_err(|_| ())?;
     let mut buffer = Vec::new();
     if buffer.try_reserve_exact(bytes).is_err() {
@@ -842,12 +838,12 @@ pub enum ShardDrive {
 }
 
 //#region 🚦DeferredOwnerRing
-pub(super) const SHARD_DEFERRED_ITEMS: usize = 256;
-pub(super) const SHARD_DEFERRED_BYTES: usize = 16 * 1024 * 1024;
-pub(super) const SHARD_FRAME_MAX_BYTES: usize = SHARD_DEFERRED_BYTES;
+pub const SHARD_DEFERRED_ITEMS: usize = 256;
+pub const SHARD_DEFERRED_BYTES: usize = 16 * 1024 * 1024;
+pub const SHARD_FRAME_MAX_BYTES: usize = SHARD_DEFERRED_BYTES;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct OwnerKey {
+pub(crate) struct OwnerKey {
     slot: usize,
     generation: u64,
 }
@@ -859,7 +855,7 @@ pub enum AdmissionLimit {
 }
 
 #[derive(Debug)]
-pub(super) struct AdmissionRejected<T> {
+pub(crate) struct AdmissionRejected<T> {
     pub limit: AdmissionLimit,
     pub owner: T,
 }
@@ -870,12 +866,12 @@ struct OwnerSlot<T> {
     owner: T,
 }
 
-pub(super) struct FixedOwnerRing<T, const N: usize> {
-    slots: Box<[Option<OwnerSlot<T>>]>,
-    order: Box<[usize]>,
+pub struct FixedOwnerRing<T, const N: usize> {
+    pub slots: Box<[Option<OwnerSlot<T>>]>,
+    pub order: Box<[usize]>,
     tail: usize,
-    len: usize,
-    bytes: usize,
+    pub len: usize,
+    pub bytes: usize,
     byte_capacity: usize,
     next_generation: u64,
 }
@@ -889,8 +885,8 @@ impl<T, const N: usize> FixedOwnerRing<T, N> {
         self.len == 0
     }
 
-    #[cfg(test)]
-    fn len(&self) -> usize {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn len(&self) -> usize {
         self.len
     }
 
@@ -927,14 +923,14 @@ impl<T, const N: usize> FixedOwnerRing<T, N> {
         self.pop_at(0)
     }
 
-    fn get(&self, offset: usize) -> Option<&T> {
+    pub fn get(&self, offset: usize) -> Option<&T> {
         if offset >= self.len {
             return None;
         }
         self.slots[self.order[offset]].as_ref().map(|slot| &slot.owner)
     }
 
-    fn pop_at(&mut self, offset: usize) -> Option<(OwnerKey, T)> {
+    pub fn pop_at(&mut self, offset: usize) -> Option<(OwnerKey, T)> {
         if self.len == 0 {
             return None;
         }
@@ -953,17 +949,17 @@ impl<T, const N: usize> FixedOwnerRing<T, N> {
         self.get(0)
     }
 
-    #[cfg(test)]
-    fn contains(&self, key: OwnerKey) -> bool {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn contains(&self, key: OwnerKey) -> bool {
         self.slots.get(key.slot).and_then(Option::as_ref).is_some_and(|slot| slot.generation == key.generation)
     }
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct CancelCursor {
-    actor: u64,
-    after_job: Option<u64>,
-    owner_bytes: usize,
+    pub actor: u64,
+    pub after_job: Option<u64>,
+    pub owner_bytes: usize,
 }
 
 #[derive(Debug)]
@@ -979,7 +975,7 @@ pub enum DeferredAuthority {
     Resume { actor: u64, operation: JobOperation, checkpoint: JobCheckpoint },
 }
 
-fn split_frame_credit(raw_bytes: usize, items: usize, index: usize) -> usize {
+pub fn split_frame_credit(raw_bytes: usize, items: usize, index: usize) -> usize {
     if items == 0 {
         return 0;
     }
@@ -1002,9 +998,9 @@ enum FrameAdmissionError {
 }
 
 #[derive(Debug)]
-struct TerminalFrameOverflow {
-    epoch: u64,
-    bytes: Vec<u8>,
+pub struct TerminalFrameOverflow {
+    pub epoch: u64,
+    pub bytes: Vec<u8>,
 }
 
 fn defer_completion(
@@ -1066,7 +1062,7 @@ impl ShardLoop {
     }
 
     /// 🎟️ Borrows only the actor's original supplied grant.
-    fn granted_budget(&self, actor: u64) -> Option<&semio_framework_actor::Budget> {
+    pub fn granted_budget(&self, actor: u64) -> Option<&semio_framework_actor::Budget> {
         self.granted_budgets.get(&actor).map(|turn| &turn.budget)
     }
 
@@ -1088,12 +1084,12 @@ impl ShardLoop {
     /// same DRR `Scheduler` that would have supplied a `Grant`-level lane). See
     /// `📓️terra-shard-lane-report.md`'s "wire change avoided" note — a `lease-request` is open
     /// against those two files in case a `Grant`-level field is still wanted for a future packet.
-    fn actor_lane(&self, actor: u64) -> semio_framework_actor::Lane {
+    pub fn actor_lane(&self, actor: u64) -> semio_framework_actor::Lane {
         self.actor_lanes.get(&actor).copied().unwrap_or(semio_framework_actor::Lane::Maintenance)
     }
 
-    #[cfg(test)]
-    fn pop_next_authority(ring: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>, placements: &HashMap<(u64, u64), JobPlacement>) -> Option<(OwnerKey, DeferredAuthority)> {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn pop_next_authority(ring: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>, placements: &HashMap<(u64, u64), JobPlacement>) -> Option<(OwnerKey, DeferredAuthority)> {
         let actor = match ring.get(0) {
             Some(DeferredAuthority::JobStep { actor, .. }) => *actor,
             _ => return ring.pop_front(),
@@ -1133,7 +1129,7 @@ impl ShardLoop {
         true
     }
 
-    async fn drive_replay_refusal(&mut self) -> Result<bool, PluginHostError> {
+    pub async fn drive_replay_refusal(&mut self) -> Result<bool, PluginHostError> {
         let Some(index) = self.replay_seed_refusals.iter().position(Option::is_some) else {
             return Ok(false);
         };
@@ -1170,7 +1166,7 @@ impl ShardLoop {
         Ok(true)
     }
 
-    fn validate_replay_request(&self, actor: u64, turn: JobTurn, request: JobReplayRequest) -> Result<(), PluginHostError> {
+    pub fn validate_replay_request(&self, actor: u64, turn: JobTurn, request: JobReplayRequest) -> Result<(), PluginHostError> {
         let Some(seed) = self.replay_seeds.iter().flatten().find(|seed| seed.actor == actor && seed.job == turn.job) else {
             return Err(PluginHostError::Plugin(format!("ShardLoop::replay: no retained seed for actor {actor}, job {}", turn.job)));
         };
@@ -1190,7 +1186,7 @@ impl ShardLoop {
         Ok(())
     }
 
-    fn begin_replay_seed(&mut self, actor: u64, turn: JobTurn, request: JobReplayRequest, worker_count: u16, worker_slot: u16) -> Result<(), PluginHostError> {
+    pub fn begin_replay_seed(&mut self, actor: u64, turn: JobTurn, request: JobReplayRequest, worker_count: u16, worker_slot: u16) -> Result<(), PluginHostError> {
         self.validate_replay_request(actor, turn, request)?;
         if worker_count == 0 || worker_slot == u16::MAX {
             return Err(PluginHostError::Plugin(format!("ShardLoop::replay: invalid worker identity for actor {actor}, job {}", turn.job)));
@@ -1210,7 +1206,7 @@ impl ShardLoop {
         Ok(())
     }
 
-    fn begin_replay_seed_close(&mut self, index: usize, reason: ReplaySeedCloseReason) {
+    pub fn begin_replay_seed_close(&mut self, index: usize, reason: ReplaySeedCloseReason) {
         Self::begin_replay_seed_close_owned(&mut self.replay_seeds, &mut self.running_jobs, &mut self.job_turns, &mut self.job_authorities, &mut self.job_placement, index, reason);
     }
 
@@ -1304,7 +1300,7 @@ impl ShardLoop {
         Ok(())
     }
 
-    async fn drive_replay_seed(&mut self) -> Result<bool, PluginHostError> {
+    pub async fn drive_replay_seed(&mut self) -> Result<bool, PluginHostError> {
         let Some(index) = (0..JOB_REPLAY_SEED_SLOT_CAPACITY)
             .map(|offset| (self.replay_seed_cursor + offset) % JOB_REPLAY_SEED_SLOT_CAPACITY)
             .find(|index| self.replay_seeds[*index].as_ref().is_some_and(|seed| !matches!(seed.phase, ReplaySeedPhase::Retained) || !self.instances.contains_key(&seed.actor)))
@@ -1632,7 +1628,7 @@ impl ShardLoop {
         self.drive_one_primed(None).await
     }
 
-    pub(super) async fn drive_one_primed(&mut self, primed: Option<Vec<u8>>) -> ShardDrive {
+    pub async fn drive_one_primed(&mut self, primed: Option<Vec<u8>>) -> ShardDrive {
         self.last_drive_consumed_epoch = None;
         match self.pump_primed(primed).await {
             Ok(_) if self.has_pending_work() => ShardDrive::MoreWork { consumed_epoch: self.last_drive_consumed_epoch },
@@ -1643,7 +1639,7 @@ impl ShardLoop {
         }
     }
 
-    pub(super) fn can_accept_primed_frame(&self) -> bool {
+    pub fn can_accept_primed_frame(&self) -> bool {
         !self.has_pending_work() || self.has_lifecycle_retry() || self.has_unissued_authority()
     }
 
@@ -1659,7 +1655,7 @@ impl ShardLoop {
         self.terminal_frames.pop_front().map(|(_, bytes)| bytes)
     }
 
-    pub(super) fn take_terminal_frame_and_rearm(&mut self) -> (Option<Vec<u8>>, Option<u64>) {
+    pub fn take_terminal_frame_and_rearm(&mut self) -> (Option<Vec<u8>>, Option<u64>) {
         let frame = self.terminal_frames.pop_front().map(|(_, bytes)| bytes);
         if frame.is_none() {
             return (None, None);
@@ -1996,16 +1992,16 @@ impl ShardLoop {
 
     fn receive_original_event(&mut self,actor:u64,receipt:semio_framework_actor::RetainedTurnReceipt)->Result<(),PluginHostError>{let batch=self.granted_budgets.get_mut(&actor).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event batch is absent")))?;let issued=batch.issue_envelope(0).map_err(PluginHostError::NativeIo)?;receipt.validate_for(issued).map_err(PluginHostError::NativeIo)?;let returned=batch.settle_envelope(0,receipt).map_err(PluginHostError::NativeIo)?;if returned!=Some(receipt){return Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("one original Event requires one complete batch return")))}Ok(())}
 
-    async fn send_refused_original_call(&mut self,actor:u64,original:&mut OriginalShardEvent,error:semio_framework_value::ValueError,fallback:Option<OriginalActorGuestReturn>,call:Option<crate::original_actor_context::OriginalActorFixedCall>)->Result<bool,PluginHostError>{let returned=original.input.refused_receipt().copied().or(fallback);original.retain_receiving_refusal(error);if let Some(call)=call{original.retain_fixed_call(call);}let returned=returned.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original receiving refusal holds no actual raw return")))?;self.send_outcome(&ShardOutcome::OriginalCall{actor,returned,continuation:false,call}).await?;Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original raw call forwarded before its held local receiving refusal")))}
+    async fn send_refused_original_call(&mut self,actor:u64,original:&mut OriginalShardEvent,error:semio_framework_value::ValueError,fallback:Option<OriginalActorGuestReturn>,call:Option<semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedCall>)->Result<bool,PluginHostError>{let returned=original.input.refused_receipt().copied().or(fallback);original.retain_receiving_refusal(error);if let Some(call)=call{original.retain_fixed_call(call);}let returned=returned.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original receiving refusal holds no actual raw return")))?;self.send_outcome(&ShardOutcome::OriginalCall{actor,returned,continuation:false,call}).await?;Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original raw call forwarded before its held local receiving refusal")))}
 
-    async fn execute_turn_for(&mut self, actor_id:u64, original:&mut OriginalShardEvent,granted:semio_framework_actor::Budget,actor_lane:semio_framework_actor::Lane)->Result<bool,PluginHostError>{
+    pub async fn execute_turn_for(&mut self, actor_id:u64, original:&mut OriginalShardEvent,granted:semio_framework_actor::Budget,actor_lane:semio_framework_actor::Lane)->Result<bool,PluginHostError>{
         let input=*original.input.issued_input().ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event awaits its next Kernel input")))?;
         let turn_budget=turn_budget_from_grant(&granted,input,self.granted_budgets.get(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event held policy is absent")))?.retained_policy,self.granted_budgets.get(&actor_id).unwrap().work_fuel,self.granted_budgets.get(&actor_id).unwrap().deadline_us).await;
         let allocation=*self.allocations.get(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event actor allocation is absent")))?;
         if original.input.phase()==ActorGuestPhase::Pending{
             let instance=self.instances.get_mut(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event guest instance is absent")))?;
             let admission=self.identities.get_mut(&allocation).expect("registered actor owns original identity").admit_actor_original(&self.runtime,instance,&mut original.input,turn_budget,turn_budget.retained_policy).await.map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event admission has no funded checkout")))?;
-            let call=match admission.call{Ok(reply)=>Some(crate::original_actor_context::OriginalActorFixedCall{input:reply.input,spent:reply.spent,work_units_spent:reply.work_units_spent,kind:crate::original_actor_context::OriginalActorFixedKind::Admission{ready:reply.ready,refusal:reply.refusal}}),Err(TurnFault::ActorCall(call))=>Some(call),Err(fault)=>{original.retain_trap(fault);None}};
+            let call=match admission.call{Ok(reply)=>Some(semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedCall{input:reply.input,spent:reply.spent,work_units_spent:reply.work_units_spent,kind:semio_framework_plugin_guest_contract::original_actor_context::OriginalActorFixedKind::Admission{ready:reply.ready,refusal:reply.refusal}}),Err(TurnFault::ActorCall(call))=>Some(call),Err(fault)=>{original.retain_trap(fault);None}};
             let raw=call.map(|call|OriginalActorGuestReturn{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,claimed_remaining:None,claimed_remaining_fuel:None});
             let receipt=match admission.receiving{Ok(receipt)=>receipt,Err(error)=>return self.send_refused_original_call(actor_id,original,error,raw,call).await};
             if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>self.send_refused_original_call(actor_id,original,error,Some(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)}),call).await,error=>Err(error)}}
@@ -2119,7 +2115,7 @@ impl ShardLoop {
     /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
     /// out so both [`Self::pump_primed`]'s "one primed frame, then the non-blocking drain" shape
     /// and `ShardFrame::Grant`'s own per-envelope loop (below) can share it.
-    async fn consume_frame(&mut self, bytes: Vec<u8>) -> Result<FrameAdmission, FrameAdmissionError> {
+    pub async fn consume_frame(&mut self, bytes: Vec<u8>) -> Result<FrameAdmission, FrameAdmissionError> {
         if bytes.len() > SHARD_FRAME_MAX_BYTES {
             let byte_len = bytes.len();
             return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin(format!("ShardLoop: raw frame exceeds {SHARD_FRAME_MAX_BYTES} bytes ({byte_len}); exact bytes retained for terminal close"))));
@@ -2233,7 +2229,7 @@ impl ShardLoop {
         Ok(())
     }
 
-    fn enqueue_authority(&mut self, lane: semio_framework_actor::Lane, authority: DeferredAuthority, owner_bytes: usize) -> Result<(), PluginHostError> {
+    pub fn enqueue_authority(&mut self, lane: semio_framework_actor::Lane, authority: DeferredAuthority, owner_bytes: usize) -> Result<(), PluginHostError> {
         let authority = AdmittedAuthority::new(self.current_allocation(authority.actor()), self.granted_budget(authority.actor()).copied(), authority, lane, owner_bytes);
         let result = if Self::is_high_priority_lane(lane) { self.pending_interactive.try_push(authority, owner_bytes) } else { self.pending_background.try_push(authority, owner_bytes) };
         if let Err(rejected) = result {
@@ -2380,7 +2376,7 @@ impl ShardLoop {
         }
     }
 
-    async fn send_outcome(&mut self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
+    pub async fn send_outcome(&mut self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
         let mut bytes = Vec::new();
         outcome.pack_encode(&mut bytes).await.map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         self.transport.send(&bytes).await;
@@ -2398,7 +2394,7 @@ pub(crate) struct ReplayLifecycleProjection {
     pub release_opportunities: usize,
 }
 
-pub(crate) fn exercise_replay_lifecycle_trace(events: &[String]) -> Result<ReplayLifecycleProjection, String> {
+pub fn exercise_replay_lifecycle_trace(events: &[String]) -> Result<ReplayLifecycleProjection, String> {
     let pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
     let abi_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
     let actor = 1;
@@ -2485,6 +2481,29 @@ fn start_job_fault_bytes(fault: &TurnFault) -> Vec<u8> {
 }
 
 //#region 🚚️ShardTransports
+/// 🔌️ Local newtype so `ShardExecutor::new` can hand [`ShardLoop::new`] an `Arc<ThreadTransport>`
+/// as a [`ShardTransports::SharedThread`] variant while the executor ALSO keeps its own
+/// [`ThreadTransport`] end (the mirror of the one wrapped here) to inject frames and drain outcomes —
+/// `impl ShardTransport for Arc<ThreadTransport>` directly would hit `E0117` (neither type is local
+/// to this crate; `🧵️shard/🦀️.rs`'s own `LoopbackProbe` doc comment already names this same
+/// orphan-rule constraint for `Arc<LoopbackTransport>`).
+pub struct SharedThreadTransport(pub Arc<semio_framework_actor::ThreadTransport>);
+
+impl ShardTransport for SharedThreadTransport {
+    async fn send(&self, bytes: &[u8]) {
+        self.0.send(bytes).await;
+    }
+    async fn recv(&self) -> Option<Vec<u8>> {
+        self.0.try_recv_now()
+    }
+    async fn heartbeat(&self) -> u64 {
+        self.0.heartbeat().await
+    }
+    async fn kill(&self) {
+        self.0.kill().await;
+    }
+}
+
 /// 🚚️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (host-dedyn): the closed-set enum replacing every
 /// `Box<dyn ShardTransport>` in this crate. `ShardTransport` (O1/R1: `async fn` in a trait cannot be
 /// `dyn`-dispatched) is declared OUTSIDE this crate (`semio_framework_actor::ShardTransport`, this
@@ -2495,10 +2514,10 @@ fn start_job_fault_bytes(fault: &TurnFault) -> Vec<u8> {
 /// own reason, next region) — a second, independent reason the macro doesn't apply here, worth
 /// recording for the ~50 remaining families since some of them will hit this exact wall.
 pub enum ShardTransports {
-    SharedThread(executor::SharedThreadTransport),
-    Process(super::process_transport::ProcessTransport),
-    Stdio(super::process_transport::StdioTransport),
-    #[cfg(test)]
+    SharedThread(SharedThreadTransport),
+    Process(semio_framework_plugin_host_process_transport::ProcessTransport),
+    Stdio(semio_framework_plugin_host_process_transport::StdioTransport),
+    #[cfg(any(test, feature = "testkit"))]
     Loopback(LoopbackTransport),
 }
 
@@ -2508,7 +2527,7 @@ impl ShardTransport for ShardTransports {
             Self::SharedThread(t) => t.send(bytes).await,
             Self::Process(t) => t.send(bytes).await,
             Self::Stdio(t) => t.send(bytes).await,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Loopback(t) => t.send(bytes).await,
         }
     }
@@ -2518,7 +2537,7 @@ impl ShardTransport for ShardTransports {
             Self::SharedThread(t) => t.recv().await,
             Self::Process(t) => t.recv().await,
             Self::Stdio(t) => t.recv().await,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Loopback(t) => t.recv().await,
         }
     }
@@ -2528,7 +2547,7 @@ impl ShardTransport for ShardTransports {
             Self::SharedThread(t) => t.heartbeat().await,
             Self::Process(t) => t.heartbeat().await,
             Self::Stdio(t) => t.heartbeat().await,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Loopback(t) => t.heartbeat().await,
         }
     }
@@ -2538,28 +2557,28 @@ impl ShardTransport for ShardTransports {
             Self::SharedThread(t) => t.kill().await,
             Self::Process(t) => t.kill().await,
             Self::Stdio(t) => t.kill().await,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             Self::Loopback(t) => t.kill().await,
         }
     }
 }
 
-impl From<executor::SharedThreadTransport> for ShardTransports {
-    fn from(t: executor::SharedThreadTransport) -> Self {
+impl From<SharedThreadTransport> for ShardTransports {
+    fn from(t: SharedThreadTransport) -> Self {
         Self::SharedThread(t)
     }
 }
-impl From<super::process_transport::ProcessTransport> for ShardTransports {
-    fn from(t: super::process_transport::ProcessTransport) -> Self {
+impl From<semio_framework_plugin_host_process_transport::ProcessTransport> for ShardTransports {
+    fn from(t: semio_framework_plugin_host_process_transport::ProcessTransport) -> Self {
         Self::Process(t)
     }
 }
-impl From<super::process_transport::StdioTransport> for ShardTransports {
-    fn from(t: super::process_transport::StdioTransport) -> Self {
+impl From<semio_framework_plugin_host_process_transport::StdioTransport> for ShardTransports {
+    fn from(t: semio_framework_plugin_host_process_transport::StdioTransport) -> Self {
         Self::Stdio(t)
     }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl From<LoopbackTransport> for ShardTransports {
     fn from(t: LoopbackTransport) -> Self {
         Self::Loopback(t)
@@ -2576,25 +2595,25 @@ impl From<LoopbackTransport> for ShardTransports {
 /// handle that can still inspect `outbound` afterward — `impl ShardTransport for
 /// Arc<LoopbackTransport>` would hit `E0117` (neither `Arc` nor `ShardTransport` is local to this
 /// crate, and `Arc` is not `#[fundamental]` the way `Box` is). `pub(crate)`, not private — moved out
-/// of `mod tests` (below) so [`ShardTransports`] can name it in its own `#[cfg(test)]` variant.
-#[cfg(test)]
+/// of `mod tests` (below) so [`ShardTransports`] can name it in its own `#[cfg(any(test, feature = "testkit"))]` variant.
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Default)]
 pub struct LoopbackTransport {
     inbound: Arc<Mutex<Vec<Vec<u8>>>>,
-    outbound: Arc<Mutex<Vec<Vec<u8>>>>,
+    pub outbound: Arc<Mutex<Vec<Vec<u8>>>>,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl LoopbackTransport {
     /// Returns `(the transport ShardLoop::new takes ownership of, a probe this test keeps)`.
-    async fn paired() -> (Self, tests::LoopbackProbe) {
+    pub async fn paired() -> (Self, crate::LoopbackProbe) {
         let transport = Self::default();
-        let probe = tests::LoopbackProbe { inbound: transport.inbound.clone(), outbound: transport.outbound.clone() };
+        let probe = crate::LoopbackProbe { inbound: transport.inbound.clone(), outbound: transport.outbound.clone() };
         (transport, probe)
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl ShardTransport for LoopbackTransport {
     async fn send(&self, bytes: &[u8]) {
         self.outbound.lock().expect("loopback lock").push(bytes.to_vec());
@@ -2608,89 +2627,39 @@ impl ShardTransport for LoopbackTransport {
     async fn kill(&self) {}
 }
 
-/// 🧪️ A `GuestRuntime` that records the EXACT `Budget`/`JobBudget` it was invoked with — unlike
-/// `MockGuestRuntime` (owned by `🖥️host/🦀️.rs`, out of this packet's edit scope, and which
-/// ignores its `budget` parameter entirely), this proves the property terra-shard-grants demanded:
-/// "a Grant's budget is what the turn actually executes under (prove the constants are gone, not
-/// merely unused)". `pub(crate)`, not private — moved out of `mod tests` so `GuestRuntimes::
-/// Recording` (`🖥️host/🦀️.rs`) can name it.
-#[cfg(test)]
-pub struct RecordingRuntime {
-    last_turn_budget: Mutex<Option<Budget>>,
-    last_job_budget: Mutex<Option<JobBudget>>,
-}
-
-#[cfg(test)]
-impl RecordingRuntime {
-    pub(crate) async fn new() -> Self {
-        Self { last_turn_budget: Mutex::new(None), last_job_budget: Mutex::new(None) }
-    }
-}
-
-#[cfg(test)]
-impl GuestRuntime for RecordingRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input,_budget.retained_policy,semio_framework_job::logical_now_us)))}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input,_budget.retained_policy)))}
-
-    async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<super::CompiledHandle, PluginHostError> {
-        Ok(super::CompiledHandle { package_hash: package.hash.0, component: None, owned: None })
-    }
-    async fn instantiate(&self, _compiled: &super::CompiledHandle, actor: ActorId, _caps: &[super::BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
-        Ok(GuestInstance { actor, state: GuestInstanceState::Mock(super::MockInstanceState::default()) })
-    }
-    async fn drop_instance(&self, _inst: GuestInstance) {}
-    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
-        *self.last_turn_budget.lock().expect("lock") = Some(budget);
-        let retained_receipt = budget.retained.return_original(semio_framework_value::RetainedCloneProgress::default()).expect("recorded idle turn spends nothing");
-        Ok(TurnResult {
-            retained_receipt,
-            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
-            effects: vec![],
-            presence: vec![],
-            next_wake: None,
-            status: semio_framework::kernel::TurnStatus::Idle,
-            fuel_used: 0,
-            command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
-            cold_pair_ingress: semio_framework::kernel::ColdPairIngressStatus::Idle,
-            lifecycle_receipt: None,
-            ui_patch_receipt: None,
-        })
-    }
-    async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
-        Ok(())
-    }
-    async fn step_job(&self, _inst: &mut GuestInstance, _job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
-        *self.last_job_budget.lock().expect("lock") = Some(budget);
-        Ok(JobStep::Running { progress: None })
-    }
-    async fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
-        Ok(())
-    }
-    async fn checkpoint(&self, _inst: &mut GuestInstance, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
-        Ok(vec![])
-    }
-    async fn restore(&self, _inst: &mut GuestInstance, _state: &[u8], _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
-        Ok(())
-    }
-}
 //#endregion 🧪️TestDoubles
 
-#[cfg(test)]
-fn fixture_instance_close_request() -> semio_framework::kernel::ActorInstanceCloseRequest {
+#[cfg(any(test, feature = "testkit"))]
+pub fn fixture_instance_close_request() -> semio_framework::kernel::ActorInstanceCloseRequest {
     semio_framework::kernel::ActorInstanceCloseRequest { lifetime: semio_framework::kernel::ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 13 }, request_sequence: 9 }
 }
 
-#[cfg(test)]
-fn fixture_instance_close_event() -> Event {
+#[cfg(any(test, feature = "testkit"))]
+pub fn fixture_instance_close_event() -> Event {
     Event::InstanceClose(fixture_instance_close_request())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn test_identity_issuer()->OriginalShardIdentityIssuer{
  let policy:ShardIdentityPolicy=serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["identityPolicy"].clone()).unwrap();
  Box::new(move |_|OriginalShardIdentity::issue(policy,Box::new(|_|true),Box::new(move |request|{if request.bytes>policy.grant.maximum_capacity_bytes||policy.grant.maximum_items==0||policy.grant.maximum_depth==0{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original fixture refuses native shard allocation"))}else{Ok(())}})))
 }
+
+/// 🧪️ [`LoopbackTransport`] (module level, above — moved there so [`ShardTransports`] can name
+/// it) hands this back from `paired()`; `pub(super)` so the parent `shard` module's own
+/// `LoopbackTransport::paired` can construct it.
+pub(crate) struct LoopbackProbe {
+    pub(crate) inbound: Arc<Mutex<Vec<Vec<u8>>>>,
+    pub(crate) outbound: Arc<Mutex<Vec<Vec<u8>>>>,
+}
+
+impl LoopbackProbe {
+    async fn push_inbound(&self, bytes: Vec<u8>) {
+        self.inbound.lock().expect("loopback lock").push(bytes);
+    }
+    async fn take_outbound(&self) -> Vec<Vec<u8>> {
+        std::mem::take(&mut *self.outbound.lock().expect("loopback lock"))
+    }
+}
+
+pub use lifecycle::LifecycleRetry;

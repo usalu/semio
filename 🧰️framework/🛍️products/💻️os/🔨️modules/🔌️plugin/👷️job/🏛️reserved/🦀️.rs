@@ -1,61 +1,47 @@
 //! 🏛️ Framework reserved jobs, their routes, commits and pumps.
-use crate::tool_contract::ToolOwnerWitness;
-use crate::tool_contract::ArtifactReservedJob;
-use crate::tool_contract::ArtifactReservedToolJob;
-use crate::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
+use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
+use semio_framework_plugin_decl_app::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
 use std::collections::BTreeSet;
 use std::collections::BTreeMap;
-use crate::window_kits::AppActionRegistry;
-use crate::app_views::CANCEL_TYPED_OPERATION_ACTION_ID;
-use crate::app_contract::is_time_travel_action_id;
-use crate::tool_jobs::is_tool_run_action_id;
-use crate::interaction_topology::INTERACTION_ACTION_IDS;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use super::window_transient::WindowTransientOwnerRegistry;
+use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_framework_plugin_operation::CANCEL_TYPED_OPERATION_ACTION_ID;
+use semio_framework_plugin_decl_app::is_time_travel_action_id;
+use crate::lifted_job::is_tool_run_action_id;
+use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_framework_value::DslValue;
 /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
 use semio_framework::AppDefinition;
-use semio_framework::{kernel::InvocationResult, Fault, FaultCode, FaultFrom, FaultOrigin, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID};
+use semio_framework::kernel::InvocationResult;
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID};
 use semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework::ViewModel;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-#[cfg(test)]
-use crate::artifact_instance::retire_document_window_registry_demands;
-#[cfg(test)]
-use crate::artifact_instance::retire_document_window_registry_step;
-use crate::app_contract::ArtifactApp;
-use crate::app_emission::ActionMeta;
-use crate::child_view::MemberKey;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework_plugin_decl_views::child_view::MemberKey;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::tool_cancellation::ToolCancellationLease;
-use crate::tool_contract::ArtifactBoundedFirstStepProof;
-use crate::tool_contract::ArtifactBoundedToolFault;
-use crate::tool_contract::ArtifactOwnedToolJobFactory;
-use crate::tool_contract::ArtifactToolFactoryRegistry;
-use crate::tool_contract::ArtifactToolPublicationContract;
-use crate::tool_contract::ArtifactToolPublicationLane;
-use crate::tool_contract::ArtifactToolRegistration;
-use crate::typed_operation::TypedCommandFullOperationJobFactory;
+use semio_framework_plugin_operation::ToolCancellationLease;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationContract;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolRegistration;
+use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
 #[cfg(test)]
 use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 #[cfg(test)]
 use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
 #[cfg(test)]
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-#[cfg(test)]
 use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
 #[cfg(test)]
-use crate::document_ingress::ActiveArtifactEnvelopeIngress;
-#[cfg(test)]
-use crate::tool_cancellation::ArtifactDocumentAuthority;
-#[cfg(test)]
-use crate::tool_cancellation::ToolCancellationHandle;
-#[cfg(test)]
-use crate::tool_cancellation::ToolOperationKey;
+use semio_framework_plugin_document_media::ActiveArtifactEnvelopeIngress;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FrameworkReservedStage {
@@ -77,8 +63,8 @@ macro_rules! framework_reserved_job {
             contract: semio_framework::ToolExecutionContract,
             operation: Option<semio_framework_job::Operation>,
             state: [u8; FRAMEWORK_RESERVED_STATE_BYTES],
-            pending: Option<crate::tool_contract::ReservedOutcomeKind>,
-            outcomes: crate::tool_contract::ReservedJobOutcomes,
+            pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
+            outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
             closing: bool,
         }
 
@@ -95,7 +81,7 @@ macro_rules! framework_reserved_job {
                     operation: None,
                     state: [0; FRAMEWORK_RESERVED_STATE_BYTES],
                     pending: None,
-                    outcomes: crate::tool_contract::ReservedJobOutcomes::new(),
+                    outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),
                     closing: false,
                 }
             }
@@ -113,7 +99,7 @@ macro_rules! framework_reserved_job {
                 if !self.outcomes.terminal_is_empty() {
                     return self.outcomes.close_demands();
                 }
-                Ok(super::reserved_job_bytes::demands(&self.raw, &self.operation))
+                Ok(crate::reserved_job_bytes::demands(&self.raw, &self.operation))
             }
         }
 
@@ -128,8 +114,8 @@ macro_rules! framework_reserved_job {
                 }
                 if let Some(kind) = self.pending {
                     let source: &[u8] = match kind {
-                        crate::tool_contract::ReservedOutcomeKind::Fault => concat!("framework reserved ", $route, " output exceeds its exact cap").as_bytes(),
-                        crate::tool_contract::ReservedOutcomeKind::Commit => &self.raw,
+                        semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault => concat!("framework reserved ", $route, " output exceeds its exact cap").as_bytes(),
+                        semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Commit => &self.raw,
                         _ => &self.state,
                     };
                     let outcome = self.outcomes.advance(kind, source, cx)?;
@@ -143,7 +129,7 @@ macro_rules! framework_reserved_job {
                         self.stage = FrameworkReservedStage::Cursor;
                         cx.set_stage(concat!("framework-reserved-", $route, "-envelope"));
                         self.write_state();
-                        self.pending = Some(crate::tool_contract::ReservedOutcomeKind::Preview);
+                        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Preview);
                     }
                     FrameworkReservedStage::Cursor => {
                         let envelope_remaining = self.raw.len().saturating_sub(self.envelope_cursor);
@@ -164,10 +150,10 @@ macro_rules! framework_reserved_job {
                             cx.set_stage(concat!("framework-reserved-", $route, "-commit-ready"));
                         }
                         self.write_state();
-                        self.pending = Some(crate::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64 });
+                        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64 });
                     }
                     FrameworkReservedStage::Retiring => {
-                        self.pending = Some(if self.raw.len() > self.contract.max_output_bytes { crate::tool_contract::ReservedOutcomeKind::Fault } else { crate::tool_contract::ReservedOutcomeKind::Commit });
+                        self.pending = Some(if self.raw.len() > self.contract.max_output_bytes { semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault } else { semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Commit });
                     }
                 }
                 Ok(None)
@@ -187,7 +173,7 @@ macro_rules! framework_reserved_job {
                 let demand=self.close_demand()?;
                 let remaining=cx.retained_grant();
                 if !cx.should_yield()&&remaining.maximum_items>0&&remaining.maximum_depth<demand.depth{return Err(semio_framework_job::OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::DepthLimit,"original reserved close exceeds caller depth")))}
-                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){self.outcomes.close_step(grant)}else{super::reserved_job_bytes::close(&mut self.raw,&mut self.operation,grant)}})?;
+                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){self.outcomes.close_step(grant)}else{crate::reserved_job_bytes::close(&mut self.raw,&mut self.operation,grant)}})?;
                 Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
             }
 
@@ -320,8 +306,8 @@ fn framework_reserved_route_job(action: &str, raw: Vec<u8>, work_items: usize) -
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct FrameworkSharedActionDescriptorRoute {
-    action_id: &'static str,
-    schema_id: &'static str,
+    pub action_id: &'static str,
+    pub schema_id: &'static str,
 }
 
 const FRAMEWORK_SHARED_ACTION_DESCRIPTOR_ROUTES: [FrameworkSharedActionDescriptorRoute; 12] = [
@@ -343,7 +329,8 @@ fn framework_shared_action_descriptor_schema_id(action_id: &str) -> Option<&'sta
     FRAMEWORK_SHARED_ACTION_DESCRIPTOR_ROUTES.iter().find(|route| route.action_id == action_id).map(|route| route.schema_id)
 }
 
-pub(crate) fn join_framework_shared_action_dispositions(definition: &mut AppDefinition) {
+#[doc(hidden)]
+pub fn join_framework_shared_action_dispositions(definition: &mut AppDefinition) {
     for action in definition.actions.iter_mut().chain(definition.window_kinds.iter_mut().flat_map(|window| window.actions.iter_mut())) {
         if framework_shared_action_descriptor_schema_id(&action.id).is_some() {
             action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
@@ -353,10 +340,12 @@ pub(crate) fn join_framework_shared_action_dispositions(definition: &mut AppDefi
 
 #[path="⚠️configuration/🦀️.rs"]
 mod original_configuration_failure;
-pub(crate) use original_configuration_failure::OriginalConfigurationFailure;
-pub(crate) const FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES:usize=8*1024*1024;
+pub use crate::reserved_jobs::original_configuration_failure::OriginalConfigurationFailure;
+#[doc(hidden)]
+pub const FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES:usize=8*1024*1024;
 
-pub(crate) enum FrameworkConfigurationBinaryStage {
+#[doc(hidden)]
+pub enum FrameworkConfigurationBinaryStage {
     Envelope,
     Decode,
     Complete,
@@ -365,14 +354,15 @@ pub(crate) enum FrameworkConfigurationBinaryStage {
 /// 🔓️ Shared result slot for a retained configuration command decoder.
 type ConfigurationDecodeCompletion<M> = std::sync::Arc<std::sync::Mutex<Option<Result<ArtifactCommand<M>, semio_framework_job::OriginalTurnFailure>>>>;
 
-pub(crate) struct ConfigurationDecodeRetirement<M: semio_framework_value::retirement::RetireOwned> {
-    pub(crate) original: ManuallyDrop<Option<ConfigurationDecodeCompletion<M>>>,
-    pub(crate) payload: Option<ControlledRetirement<Option<Result<ArtifactCommand<M>, semio_framework_job::OriginalTurnFailure>>>>,
+#[doc(hidden)]
+pub struct ConfigurationDecodeRetirement<M: semio_framework_value::retirement::RetireOwned> {
+    pub original: ManuallyDrop<Option<ConfigurationDecodeCompletion<M>>>,
+    pub payload: Option<ControlledRetirement<Option<Result<ArtifactCommand<M>, semio_framework_job::OriginalTurnFailure>>>>,
 }
 
 impl<M: semio_framework_value::retirement::RetireOwned> ConfigurationDecodeRetirement<M> {
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.original.is_none() && self.payload.is_none() }
-    pub(crate) fn demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn terminal_is_empty(&self) -> bool { self.original.is_none() && self.payload.is_none() }
+    pub fn demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.original.is_some() {
             let release = std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<std::sync::Mutex<Option<Result<ArtifactCommand<M>, semio_framework_job::OriginalTurnFailure>>>>()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "configuration completion Arc extent overflow"))?.0.pad_to_align().size();
             return Ok(RetirementDemand { copy_bytes: size_of::<std::sync::Mutex<Option<Result<ArtifactCommand<M>, semio_framework_job::OriginalTurnFailure>>>>() + size_of::<Option<Result<ArtifactCommand<M>, semio_framework_job::OriginalTurnFailure>>>() + size_of::<Option<ConfigurationDecodeCompletion<M>>>(), release_bytes: release, depth: 2, ..Default::default() });
@@ -383,7 +373,7 @@ impl<M: semio_framework_value::retirement::RetireOwned> ConfigurationDecodeRetir
         }
         Ok(Default::default())
     }
-    pub(crate) fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let demand = self.demand(grant.maximum_copy_bytes)?;
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -408,24 +398,25 @@ impl<M: semio_framework_value::retirement::RetireOwned> Drop for ConfigurationDe
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "configuration completion requires its original controlled close"); }
 }
 
-pub(crate) struct FrameworkConfigurationBinaryJob<A: ArtifactApp> {
-    pub(crate) raw: Vec<u8>,
-    pub(crate) cursor: usize,
-    pub(crate) stage: FrameworkConfigurationBinaryStage,
-    pub(crate) operation: Option<semio_framework_job::Operation>,
-    pub(crate) decoded: ManuallyDrop<Option<ConfigurationDecodeCompletion<A::ConfigMutation>>>,
-    pub(crate) decoded_close: Option<ConfigurationDecodeRetirement<A::ConfigMutation>>,
-    pub(crate) receiving:ManuallyDrop<Option<store::os_store::command_format::receiving::RetainedArtifactCommandReceiving<A::ConfigMutation>>>,
-    pub(crate) native:semio_framework_job::OriginalNativeDecodeSource,
-    pub(crate) failure:ManuallyDrop<Option<OriginalConfigurationFailure>>,
-    pub(crate) state: [u8; 8],
-    pub(crate) pending: Option<crate::tool_contract::ReservedOutcomeKind>,
-    pub(crate) outcomes: crate::tool_contract::ReservedJobOutcomes,
-    pub(crate) closing: bool,
+#[doc(hidden)]
+pub struct FrameworkConfigurationBinaryJob<A: ArtifactApp> {
+    pub raw: Vec<u8>,
+    pub cursor: usize,
+    pub stage: FrameworkConfigurationBinaryStage,
+    pub operation: Option<semio_framework_job::Operation>,
+    pub decoded: ManuallyDrop<Option<ConfigurationDecodeCompletion<A::ConfigMutation>>>,
+    pub decoded_close: Option<ConfigurationDecodeRetirement<A::ConfigMutation>>,
+    pub receiving:ManuallyDrop<Option<store::os_store::command_format::receiving::RetainedArtifactCommandReceiving<A::ConfigMutation>>>,
+    pub native:semio_framework_job::OriginalNativeDecodeSource,
+    pub failure:ManuallyDrop<Option<OriginalConfigurationFailure>>,
+    pub state: [u8; 8],
+    pub pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
+    pub outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+    pub closing: bool,
 }
 
 impl<A: ArtifactApp> FrameworkConfigurationBinaryJob<A> {
-    fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if !self.outcomes.terminal_is_empty() { return self.outcomes.close_demands(); }
         if self.failure.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(owner)=self.receiving.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.close_demands(body)}}
@@ -440,7 +431,7 @@ impl<A: ArtifactApp> FrameworkConfigurationBinaryJob<A> {
 
 impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurationBinaryJob<A> {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        use crate::tool_contract::ReservedOutcomeKind;
+        use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
         if self.failure.is_some(){if let Some(failure)=semio_framework_job::admit_original_domain_failure(&mut self.failure,cx)?{return Err(failure)}return Ok(None)}
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
@@ -513,12 +504,12 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurat
 }
 
 struct FrameworkConfigurationBinaryJobFactory<A: ArtifactApp> {
-    keys: Vec<semio_framework::ToolFactoryKey>,
-    marker: std::marker::PhantomData<fn() -> A>,
+    pub keys: Vec<semio_framework::ToolFactoryKey>,
+    pub marker: std::marker::PhantomData<fn() -> A>,
 }
 
 impl<A: ArtifactApp> FrameworkConfigurationBinaryJobFactory<A> {
-    fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: vec![semio_framework::ToolFactoryKey::new(controller_id, "configuration-binary")], marker: std::marker::PhantomData }
     }
 }
@@ -556,7 +547,8 @@ impl<A: ArtifactApp> ArtifactOwnedToolJobFactory for FrameworkConfigurationBinar
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "configuration-binary", lanes: &[ArtifactToolPublicationLane::HostOnly] }];
 }
 
-pub(crate) fn register_framework_reserved_factories<A: ArtifactApp>(registry: &mut ArtifactToolFactoryRegistry<'_, A>) -> Result<(), Fault> {
+#[doc(hidden)]
+pub fn register_framework_reserved_factories<A: ArtifactApp>(registry: &mut ArtifactToolFactoryRegistry<'_, A>) -> Result<(), Fault> {
     let controller_id = registry.controller_id().to_string();
     registry.register(FrameworkUndoJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkRedoJobFactory::<A>::new(&controller_id))?;
@@ -582,26 +574,27 @@ pub(crate) fn register_framework_reserved_factories<A: ArtifactApp>(registry: &m
     Ok(())
 }
 
+#[doc(hidden)]
 #[derive(Clone)]
-pub(crate) struct QualifiedBoundedFirstStepProof {
-    pub(crate) row: ArtifactBoundedFirstStepProof,
-    pub(crate) owner: ToolOwnerWitness,
+pub struct QualifiedBoundedFirstStepProof {
+    pub row: ArtifactBoundedFirstStepProof,
+    pub owner: ToolOwnerWitness,
 }
 
 impl QualifiedBoundedFirstStepProof {
-    pub(crate) fn key(&self) -> semio_framework::ToolFactoryKey {
+    pub fn key(&self) -> semio_framework::ToolFactoryKey {
         semio_framework::ToolFactoryKey::new(self.row.controller_id, self.row.tool_id)
     }
 
-    pub(crate) fn schema_id(&self) -> String {
+    pub fn schema_id(&self) -> String {
         format!("{}.tool-command.v1", self.row.artifact_schema)
     }
 
-    pub(crate) fn contract(&self) -> semio_framework::ToolExecutionContract {
+    pub fn contract(&self) -> semio_framework::ToolExecutionContract {
         self.row.contract
     }
 
-    pub(crate) fn admits<A: ArtifactApp>(&self, admission: &semio_framework::ToolWireAdmission) -> bool {
+    pub fn admits<A: ArtifactApp>(&self, admission: &semio_framework::ToolWireAdmission) -> bool {
         self.owner == ToolOwnerWitness::of::<A>()
             && self.row.owner == self.owner
             && admission.key == self.key()
@@ -612,43 +605,44 @@ impl QualifiedBoundedFirstStepProof {
     }
 }
 
+#[doc(hidden)]
 #[derive(Clone)]
-pub(crate) enum QualifiedToolProof {
+pub enum QualifiedToolProof {
     Bounded(QualifiedBoundedFirstStepProof),
     FrameworkOwned(ArtifactToolRegistration),
     AppOwned(ArtifactToolRegistration),
 }
 
 impl QualifiedToolProof {
-    pub(crate) fn key(&self) -> semio_framework::ToolFactoryKey {
+    pub fn key(&self) -> semio_framework::ToolFactoryKey {
         match self {
             Self::Bounded(proof) => proof.key(),
             Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.key.clone(),
         }
     }
 
-    pub(crate) fn publication_lanes(&self) -> &'static [ArtifactToolPublicationLane] {
+    pub fn publication_lanes(&self) -> &'static [ArtifactToolPublicationLane] {
         match self {
             Self::Bounded(_) => &[],
             Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.publication_lanes,
         }
     }
 
-    pub(crate) fn schema_id(&self) -> String {
+    pub fn schema_id(&self) -> String {
         match self {
             Self::Bounded(proof) => proof.schema_id(),
             Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.schema_id.clone(),
         }
     }
 
-    pub(crate) fn contract(&self) -> semio_framework::ToolExecutionContract {
+    pub fn contract(&self) -> semio_framework::ToolExecutionContract {
         match self {
             Self::Bounded(proof) => proof.contract(),
             Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.contract,
         }
     }
 
-    pub(crate) fn admits<A: ArtifactApp>(&self, admission: &semio_framework::ToolWireAdmission) -> bool {
+    pub fn admits<A: ArtifactApp>(&self, admission: &semio_framework::ToolWireAdmission) -> bool {
         match self {
             Self::Bounded(proof) => proof.admits::<A>(admission),
             Self::FrameworkOwned(registration) | Self::AppOwned(registration) => {
@@ -663,43 +657,42 @@ impl QualifiedToolProof {
     }
 }
 
-pub(crate) struct FrameworkReservedCommitPermit {
-    pub(crate) operation: semio_framework_job::Operation,
-    pub(crate) lease: ToolCancellationLease,
-    pub(crate) producer_fault: Option<ArtifactBoundedToolFault>,
-    pub(crate) identity: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
-    pub(crate) identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress,
+#[doc(hidden)]
+pub struct FrameworkReservedCommitPermit {
+    pub operation: semio_framework_job::Operation,
+    pub lease: ToolCancellationLease,
+    pub producer_fault: Option<ArtifactBoundedToolFault>,
+    pub identity: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
+    pub identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress,
 }
 
-#[cfg(test)]
-include!("../../🪟️window/🫧️transient/🧪️tests/🔁️document-replacement/🦀️.rs");
 
 #[cfg(test)]
 include!("../../🧪️tests/🔬️app-artifact-fixed-registry/🦀️.rs");
 
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-artifact-reserved-tool-job/🦀️.rs");
 
 impl FrameworkReservedCommitPermit {
-    pub(crate) fn new(operation: semio_framework_job::Operation, lease: ToolCancellationLease, maximum_identity_bytes: usize) -> Result<Self, Fault> {
+    pub fn new(operation: semio_framework_job::Operation, lease: ToolCancellationLease, maximum_identity_bytes: usize) -> Result<Self, Fault> {
         let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| !lease.token.is_cancelled_now() && !lease.publication_claim.is_cancelled();
         let control = semio_framework_value::NativeEncodeControl::new(maximum_identity_bytes, &mut observer);
         let identity = control.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?;
         Ok(Self { operation, lease, producer_fault: None, identity: Some(identity), identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 } })
     }
 
-    pub(crate) async fn is_cancelled(&self) -> bool {
+    pub async fn is_cancelled(&self) -> bool {
         self.lease.is_cancelled().await
     }
 
-    pub(crate) fn finish(mut self) {
+    pub fn finish(mut self) {
         self.lease.finish();
     }
 }
 
-pub(crate) const FRAMEWORK_RESERVED_JOB_MAGIC: &[u8; 8] = b"FRRESV01";
+#[doc(hidden)]
+pub const FRAMEWORK_RESERVED_JOB_MAGIC: &[u8; 8] = b"FRRESV01";
 
-pub(crate) fn encode_framework_reserved_job_input(work_items: u64, raw: &[u8]) -> Vec<u8> {
+#[doc(hidden)]
+pub fn encode_framework_reserved_job_input(work_items: u64, raw: &[u8]) -> Vec<u8> {
     let mut input = Vec::with_capacity(16 + raw.len());
     input.extend_from_slice(FRAMEWORK_RESERVED_JOB_MAGIC);
     input.extend_from_slice(&work_items.to_le_bytes());
@@ -707,11 +700,12 @@ pub(crate) fn encode_framework_reserved_job_input(work_items: u64, raw: &[u8]) -
     input
 }
 
-pub(crate) struct PendingFrameworkReserved {
-    pub(crate) action: String,
-    pub(crate) args: Option<DslValue>,
-    pub(crate) meta: ActionMeta,
-    pub(crate) permit: FrameworkReservedCommitPermit,
+#[doc(hidden)]
+pub struct PendingFrameworkReserved {
+    pub action: String,
+    pub args: Option<DslValue>,
+    pub meta: ActionMeta,
+    pub permit: FrameworkReservedCommitPermit,
 }
 
 /// 🧾️ A framework-reserved route whose spawned job finished and whose commit the app now owns.
@@ -720,19 +714,21 @@ pub(crate) struct PendingFrameworkReserved {
 /// (checkpoint pins, checkout cascade) or walks history (revert) is driven across turns instead of
 /// having to finish inside the turn that saw its `JobCompleted`. Every unit re-reads the
 /// operation's cancellation lease, and `applied`/`total` is its progress.
-pub(crate) struct FrameworkReservedCommit {
-    pub(crate) action: String,
-    pub(crate) args: Option<DslValue>,
-    pub(crate) meta: ActionMeta,
-    pub(crate) permit: FrameworkReservedCommitPermit,
-    pub(crate) log_generation_before: u64,
-    pub(crate) stage: FrameworkReservedCommitStage,
-    pub(crate) applied: u64,
-    pub(crate) total: u64,
+#[doc(hidden)]
+pub struct FrameworkReservedCommit {
+    pub action: String,
+    pub args: Option<DslValue>,
+    pub meta: ActionMeta,
+    pub permit: FrameworkReservedCommitPermit,
+    pub log_generation_before: u64,
+    pub stage: FrameworkReservedCommitStage,
+    pub applied: u64,
+    pub total: u64,
 }
 
 /// 🪜️ The next unit a [`FrameworkReservedCommit`] runs.
-pub(crate) enum FrameworkReservedCommitStage {
+#[doc(hidden)]
+pub enum FrameworkReservedCommitStage {
     Validate,
     CheckpointChildren { message: String, authors: Vec<vcs::Author>, keys: Vec<MemberKey>, next: usize, pins: Vec<vcs::CompositionPin> },
     Route { pins: Vec<vcs::CompositionPin> },
@@ -750,7 +746,8 @@ pub struct FrameworkReservedCommitProgress {
 }
 
 /// 🫧️ Yields one mounted plugin-job transition back to the host executor.
-pub(crate) async fn plugin_job_yield_once() {
+#[doc(hidden)]
+pub async fn plugin_job_yield_once() {
     let mut yielded = false;
     std::future::poll_fn(move |cx| {
         if yielded {
@@ -765,7 +762,8 @@ pub(crate) async fn plugin_job_yield_once() {
 }
 
 /// 🔔️ The paid turns one lent reserved outcome may spend acknowledging and removing its descriptor.
-pub(crate) const RESERVED_OUTCOME_ACKNOWLEDGE_TURNS: usize = 8;
+#[doc(hidden)]
+pub const RESERVED_OUTCOME_ACKNOWLEDGE_TURNS: usize = 8;
 
 /// 🚦️ Whether one mounted-worker pump rejection is scheduler weather rather than a lost transition.
 /// The process pool admits a step through a per-worker `try_lock` and a finite per-lane queue, so a
@@ -773,7 +771,8 @@ pub(crate) const RESERVED_OUTCOME_ACKNOWLEDGE_TURNS: usize = 8;
 /// has not landed yet all return an `Err` that says NOTHING about this job — the exact same set the
 /// mounted typed-operation path already answers with `AwaitingInput`. Faulting a framework-reserved
 /// route on them made every `interactionHover`/`interactionSelect` a coin flip against pool load.
-pub(crate) fn reserved_pump_fault_is_transient(fault: &semio_framework_job_worker::MountedWorkerJobPumpFault) -> bool {
+#[doc(hidden)]
+pub fn reserved_pump_fault_is_transient(fault: &semio_framework_job_worker::MountedWorkerJobPumpFault) -> bool {
     matches!(
         fault,
         semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(semio_framework_job_worker::WorkerJobSubmitFault::Contention(_))
@@ -784,7 +783,8 @@ pub(crate) fn reserved_pump_fault_is_transient(fault: &semio_framework_job_worke
 
 /// 🏷️ The exact rejection a structural pump fault carries, so the route's fault message names the
 /// transition it lost instead of a bare code.
-pub(crate) fn reserved_pump_fault_detail(fault: &semio_framework_job_worker::MountedWorkerJobPumpFault) -> String {
+#[doc(hidden)]
+pub fn reserved_pump_fault_detail(fault: &semio_framework_job_worker::MountedWorkerJobPumpFault) -> String {
     match fault {
         semio_framework_job_worker::MountedWorkerJobPumpFault::Submit(submit) => format!("submit {submit:?}"),
         semio_framework_job_worker::MountedWorkerJobPumpFault::Take(take) => format!("take {take:?}"),
@@ -794,7 +794,8 @@ pub(crate) fn reserved_pump_fault_detail(fault: &semio_framework_job_worker::Mou
 }
 
 /// 🧾️ Compares a retained fixed-page payload without materializing a whole-buffer adapter.
-pub(crate) fn retained_payload_eq_slice(payload: &semio_framework_job::RetainedJobPayload, expected: &[u8]) -> bool {
+#[doc(hidden)]
+pub fn retained_payload_eq_slice(payload: &semio_framework_job::RetainedJobPayload, expected: &[u8]) -> bool {
     if payload.len() != expected.len() {
         return false;
     }
@@ -810,11 +811,14 @@ pub(crate) fn retained_payload_eq_slice(payload: &semio_framework_job::RetainedJ
     reader.terminal_is_empty() && cursor == expected.len()
 }
 
-pub(crate) const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
+#[doc(hidden)]
+pub const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
 
-pub(crate) const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
+#[doc(hidden)]
+pub const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
 
-pub(crate) fn is_framework_reserved_action_id(action: &str) -> bool {
+#[doc(hidden)]
+pub fn is_framework_reserved_action_id(action: &str) -> bool {
     HISTORY_ACTION_IDS.contains(&action)
         || CLIPBOARD_ACTION_IDS.contains(&action)
         || INTERACTION_ACTION_IDS.contains(&action)
@@ -827,7 +831,8 @@ pub(crate) fn is_framework_reserved_action_id(action: &str) -> bool {
 }
 
 /// 📜️ Joins the app's declared bounded-first-step proofs to the live registry and its exact factory registrations.
-pub(crate) fn tool_job_registration<A: ArtifactApp>(
+#[doc(hidden)]
+pub fn tool_job_registration<A: ArtifactApp>(
     registry: &AppActionRegistry,
     runtime_controller_id: &str,
     artifact_schema: &str,
@@ -910,6 +915,3 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
     Ok((controller_id, proofs))
 }
 
-#[path = "../../🧵️retained-command/🛬️lifted/🏛️reserved/🦀️.rs"]
-mod lifted_route_capacity;
-pub use lifted_route_capacity::*;

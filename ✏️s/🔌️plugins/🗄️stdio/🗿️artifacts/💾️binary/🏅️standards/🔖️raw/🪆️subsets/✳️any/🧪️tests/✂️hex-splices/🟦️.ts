@@ -1,6 +1,6 @@
 /** 🧪️ Third-party and independent oracle of the hex-window splice corpus (`🧫️fixtures/✂️hex-splices`): Ajv validates actual byte-range mutation inputs, and the bytes each row means are rebuilt TWO independent ways — applying the digit ranges to the hex text and decoding it, and applying the listed byte ranges to the bytes — which must agree. The Rust editor law replays the same corpus through `binary_text_emit`. */
 import { describe, expect, test } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import corpus from "../🧫️fixtures/✂️hex-splices/🔣️.json";
 import schema from "../../🧬️schema/🧬️mutations/✂️replace-byte-range/🧬️schema/🔣️.json";
 

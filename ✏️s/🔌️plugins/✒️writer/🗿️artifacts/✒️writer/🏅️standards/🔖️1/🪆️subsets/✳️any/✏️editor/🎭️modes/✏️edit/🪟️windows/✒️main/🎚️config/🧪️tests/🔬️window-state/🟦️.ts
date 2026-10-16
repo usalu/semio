@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { applyPatch } from "fast-json-patch";
 import { applyWriterMainWindowConfigMutation, type WriterMainWindowConfigMutation } from "../../🧬️schema/🧬️mutations/🟦️.ts";
 import { applyWriterMainWindowTransientMutation, type WriterMainWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🧬️mutations/🟦️.ts";

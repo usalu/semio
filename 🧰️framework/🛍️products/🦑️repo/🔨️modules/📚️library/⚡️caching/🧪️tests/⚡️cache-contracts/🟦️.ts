@@ -829,7 +829,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       inspect(engineSource);
       assert.deepEqual(outputs, [row.directory]);
     }
-    const source = ts.createSourceFile("📜️script.ts", readFileSync(join(root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+    const source = ts.createSourceFile("setup.ts", readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
     const nxSource = ts.createSourceFile("nx.ts", readFileSync(join(SCRIPT_ROOT, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
     const { testNxCoordinator } = await import("../🛑️coordinator/🟦️.ts");
     await testNxCoordinator(root);

@@ -2,40 +2,45 @@
 //! and member factories.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
+#[cfg(test)]
+#[path = "🌱️initial/🪪️identity/🧪️tests/🔬️unit/🦀️.rs"]
+pub mod tests;
+#[path = "🌳️closure/🦀️.rs"]
+pub mod owned_document_closure;
+#[path = "🌳️graph/🔗️links/🦀️.rs"]
+pub mod composition_links;
+#[path = "🌳️graph/🤝️group/🦀️.rs"]
+pub mod composition_group;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use crate::os_spr::command::ArtifactMessageSource;
-use super::owned_document_closure::{OWNED_DOCUMENT_MAXIMUM_MEMBERS, OwnedDocumentClosureSource};
+use semio_framework_os_spr::command::ArtifactMessageSource;
+use crate::owned_document_closure::{OWNED_DOCUMENT_MAXIMUM_MEMBERS, OwnedDocumentClosureSource};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use crate::os_spr::SchemaId;
-use crate::os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
+use semio_framework_os_spr::SchemaId;
+use semio_framework_os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use crate::os_vcs::io::binary::entity_identity::{mint_child_id,mint_invocation_id,operation_list_fingerprint};
-use crate::os_vcs::VcsError;
-use crate::os_vcs::{
-    Identified, Patchable,
-};
-use super::artifact_child_owner_schema::OwnerRef;
+use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_framework_os_vcs::io::binary::entity_identity::{mint_child_id, mint_invocation_id, operation_list_fingerprint};
+use semio_framework_os_vcs::VcsError;
+use semio_framework_os_vcs::{Identified, Patchable};
+use semio_framework_os_store_envelope::owner::OwnerRef;
 #[cfg(target_arch = "wasm32")]
-use super::serialization::{ArtifactCodecApplyFuture};
-use crate::os_pack::pack_rt;
+use semio_framework_os_store_text_io::ArtifactCodecApplyFuture;
+use semio_framework_os_pack::pack_rt;
 #[cfg(target_arch = "wasm32")]
-use super::codec_registry::{ComponentDocumentCodecFuture};
-use super::command_format::COMMAND_BINARY_FORMAT;
-use super::command_format::write_command_transaction;
-use super::canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
-};
+use semio_framework_os_store_codec_registry::ComponentDocumentCodecFuture;
+use semio_framework_os_store_command::COMMAND_BINARY_FORMAT;
+use semio_framework_os_store_command::write_command_transaction;
+use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
 #[cfg(target_arch = "wasm32")]
-use super::backbone::resolve_backbone;
+use semio_framework_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use super::backbone::local_storage_backbone_key;
-use super::{ArtifactRefs, MemberFactory, SpaceMember};
+use semio_framework_os_store_backbone::local_storage_backbone_key;
+use semio_framework_os_store_space_member::lifted_store::{ArtifactRefs, MemberFactory, SpaceMember};
 
 // 🧩️ Atomic composite dispatch across a parent `SpaceMember` and N child `SpaceMember`s — the
 // mechanism that makes ONE user gesture spanning a parent and several `🔖️Composition` children
@@ -66,12 +71,12 @@ pub struct ChildDispatch<'wire> {
     pub child: semio_framework_artifact_reference::ArtifactRef,
     pub ops: &'wire [Vec<u8>],
     pub op_schema: &'wire SchemaId,
-    pub labels: &'wire [crate::LocalizedLabel],
+    pub labels: &'wire [semio_framework_ui_locale::LocalizedLabel],
 }
 
 impl<'wire> ChildDispatch<'wire> {
     /// 🤲️ Borrows the exact retained child sources for one awaited composite publication.
-    pub fn borrowed(child:semio_framework_artifact_reference::ArtifactRef,ops:&'wire [Vec<u8>],op_schema:&'wire SchemaId,labels:&'wire [crate::LocalizedLabel])->Self {
+    pub fn borrowed(child:semio_framework_artifact_reference::ArtifactRef,ops:&'wire [Vec<u8>],op_schema:&'wire SchemaId,labels:&'wire [semio_framework_ui_locale::LocalizedLabel])->Self {
         Self{child,ops,op_schema,labels}
     }
 }
@@ -108,7 +113,7 @@ pub struct GroupReceipt<M> {
     pub invocation_id: String,
     pub member_edits: Vec<(semio_framework_artifact_reference::ArtifactRef, String)>,
     pub created_children: Vec<(semio_framework_artifact_reference::ArtifactRef, M)>,
-    pub messages: Vec<crate::os_spr::MutationMessage>,
+    pub messages: Vec<semio_framework_os_spr::MutationMessage>,
 }
 
 /// 🎛️ Cross-member metadata for one `dispatch_group` call. No member edit carries a hand-written description (design
@@ -147,10 +152,10 @@ pub struct GroupUndoReport {
 /// `&self`/`&mut self`, none require a live `CompositionCoordinator`.
 #[derive(Debug)]
 pub struct CompositionGraph {
-    pub(crate) owns: super::composition_group::OwnsRoot,
+    pub(crate) owns: crate::composition_group::OwnsRoot,
     pub(crate) owns_group: Option<usize>,
     pub(crate) owns_retiring: Option<(String, (String, String))>,
-    pub(crate) links: super::composition_links::LinkRoot,
+    pub(crate) links: crate::composition_links::LinkRoot,
     pub(crate) owns_authority: Option<Arc<()>>,
     pub(crate) owns_generation: u64,
 }
@@ -161,12 +166,12 @@ impl Default for CompositionGraph {
 
 /// 🎟️ Exact read-only ownership admission consumed by an exclusive graph commit.
 pub struct OwnsAdmission {
-    parent: String,
-    slot: String,
-    child: String,
-    inserts: bool,
-    authority: Arc<()>,
-    generation: u64,
+    pub parent: String,
+    pub slot: String,
+    pub child: String,
+    pub inserts: bool,
+    pub authority: Arc<()>,
+    pub generation: u64,
 }
 
 impl OwnsAdmission {
@@ -400,14 +405,14 @@ impl CompositionGraph {
 /// `SpaceMember::dispatch_wire`'s blanket impl (which DOES know the concrete type, on the receiving
 /// member) can decode correctly via the ordinary `dispatch_binary` path. Must be kept byte-for-byte
 /// in sync with `write_command_ops`/`ArtifactCommand::encode_op`'s ordinal-0 (`Apply`) arm.
-pub(crate) async fn build_apply_command_bytes(ops: &[Vec<u8>], transaction: Option<&protocol::TransactionRef>) -> Vec<u8> {
+pub async fn build_apply_command_bytes(ops: &[Vec<u8>], transaction: Option<&protocol::TransactionRef>) -> Vec<u8> {
     let mut out = vec![COMMAND_BINARY_FORMAT];
-    crate::os_pack::write_varint_u64(&mut out, 0);
+    semio_framework_os_pack::write_varint_u64(&mut out, 0);
     out.push(u8::from(transaction.is_some()) << 1);
     write_command_transaction(&mut out, transaction);
-    crate::os_pack::write_varint_u64(&mut out, ops.len() as u64);
+    semio_framework_os_pack::write_varint_u64(&mut out, ops.len() as u64);
     for op in ops {
-        crate::os_pack::write_varint_u64(&mut out, op.len() as u64);
+        semio_framework_os_pack::write_varint_u64(&mut out, op.len() as u64);
         out.extend_from_slice(op);
     }
     out
@@ -417,7 +422,7 @@ pub(crate) async fn build_apply_command_bytes(ops: &[Vec<u8>], transaction: Opti
 /// OUTERMOST segment of every message's `target` — the discipline §C4 mandates for composite step
 /// paths, generalized to a composition group: a caller unioning messages from several members must
 /// still be able to tell which member produced which message.
-pub(crate) async fn prefix_message_target(messages: Vec<crate::os_spr::MutationMessage>, member_path: &str) -> Vec<crate::os_spr::MutationMessage> {
+pub async fn prefix_message_target(messages: Vec<semio_framework_os_spr::MutationMessage>, member_path: &str) -> Vec<semio_framework_os_spr::MutationMessage> {
     messages
         .into_iter()
         .map(|mut message| {
@@ -447,8 +452,8 @@ pub(crate) async fn prefix_message_target(messages: Vec<crate::os_spr::MutationM
 /// own policy consistently if it wants Phase 2 to actually complete (see this file's own
 /// `dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_faire` test, which sets
 /// `LaissezFaire` on BOTH members for exactly this reason).
-pub(crate) async fn reject_if_policy_rejects(policy: crate::os_spr::MergePolicy, messages: &[crate::os_spr::MutationMessage]) -> Result<(), VcsError> {
-    let Some(worst) = crate::os_spr::worst_level(messages) else {
+pub async fn reject_if_policy_rejects(policy: semio_framework_os_spr::MergePolicy, messages: &[semio_framework_os_spr::MutationMessage]) -> Result<(), VcsError> {
+    let Some(worst) = semio_framework_os_spr::worst_level(messages) else {
         return Ok(());
     };
     if !policy.rejects(worst) {
@@ -465,7 +470,7 @@ pub(crate) async fn reject_if_policy_rejects(policy: crate::os_spr::MergePolicy,
 ///
 /// 🌀️ `ArtifactRef::to_uri` is async (🚪️io, out of scope) — hoisted out of `Iterator::map`'s
 /// sync closure into an explicit loop (R10 shape 1).
-pub(crate) async fn fold_compensation_error(original: VcsError, report: GroupUndoReport) -> VcsError {
+pub async fn fold_compensation_error(original: VcsError, report: GroupUndoReport) -> VcsError {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     if report.skipped.is_empty() {
@@ -572,7 +577,7 @@ impl TransactionCoordinator {
     /// `dispatch_group`'s doc comment for why every already-applied member must still get a
     /// best-effort rollback attempt even if an earlier one in this same pass failed. Relation-
     /// agnostic: undoing a member does not need to know WHY it was dispatched.
-    pub(crate) async fn compensate<Mp: SpaceMember, Mc: SpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&mut Mc, ChildDispatch<'_>)], applied_children: &[(usize, String)], parent_applied: Option<&str>, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
+    pub async fn compensate<Mp: SpaceMember, Mc: SpaceMember>(parent_ref: &semio_framework_artifact_reference::ArtifactRef, parent: &mut Mp, children: &mut [(&mut Mc, ChildDispatch<'_>)], applied_children: &[(usize, String)], parent_applied: Option<&str>, identity: &mut EntityIdentityAuthority<'_>) -> GroupUndoReport {
         let mut undone = Vec::new();
         let mut skipped = Vec::new();
         if let Some(edit_id) = parent_applied {
@@ -701,7 +706,7 @@ impl TransactionCoordinator {
      identity: &mut EntityIdentityAuthority<'_>) -> Result<GroupReceipt<Mc>, VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _,DialectCoordinateText as _};
 
-        let mut all_messages: Vec<crate::os_spr::MutationMessage> = Vec::new();
+        let mut all_messages: Vec<semio_framework_os_spr::MutationMessage> = Vec::new();
         if !parent_ops.is_empty() {
             all_messages.extend(prefix_message_target(parent.preview_wire(&parent_ops).await, &parent_ref.to_uri()).await);
         }
@@ -772,8 +777,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 return Err(fold_compensation_error(error, report).await);
             }
             if relation == MemberRelation::Peer {
-                let initiator = crate::os_spr::ForeignTarget { artifact_id: parent_ref.artifact_id.clone(), artifact_kind: parent_ref.dialect.artifact_kind.clone(), dialect: Some(parent_ref.dialect.to_coordinate()) };
-                if let Err(error) = children[index].0.stamp_tail_origin(crate::os_spr::MutationOrigin::Transaction { initiator }).await {
+                let initiator = semio_framework_os_spr::ForeignTarget { artifact_id: parent_ref.artifact_id.clone(), artifact_kind: parent_ref.dialect.artifact_kind.clone(), dialect: Some(parent_ref.dialect.to_coordinate()) };
+                if let Err(error) = children[index].0.stamp_tail_origin(semio_framework_os_spr::MutationOrigin::Transaction { initiator }).await {
                     let report = Self::compensate(parent_ref, parent, children, &applied_children, None, identity).await;
                     return Err(fold_compensation_error(error, report).await);
                 }

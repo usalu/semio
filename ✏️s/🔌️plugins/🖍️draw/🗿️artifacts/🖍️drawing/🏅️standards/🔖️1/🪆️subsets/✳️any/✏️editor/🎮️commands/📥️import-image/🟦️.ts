@@ -1,4 +1,4 @@
-import type {RetainedCloneGrant} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
+import type {RetainedCloneGrant} from "@semio-tech/framework/value/retained-clone/contract";
 /** 📥️ Private encoded PNG and JPEG admission completes before a semantic image import can publish. */
 import {DrawingImageAdmissionJob} from "../../../🚪️io/🖼️image/🟦️.ts";
 import type {DrawingImageAsset} from "../../../🧬️schema/🟦️.ts";

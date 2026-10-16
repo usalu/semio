@@ -1,5 +1,5 @@
 /** 📠️ CCITT terminating and makeup codewords. */
-import {NativeDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 function invalid(message:string):never{throw Error('tiff CCITT: '+message)}
 class Bits{at=0;constructor(private source:Uint8Array,private fill:number){}bit():number{if(this.at>=this.source.length*8)invalid('truncated codeword');const value=(this.source[this.at>>>3]!>>>(this.fill===2?this.at%8:7-this.at%8))&1;this.at++;return value;}align():void{this.at=Math.ceil(this.at/8)*8;}eol():void{let zeros=0;while(this.bit()===0)if(++zeros>64)invalid('EOL fill extent');if(zeros<11)invalid('EOL');}run(color:boolean):number{const table=color?black:white;let total=0;for(;;){let code=0,found:number|undefined;for(let length=1;length<=13;length++){code=code*2+this.bit();found=table.get(length*8192+code);if(found!==undefined)break;}if(found===undefined)invalid('run code');total+=found;if(!Number.isSafeInteger(total))invalid('run extent');if(found<64)return total;}}}
 function paint(row:Uint8Array,from:number,to:number,color:boolean):void{if(to<from||to>row.length)invalid('row extent');row.fill(Number(color),from,to);}

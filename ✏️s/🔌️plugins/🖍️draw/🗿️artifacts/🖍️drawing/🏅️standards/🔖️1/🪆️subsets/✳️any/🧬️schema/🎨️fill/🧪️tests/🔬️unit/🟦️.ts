@@ -41,7 +41,7 @@ test("fill editing preserves stops, geometry, alpha and source on rejection", ()
 import sharp from "sharp";
 import { PreparedFill, GradientRamp } from "../../🎨️sampling/🟦️.ts";
 import retirementCases from "../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🧹️retirement/🔣️.json";
-import retirementSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🧬️schema/🔣️.json";
+import { retireSchema as retirementSchema } from "@semio-tech/framework/2d/retire/schema";
 import samplingCases from "../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json";
 
 /** 🧭️ SVG 1.1 degenerate gradients use their last stop; normalize these before the librsvg oracle. */

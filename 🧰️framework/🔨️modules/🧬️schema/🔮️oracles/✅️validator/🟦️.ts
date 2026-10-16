@@ -4,6 +4,7 @@
  * `📇️directory/🧬️schema/🔣️.json`) keeps compiling everywhere, and a keyword outside the vocabulary still fails
  * (ticket 26/09/23 S15). https://ajv.js.org/strict-mode.html#prohibit-ignored-keywords */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import Ajv, { type Options } from "ajv";
 import addFormats, { type FormatName } from "ajv-formats";
 import vocabulary from "../../🧬️vendor-annotation-vocabulary/🔣️.json" with { type: "json" };
@@ -27,6 +28,17 @@ export function semioSchemaAjvV1(options: Options = {}): Ajv {
   for (const document of SEMIO_SCHEMA_VENDOR_VOCABULARY_DOCUMENTS_V1) ajv.addSchema(document);
   for (const [keyword, metaSchema] of Object.entries(vocabulary.keywords)) ajv.addKeyword({ keyword, metaSchema });
   return ajv;
+}
+
+export type SchemaScopeValidator = ((value: unknown) => boolean) & { errors?: unknown };
+
+/** 🧩️ Compiles one PascalCase export of a committed schema module (or the whole module when `exportId` is null) with the strict semio Ajv, so a consumer's test validates against the owner's document without importing the owner; the module and dependency paths are repository-relative or absolute. */
+export function compileSchemaScopeExport(repoRoot: string, moduleRel: string, exportId: string | null, dependencyModules: readonly string[] = []): SchemaScopeValidator {
+  const module = JSON.parse(readFileSync(resolve(repoRoot, moduleRel), "utf8"));
+  const ajv = semioSchemaAjvV1({ allErrors: true });
+  for (const dependency of dependencyModules) ajv.addSchema(JSON.parse(readFileSync(resolve(repoRoot, dependency), "utf8")));
+  ajv.addSchema(module);
+  return ajv.compile({ $ref: exportId === null ? module.$id : `${module.$id}#/$defs/${exportId}` }) as SchemaScopeValidator;
 }
 
 /** 🧺️ Adds every mutation leaf payload schema (`<mutations>/<leaf>/🧬️schema/🔣️.json`) of one aggregate collection to `ajv`, so the

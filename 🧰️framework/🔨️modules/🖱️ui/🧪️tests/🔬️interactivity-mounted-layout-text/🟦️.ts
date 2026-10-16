@@ -1,4 +1,5 @@
-import { policyReadRustPolicySource, interactivityMountedLayoutTextFailures } from "../../../../../📜️script.ts";
+import { policyReadRustPolicySource } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
+import { interactivityMountedLayoutTextFailures } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts";
 
 /** 📚️ One policy source per audited file, arity-preserving so the failure checkers keep their positional parameters. */
 type LayoutTextPolicySources = [string, string, string, string, string, string, string, string];
@@ -14,7 +15,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
-  ];
+  ] as const;
   const clean: Readonly<LayoutTextPolicySources> = [
     policyReadRustPolicySource(repoRoot, paths[0]),
     policyReadRustPolicySource(repoRoot, paths[1]),
@@ -57,7 +58,9 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
   ];
   for (const [name, index, needle, replacement] of mutations) {
     const mutated: LayoutTextPolicySources = [...clean];
-    mutated[index] = mutated[index].replace(needle, replacement);
+    const original = mutated[index];
+    if (original === undefined) throw new Error(`P5c mutation source index missing: ${index}`);
+    mutated[index] = original.replace(needle, replacement);
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5c mutation ${name} did not alter source.`);
     if (interactivityMountedLayoutTextFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5c mutation ${name} was falsely accepted.`);
   }
@@ -80,7 +83,9 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
   ];
   for (const [index, needle] of lawMutations) {
     const mutated: LayoutTextPolicySources = [...clean];
-    mutated[index] = mutated[index].replace(needle, "P5C_MUTATED_LAW_EVIDENCE");
+    const original = mutated[index];
+    if (original === undefined) throw new Error(`P5c law source index missing: ${index}`);
+    mutated[index] = original.replace(needle, "P5C_MUTATED_LAW_EVIDENCE");
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5c law mutation ${needle} did not alter source.`);
     if (interactivityMountedLayoutTextFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5c law mutation ${needle} was falsely accepted.`);
   }

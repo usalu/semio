@@ -13,7 +13,7 @@ pub struct DocumentState {
     pub panel_documents: HashMap<String, UiDocumentLease>,
     pub spawned_ui: Option<UiDocumentLease>,
     pub spawned_session: Option<ActiveSession>,
-    pub app_document_identities: crate::media_slots::DocumentIdentityRegistry,
+    pub app_document_identities: semio_framework_os_renderer_wgpu_media_slots::DocumentIdentityRegistry,
     pub closing_documents: ShellDocumentRetirementRegistry,
     /// 🎬️ Each live window instance's projected Actions pane document — see
     /// `//#region 🎬️WindowActionsAndSearchPanes`.

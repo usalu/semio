@@ -4,8 +4,8 @@
 //! summary parsing, layout) are covered by each element's own `🧪️tests/🔬️wgpu-unit`.
 
 use super::*;
-use crate::agent_approvals::{approval_decision_control_id, APPROVALS_CLOSE_CONTROL_ID};
-use crate::agent_bridge::{ApprovalDecision, GatewayToShell, ShellToGateway};
+use semio_framework_os_renderer_wgpu_agent_elements::agent_approvals::{approval_decision_control_id, APPROVALS_CLOSE_CONTROL_ID};
+use semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::{ApprovalDecision, GatewayToShell, ShellToGateway};
 
 //#region 🧯️TransientNotice
 #[test]
@@ -216,7 +216,7 @@ fn a_plain_text_summary_still_lists_a_change_summary_line() {
 //#region 🚦️AgentPresence
 #[test]
 fn presence_frames_move_the_shells_own_indicator() {
-    use crate::agent_presence::AgentPresenceTone;
+        use semio_framework_os_renderer_wgpu_agent_elements::agent_presence::AgentPresenceTone;
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert_eq!(shell.chrome.agent_presence_tone(), AgentPresenceTone::Disconnected);
     shell.chrome.apply_agent_bridge_frame(&GatewayToShell::Welcome { bridge_version: 1, connection: "c".into(), principal: "p".into() }.encode()).expect("frame decodes");
@@ -229,7 +229,7 @@ fn presence_frames_move_the_shells_own_indicator() {
 fn the_chat_header_plan_puts_the_dot_and_status_inside_the_panel() {
     let theme = Theme::dark();
     let panel = Rect::new(900.0, 40.0, 320.0, 700.0);
-    let plan = crate::agent_chat_panel::plan_agent_chat_header(panel, crate::agent_bridge::AgentBridgeStatus::Open, &crate::agent_bridge::AgentBridgePresence::default(), &theme, Locale::En);
+    let plan = semio_framework_os_renderer_wgpu_agent_elements::agent_chat_panel::plan_agent_chat_header(panel, semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeStatus::Open, &semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgePresence::default(), &theme, Locale::En);
     assert_eq!(plan.title, "Chat");
     assert_eq!(plan.status_text, "Agent idle");
     assert_eq!(plan.dot_color, theme.accent);
@@ -394,7 +394,7 @@ fn the_close_control_retires_the_operation() {
     shell.directory.identity = Some(test_identity());
     shell.directory.open_space_administration("space-1");
     assert!(shell.directory.space_administration_plan(&shell.prefs).is_some(), "an identity plus a space id mounts the sheet");
-    shell.directory.resolve_space_administration_control(crate::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID, &shell.prefs);
+    shell.directory.resolve_space_administration_control(semio_framework_os_renderer_wgpu_hub_workspace::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID, &shell.prefs);
     assert!(shell.directory.space_administration_plan(&shell.prefs).is_none());
 }
 

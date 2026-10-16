@@ -1,9 +1,9 @@
 /** 🧱️ Exact authored nonuniform grid and typed mesh/child relationships. */
 import type {Grid3dSnapshot,Grid3dTile,Grid3dTileMedia,Grid3dDirection,Grid3dColor} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow,SqliteValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type {SqliteDatabase,SqliteRow,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
 export const WFC_GRID3D_SQLITE_SCHEMA=`CREATE TABLE wfc_grid3d_document (id INTEGER PRIMARY KEY, schema_id TEXT NOT NULL, seed TEXT NOT NULL, width INTEGER NOT NULL CHECK(width BETWEEN 0 AND 4294967295), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4294967295), depth INTEGER NOT NULL CHECK(depth BETWEEN 0 AND 4294967295), periodic_x INTEGER NOT NULL CHECK(periodic_x IN(0,1)), periodic_y INTEGER NOT NULL CHECK(periodic_y IN(0,1)), periodic_z INTEGER NOT NULL CHECK(periodic_z IN(0,1)));
 CREATE TABLE wfc_grid3d_cell_size (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc_grid3d_document(id), axis TEXT NOT NULL CHECK(axis IN('x','y','z')), ordinal INTEGER NOT NULL CHECK(ordinal>=0), size REAL, size_bits INTEGER NOT NULL, size_class TEXT NOT NULL);
 CREATE TABLE wfc_grid3d_tile (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES wfc_grid3d_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), authored_id TEXT NOT NULL, label TEXT, weight REAL, media_kind TEXT NOT NULL CHECK(media_kind IN('mesh','mesh_child')), weight_bits INTEGER NOT NULL, weight_class TEXT NOT NULL);

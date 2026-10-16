@@ -6,7 +6,7 @@ import { writePdfDictionary,readPdfDictionary,writePdfObject,readPdfObject } fro
 import { writePdfColorSpace,readPdfColorSpace } from "../🌈️color/🟦️.ts";
 import { writePdfGroup,readPdfGroup } from "../🖼️resource/🎚️state/🟦️.ts";
 import { writePdfAnnotation,readPdfAnnotation } from "../📌️annotation/🟦️.ts";
-import { artifactSqliteInteger } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 function rectangle(value:readonly Binary64[]|null|undefined):readonly (Binary64|null)[]{if(value==null)return [null,null,null,null];if(value.length!==4)throw new Error("PDF rectangle requires four coordinates");return value;}
 function readRectangle(reader:PdfReader,row:SqliteRow,start:number):[Binary64,Binary64,Binary64,Binary64]|null{let count=0;for(let index=0;index<4;index++)if(!reader.isNull("pdf_page",row,start+index))count++;if(count===0)return null;if(count!==4)throw new Error("PDF rectangle has partially absent coordinates");return [reader.real("pdf_page",row,start),reader.real("pdf_page",row,start+1),reader.real("pdf_page",row,start+2),reader.real("pdf_page",row,start+3)];}

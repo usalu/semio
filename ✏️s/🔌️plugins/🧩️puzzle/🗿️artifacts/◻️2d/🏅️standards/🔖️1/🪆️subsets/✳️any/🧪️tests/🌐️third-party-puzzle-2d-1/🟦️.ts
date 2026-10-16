@@ -33,7 +33,7 @@ import { dirname, join } from "node:path";
 import Graph from "graphology";
 import { compare, applyPatch, deepClone, type Operation } from "fast-json-patch";
 import { Validator } from "jsonschema";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "@semio-tech/framework/test/adapter";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors

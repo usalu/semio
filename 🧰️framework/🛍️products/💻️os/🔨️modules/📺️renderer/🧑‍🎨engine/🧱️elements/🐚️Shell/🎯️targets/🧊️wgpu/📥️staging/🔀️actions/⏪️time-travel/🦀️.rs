@@ -3,7 +3,6 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::time_travel::*;
 
 impl<'ctx> ActionsCtx<'ctx> {
     /// 🏁️ Applies what the session's guest published between two dispatches — the wgpu twin of React's
@@ -15,7 +14,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// goes to the settle lane ([`ShellState::owe_refresh`]) — the surface refreshes and the rows land with no further
     /// dispatch. A drain `fault` is told through the dispatch-fault funnel; `resync` re-reads the whole projection.
     /// `true` when the session, the rows or the owed refresh changed, or a fault was told.
-    pub(crate) async fn drain_operation_publications(&mut self) -> bool {
+    pub async fn drain_operation_publications(&mut self) -> bool {
         let publications = self.docs.session.as_ref().and_then(|session| self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|plugin| plugin.take_operation_publications(session.instance_id))).unwrap_or_default();
         if publications.is_empty() {
             return false;

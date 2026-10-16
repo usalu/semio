@@ -4,7 +4,7 @@ import {expect,test} from "bun:test";
 import f from "./🧫️fixtures/🔣️.json";
 import native from "../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json";
 import semantic from "./🧫️fixtures/🎛️semantic.json";
-import {independentSqliteExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {independentSqliteExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 import {parseTiffSnapshot,type TiffSnapshot,type TiffValues} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {TIFF_SQLITE_SCHEMA,tiffSnapshotToSqliteDatabase,tiffSnapshotFromSqliteDatabase,tiffSnapshotToSqliteFile,tiffSnapshotFromSqliteFile} from "../🟦️.ts";
 import {exportSqliteDatabase} from "@semio-tech/framework";

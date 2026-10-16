@@ -1,9 +1,9 @@
 /** 🧵️ Authoritative scene owners emit SVG scalar fragments and bounded byte pages. */
 import type {DocumentScenePlan,DocumentSceneNode} from "../../../../../../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
 import {ScenePlanCloseJob} from "../../../../../../../../🧬️schema/🎬️scene/🧹️retire/🟦️.ts";
-import {PngEncodeJob} from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
-import {pathSegmentsToSvgD} from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import {PngEncodeJob} from "@semio-tech/framework/pixels/png/encode";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
+import {pathSegmentsToSvgD} from "@semio-tech/framework/2d";
 export type SvgWriteLimits={viewBox:readonly[number,number,number,number];maxOutputBytes:number;maxWork:number};
 export type SvgWriteProgress={phase:string;nodes:number;bytes:number;work:number;done:boolean};
 const PAGE=3072,encoder=new TextEncoder(),alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

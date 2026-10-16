@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellInput
 impl ShellInputState {
-    pub(crate) fn update_tree_hover(&mut self, input: &InputState<ActionDescriptor>, settle: &mut SettleState) {
+    pub fn update_tree_hover(&mut self, input: &InputState<ActionDescriptor>, settle: &mut SettleState) {
         let hovered = input.hovered_id.as_deref().and_then(tree_hit_item_id);
         if self.tree_hovered_id.as_deref() == hovered {
             return;
@@ -24,27 +24,27 @@ impl ShellInputState {
         }
     }
 
-    pub(crate) fn queue_tree_selection(&mut self, item_id: &str, settle: &mut SettleState) {
+    pub fn queue_tree_selection(&mut self, item_id: &str, settle: &mut SettleState) {
         let Some(action) = self.widget_maps.tree_selection_change.clone() else {
             return;
         };
-        settle.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: crate::action_args_json!({ "ids": [item_id] }) });
+        settle.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "ids": [item_id] }) });
     }
 
     /// 🌳️ Arms one tree-selection dispatch on the settle lane — a selection is a pointer gesture, and
     /// a gesture never converges its own chain (see [`Self::handle_pointer_button`]).
-    pub(crate) fn dispatch_tree_selection(&mut self, item_id: &str, settle: &mut SettleState) {
+    pub fn dispatch_tree_selection(&mut self, item_id: &str, settle: &mut SettleState) {
         self.queue_tree_selection(item_id, settle);
         settle.owe_settle();
     }
 
-    pub(crate) fn retained_window_body_rect(&self, window_id: &str) -> Option<Rect> {
+    pub fn retained_window_body_rect(&self, window_id: &str) -> Option<Rect> {
         self.retained_hit_windows.values().find_map(|(owner, body)| (owner == window_id).then_some(*body))
     }
 
     /// 👻️ Catalogue ghosts while dragging from a retained document tree (panel catalogue) — not shell `tree_drag`.
-    pub(crate) fn sync_world3d_catalogue_drop_preview_from_retained_ui(&mut self, surfaces: &mut SurfaceState) {
-        let sessions = crate::interpreter::active_retained_drag_sessions();
+    pub fn sync_world3d_catalogue_drop_preview_from_retained_ui(&mut self, surfaces: &mut SurfaceState) {
+        let sessions = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::active_retained_drag_sessions();
         if sessions.is_empty() {
             if self.tree_drag.is_none() && self.pending_tree_drag.is_none() {
                 surfaces.clear_world3d_catalogue_drop_previews();
@@ -57,7 +57,7 @@ impl ShellInputState {
         }
     }
 
-    pub(super) fn retained_scene_point(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>) -> Option<(String, f32, f32)> {
+    pub fn retained_scene_point(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>) -> Option<(String, f32, f32)> {
         let hit = input.hit_at(x, y)?;
         if hit.kind != HitKind::ComponentScene {
             return None;
@@ -66,20 +66,20 @@ impl ShellInputState {
         Some((window_id, x - body.x, y - body.y))
     }
 
-    pub(crate) fn sync_canvas2d_catalogue_drag(&self, x: f32, y: f32, drag_data: &HashMap<String, String>, input: &mut InputState<ActionDescriptor>) {
+    pub fn sync_canvas2d_catalogue_drag(&self, x: f32, y: f32, drag_data: &HashMap<String, String>, input: &mut InputState<ActionDescriptor>) {
         let Some((window_id, local_x, local_y)) = self.retained_scene_point(x, y, input) else {
-            crate::scenes::cancel_canvas_catalogue_drag(input);
+            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
             return;
         };
-        crate::interpreter::canvas_catalogue_drag_over(&window_id, local_x, local_y, drag_data, input);
+        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drag_over(&window_id, local_x, local_y, drag_data, input);
     }
 
-    pub(crate) fn finish_canvas2d_catalogue_drop(&self, x: f32, y: f32, drag_data: &HashMap<String, String>, input: &mut InputState<ActionDescriptor>) -> bool {
+    pub fn finish_canvas2d_catalogue_drop(&self, x: f32, y: f32, drag_data: &HashMap<String, String>, input: &mut InputState<ActionDescriptor>) -> bool {
         let Some((window_id, local_x, local_y)) = self.retained_scene_point(x, y, input) else {
-            crate::scenes::cancel_canvas_catalogue_drag(input);
+            semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
             return false;
         };
-        crate::interpreter::canvas_catalogue_drop(&window_id, local_x, local_y, drag_data, input)
+        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop(&window_id, local_x, local_y, drag_data, input)
     }
 
     /// 🔽️ Closes every open `Select` popup and drops the two `scroll_offsets` slots each one owned —
@@ -87,7 +87,7 @@ impl ShellInputState {
     /// slot outlives the popup that minted it (ticket 26/09/17 packet W15a). The ONE close path, so
     /// the outside-press, item-commit, Escape and toggle routes cannot disagree about the state they
     /// leave behind.
-    pub(crate) fn close_open_selects(&mut self) {
+    pub fn close_open_selects(&mut self) {
         for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
             ui_wgpu::wgpu::clear_select_scroll(&mut self.scroll_offsets, &key);
             self.open_selects.insert(key, false);
@@ -109,7 +109,7 @@ impl ShellInputState {
      * A point over chrome no scene owns answers the shell's own `"window"` menu, carrying the
      * node/edge the hit control id named as a fallback (a chrome-registered graph row).
      */
-    pub(super) fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>, surfaces: &SurfaceState) -> ContextMenuSurfaceResolution {
+    pub fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>, surfaces: &SurfaceState) -> ContextMenuSurfaceResolution {
         let mut fallback_hits = Vec::new();
         if let Some(node_id) = node_id {
             fallback_hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
@@ -118,9 +118,9 @@ impl ShellInputState {
             fallback_hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
         }
         if let Some((window_id, body)) = self.retained_context_menu_window(x, y) {
-            if let Some(resolved) = crate::interpreter::surface_context_menu_target(&window_id, x - body.x, y - body.y) {
-                let kind = crate::scenes::context_menu_surface_kind_id(resolved.kind).to_string();
-                let crate::scenes::SceneContextMenuTarget { mut hits, mut selection, text } = resolved.target;
+            if let Some(resolved) = semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::surface_context_menu_target(&window_id, x - body.x, y - body.y) {
+                let kind = semio_framework_os_renderer_wgpu_scene_render::context_menu_surface_kind_id(resolved.kind).to_string();
+                let semio_framework_os_renderer_wgpu_scene_render::SceneContextMenuTarget { mut hits, mut selection, text } = resolved.target;
                 if resolved.kind == ui_wgpu::wgpu::SurfaceKind::World3d {
                     if let Some(state) = surfaces.world3d_state_for_window(&window_id) {
                         let (world_hits, world_selection) = infinite_world::world::world3d_context_menu_surface(&state.selection);
@@ -140,25 +140,25 @@ impl ShellInputState {
     /// 🍿️ Hands one activated context-menu row to the text editor under the menu's own origin when
     /// that row is local to the editor (`interpreter::text_editor_claim_menu_action`). `true` means
     /// the row is answered on the surface and must NOT be dispatched to the guest.
-    pub(crate) fn claim_text_editor_menu_action(&self, action: &ActionDescriptor, x: f32, y: f32) -> bool {
+    pub fn claim_text_editor_menu_action(&self, action: &ActionDescriptor, x: f32, y: f32) -> bool {
         let Some((window_id, body)) = self.retained_context_menu_window(x, y) else {
             return false;
         };
-        crate::interpreter::text_editor_claim_menu_action(&window_id, x - body.x, y - body.y, &action.action)
+        semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_menu_action(&window_id, x - body.x, y - body.y, &action.action)
     }
 
     /// 📋️ Alt + secondary press on a text editor opens its completions dropdown instead of a menu.
-    pub(crate) fn claim_text_editor_alt_completions(&self, x: f32, y: f32) -> bool {
+    pub fn claim_text_editor_alt_completions(&self, x: f32, y: f32) -> bool {
         let Some((window_id, body)) = self.retained_context_menu_window(x, y) else {
             return false;
         };
-        crate::interpreter::text_editor_claim_alt_completions(&window_id, x - body.x, y - body.y)
+        semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::text_editor_claim_alt_completions(&window_id, x - body.x, y - body.y)
     }
 
     /// 🪟️ The retained body a right-click landed in, as `(window_id, body_rect)` — the hit registry's
     /// own owner map first (a press on a registered row inside the body), then the dock body the point
     /// falls in, so a click on a scene that registers no target of its own still resolves its window.
-    pub(super) fn retained_context_menu_window(&self, x: f32, y: f32) -> Option<(String, Rect)> {
+    pub fn retained_context_menu_window(&self, x: f32, y: f32) -> Option<(String, Rect)> {
         if let Some(window_id) = self.context_window_instance_id(x, y) {
             if let Some(body) = self.retained_window_body_rect(window_id) {
                 return Some((window_id.to_string(), body));
@@ -167,7 +167,7 @@ impl ShellInputState {
         self.retained_hit_windows.values().find(|(_, body)| body.contains(x, y)).cloned()
     }
 
-    pub(crate) fn sync_context_menu_hover(&mut self, input: &InputState<ActionDescriptor>) {
+    pub fn sync_context_menu_hover(&mut self, input: &InputState<ActionDescriptor>) {
         let Some(menu) = self.context_menu.as_mut() else {
             return;
         };
@@ -287,7 +287,7 @@ impl ShellInputState {
     /// 🧯️ The quick-search and find overlays are deliberately NOT dismissable layers: they are
     /// focus-trapping dialogs with a focused query field, which is exactly React's `isEditableTarget`
     /// early return in `handleAppKeydown`, and `idle`'s `focused_id` term already reproduces it.
-    pub(super) fn dismiss_dismissable_layers(&mut self) -> bool {
+    pub fn dismiss_dismissable_layers(&mut self) -> bool {
         let mut dismissed = false;
         if self.open_selects.values().any(|open| *open) {
             self.close_open_selects();
@@ -302,14 +302,14 @@ impl ShellInputState {
 
     /// ⌨️ The chrome control the keyboard ring focused, addressed the way an accessibility event addresses it —
     /// `None` when focus is on a window, on a text field, or on a control the presented chrome no longer carries.
-    pub(super) fn keyboard_focused_chrome_target(&self, input: &InputState<ActionDescriptor>, chrome: &ChromeState) -> Option<ui_render::AccessibilityTarget> {
+    pub fn keyboard_focused_chrome_target(&self, input: &InputState<ActionDescriptor>, chrome: &ChromeState) -> Option<ui_render::AccessibilityTarget> {
         let key = self.accessibility_focused_control_id.as_deref().filter(|_| input.focused_id.is_none())?;
         let node = chrome.presented_chrome_accessibility.iter().find(|node| node.key == key && node.focusable && !node.disabled)?;
-        Some(ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() })
+        Some(ui_render::AccessibilityTarget { window_id: semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() })
     }
 
     /// ⌨️🖼️ Where the keyboard focus ring goes this frame: around the focused chrome control's own hit rect.
-    pub(crate) fn keyboard_focus_ring_rect(&self, input: &InputState<ActionDescriptor>) -> Option<Rect> {
+    pub fn keyboard_focus_ring_rect(&self, input: &InputState<ActionDescriptor>) -> Option<Rect> {
         let key = self.accessibility_focused_control_id.as_deref()?;
         input.staged_hits().iter().rev().find(|hit| hit.control_id.as_deref() == Some(key)).map(|hit| hit.rect)
     }
@@ -319,7 +319,7 @@ impl ShellInputState {
     /// `chordFromKeyboardEvent`: the fixed `ctrl, meta, alt, shift` modifier order then the key, with
     /// Escape cancelling the capture and a bare modifier press ignored. `true` when the event was
     /// consumed by the capture (which includes the Escape cancel).
-    pub(crate) fn capture_keybinding_chord(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState) -> bool {
+    pub fn capture_keybinding_chord(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState) -> bool {
         let Some(control_id) = self.keybinding_capture_control_id.clone() else { return false };
         if matches!(action, ui_wgpu::wgpu::KeyAction::Escape) {
             self.keybinding_capture_control_id = None;

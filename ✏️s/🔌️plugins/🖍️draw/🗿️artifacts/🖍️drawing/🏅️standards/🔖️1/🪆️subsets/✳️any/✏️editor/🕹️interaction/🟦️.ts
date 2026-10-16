@@ -1,5 +1,5 @@
 /** 🎯️ Document membership and structural order for selection, independent of rendered panels. */
-import type { DomainTopology, TopologyNode } from "../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/🟦️.ts";
+import type { DomainTopology, TopologyNode } from "@semio-tech/framework/interaction";
 
 import type { PathGeometrySegment } from "../../🧬️schema/🟦️.ts";
 import { geometryId,pointId,pointSlots } from "./🎯️points/🟦️.ts";

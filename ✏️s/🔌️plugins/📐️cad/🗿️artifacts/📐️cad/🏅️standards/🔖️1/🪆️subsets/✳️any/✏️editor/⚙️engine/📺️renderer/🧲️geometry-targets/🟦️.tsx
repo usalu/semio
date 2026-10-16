@@ -15,7 +15,7 @@ import {
   type BufferGeometry as ThreeBufferGeometry,
   type MeshStandardMaterial as ThreeMeshStandardMaterial,
   type Object3D as ThreeObject3D
-} from "@semio-tech/ui-react";
+} from "@semio-tech/framework/ui/targets/react";
 // #endregion 🔌️Adapters
 import { ephemeralMap } from "@semio-tech/framework";
 import { createTemplatePool, ViewRadiusLayer, WORLD_LOCKED_OPACITY_SCALE, worldEntitySelectable } from "@semio-tech/infinite-world-r3f";

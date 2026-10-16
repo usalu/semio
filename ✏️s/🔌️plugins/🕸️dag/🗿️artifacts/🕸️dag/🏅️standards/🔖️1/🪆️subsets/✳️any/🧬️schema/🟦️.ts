@@ -1,7 +1,7 @@
 /** 🧬️ Dag durable document with exact owned-child coordinates. */
-import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { requireArtifactDialect, type ArtifactDialect } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { requireArtifactDialect, type ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
 
 const CONTENT_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.semio", standard: "v1", subset: "graph" };
 

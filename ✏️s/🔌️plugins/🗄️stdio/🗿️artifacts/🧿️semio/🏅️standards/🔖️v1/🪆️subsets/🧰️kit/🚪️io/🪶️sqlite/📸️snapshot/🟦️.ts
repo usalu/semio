@@ -3,9 +3,9 @@ import type {SemioKitSnapshot,SemioKitDesign,SemioKitType} from "../../../🧬�
 import {parseSemioTransform,type SemioTransform} from "../../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 import {parseSemioChild,type ArtifactChild} from "../../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
 import {parseArtifactLink,type ArtifactLink,type ArtifactRef,type BlobRef} from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 
 export const SEMIO_KIT_SQLITE_SCHEMA=`CREATE TABLE semio_kit_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_kit_type (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_kit_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL);

@@ -1,9 +1,9 @@
 /** 📐️ STEP-specific exchange entities and typed argument ownership. */
 import type {StepSnapshot,StepValue,StepEntity,StepComplexType} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type {SqliteRow,SqliteDatabase} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64} from "@semio-tech/framework/value/ieee754";
+import type {SqliteRow,SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 export const STEP_SQLITE_SCHEMA=`CREATE TABLE step_document (
   id INTEGER PRIMARY KEY,
   schema TEXT NOT NULL,

@@ -3,7 +3,9 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
-import { WORKSPACE_ROOT, toolJobRustBlock, toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobProductionSource, toolJobMountedDispatchOneTurnExact } from "../../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { toolJobRustBlock, toolJobProductionSource } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
+import { toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobMountedDispatchOneTurnExact } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts";
 
 /** 🧪️ Cross-checks full-domain scope fixtures with system deep equality and semantic Ajv scope validation and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
@@ -137,7 +139,7 @@ export function toolJobLatestWinsSelfTests(): number {
     [source, reactor.replace("pub(crate) fn spawn_task<", "pub(crate) async fn spawn_task<"), host],
     [source, reactor.replace("reservation.install(Box::pin(async move {", "let future = run.run(ctx); reservation.install(Box::pin(async move {"), host],
     [source, reactor, host.replace("pub fn new(registry:", "pub async fn new(registry:")],
-  ];
+  ] as const;
   for (const [main, tasks, handles] of taskHostiles) if (taskAdmissionExact(main, tasks, handles)) throw new Error("task admission accepts a suspended or prematurely invoked user factory");
   const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
   for (const law of rawFixture.cases) {
@@ -202,7 +204,7 @@ export function toolJobLatestWinsSelfTests(): number {
     [source, rawSource.replace("self.emit = rejected.emit.ok()", "drop(rejected.emit)")],
     [source.replace("return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault:", "return Err(ArtifactToolCompletionRejection { emit: discarded_emit, ephemeral, fault:"), rawSource],
     [source.replace("mounted owned child group requires its one exact admitted typed source family", "typed child output is accepted"), rawSource],
-  ];
+  ] as const;
   for (const [hostileMain, hostileRetained] of childCloseHostiles) if (childCloseExact(hostileMain, hostileRetained)) throw new Error("retained ChildEmit close oracle accepted lost ownership or bounded-factory publication");
   for (const path of ["🦀️.rs", "🧩️composition/📨️emission/📦️preparation/🦀️.rs", "🧵️retained-command/🦀️.rs", "🧪️tests/🧩️composition/📨️emission/🦀️.rs"]) {
     const result = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout", "--config", "skip_children=true", join(base, path)], { stdio: ["ignore", "ignore", "pipe"], timeout: 5000 });
@@ -214,8 +216,12 @@ export function toolJobLatestWinsSelfTests(): number {
   const mutatePublisher = (before: string, after: string): string => source.slice(0, publisherStart) + source.slice(publisherStart).replace(before, after);
   const admittedBatchSourceExact = (text: string): boolean => {
     const publisher = body(text, "publish_mounted_typed_operation_unit").replace(/\s+/gu, ""), lanes = {store:"artifact_mutations",config_store:"config_mutations",draft_store:"draft_mutations"};
-    const calls = [...publisher.matchAll(/self\.(store|config_store|draft_store)\.admit_apply_batch\((.*?)\)\.map_err/gu)];
-    return text.replace(/\s+/gu, "").includes("self.publish_mounted_typed_operation_unit(mounted,crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,retained))?") && calls.length > 0 && !publisher.includes(".await") && !publisher.includes(".last().cloned()") && Object.values(lanes).every(lane => calls.some(call => call[2].includes(`&mutemit.${lane},HistoryLane::Document`)) && !publisher.includes(`emit.${lane}.clone()`) && !publisher.includes(`emit.${lane}.clear()`) && !publisher.includes(`drop(std::mem::take(&mutemit.${lane}))`)) && calls.every(call => call[2].includes(`&mutemit.${lanes[call[1] as keyof typeof lanes]},HistoryLane::Document`) && call[2].endsWith("retained") && (toolJobRustBlock(publisher,publisher.indexOf("{",call.index!+call[0].length))?.body??"").includes("mounted.publication_ownership_progress=Some((retained,ownership))"));
+    const calls = [...publisher.matchAll(/self\.(store|config_store|draft_store)\.admit_apply_batch\((.*?)\)\.map_err/gu)].map(call => {
+      const [text, lane, args] = call;
+      if (text === undefined || args === undefined || call.index === undefined || (lane !== "store" && lane !== "config_store" && lane !== "draft_store")) throw new Error("Exact mounted publication source match required");
+      return { text, lane, args, index: call.index } as const;
+    });
+    return text.replace(/\s+/gu, "").includes("self.publish_mounted_typed_operation_unit(mounted,crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,retained))?") && calls.length > 0 && !publisher.includes(".await") && !publisher.includes(".last().cloned()") && Object.values(lanes).every(lane => calls.some(call => call.args.includes(`&mutemit.${lane},HistoryLane::Document`)) && !publisher.includes(`emit.${lane}.clone()`) && !publisher.includes(`emit.${lane}.clear()`) && !publisher.includes(`drop(std::mem::take(&mutemit.${lane}))`)) && calls.every(call => call.args.includes(`&mutemit.${lanes[call.lane]},HistoryLane::Document`) && call.args.endsWith("retained") && (toolJobRustBlock(publisher,publisher.indexOf("{",call.index+call.text.length))?.body??"").includes("mounted.publication_ownership_progress=Some((retained,ownership))"));
   };
   const ingress = body(storeSource, "admit_apply_batch"), admission = ingress.indexOf("if grant.maximum_items==0"), transfer = ingress.indexOf("std::mem::take(mutations)");
   if (admission < 0 || transfer <= admission || !["grant.maximum_copy_bytes<copied_bytes", "grant.maximum_capacity_bytes<retained_capacity_bytes", "grant.maximum_depth==0", "transaction:transaction.take()", "RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0}"].every(marker => ingress.includes(marker)) || ingress.includes("mutations.clone()")) throw new Error("actual borrowed batch ingress loses funded original custody or its receipt");
@@ -230,10 +236,12 @@ export function toolJobLatestWinsSelfTests(): number {
     ["transient scheduler-wait classification", toolJobTypedPersistentFoundation, source.replace('Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits transient scheduler authority" })', 'Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker awaits transient scheduler authority" })')],
     ["retained ephemeral publisher", (text) => toolJobEphemeralOneItemPublicationBounded(storeSource, text), source.replace("self.presence_one_item_factory.as_deref()", "A::build_presence_store_one_item_preparation_factory()")],
   ];
-  mountedChecks.push(["move-only mutation ownership", mountedChecks[0][1], mutatePublisher("&mut emit.artifact_mutations,HistoryLane::Document", "&mut emit.artifact_mutations.clone(),HistoryLane::Document")]);
+  const [firstCheck] = mountedChecks;
+  if (firstCheck === undefined) throw new Error("Mounted publication baseline required");
+  mountedChecks.push(["move-only mutation ownership", firstCheck[1], mutatePublisher("&mut emit.artifact_mutations,HistoryLane::Document", "&mut emit.artifact_mutations.clone(),HistoryLane::Document")]);
   for (const lane of ["artifact_mutations", "config_mutations", "draft_mutations"]) {
     for (const hostile of [mutatePublisher(`&mut emit.${lane},HistoryLane::Document`, `&mut emit.${lane}.clone(),HistoryLane::Document`), mutatePublisher(`&mut emit.${lane},HistoryLane::Document`, "&mut Vec::new(),HistoryLane::Document"), mutatePublisher(`&mut emit.${lane},HistoryLane::Document`, `&mut { emit.${lane}.clear(); Vec::new() },HistoryLane::Document`)]) {
-      if (hostile === source || mountedChecks[0][1](hostile)) throw new Error("mounted batch publication accepted a copied or dropped original mutation owner");
+      if (hostile === source || firstCheck[1](hostile)) throw new Error("mounted batch publication accepted a copied or dropped original mutation owner");
     }
   }
   console.log("[DEBUG] Original three mutable batch lanes forward supplied preparation policy and actual ownership receipt; nine clone/empty/drop hostiles rejected; defining Store admission precedes original transfer");

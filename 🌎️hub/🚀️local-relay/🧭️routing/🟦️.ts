@@ -1,4 +1,4 @@
-import { GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR } from "../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
+import { INFERENCE_PROGRESS_MAX_CURSOR } from "../../💡️inference/🧬️schema/🟦️.ts";
 
 /** 🧭 Admits one encoded document execution-target asset route. */
 export function localRelayExecutionTargetAsset(path: string): "manifest" | "component" | "descriptor" | "browser-actor" | undefined {
@@ -31,7 +31,7 @@ export function localRelaySpaceArtifactCreationPath(method: string, path: string
   return (method === "POST" && requestId === undefined && !cancel) || (method === "GET" && !cancel) || (method === "POST" && requestId !== undefined && cancel);
 }
 
-/** 🧭 Admits exact GIS-map inference lifecycle routes within the schema-owned cursor bound. */
+/** 🧭 Admits exact GIS-map inference lifecycle routes within the hub inference schema's cursor bound. */
 export function localRelayInferencePath(method: string, path: string): boolean {
   const matched = /^\/spaces\/([^/]+)\/documents\/([^/]+)\/inference\/gis-map\/(.+)$/u.exec(path);
   if (!matched) return false;
@@ -46,7 +46,7 @@ export function localRelayInferencePath(method: string, path: string): boolean {
   const suffix = matched[3]!;
   if (method === "POST") return /^(?:jobs|jobs\/reconcile|jobs\/[0-9a-f]{32}\/(?:cancel|approval)|approval-undos)$/u.test(suffix);
   const events = /^jobs\/[0-9a-f]{32}\/events\?after=(0|[1-9][0-9]*)$/u.exec(suffix);
-  return method === "GET" && events !== null && Number(events[1]) <= GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR;
+  return method === "GET" && events !== null && Number(events[1]) <= INFERENCE_PROGRESS_MAX_CURSOR;
 }
 
 /** 🎟️ Admits exactly one invite-redemption route whose capability token stays inside the hub's own

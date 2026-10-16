@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalFixture } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import { Database } from "bun:sqlite";
 import owned from "../../../../../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🫳️ownership/🔣️.json";

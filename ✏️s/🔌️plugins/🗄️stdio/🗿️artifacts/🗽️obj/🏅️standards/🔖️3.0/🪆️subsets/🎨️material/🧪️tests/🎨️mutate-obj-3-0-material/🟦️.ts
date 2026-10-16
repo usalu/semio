@@ -7,7 +7,7 @@
  *  nothing: each row's expected document is the COMMITTED fixture — `➡️after.obj` for a mutation, `⬅️before.obj` for its
  *  inverse — handed to the `obj-3-0-document-compare-v1` pipeline as `expected-obj`, where three's OBJLoader reads it
  *  and the subject's `actual-obj`. */
-import { defineTestAdapter } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 /** 🟦️ OBJ 3.0 `🎨️material` mutation case — the ORACLE half, `three-obj-3-0-document-reader`. A reader oracle computes
  *  nothing: each row's expected document is the COMMITTED fixture — `➡️after.obj` for a mutation, `⬅️before.obj` for its
  *  inverse — handed to the `obj-3-0-document-compare-v1` pipeline as `expected-obj`, where three's OBJLoader reads it

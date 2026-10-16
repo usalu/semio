@@ -23,10 +23,20 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-decode = { path = "../../../../📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
+semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
+semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }

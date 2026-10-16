@@ -1,11 +1,11 @@
 /** 🔌️ Seventeen handwritten entities preserve Wires intrinsic trees and the independent graph handle. */
 import type{WiresSnapshot}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type{WiresValue}from"../../../🧬️schema/🌱️value/🟦️.ts";
-import type{ ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteValueBudget,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type{ ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteValueBudget,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64} from "@semio-tech/framework/value/ieee754";
 export const WIRES_SQLITE_SCHEMA=String.raw`CREATE TABLE wires_document (id INTEGER PRIMARY KEY);
 CREATE TABLE wires_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null','boolean','unsigned','signed','float','text','bytes','array','object')));
 CREATE TABLE wires_snapshot_root (id INTEGER PRIMARY KEY REFERENCES wires_document(id), value_id INTEGER NOT NULL REFERENCES wires_value(id));

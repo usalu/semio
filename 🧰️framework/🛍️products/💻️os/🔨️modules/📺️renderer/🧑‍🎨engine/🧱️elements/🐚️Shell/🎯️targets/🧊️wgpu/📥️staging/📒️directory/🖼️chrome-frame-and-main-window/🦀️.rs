@@ -9,14 +9,14 @@ impl DirectoryState {
     /// 👕️ Every board window of the attached session as the presence wire names it — camera, size and
     /// the world point under the pointer (`crate::canvas_presence::board_presence_view`) — plus the
     /// active utility of the board under the pointer, React's `publishLocalActiveToolV1`.
-    pub(crate) fn board_presence_views(&self, surfaces: &SurfaceState) -> (Vec<PresenceWindowView>, Option<String>) {
+    pub fn board_presence_views(&self, surfaces: &SurfaceState) -> (Vec<PresenceWindowView>, Option<String>) {
         let mut active_tool = None;
         let views = surfaces
             .board2d_states
             .iter()
             .filter_map(|(host_id, surface)| {
-                let (camera, utility) = crate::engine_canvas::board2d_presence_state(host_id)?;
-                let view = crate::canvas_presence::board_presence_view(&surface.window_id, surface.bounds, camera, self.presence_pointer);
+                let (camera, utility) = semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_presence_state(host_id)?;
+                let view = semio_framework_os_renderer_wgpu_hub_workspace::canvas_presence::board_presence_view(&surface.window_id, surface.bounds, camera, self.presence_pointer);
                 if view.pointer.is_some() {
                     active_tool = utility;
                 }
@@ -29,13 +29,13 @@ impl DirectoryState {
     /// 👥️ Every board window's peer overlays from the verified roster: the other actors' cursors,
     /// viewports and marks this shell paints over its boards (`crate::canvas_presence::board_peer_overlays`,
     /// React's `CanvasPresenceOverlayV1`). Nothing before the hub named this connection's own actor.
-    pub(crate) fn board_peer_overlays(&self, surfaces: &SurfaceState) -> Vec<(Rect, crate::canvas_presence::BoardPeerOverlays)> {
+    pub fn board_peer_overlays(&self, surfaces: &SurfaceState) -> Vec<(Rect, semio_framework_os_renderer_wgpu_hub_workspace::canvas_presence::BoardPeerOverlays)> {
         let Some((actor, color)) = self.presence_self.as_ref() else { return Vec::new() };
         surfaces.board2d_states
             .iter()
             .filter_map(|(host_id, surface)| {
-                let (camera, _) = crate::engine_canvas::board2d_presence_state(host_id)?;
-                let overlays = crate::canvas_presence::board_peer_overlays(&self.presence_peers, &surface.window_id, surface.bounds, camera, actor, *color, &format!("board/{}", surface.window_id));
+                let (camera, _) = semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_presence_state(host_id)?;
+                let overlays = semio_framework_os_renderer_wgpu_hub_workspace::canvas_presence::board_peer_overlays(&self.presence_peers, &surface.window_id, surface.bounds, camera, actor, *color, &format!("board/{}", surface.window_id));
                 (!overlays.cursors.is_empty() || !overlays.marks.is_empty()).then_some((surface.bounds, overlays))
             })
             .collect()

@@ -8,7 +8,7 @@ use super::*;
 /// 🔓️ Decodes a `data:<mime>;base64,<data>` URL's payload; `None` for anything malformed or missing a
 /// comma separator. Used by both `RequestMediaFrames.payload` (bytes already in memory) and the
 /// fallback-response encoding below.
-pub(super) fn decode_data_url(data_url: &str) -> Option<Vec<u8>> {
+pub fn decode_data_url(data_url: &str) -> Option<Vec<u8>> {
     use base64::Engine;
     let comma = data_url.find(',')?;
     base64::engine::general_purpose::STANDARD.decode(&data_url[comma + 1..]).ok()
@@ -17,7 +17,7 @@ pub(super) fn decode_data_url(data_url: &str) -> Option<Vec<u8>> {
 /// 📦️ Builds the single `fallback_action` `ActionDescriptor` — raw `bytes` re-encoded as a data URL
 /// merged into `base_args`, same shape on every failure path (`ffmpeg` missing, spawn/scratch-dir I/O
 /// failure, no source bytes at all) so the plugin's fallback handler only needs to handle one shape.
-pub(super) fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes: &[u8], name: &str, base_args: &Value) -> ActionDescriptor {
+pub fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes: &[u8], name: &str, base_args: &Value) -> ActionDescriptor {
     use base64::Engine;
     let mut args = base_args.clone();
     if let Some(obj) = args.as_object_mut() {
@@ -33,8 +33,8 @@ pub(super) fn fallback_action_descriptor(controller_id: &str, fallback_action: &
 /// `sample_stride` floors at 1 (every frame); `max_frames` of 0 means "host default" (capped generously
 /// rather than truly unlimited, so a pathological request can't fill disk); `max_long_edge_px` of 0
 /// skips the scale filter entirely (native resolution).
-#[cfg(any(not(target_arch = "wasm32"), test))]
-pub(super) fn ffmpeg_frame_extraction_args(sample_stride: u32, max_frames: u32, max_long_edge_px: u32, input: &std::path::Path, out_dir: &std::path::Path) -> Vec<String> {
+#[cfg(any(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+pub fn ffmpeg_frame_extraction_args(sample_stride: u32, max_frames: u32, max_long_edge_px: u32, input: &std::path::Path, out_dir: &std::path::Path) -> Vec<String> {
     let stride = sample_stride.max(1);
     let filter = if max_long_edge_px > 0 { format!("select=not(mod(n\\,{stride})),scale={max_long_edge_px}:-2") } else { format!("select=not(mod(n\\,{stride}))") };
     let frames_cap = if max_frames > 0 { max_frames } else { 100_000 };
@@ -46,8 +46,8 @@ pub(super) fn ffmpeg_frame_extraction_args(sample_stride: u32, max_frames: u32, 
 /// `-frame_pts`/timebase math this ticket scopes out; documented simplification, same spirit as the D1
 /// wgpu point-sprite pass note above `render_world_3d`). Good enough for frame *ordering*/spacing; exact
 /// decode timestamps are future work if a downstream consumer needs true sub-frame sync.
-#[cfg(any(not(target_arch = "wasm32"), test))]
-pub(super) fn approx_sampled_timestamp_ms(index: u32, sample_stride: u32, fps_hint: f64) -> f64 {
+#[cfg(any(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+pub fn approx_sampled_timestamp_ms(index: u32, sample_stride: u32, fps_hint: f64) -> f64 {
     let stride = sample_stride.max(1) as f64;
     let fps = if fps_hint > 0.0 { fps_hint } else { 30.0 };
     (index as f64) * stride / fps * 1000.0
@@ -68,7 +68,7 @@ fn ffmpeg_available() -> bool {
 /// (MJPEG/H.264-baseline) gets a chance.
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::too_many_arguments)]
-pub(crate) async fn request_media_frames(
+pub async fn request_media_frames(
     controller_id: &str,
     accept: &str,
     frame_action: &str,
@@ -157,7 +157,7 @@ pub(crate) async fn request_media_frames(
 /// this native/wasm shell.
 #[cfg(target_arch = "wasm32")]
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn request_media_frames(
+pub fn request_media_frames(
     controller_id: &str,
     _accept: &str,
     _frame_action: &str,
@@ -179,19 +179,19 @@ pub(crate) fn request_media_frames(
 //#endregion RequestMediaFrames
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
+pub async fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
     ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(filename, ["json"])).await.into_iter().next()
 }
 
 #[cfg(target_arch = "wasm32")]
-pub(super) async fn pick_native_path_from_host(request: serde_json::Value) -> Option<String> {
+pub async fn pick_native_path_from_host(request: serde_json::Value) -> Option<String> {
     let answer = host_io_call(&request.to_string(), None).await.ok()?;
     serde_json::from_str::<Option<String>>(&answer).ok().flatten()
 }
 
 //#region 📤️FileOpenImport
 /// ⏱️ The wall budget one drain spends dispatching import chunks, so a Cancel lands between chunks.
-pub(super) const IMPORT_TRANSFER_TURN_MS: f64 = 8.0;
+pub const IMPORT_TRANSFER_TURN_MS: f64 = 8.0;
 //#endregion 📤️FileOpenImport
 
 //#region 🎨️ThemeDocumentDoors
@@ -199,7 +199,7 @@ pub(super) const IMPORT_TRANSFER_TURN_MS: f64 = 8.0;
 /// side of React's `saveTheme`, which writes `canonicalUiTheme(saved)` into
 /// `customThemes[id]` and then selects it. The stored text is the SAME canonical JSON React stores,
 /// so a theme saved on either renderer opens on the other.
-pub(crate) fn save_custom_theme_document(id: &str, document: &ThemeDocument) -> Option<String> {
+pub fn save_custom_theme_document(id: &str, document: &ThemeDocument) -> Option<String> {
     let raw = document.canonical_json()?;
     with_chrome_prefs(|prefs| {
         prefs.custom_themes.insert(id.to_string(), raw.clone());
@@ -213,7 +213,7 @@ pub(crate) fn save_custom_theme_document(id: &str, document: &ThemeDocument) -> 
 
 /// 🆔️ React's `saveTheme` slug: lowercase, non-alphanumerics collapsed to `-`, trimmed, under
 /// `custom.`.
-pub(crate) fn custom_theme_id_for_label(label: &str) -> Option<String> {
+pub fn custom_theme_id_for_label(label: &str) -> Option<String> {
     let mut slug = String::new();
     let mut pending_dash = false;
     for character in label.trim().to_lowercase().chars() {
@@ -239,7 +239,7 @@ pub(crate) fn custom_theme_id_for_label(label: &str) -> Option<String> {
 /// verb, ~450 rows, the key in the args) would have been unable to say WHICH key it wrote. React's
 /// handlers are closures that captured those coordinates, which is what this restores. Keys stay
 /// ascending so the projected argument object is stable.
-pub(crate) fn merge_committed_args(authored: Option<&DslValue>, value: DslValue) -> Option<DslValue> {
+pub fn merge_committed_args(authored: Option<&DslValue>, value: DslValue) -> Option<DslValue> {
     let mut fields: Vec<(String, DslValue)> = match authored {
         Some(semio_framework_value::DslValue::Object(existing)) => existing.iter().filter(|(key, _)| key != "value").cloned().collect(),
         _ => Vec::new(),
@@ -252,5 +252,5 @@ pub(crate) fn merge_committed_args(authored: Option<&DslValue>, value: DslValue)
 
 //#region ⚖️MergePolicyAndThemeCommits
 /// ⬆️ React's `requestFileOpen(".theme.dsl,.dsl,text/plain")` accept list, verbatim.
-pub(crate) const SHELL_THEME_IMPORT_ACCEPT: &str = ".theme.dsl,.dsl,text/plain";
+pub const SHELL_THEME_IMPORT_ACCEPT: &str = ".theme.dsl,.dsl,text/plain";
 //#endregion ⚖️MergePolicyAndThemeCommits

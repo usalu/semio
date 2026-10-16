@@ -1,6 +1,14 @@
 //! 🧭️ The routers of the plugin host: IO, inference, plugin graph, mutation, instance directory, transaction coordinator, app and opening resolver.
 
-use super::*;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+use std::sync::{Arc, Mutex};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin_guest_contract::{IoEntryRouteConflict, IoRouteConflict, PluginHostError};
+use semio_framework_plugin_host_post_turn_relay::PluginInstanceHandle;
+use semio_framework::PluginManifest;
 
 //#region 🔖️IoRouter
 /// 🌉️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): the host
@@ -26,15 +34,15 @@ struct IoRouterState {
 }
 
 /// 🌉️ One edge of the NEW mechanism's merged graph: `(from, into)`.
-pub(super) type IoEntryKey = (semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect);
+pub type IoEntryKey = (semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect);
 
 /// 🌉️ One edge's owner + declared strength — erased from the owning plugin's `IoEntryDescriptor`,
 /// plus which plugin registered it (needed by `run_io`'s reentrancy guard and `identify`'s fan-out).
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct IoEntryRoute {
-    pub(super) owner: String,
-    pub(super) fidelity: semio_framework::io_schema::IoFidelity,
-    pub(super) sniffs: bool,
+pub struct IoEntryRoute {
+    pub owner: String,
+    pub fidelity: semio_framework::io_schema::IoFidelity,
+    pub sniffs: bool,
 }
 
 /// 🌉️ Inverse of `io_schema::Confidence::rank()` — the WIT `io-sniff` guest export returns a raw
@@ -123,7 +131,7 @@ fn walk_io_routes(
 ///
 /// 🚫️async: R10 residue shape 1 — `io_route_rank` is async, so ranks are precomputed before
 /// the sync `sort_by` comparator rather than called from inside it.
-pub(super) fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework_artifact_reference::ArtifactDialect, into: &semio_framework_artifact_reference::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
+pub fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework_artifact_reference::ArtifactDialect, into: &semio_framework_artifact_reference::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let max_hops = max_hops.min(3);
@@ -159,7 +167,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// claim a `(from, into)` key a DIFFERENT plugin already owns? `None` means the merge is safe
 /// (either a brand-new key, or `plugin_id` re-claiming its OWN key — idempotent). Extracted as its
 /// own function so the conflict rule is unit-testable without a real `Arc<WasmPluginRuntime>`.
-pub(super) fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id: &str, incoming: &[semio_framework::io_schema::IoEntryDescriptor]) -> Option<PluginHostError> {
+pub fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id: &str, incoming: &[semio_framework::io_schema::IoEntryDescriptor]) -> Option<PluginHostError> {
     for descriptor in incoming {
         let key: IoEntryKey = (descriptor.from.clone(), descriptor.into.clone());
         if let Some(current) = existing.get(&key) {
@@ -176,7 +184,7 @@ pub(super) fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>,
 /// error message, or `None` if the whole route is safe to execute. Extracted as its own function so
 /// the guard is unit-testable without a real `Arc<WasmPluginRuntime>` (`run_io` needs one for every
 /// OTHER hop it actually executes; this predicate needs none).
-pub(super) fn route_reenters_calling_plugin<'route>(
+pub fn route_reenters_calling_plugin<'route>(
     graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
     route: &'route semio_framework::io_schema::IoRoute,
     calling_plugin_id: &str,
@@ -898,7 +906,7 @@ impl PluginGraph {
         Self { state: Mutex::new(BTreeMap::new()) }
     }
 
-    pub(super) fn lock(&self) -> Result<std::sync::MutexGuard<'_, BTreeMap<String, PluginManifest>>, PluginGraphError> {
+    pub(crate) fn lock(&self) -> Result<std::sync::MutexGuard<'_, BTreeMap<String, PluginManifest>>, PluginGraphError> {
         self.state.lock().map_err(|_| PluginGraphError::LockPoisoned)
     }
 
@@ -1692,7 +1700,6 @@ impl AppRouter {
         Self { state: Mutex::new(AppRouterState::default()) }
     }
 
-
     /// 🧪️ `register_plugin` split out for direct manifest-driven testing (no wasmtime component
     /// needed to exercise the two frozen conflict/gate faults) — pure aside from the `Mutex` lock.
     /// All-or-nothing per plugin: a breaching manifest leaves no surface behind and its fault is
@@ -1899,3 +1906,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 #[path = "../🧪️tests/🔬️opening-resolver/🦀️.rs"]
 mod opening_resolver_tests;
 //#endregion 🔖️OpeningResolver
+
+//#region 🔧️SharedWasmtimeEngine
+/// 🧪️ Only `host_transaction_coordinator_tests`' `FakeCluster` fixture calls this now — the old
+/// `HostState`'s WIT `host.*` import handlers (which encoded EVERY fault this way) are gone with
+/// `WasmPluginRuntime`. Kept (not deleted) because that fixture still needs it; `cfg_attr` silences
+/// the resulting "never used" warning on a plain (non-test) `--lib` build without hiding a REAL
+/// dead-code case under a blanket `#[allow]`.
+#[cfg_attr(not(test), allow(dead_code))]
+// 🚫️async: E1 — pure in-memory encoder, no suspension point; reverted per R9 (its only
+// consumer FakeCluster::exchange must itself be sync to satisfy run_transaction/undo_group
+// production FnMut(...) -> Result<...> closure signature).
+fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
+    let code = code.into();
+    semio_framework_diagnostic::encode_fault_bytes(&semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Os, semio_framework_diagnostic::FaultCode::new(code), message))
+}
+//#endregion 🔧️SharedWasmtimeEngine

@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { validateJsonSchemaSubset } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/framework/schema";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/♻️retirement/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/♻️retirement/🔣️.json", import.meta.url), "utf8"));
-const valueSchema = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+const valueSchema = JSON.parse(readFileSync(frameworkSourceUrl("🔨️modules/🌱️value/🧬️schema/🔣️.json"), "utf8"));
 const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
 test("closed recursive retirement wire corpus has independent AJV and owned schema parity", () => {
   const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(schema);

@@ -13,7 +13,7 @@ import {
   type ThreeCamera,
   type ThreeScene,
   type Vector3 as ThreeVector3
-} from "@semio-tech/ui-react";
+} from "@semio-tech/framework/ui/targets/react";
 // #endregion 🔌️Adapters
 import {
   DEFAULT_LOD_GRID_FACTOR,

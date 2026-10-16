@@ -1,6 +1,6 @@
 /** 📜️ Handwritten persisted Procedure identity and program/seed child relations. */
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteDatabase}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 import{parseProcedureArtifact,type ProcedureArtifact}from"../../../🧬️schema/🟦️.ts";
 import type{ProcedureSnapshot}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 /** 🏛️ Individual parent identity, flow handle and text handle contract. */

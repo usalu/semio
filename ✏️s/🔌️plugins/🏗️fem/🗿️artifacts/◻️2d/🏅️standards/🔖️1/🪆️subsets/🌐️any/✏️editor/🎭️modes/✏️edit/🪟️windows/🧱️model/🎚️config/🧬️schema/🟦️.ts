@@ -1,4 +1,4 @@
-import { parseViewport2d, type Viewport2d } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+import { parseViewport2d, type Viewport2d } from "@semio-tech/framework/ui/viewport/2d/schema";
 /** 🧬️ Exact FEM 2D model window configuration. */
 export interface Fem2dModelWindowConfig {
   camera: Viewport2d;

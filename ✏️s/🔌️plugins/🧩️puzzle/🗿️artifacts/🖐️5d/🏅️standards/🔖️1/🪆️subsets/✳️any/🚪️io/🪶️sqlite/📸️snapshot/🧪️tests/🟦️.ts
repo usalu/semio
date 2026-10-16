@@ -1,4 +1,4 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import * as artifactSqlite0 from "../🟦️.ts";
 /** 🧩️ Native Puzzle5d parent identities and exact scalar domains share neutral oracle vectors. */
 import {expect,test} from 'bun:test';
@@ -10,16 +10,17 @@ import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts"
 import {Database} from 'bun:sqlite';
 import {fileURLToPath} from 'node:url';
 import {PUZZLE5D_SQLITE_SCHEMA} from "../🗄️schema/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
+import type {ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 import snapshotSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
-import ioSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import type {DragSelection2d as StandaloneDrag2d} from "../../../../🧬️schema/🧬️mutations/✋️drag-selection2d/🦠️mutation/🟦️.ts";
 import type {DragSelection3d as StandaloneDrag3d} from "../../../../🧬️schema/🧬️mutations/🚚️drag-selection3d/🦠️mutation/🟦️.ts";
 import type {RotateSelection3d as StandaloneRotate3d} from "../../../../🧬️schema/🧬️mutations/🔄️rotate-selection3d/🦠️mutation/🟦️.ts";
 import type {ScaleSelection3d as StandaloneScale3d} from "../../../../🧬️schema/🧬️mutations/🔍️scale-selection3d/🦠️mutation/🟦️.ts";
 import type {CreatePart,AddPartGrip,CreateTargetVolume} from "../../../../🧬️schema/🧬️mutations/🟦️.ts";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 function specimen(bits:bigint):snapshot.Puzzle5dSnapshot {
  const word={bits};
  const part:snapshot.Puzzle5dPart={id:'',partKind:null,anchor:'derived','2d':{x:word,y:word,shape:'',radius:word,width:null,height:word,text:null,iconKind:'',hidden:null,locked:false},'3d':{origin:[word,word,word],meshUrl:'',orientation:[word,word,word,word],scale:word,label:null},grips:[{id:'',gripKind:'unresolved','2d':{angle:word,gripKind:null,radius:word},'3d':{position:[word,word,word],direction:[word,word,word],radius:null,label:''}}]};
@@ -171,11 +172,11 @@ test("Puzzle5d borrowed Scale and diff metadata preserve the authored neutral re
 });
 
 test("Puzzle5d nullable delta retains omission, clearing and exact typed replacement",async()=>{
- const nullable=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🪆️binding/🪆️optional/🔣️.json",import.meta.url)).json();
+ const nullable=await Bun.file(frameworkSourceUrl("🔨️modules/🗣️dsl/🧪️tests/🧫️fixtures/🪆️binding/🪆️optional/🔣️.json")).json();
  const validate=new Ajv({strict:true}).addSchema(artifactReferenceSchema).compile({type:"object",properties:{label:{type:"object",properties:{value:{type:"string"}},additionalProperties:false}},additionalProperties:false});
  for(const sample of nullable.samples){expect(validate(sample.physical)).toBe(true);expect(JSON.parse(JSON.stringify(sample.physical))).toEqual(sample.physical);const semantic=!("label" in sample.physical)?{}:!("value" in sample.physical.label)?{label:null}:{label:sample.physical.label.value};expect(semantic).toEqual(sample.json)}
  for(const sample of nullable.invalid)expect(validate(sample)).toBe(false);
- const binding=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",import.meta.url)).text();
+ const binding=await Bun.file(frameworkSourceUrl("🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs")).text();
  expect(binding).toContain('mod optional_field;');
- const macro=await Bun.file(new URL("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",import.meta.url)).text();const diffText=macro.slice(macro.indexOf('fn diff_text_tokens('),macro.indexOf('pub fn expand_diff_binary('));expect(diffText).toContain('::semio_framework_dsl_record::parse_exact(');
+ const macro=await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs")).text();const diffText=macro.slice(macro.indexOf('fn diff_text_tokens('),macro.indexOf('pub fn expand_diff_binary('));expect(diffText).toContain('::semio_framework_dsl_record::parse_exact(');
 });

@@ -5,7 +5,7 @@ import { PdfProjection, PdfReader, pdfInteger, pdfNumber, type PdfCell } from ".
 import { writePdfOperations, readPdfOperations } from "../🖋️content/🟦️.ts";
 import { writePdfToUnicode, readPdfToUnicode, writePdfCMap, readPdfCMap, writePdfFontProgram, readPdfFontProgram } from "../🔤️font/🟦️.ts";
 import { writePdfImage, readPdfImage } from "../🖼️resource/🟦️.ts";
-import { artifactSqliteInteger } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 async function writeIdentity(out: PdfProjection, value: PdfGraphIdentity): Promise<bigint> {
   const key = await out.insert("pdf_graph_identity", [pdfInteger(value.owner.num), pdfInteger(value.owner.gen, 16)]);

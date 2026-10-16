@@ -1,4 +1,4 @@
-import { parseArtifactRef,type ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { parseArtifactRef,type ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 /** 🪪️ Admitted stream words bind to exact logical generations and structural paths. */
 import type { ObjRef, PdfOp, PdfObject, PdfIndirectObject, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage } from "../📸️snapshot/🟦️.ts";
 import { parsePdfOp, parsePdfToUnicode, parsePdfEmbeddedCMap, parsePdfFontProgram, parsePdfImage } from "../📸️snapshot/🟦️.ts";

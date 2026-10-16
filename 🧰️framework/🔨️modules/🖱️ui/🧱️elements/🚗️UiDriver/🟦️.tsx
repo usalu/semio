@@ -6,7 +6,8 @@
 
 // #region Adapters
 import * as React from "react";
-import { type StoragePort, createBrowserStoragePort, ephemeralBox } from "@semio-tech/framework";
+import { type StoragePort, createBrowserStoragePort } from "../../🔨️modules/🗄️storage-port/🟦️.ts";
+import { ephemeralBox } from "../../../🫧️transient/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 // #endregion Adapters
 

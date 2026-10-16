@@ -1,0 +1,30 @@
+{
+ "moves": [
+  {
+   "names": [
+    "ephemeralBox",
+    "ephemeralMap",
+    "ephemeralSet",
+    "EphemeralBox"
+   ],
+   "target": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🫧️ephemeral-state/🟦️.ts",
+   "via": "@semio-tech/ui-styling",
+   "scope": [
+    "🧰️framework/🔨️modules/🖱️ui/🧱️elements",
+    "🧰️framework/🔨️modules/🖱️ui/🔨️modules",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests"
+   ],
+   "from": {
+    "files": [
+     "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🫧️ephemeral-state/🟦️.ts"
+    ]
+   }
+  }
+ ],
+ "exclude": [
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu",
+  "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages"
+ ]
+}

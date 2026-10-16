@@ -1,5 +1,5 @@
 /** 🌳️ Explicit node transforms, references and ordered occurrences. */
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 import type {GltfNode} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {type Write,type Read,word,optionalWord,ordinal,optionalText,columns} from "../🧩️control/🟦️.ts";
 const VALUE=columns(3);

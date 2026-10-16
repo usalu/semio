@@ -6,7 +6,7 @@ use super::*;
 
 /// 🗂️ `ui_wgpu::wgpu::ShellMenuAction.kind` wire string for an `ActionDefinition.kind` — host-side styling
 /// parity only, unused by `build_shell_context_menu_specs` itself.
-pub(crate) fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
+pub fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String {
     match kind {
         semio_framework::ActionKind::Mutation => "mutation",
         semio_framework::ActionKind::View => "view",
@@ -27,7 +27,7 @@ pub(crate) fn context_menu_action_kind_str(kind: semio_framework::ActionKind) ->
 /// synthesizes (`menu.group.more`) is the one group id outside the closed 20-id ribbon-parent taxonomy,
 /// so resolving through the taxonomy alone rendered it with an EMPTY label. Its React twin resolves the
 /// same id through `ui.contextMenu.more` (`🛠️ShellHelpers/🟦️.tsx`'s `contextMenuGroupLabel`).
-pub(crate) fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
+pub fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
     let ui_wgpu::wgpu::ContextMenuItemSpec { id, label, icon, shortcut, disabled, reason, separator, checked, destructive, action, args, children, .. } = spec;
     let is_group_row = id.starts_with(ui_wgpu::wgpu::CONTEXT_MENU_GROUP_ID_PREFIX);
     let label = ui_wgpu::wgpu::context_menu_group_label(&id, is_de).map(str::to_string).or(label);
@@ -47,7 +47,7 @@ pub(crate) fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenu
     }
 }
 
-pub(crate) fn scope_context_menu_items(items: &mut [ContextMenuItem], window_id: &str) {
+pub fn scope_context_menu_items(items: &mut [ContextMenuItem], window_id: &str) {
     for item in items {
         if let Some(action) = item.action.as_mut() {
             scope_action_to_window(action, window_id);
@@ -62,7 +62,7 @@ pub(crate) fn scope_context_menu_items(items: &mut [ContextMenuItem], window_id:
 /// focused-input Enter/Escape commit) must look straight through them — otherwise the chord that
 /// opens the quick-search palette disables every route out of it, including its own toggle and
 /// Escape (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(crate) const SHELL_OVERLAY_INPUT_IDS: [&str; 2] = ["ui.search.input", "ui.find.input"];
+pub const SHELL_OVERLAY_INPUT_IDS: [&str; 2] = ["ui.search.input", "ui.find.input"];
 
 //#endregion ShellTypes
 

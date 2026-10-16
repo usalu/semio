@@ -1,11 +1,9 @@
 import {repositoryCachePartitionRootDataV1} from "../📂️paths/🟦️.ts";
 import {dirname,join} from "node:path";
-import {existsSync,lstatSync,mkdirSync,readdirSync,rmSync,unlinkSync} from "node:fs";
+import {lstatSync,mkdirSync} from "node:fs";
 import {repositoryCacheBudgetV1,type RepositoryCachePartitionIdV1} from "../🟦️.ts";
 import {openNativePlatformStorageV1,requireNativeStoragePathV1,type NativeImageStorageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
-import {acquireResourceLease,checkResourceLeaseControl,readResourceQueueClaimIdentityV1,resourceQueueCatalogPathV1,requireMaterializedPathV1,retireResourceQueueClaimsV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import retention from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧬️schema/🎟️retention.json" with {type:"json"};
-import custody from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧬️schema/🎟️custody.json" with {type:"json"};
+import {checkResourceLeaseControl,requireMaterializedPathV1,retireResourceLeasesV1,retireResourceQueueClaimsV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import parentSchema from"./📂️parents/🧬️schema/🔣️.json"with{type:"json"};
 
@@ -32,14 +30,10 @@ function prepareRepositoryCacheParentsV1(workspace:string,control:ResourceLeaseC
 async function openRepositoryLeasePartitionV1(workspace:string,control:ResourceLeaseControl):Promise<NativeImageStorageV1>{
  prepareRepositoryCacheParentsV1(workspace,control);
  const budget=repositoryCacheBudgetV1(workspace),partition=budget.partitions.leases,open=()=>openNativePlatformStorageV1({directory:partition.directory,leaseDirectory:budget.controlDirectory,filesystemBytes:partition.filesystemBytes,maximumPhysicalBytes:partition.capacityBytes,control,maximumLeaseDatabaseBytes:16384});let image=await open();
- try{const directory=repositoryLeaseDirectoryV1(workspace);await image.recheck();const catalog=resourceQueueCatalogPathV1(directory);
-  if(!existsSync(catalog)||lstatSync(catalog).size===0){await image.withExclusiveMaintenance({version:1,wait:true},async()=>{
-   await image.recheck();const claims=requireNativeStoragePathV1(image.root,join(directory,custody.properties.claimDirectory.const));let names:string[];try{names=readdirSync(claims);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return;throw error;}let retired=0;
-   for(const name of names.filter(name=>/^[a-f0-9]{64}\.sqlite$/u.test(name)).sort().slice(0,retention.properties.maximumClaimsPerTurn.const)){checkResourceLeaseControl(control);await image.recheck();const row=await readResourceQueueClaimIdentityV1(directory,name,control);if(!row)continue;requireNativeStoragePathV1(image.root,row.path);const held=await acquireResourceLease({directory:dirname(row.path),resource:row.resource,mode:"exclusive",signal:control.signal,control,timeoutMs:0,maximumDatabaseBytes:custody.properties.maximumDatabaseBytes.const});try{const before=lstatSync(row.path);if(before.dev!==row.device||before.ino!==row.inode)throw Error("Original quiescent claim inode required");rmSync(requireNativeStoragePathV1(image.root,row.queueTicketPath),{force:true});}finally{held.release();}const settled=lstatSync(row.path);if(settled.dev!==row.device||settled.ino!==row.inode)throw Error("Released quiescent claim inode required");unlinkSync(row.path);retired++;await control.publish({resource:"repository:lease-claims-retirement",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}
-   console.log("[DEBUG] Original exclusive lease image retired settled queue claims "+JSON.stringify({retired}));
-  });image=await open();}
-  await image.recheck();await retireResourceQueueClaimsV1(directory,control);await image.recheck();return image;
- }catch(error){await image.close();throw error;}
+ try{const directory=repositoryLeaseDirectoryV1(workspace);await image.recheck();requireNativeStoragePathV1(image.root,directory);await image.withExclusiveMaintenance({version:1,wait:false},async(_port,custody)=>{
+  if(custody.kind!=="kernel-ex")throw Error("Actual exclusive lease image maintenance required");const resource="native-fixed-image:"+partition.directory;requireResourceLeaseWriterProofV1(custody.proof,{directory:budget.controlDirectory,resource,path:resourceLeasePathV1(budget.controlDirectory,resource)},custody.control);await image.recheck();const ordinary=await retireResourceLeasesV1(directory,custody.control,0),claims=await retireResourceQueueClaimsV1(directory,custody.control,0);await image.recheck();console.log("[DEBUG] Actual exclusive lease image retired authenticated idle databases "+JSON.stringify({ordinary,claims}));
+ });image=await open();await image.recheck();return image;
+ }catch(error){try{await image.close();}catch{}throw error;}
 }
 
 /** 🎟️ Opens the authored finite backing under original caller custody; unsupported enforcement remains a refusal. */

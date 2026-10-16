@@ -3,14 +3,13 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::local_folders::*;
 use semio_framework_os_config::opening_config::mutations::{apply_local_folders_config_mutation, attach_local_folder, detach_local_folder, LocalFolderBinding, LocalFolderBindings, LocalFolderRef, LocalFoldersConfigMutation, LOCAL_FOLDERS_CONFIG_SCHEMA};
 
 //#region 🔖️HostRouteFolder
 /// 📬️ A read's answer: the stored archive's bytes, `None` when nothing was written yet (`204`), else the refusal — the
 /// HTTP status as `backbone-folder.status-<n>`, or the page's own transport error.
-#[cfg(any(target_arch = "wasm32", test))]
-pub(crate) fn backbone_folder_read_answer(answer: &str) -> Result<Option<Vec<u8>>, String> {
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+pub fn backbone_folder_read_answer(answer: &str) -> Result<Option<Vec<u8>>, String> {
     let answer: Value = serde_json::from_str(answer).map_err(|error| error.to_string())?;
     if let Some(error) = answer.get("error").and_then(Value::as_str) {
         return Err(error.to_string());
@@ -29,7 +28,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// React's `restoreDocumentArchiveV1`: once the program holds it, its history is re-read (rows, edits, head) and every
     /// surface refreshes. `true` when an archive was restored.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) async fn restore_folder_archive(&mut self, path: &str, document_id: &str) -> Result<bool, String> {
+    pub async fn restore_folder_archive(&mut self, path: &str, document_id: &str) -> Result<bool, String> {
         let Some(bytes) = store_sync::sync::FolderEventLogStorage::new(std::path::PathBuf::from(path)).read_archive(document_id).await.map_err(|error| error.to_string())? else { return Ok(false) };
         self.restore_document_archive_bytes(&bytes).await?;
         Ok(true)
@@ -37,7 +36,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
 
     /// 🗃️ Loads one encoded document archive into the session's program like a fresh load, then re-reads its history
     /// (rows, edits, head) and refreshes every surface — React's `restoreDocumentArchiveV1`, on both builds.
-    pub(crate) async fn restore_document_archive_bytes(&mut self, bytes: &[u8]) -> Result<(), String> {
+    pub async fn restore_document_archive_bytes(&mut self, bytes: &[u8]) -> Result<(), String> {
         let archive = protocol::decode_document_archive_bytes(bytes).await.map_err(|error| error.to_string())?;
         let session = self.docs.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
@@ -50,8 +49,8 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// the stored archive is read and restored like a fresh load, or, when nothing was written yet, the document's own
     /// archive is written there first; the document then stays bound until detached and every history change writes its
     /// archive again ([`Self::flush_host_route_folder`]). A folder attach is remembered for this device.
-    #[cfg(any(target_arch = "wasm32", test))]
-    pub(crate) async fn attach_host_route_backbone(&mut self, uri: String, identity: LocalFolderIdentity) -> Result<(), String> {
+    #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+    pub async fn attach_host_route_backbone(&mut self, uri: String, identity: LocalFolderIdentity) -> Result<(), String> {
         let schema = self.docs.session.as_ref().map(|session| session.app.io.artifact_schema.clone()).ok_or("session missing")?;
         let stored = backbone_folder_read_answer(&backbone_folder_call(&backbone_folder_request(BackboneFolderVerb::Read, &uri, &identity.document_id, None), None).await?)?;
         let written = match stored {

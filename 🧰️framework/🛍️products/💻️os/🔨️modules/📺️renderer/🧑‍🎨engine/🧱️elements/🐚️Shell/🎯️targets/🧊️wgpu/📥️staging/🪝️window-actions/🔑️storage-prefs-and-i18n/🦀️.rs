@@ -4,7 +4,7 @@ use super::*;
 
 //#region ShellChrome
 //#region 🎨️ThemeRegistry
-pub(crate) fn delete_custom_theme(id: &str) {
+pub fn delete_custom_theme(id: &str) {
     with_chrome_prefs(|prefs| {
         prefs.custom_themes.remove(id);
         if prefs.theme_id == id {

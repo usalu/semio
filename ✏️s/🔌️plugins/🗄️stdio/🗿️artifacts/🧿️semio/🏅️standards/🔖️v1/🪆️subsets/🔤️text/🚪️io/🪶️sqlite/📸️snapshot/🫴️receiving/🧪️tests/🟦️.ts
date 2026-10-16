@@ -4,7 +4,7 @@ import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import contract from"./🧫️fixtures/🔣️.json";
 import shape from"../🧬️schema/🔣️.json";
-import canonicalGrant from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { retainedCloneWireSchema as canonicalGrant } from "@semio-tech/framework/value/retained-clone/wire/schema";
 import{semioTextSnapshotToSqliteDatabase as project,semioTextSnapshotFromSqliteDatabase as reconstruct,SEMIO_TEXT_SQLITE_SCHEMA}from"../../🟦️.ts";
 import type{SemioTextSnapshot}from"../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";

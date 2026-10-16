@@ -14,7 +14,7 @@
 use super::*;
 
 fn chrome_lane_source() -> String {
-    crate::shell::SHELL_SOURCE.to_string()
+    shell_source().to_string()
 }
 
 fn lane_body(source: &str, name: &str) -> String {

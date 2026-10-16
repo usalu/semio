@@ -14,16 +14,16 @@ use super::*;
 /// 🩸️ This renderer used to mint `shell.tour.{skip,next,back}` — ids React has never had, so a parity
 /// probe driving ONE journey across both renderers had to carry an alias table and every tour step read
 /// as a difference (`📓️w5b-interaction-parity-probe.md` §4.1).
-pub(crate) const UI_INTRODUCTION_SKIP_CONTROL_ID: &str = "ui.introduction.skip";
+pub const UI_INTRODUCTION_SKIP_CONTROL_ID: &str = "ui.introduction.skip";
 
-pub(crate) const UI_INTRODUCTION_NEXT_CONTROL_ID: &str = "ui.introduction.next";
+pub const UI_INTRODUCTION_NEXT_CONTROL_ID: &str = "ui.introduction.next";
 
-pub(crate) const UI_INTRODUCTION_BACK_CONTROL_ID: &str = "ui.introduction.back";
+pub const UI_INTRODUCTION_BACK_CONTROL_ID: &str = "ui.introduction.back";
 
 /// 🧯️ The blocking veil itself. React's scrim is a real `pointer-events-auto` element with its own
 /// `onPointerDown={skip}`; giving it a control id is what lets `pointer_press_belongs_to_shell_chrome`
 /// claim the press before any 3D surface under it can.
-pub(crate) const UI_INTRODUCTION_VEIL_CONTROL_ID: &str = "ui.introduction.veil";
+pub const UI_INTRODUCTION_VEIL_CONTROL_ID: &str = "ui.introduction.veil";
 
 //#endregion 🔑️StorageKeys
 //#endregion ShellChrome

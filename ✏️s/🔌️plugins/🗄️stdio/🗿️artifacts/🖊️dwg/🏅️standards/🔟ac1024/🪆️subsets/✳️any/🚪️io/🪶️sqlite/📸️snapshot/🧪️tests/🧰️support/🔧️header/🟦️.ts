@@ -1,6 +1,6 @@
 /** 🧫️ Handcrafted DWG typed boundary fixture shared by component and complete snapshot laws. */
 import type { DwgHeaderVariables,DwgHeaderSpaceGeometry } from "../../../../../../🧬️schema/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 
 function header(bits:bigint):DwgHeaderVariables{
   const f=(index:number)=>({bits:(bits+BigInt(index))&18446744073709551615n});

@@ -5,7 +5,7 @@
 
 import { ephemeralBox } from "@semio-tech/framework";
 // #region 🔌️Adapters
-import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/ui-styling";
+import { clearColorResolveCache, resolveSemanticColorHex, tokenHex } from "@semio-tech/framework/ui/styling";
 // #endregion 🔌️Adapters
 import { THREE } from "../🔌️ports/🟦️.ts";
 

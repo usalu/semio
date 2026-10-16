@@ -3,59 +3,63 @@
 //! catalog constructors. The catalog carries the engine's disposer, so it lives with the engine, above the vocabulary.
 //!
 //! Layering: `📓️2026-10-13-wave-e1b-kernel-seams.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use crate::os_store::snapshot_read::retire_document_envelope;
-use crate::os_store::snapshot_read::retirement_owner_demands;
-use crate::os_store::snapshot_read::retirement_owner_close;
-use crate::os_store::snapshot_read::ArtifactStoreEnvelopeRetirement;
-use crate::ArtifactStoreCursorDisposer;
-use crate::os_store::snapshot_read::ArtifactGenesisRetirement;
-use crate::MemberSnapshotOpenOperation;
-use super::history_read_admission;
-use super::ArtifactStoreDecodedEditRetirementFactory;
-use super::ArtifactStoreDecodedEditRetirement;
-use super::ArtifactStoreChangeRetirementFactory;
-use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis};
+#[path = "📥️lifted/🏪️store/🦀️.rs"]
+pub mod lifted_store;
+#[path = "📥️lifted/🏭️operation/🦀️.rs"]
+pub mod lifted_operation;
+use semio_framework_os_store_read::retire_document_envelope;
+use semio_framework_os_store_read::retirement_owner_demands;
+use semio_framework_os_store_read::retirement_owner_close;
+use semio_framework_os_store_read::ArtifactStoreEnvelopeRetirement;
+use crate::lifted_store::ArtifactStoreCursorDisposer;
+use semio_framework_os_store_read::ArtifactGenesisRetirement;
+use crate::lifted_operation::MemberSnapshotOpenOperation;
+use semio_framework_os_store_read::history_read_admission;
+use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirementFactory;
+use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
+use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreChangeRetirementFactory;
+use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use super::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress};
-use crate::os_spr::command::ArtifactMessageSource;
+use semio_framework_os_store_replay::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress};
+use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use crate::os_spr::MutationId;
-use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
+use semio_framework_os_spr::MutationId;
+use semio_framework_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
 use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
-use crate::os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
+use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
-use crate::os_vcs::{Author, VcsError};
-use crate::os_vcs::{
-    Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable,
-};
-use super::artifact_child_owner_schema::OwnerRef;
-use crate::os_pack::pack_rt;
-use super::ledger::{ArtifactEditMessageLedgerRetirement, CursorRevisionAccumulator};
-use super::canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
-};
-use super::prepared_operation_wire::{ArtifactOperationWire, ArtifactOperationText};
-use super::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
-use super::{ArtifactBackboneRef, ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOwnedDisposer, EditReplay, EditReplayResult, EffectiveSupersessions, HistoryLane, MemberStoreOneItemWirePreparationFactory, MigrationProvenance, OpenToolTransaction, ReplayProgress, retire_shared_projection};
+use semio_framework_os_vcs::{Author, VcsError};
+use semio_framework_os_vcs::{Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable};
+use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_framework_os_pack::pack_rt;
+use semio_framework_os_store_ledger::{ArtifactEditMessageLedgerRetirement, CursorRevisionAccumulator};
+use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
+use semio_framework_os_store_operation_wire::{ArtifactOperationWire, ArtifactOperationText};
+use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+use semio_framework_os_store_space_schema::{ArtifactBackboneRef, ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane, MigrationProvenance, OpenToolTransaction};
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use crate::lifted_store::ArtifactStoreOwnedDisposer;
+use semio_framework_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayProgress, retire_shared_projection};
+use semio_framework_os_store_one_item_publication::lifted_publication::MemberStoreOneItemWirePreparationFactory;
 
 #[path="🏭️producer/🧬️schema/🦀️.rs"]
-mod producer;
+pub mod producer;
 pub use producer::{DocumentStoreOwnerProducer,BoundedDocumentStoreOwnerProducer};
 
-pub(crate) struct DocumentCatalogOwner<T>(pub(crate) Option<T>);
+pub struct DocumentCatalogOwner<T>(pub(crate) Option<T>);
 
 impl<T> DocumentCatalogOwner<T> {
-    pub(crate) fn take(&mut self) -> Option<T> { self.0.take() }
-    fn is_some(&self) -> bool { self.0.is_some() }
+    pub fn take(&mut self) -> Option<T> { self.0.take() }
+    pub fn is_some(&self) -> bool { self.0.is_some() }
 }
 
 impl<T> std::ops::Deref for DocumentCatalogOwner<T> {
@@ -77,15 +81,15 @@ where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
-    pub(crate) snapshot_retirement: DocumentCatalogOwner<Arc<dyn SnapshotRetirementFactory<P>>>,
-    pub(crate) initial_snapshot_retirement: DocumentCatalogOwner<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
-    pub(crate) mutation_retirement: DocumentCatalogOwner<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>,
-    pub(crate) store_disposer: DocumentCatalogOwner<Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>>,
-    pub(crate) one_item_preparation: Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
-    pub(crate) replay_preparation: Option<Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>>,
-    pub(crate) one_item_wire_preparation: Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>,
-    pub(crate) operation_wire: ArtifactOperationWire<Mutation>,
-    factory_retirement_tickets: semio_framework_value::FactoryChildTickets<6>,
+    pub snapshot_retirement: DocumentCatalogOwner<Arc<dyn SnapshotRetirementFactory<P>>>,
+    pub initial_snapshot_retirement: DocumentCatalogOwner<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
+    pub mutation_retirement: DocumentCatalogOwner<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>,
+    pub store_disposer: DocumentCatalogOwner<Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>>,
+    pub one_item_preparation: Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
+    pub replay_preparation: Option<Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>>,
+    pub one_item_wire_preparation: Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>,
+    pub operation_wire: ArtifactOperationWire<Mutation>,
+    pub factory_retirement_tickets: semio_framework_value::FactoryChildTickets<6>,
 }
 
 /// 🛡️ Retains original typed catalog inputs and any actual completed allocation on admission refusal.
@@ -269,7 +273,7 @@ where
         bytes
     }
 
-    pub(crate) fn take_factory_retirement_tickets(&mut self) -> semio_framework_value::FactoryChildTickets<6> {
+    pub fn take_factory_retirement_tickets(&mut self) -> semio_framework_value::FactoryChildTickets<6> {
         std::mem::replace(&mut self.factory_retirement_tickets, semio_framework_value::FactoryChildTickets { slots: std::array::from_fn(|_| semio_framework_value::FactoryChildSlot::empty()), prepared: 0 })
     }
 
@@ -325,14 +329,14 @@ where
         }).map(|(owner,mut progress)|{progress.copied_bytes=demand.copy_bytes;(owner,progress)}).map_err(|(error, (owners, envelope))| (error, owners, envelope))
     }
 
-    pub(crate) fn retire_decoded_edit(&self, edit: Edit<Mutation>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Edit<Mutation>)>
+    pub fn retire_decoded_edit(&self, edit: Edit<Mutation>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Edit<Mutation>)>
     where Mutation: Send + 'static,
     {
         admit_artifact_retirement((edit, self.mutation_retirement.clone()), grant, |(edit, factory)| ArtifactStoreDecodedEditRetirement::new(edit, factory))
             .map_err(|(error, (edit, factory))| { drop(factory); (error, edit) })
     }
 
-    pub(crate) fn retire_decoded_envelope(&self, envelope: ArtifactEnvelope<P, Mutation>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, ArtifactEnvelope<P, Mutation>)>
+    pub fn retire_decoded_envelope(&self, envelope: ArtifactEnvelope<P, Mutation>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, ArtifactEnvelope<P, Mutation>)>
     where P: Send + Sync + 'static, Mutation: Send + 'static,
     {
         self.retire_envelope(envelope, grant)
@@ -378,7 +382,7 @@ where
         Ok(semio_framework_value::RetirementDemand { release_bytes: self.store_disposer.0.as_ref().map_or(0, |owner| size_of_val(owner.as_ref())), depth: usize::from(self.store_disposer.is_some()), ..Default::default() })
     }
 
-    fn factory_aliases_present(&self) -> bool {
+    pub fn factory_aliases_present(&self) -> bool {
         self.snapshot_retirement.is_some() || self.initial_snapshot_retirement.is_some() || self.mutation_retirement.is_some() || self.one_item_preparation.is_some() || self.replay_preparation.is_some() || self.one_item_wire_preparation.is_some()
     }
 
@@ -432,11 +436,11 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<
     fn drop(&mut self) { assert!(std::thread::panicking() || self.uninstalled_owners_terminal_is_empty(), "document catalog reached Drop before exact handoff or controlled retirement"); }
 }
 
-pub(crate) struct UninstalledDocumentEnvelopeRetirement<P, M>
+pub struct UninstalledDocumentEnvelopeRetirement<P, M>
 where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<P>,
 {
-    envelope: Option<ArtifactStoreEnvelopeRetirement<P, M>>,
-    owners: Option<DocumentStoreOwners<P, M>>,
+    pub envelope: Option<ArtifactStoreEnvelopeRetirement<P, M>>,
+    pub owners: Option<DocumentStoreOwners<P, M>>,
 }
 
 impl<P, M> ErasedSnapshotRetirement for UninstalledDocumentEnvelopeRetirement<P, M>
@@ -472,7 +476,7 @@ where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue
 impl<P, M> UninstalledDocumentEnvelopeRetirement<P, M>
 where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue + FromValue + Mutation<P> + Send + 'static,
 {
-    fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.envelope.is_some() { return retirement_owner_demands(&self.envelope, body); }
         if let Some(owners) = self.owners.as_ref() {
             let mut demand = owners.uninstalled_owners_demands(body)?;
@@ -484,10 +488,10 @@ where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue
 }
 
 #[path="🏭️member/🧬️schema/🦀️.rs"]
-mod member_producer;
+pub mod member_producer;
 pub use member_producer::MemberStoreProducer;
 
-pub(crate) const UNSCHEDULED_CATALOG_STEPS: usize = 1 << 12;
+pub const UNSCHEDULED_CATALOG_STEPS: usize = 1 << 12;
 
 /// 🏗️ Funds one complete member catalog from its own quoted demands for async construction that no scheduler grants.
 pub fn funded_member_store_owners<P, Mutation, C>(producer:&C) -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
@@ -526,7 +530,7 @@ where
     Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "catalog constructor did not complete within its bounded ticket admission"))
 }
 
-pub(crate) fn close_unscheduled_catalog<P, Mutation>(mut owners: DocumentStoreOwners<P, Mutation>)
+pub fn close_unscheduled_catalog<P, Mutation>(mut owners: DocumentStoreOwners<P, Mutation>)
 where
     P: Clone + ToValue + FromValue,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
@@ -550,10 +554,10 @@ where
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(crate) struct BoundedArtifactRetirementFactory<T>(PhantomData<fn() -> T>);
+pub struct BoundedArtifactRetirementFactory<T>(PhantomData<fn() -> T>);
 
 impl<T> BoundedArtifactRetirementFactory<T> {
-    pub(crate) fn new() -> Self { Self(PhantomData) }
+    pub fn new() -> Self { Self(PhantomData) }
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {

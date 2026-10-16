@@ -21,8 +21,8 @@ export {cargoDirectories,cargoTargetDirectory,cargoBuildDirectory} from "./🗂�
 export type {CargoDirectories} from "./🗂️directories/🟦️.ts";
 
 //#region 🧩️ReleaseComponentPlan
-/** 🎚️ The one component profile a release compiles (ticket 26/09/23 wave A2): the shipped `wasm-release`, staged into the
- * schema-owned deliverable directory (`dist/components`) that describe, receipts, materialization and the trusted catalog read. */
+/** 🎚️ The one component profile a release compiles (ticket 26/09/23 wave A2): the selected `release`, staged into the
+ * schema-owned deliverable directory (the managed selected-mode component product) that describe, receipts, materialization and the trusted catalog read. */
 
 //#endregion
 
@@ -63,7 +63,7 @@ export function componentWorkspacesV1(repoRoot: string, workspaces?: readonly st
 
 /** 🗺️ The release driver's plan: one pass per component workspace and release profile, staging each component into its profile's deliverable directory.
  * `pluginIds` restricts the passes to exactly those components (a dev launch builds only its closure); unknown ids are refused. */
-export function componentPassPlanV1(repoRoot: string, pluginIds?: ReadonlySet<string>, mode: BuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE)): NativeBuildPlanV1 {
+export function componentPassPlanV1(repoRoot: string, pluginIds: ReadonlySet<string> | undefined, mode: BuildMode): NativeBuildPlanV1 {
   const workspaces = componentWorkspacesV1(repoRoot), known = new Set(workspaces.flatMap((workspace) => Object.values(workspace.pluginIds)));
   const unknown = [...pluginIds ?? []].filter((id) => !known.has(id));
   if (unknown.length) throw Error(`Release plan names no discovered component: ${unknown.join(", ")}`);
@@ -75,9 +75,9 @@ export function componentPassPlanV1(repoRoot: string, pluginIds?: ReadonlySet<st
 
 /** 🚀️ A product's release plan: one Cargo pass per component workspace restricted to `components` (every discovered component when omitted) and the
  * pipeline's jobs with absolute working directories, plus the hook that gives each job its owner policies inside the driver's generation. */
-export function nativeBuildPipelinePlanV1(repoRoot: string, pipeline: NativeBuildPipelineV1, components?: ReadonlySet<string>): Readonly<{ plan: NativeBuildPlanV1; jobEnvironment: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>> }> {
-  const admitted = admitNativeBuildPipelineV1(pipeline), passes = componentPassPlanV1(repoRoot, components).passes, policies = new Map(admitted.jobs.map((job) => [job.id, job.policies]));
-  const policy = buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE)), profile = (value: string): string => {readBuildMode(value);return policy.cargoProfile;};
+export function nativeBuildPipelinePlanV1(repoRoot: string, pipeline: NativeBuildPipelineV1, mode: BuildMode, components?: ReadonlySet<string>): Readonly<{ plan: NativeBuildPlanV1; jobEnvironment: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>> }> {
+  const admitted = admitNativeBuildPipelineV1(pipeline), passes = componentPassPlanV1(repoRoot, components, mode).passes, policies = new Map(admitted.jobs.map((job) => [job.id, job.policies]));
+  const policy = buildModePolicy(mode), profile = (value: string): string => {readBuildMode(value);return policy.cargoProfile;};
   const jobs: NativeBuildJobV1[] = admitted.jobs.map((job) => ({ id: job.id, cwd: resolve(repoRoot, job.root), command: bindHostPlatformJobArgumentsV1(job.command,process.platform), after: job.after, profile: profile(job.profile), target: job.target, workerProtocol: job.workerProtocol, ...(job.lane === undefined ? {} : { lane: profile(job.lane) }) }));
   return Object.freeze({ plan: admitNativeBuildPlanV1({ version: 1, passes, jobs, ...(admitted.stageAfter ? { stageAfter: admitted.stageAfter } : {}) }), jobEnvironment: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => ownerEnvironmentV1(job.cwd, policies.get(job.id) ?? [], generation.build, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(job.profile) }) });
 }

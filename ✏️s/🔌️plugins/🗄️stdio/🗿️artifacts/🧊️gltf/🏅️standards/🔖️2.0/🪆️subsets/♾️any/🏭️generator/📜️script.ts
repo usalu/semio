@@ -33,7 +33,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { leadingEmojiIdentity } from "../../../../../../../../../../🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
+import { leadingEmojiIdentity } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import * as THREE from "three";

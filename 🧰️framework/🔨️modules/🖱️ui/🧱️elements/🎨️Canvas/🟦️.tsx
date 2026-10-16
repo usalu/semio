@@ -6,7 +6,6 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox } from "@semio-tech/framework";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { type IconName } from "@semio-tech/assets";
@@ -32,6 +31,7 @@ import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../
 import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope, setSurfaceActiveRoot } from "../🌈️Surface/🟦️.tsx";
 import { WindowChrome, windowCapFrameClass } from "../🗂️WindowChrome/🟦️.tsx";
 import { type UiStatus } from "@semio-tech/ui-styling";
+import { ephemeralBox } from "../../../🫧️transient/🟦️.ts";
 import { createEvenWindowLayout, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type WindowLayoutWindowNode, type WindowStackCorner } from "../../🔨️modules/🗺️window-layout/🟦️.ts";
 import { focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace } from "../🔍️WindowSearch/🟦️.tsx";
 import { dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabClass, windowBodyFrameClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";

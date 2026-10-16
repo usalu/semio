@@ -1,4 +1,4 @@
-import { interactivityStoreSyncFailures } from "../../../../../../../../📜️script.ts";
+import { interactivityStoreSyncFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity store sync policy assertions. */
 export function interactivityStoreSyncSelfTests(): void {

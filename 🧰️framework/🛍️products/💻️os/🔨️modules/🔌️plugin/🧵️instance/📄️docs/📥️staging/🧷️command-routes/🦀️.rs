@@ -8,10 +8,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
     /// §3, gap N17): every verb but a view or interaction verb waits — nothing reads or edits the document being replaced;
     /// hover and pick read only the selection (audit W2A-13) — except `historyEditCancelReplay`, which cancels the load;
     /// `None` while no load runs.
-    pub(crate) fn document_loading_refusal(&self, tools: &ToolOperations<A>, verb: &str) -> Option<Fault> {
+    pub(crate) fn document_loading_refusal(&self, tools: &ToolOperations<A>, verb: &str, admitted_by_extension: bool) -> Option<Fault> {
         let mut loading = false;
         self.document_archive_loads.each_id(|operation| loading |= self.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::loading));
-        let exempt = matches!(tools.declared_action_kind(verb), Some(ActionKind::View | ActionKind::Interaction)) || INTERACTION_ACTION_IDS.contains(&verb) || InstanceExtensions::admitted_while_loading(verb);
+        let exempt = matches!(tools.declared_action_kind(verb), Some(ActionKind::View | ActionKind::Interaction)) || INTERACTION_ACTION_IDS.contains(&verb) || admitted_by_extension;
         (loading && !exempt).then(|| Fault::new(FaultOrigin::Framework, FaultCode::new(DOCUMENT_LOADING_CODE), format!("'{verb}' waits: the document is still loading")))
     }
 }

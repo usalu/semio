@@ -1,6 +1,6 @@
 /** 🧪️ Ajv (third-party oracle) and the hand-written `dragBlocks` parser agree on the committed witness and on every hostile variant. */
 import { expect, test } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import schema from "../../../../../🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧬️schema/🔣️.json";
 import mutation from "../../../../../🧱️block/🧪️tests/🧫️fixtures/🧬️mutations/🤏️drag-blocks/🤏️nudges/🦠️mutation/🔣️.json";
 import { parseDragBlocks } from "../../../../../🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🟦️.ts";

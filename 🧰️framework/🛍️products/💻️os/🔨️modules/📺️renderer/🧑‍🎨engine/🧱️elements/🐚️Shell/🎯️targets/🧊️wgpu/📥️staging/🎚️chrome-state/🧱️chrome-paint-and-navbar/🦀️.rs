@@ -14,12 +14,12 @@ use super::*;
 /// `wasm32-unknown-unknown`, so every browser boot — macOS included — painted `Ctrl+Alt+E` where
 /// React painted `⌘️⌥️E`. It now reads the host's own platform, published by whoever owns a
 /// `navigator` (`🧊️renderer/🦀️.rs`, region ⌨️HostPlatform).
-pub(crate) fn format_keybinding_shortcut(keys: &str) -> String {
+pub fn format_keybinding_shortcut(keys: &str) -> String {
     let chord = keys.split(',').next().unwrap_or(keys).trim().to_ascii_lowercase();
     if chord.is_empty() {
         return String::new();
     }
-    let apple = crate::host_platform_uses_meta();
+    let apple = semio_framework_os_renderer_wgpu_host_base::host_platform_uses_meta();
     let glyph = |part: &str| -> String {
         match part {
             "mod" if apple => "⌘️".into(),
@@ -66,7 +66,7 @@ pub(crate) fn format_keybinding_shortcut(keys: &str) -> String {
 /// navbar's role buttons read `Editor ⌘️⌥️E` / `Viewer ⌘️⌥️V`. The chord comes from this session's own
 /// remappable table, so an override is reflected in the badge exactly as React's
 /// `useControlHotkey(id)` reads `controlKeybindings`.
-pub(crate) fn shell_control_hotkey_badge(table: &[(String, String)], control_id: &str) -> Option<String> {
+pub fn shell_control_hotkey_badge(table: &[(String, String)], control_id: &str) -> Option<String> {
     table.iter().find(|(id, _)| id == control_id).map(|(_, keys)| format_keybinding_shortcut(keys))
 }
 

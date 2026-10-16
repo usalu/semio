@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellChrome
 impl ShellInputState {
-    pub(crate) fn reveal_panel_tab_row(&mut self, anchor: PanelAnchor, tab_id: &str, dock: &ShellDockState) {
+    pub fn reveal_panel_tab_row(&mut self, anchor: PanelAnchor, tab_id: &str, dock: &ShellDockState) {
         if let Some(row_index) = dock.anchor_panel_tab_rows(anchor).iter().position(|row| row.iter().any(|node| node.id == tab_id)) {
             self.scroll_offsets.insert(panel_tab_scroll_id(anchor, row_index), f32::MAX);
         }
@@ -15,6 +15,6 @@ impl ShellInputState {
 
 //#endregion ShellChrome
 
-pub(super) fn panel_tab_scroll_id(anchor: PanelAnchor, row_index: usize) -> String {
+pub fn panel_tab_scroll_id(anchor: PanelAnchor, row_index: usize) -> String {
     format!("shell.panel.tabs.{}.{}.scroll", anchor.as_str(), row_index)
 }

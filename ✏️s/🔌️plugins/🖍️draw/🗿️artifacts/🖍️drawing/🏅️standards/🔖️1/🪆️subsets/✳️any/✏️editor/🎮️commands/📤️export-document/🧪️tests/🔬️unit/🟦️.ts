@@ -8,7 +8,8 @@ import schema from "../../🧬️schema/🔣️.json";
 import documents from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
 import traces from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 import {DrawingPngExportJob,exportDrawingPng,DRAWING_PNG_LIMITS,drawingPngExtent} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 const lift=(value:any):any=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,lift(item)])):value;
 const algorithms={maxWork:1e7,trace:traces[0]!.limits,booleans:{tolerance:.005,epsilon:1e-8,maxDepth:32,maxReferences:256,maxEdges:65536,maxParameters:262144,maxAtomicEdges:65536,maxSegments:65536,maxRetainedSegments:262144,maxWork:1e7}};
 const source=(name="rectangle")=>{const row=documents.find(row=>row.name===name)!;return{row,document:{...structuredClone(row.document),layers:lift(row.document.layers),artboard:{width:binary64(2),height:binary64(1)}}};};
@@ -35,9 +36,9 @@ test("PNG observers cancel before, during and after encoding and never publish p
 },120000);
 
 test("neutral PNG admission refusal and cancellation retain actual source and candidate",async()=>{
- const root="../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/";
+ const root=frameworkSourcePath("🔨️modules/🔲️pixels/📷️png/✍️encode")+"/";
  const fixture=await Bun.file(new URL(root+"🧫️fixtures/🔣️.json",import.meta.url)).json();
- const {PngEncodeJob}=await import("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts");
+ const {PngEncodeJob}=await import("@semio-tech/framework/pixels/png/encode");
  const image={width:fixture.width,height:fixture.height,pixels:Uint8Array.from(fixture.pixels)},source=image.pixels;
  expect(()=>new PngEncodeJob(image,fixture.maximumBytes)).toThrow(/byte limit/i);expect(image.pixels).toBe(source);expect([...source]).toEqual(fixture.pixels);
  const job=new PngEncodeJob(image),candidate=(job as any).output as Uint8Array;job.advance(1);const decoded=await sharp(job.result()).ensureAlpha().raw().toBuffer();expect([...decoded]).toEqual(fixture.pixels);

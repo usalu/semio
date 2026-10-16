@@ -762,7 +762,7 @@ pub(crate) async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
             if app.tools.tool_operations.get(next_id).unwrap().stage == MountedTypedCommandFullOperationStage::Worker {
                 app.tools.tool_operations.get_mut(next_id).unwrap().drive_worker_step(app.mounted_policy.maintenance).unwrap();
             } else {
-                app.advance_typed_operation_publication_one(app.mounted_policy.maintenance).await.unwrap();
+                { let __a0 = app.mounted_policy.maintenance; app.typed_ctx().advance_typed_operation_publication_one(__a0).await }.unwrap();
             }
             plugin_job_yield_once().await;
         }
@@ -1289,6 +1289,5 @@ pub(crate) async fn test_retained_document_cancellation<A: ArtifactApp + Default
 #[cfg(test)]
 include!("../../🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs");
 
-#[path = "../../👷️job/🛬️lifted/🔄️full-operation/🦀️.rs"]
-mod lifted_full_operation_job;
+use semio_framework_plugin_job::lifted_full_operation_job as lifted_full_operation_job;
 pub use lifted_full_operation_job::*;

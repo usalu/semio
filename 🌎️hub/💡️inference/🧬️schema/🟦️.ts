@@ -13,6 +13,7 @@ export const INFERENCE_RESULT_MAX_BYTES = 16384;
 export const INFERENCE_PROPOSAL_MAX_BYTES = 4096;
 export const INFERENCE_COMMAND_MAX_BYTES = 8192;
 export const INFERENCE_IDENTITY_JSON_MAX_BYTES = 8192;
+export const INFERENCE_PROGRESS_MAX_CURSOR = 16;
 export const INFERENCE_SCHEMA_SCOPE = "hub.inference";
 export const INFERENCE_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/hub/inference/schema.json";
 
@@ -522,7 +523,7 @@ export type InferenceLimitsV1 = {
 };
 const INFERENCE_LIMITS: InferenceLimitsV1 = {
   requestMaxBytes: 1024, inputMaxBytes: 1048576, resultMaxBytes: 16384, proposalMaxBytes: 4096, commandMaxBytes: 8192, identityJsonMaxBytes: 8192, jobCapacity: 128,
-  operationCapacity: 32, documentGateCapacity: 64, progressMaxCursor: 16, eventPageMaxItems: 8, claimLeaseMaxMs: 30000, jobMaxLifetimeMs: 120000, workUnitLimit: 4096,
+  operationCapacity: 32, documentGateCapacity: 64, progressMaxCursor: INFERENCE_PROGRESS_MAX_CURSOR, eventPageMaxItems: 8, claimLeaseMaxMs: 30000, jobMaxLifetimeMs: 120000, workUnitLimit: 4096,
   recursionDepth: 32, allocationBytes: 1048576, approvalMaxRecords: 8,
 };
 export function parseInferenceLimitsV1(value: unknown): InferenceLimitsV1 {

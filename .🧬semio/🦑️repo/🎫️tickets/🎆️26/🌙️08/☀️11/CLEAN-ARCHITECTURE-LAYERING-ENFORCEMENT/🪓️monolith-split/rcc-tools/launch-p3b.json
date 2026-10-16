@@ -1,0 +1,27 @@
+{
+ "after": "⚖️gate🌍️gis🚪️io🟦️",
+ "entries": [
+  {
+   "name": "⚖️gate🏢️semio-tech🎡️playrelease-job-order",
+   "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🏢️semio-tech/🎡️play/🧪️tests/🧩️release-job-order/🟦️.ts\"",
+   "env": {
+    "SEMIO_BUILD_MODE": "ship",
+    "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+    "NODE_DISABLE_COMPILE_CACHE": "1"
+   },
+   "group": "4_gate",
+   "order": 13.59
+  },
+  {
+   "name": "⚖️gate♻️mit-bestand🧺️demonstratorengine-producers",
+   "command": "bun repo exec --projects=@semio-tech/mit-bestand-demonstrator --exclude-dependencies -- bun test \"${workspaceFolder}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🧩️engine-producers/🟦️.ts\"",
+   "env": {
+    "SEMIO_BUILD_MODE": "ship",
+    "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+    "NODE_DISABLE_COMPILE_CACHE": "1"
+   },
+   "group": "4_gate",
+   "order": 13.6
+  }
+ ]
+}

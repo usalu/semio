@@ -53,7 +53,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             let selection = {
                 let programs: Vec<(&str, &semio_framework::PluginManifest)> = self.plugins.plugins.iter().map(|entry| (entry.plugin_id.as_str(), &entry.manifest)).collect();
                 let request = BootSelectionRequest { plugin_id: resolve_registry_plugin_id(&self.plugins.plugin_filter), app_id: resolve_playground_app_id(&self.plugins.plugin_filter) };
-                select_boot_program(&programs, request, boot_app_role(), crate::boot_app_id().as_deref())
+                select_boot_program(&programs, request, boot_app_role(), semio_framework_os_renderer_wgpu_host_base::boot_app_id().as_deref())
             };
             let Some((index, app)) = selection else {
                 let plugin_id = resolve_registry_plugin_id(&self.plugins.plugin_filter).to_string();
@@ -119,7 +119,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md` §8.1).
     /// The frame loop takes it from here, one [`Self::settle_pump_step`] per frame, which is what
     /// React's refresh lane has always done with its owed slot.
-    pub(super) async fn settle_boot(&mut self) -> Result<(), String> {
+    pub async fn settle_boot(&mut self) -> Result<(), String> {
         self.as_session().sync_dock();
         self.as_session().sync_session_chrome();
         #[cfg(not(target_arch = "wasm32"))]
@@ -153,7 +153,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// `sync_session_chrome` has already run `resolve_boot_example_id` for the instance's dialect (a
     /// query id the dialect does not author falls back, never a boot failure), so the id announced here
     /// is exactly the one the navbar picker shows.
-    pub(crate) async fn announce_session_example(&mut self) -> Result<(), String> {
+    pub async fn announce_session_example(&mut self) -> Result<(), String> {
         let Some(example_id) = self.plugins.active_example_id.clone().filter(|id| !id.is_empty()) else {
             return Ok(());
         };
@@ -161,7 +161,7 @@ impl<'ctx> ActionsCtx<'ctx> {
             return Ok(());
         };
         debug_log(&format!("[TRACE] wgpu-shell session example {}", serde_json::json!({ "exampleId": example_id, "controller": controller_id })));
-        self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: crate::action_args_json!({ "exampleId": example_id }) }).await
+        self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "exampleId": example_id }) }).await
     }
 }
 

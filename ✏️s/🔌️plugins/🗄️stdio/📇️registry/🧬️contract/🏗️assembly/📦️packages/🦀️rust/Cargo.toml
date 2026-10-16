@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Assembly of stdio artifact contributions: schema definitions, native codec receipts, capability ledgers and the contribution registry"
 
 [package.metadata.semio]
-role = "s-module"
+role = "library"
 
 [lints]
 workspace = true

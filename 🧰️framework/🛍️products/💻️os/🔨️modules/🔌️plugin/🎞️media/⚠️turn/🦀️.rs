@@ -1,12 +1,16 @@
 //! 🎞️ Complete media domain fields remain in their source slot until their original context funds publication.
-use semio_framework::{MediaError,MediaType};
-use semio_framework_job::{OriginalDomainProjection,OriginalDomainView as V,OriginalDomainFailure};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+use semio_framework_plugin_decl_app::invalid;
+use semio_framework_plugin_decl_app::project_media_error;
+use semio_framework::MediaError;
+use semio_framework_job::{OriginalDomainProjection, OriginalDomainView as V, OriginalDomainFailure};
+use semio_framework_value::{ValueError, RetainedCloneProgress};
 
+#[doc(hidden)]
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub(crate) struct MediaOperationRefusal{pub(crate) source:MediaOperationSource}
+pub struct MediaOperationRefusal{pub source:MediaOperationSource}
+#[doc(hidden)]
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub(crate) enum MediaOperationSource{Media(MediaError),Dispatch(semio_framework::ToolDispatchError)}
+pub enum MediaOperationSource{Media(MediaError),Dispatch(semio_framework::ToolDispatchError)}
 impl From<MediaError> for MediaOperationSource{fn from(source:MediaError)->Self{Self::Media(source)}}
 impl OriginalDomainFailure for MediaOperationRefusal{
  fn domain_code(&self)->&str{match &self.source{MediaOperationSource::Dispatch(_)=>"media.dispatch",MediaOperationSource::Media(source)=>match source{MediaError::UnknownPort(_)=>"media.unknown-port",MediaError::Incompatible{..}=>"media.incompatible",MediaError::Payload(..)=>"media.payload",MediaError::NotImplemented=>"media.not-implemented"}}}
@@ -29,18 +33,16 @@ impl OriginalDomainProjection for MediaOperationRefusal{
 
 
 /// 🧳️ Keeps domain output and original physical/context failure distinct before paid publication.
+#[doc(hidden)]
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub(crate) enum MediaOperationFailure{Domain(MediaOperationSource),Original(semio_framework_job::OriginalTurnFailure)}
+pub enum MediaOperationFailure{Domain(MediaOperationSource),Original(semio_framework_job::OriginalTurnFailure)}
 impl From<MediaError> for MediaOperationFailure{fn from(source:MediaError)->Self{Self::Domain(source.into())}}
 impl From<semio_framework::Fault> for MediaOperationFailure{fn from(source:semio_framework::Fault)->Self{Self::Original(source.into())}}
 impl From<semio_framework_job::OriginalTurnFailure> for MediaOperationFailure{fn from(source:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(source)}}
-impl From<crate::PluginLifecycleFailure> for MediaOperationFailure{fn from(source:crate::PluginLifecycleFailure)->Self{Self::Original(source.into())}}
+impl From<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> for MediaOperationFailure{fn from(source:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure)->Self{Self::Original(source.into())}}
 impl From<ValueError> for MediaOperationFailure{fn from(source:ValueError)->Self{Self::Original(source.into())}}
 
 impl From<semio_framework::ToolDispatchError> for MediaOperationFailure{fn from(source:semio_framework::ToolDispatchError)->Self{Self::Domain(MediaOperationSource::Dispatch(source))}}
 
-#[cfg(any(test,feature="media-turn-testing"))]
-#[path="🧪️tests/🦀️.rs"]
-pub mod tests;
 
 pub use semio_framework_plugin_decl_app::media_operation_refusal::*;

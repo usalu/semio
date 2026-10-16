@@ -2,7 +2,7 @@
 import type { PdfDate,PdfInfo } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
-import { artifactSqliteInteger } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 /** 📆️ Project the exact signed and unsigned native fields without date-string normalization. */
 export async function writePdfDate(out:PdfProjection,value:PdfDate):Promise<bigint>{return out.insert("pdf_date",[pdfInteger(value.year,32,true),pdfInteger(value.month??1),pdfInteger(value.day??1),pdfInteger(value.hour??0),pdfInteger(value.minute??0),pdfInteger(value.second??0),value.offsetMinutes==null?null:pdfInteger(value.offsetMinutes,32,true)]);}

@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020";
 import { UndirectedGraph } from "graphology";
-import schema from "../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows/🔣️.json";
+import { toolMachineNodeGraphEditRowsSchema as schema } from "@semio-tech/framework/tool-machine/schema/node-graph-edit-rows";
 import fixture from "../🧫️fixtures/🛠️graph-tool/🔣️.json";
 
 type GraphOperation = { operation: string; sourceNodeId: string; targetNodeId: string; synapseId: string; nodeIds: string[]; synapseIds: string[] };

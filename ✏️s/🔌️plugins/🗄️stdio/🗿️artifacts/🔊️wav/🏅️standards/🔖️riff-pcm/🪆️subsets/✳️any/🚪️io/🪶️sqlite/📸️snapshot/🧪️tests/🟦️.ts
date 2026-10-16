@@ -4,15 +4,15 @@ import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json";
 import floats from "./🧫️fixtures/🔢️float32.json";
 import indices from "./🧫️fixtures/🧭️indices.json";
-import integerQueries from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json";
+import { sqliteSnapshotIeee754Fixture as integerQueries } from "@semio-tech/framework/io/sqlite-snapshot/ieee754/testing";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import textSchema from "../../../📝️text/📸️snapshot/🔣️.json";
 import {buildSchema,graphqlSync} from "graphql";
 import type {WavSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseWavSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary32Value} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32Value} from "@semio-tech/framework/value/ieee754";
 import {WAV_SQLITE_SCHEMA,wavSnapshotToSqliteDatabase,wavSnapshotFromSqliteDatabase} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,SqliteOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,SqliteOperation} from "@semio-tech/framework/io/sqlite-snapshot";
 
 function fixtureSnapshot():WavSnapshot{return parseWavSnapshot({...fixture,chunkOrder:fixture.chunkOrder.map(reference=>reference.kind==="other"?{kind:"other",value:BigInt(reference.value!)}:{kind:reference.kind})})}
 
@@ -112,7 +112,7 @@ test("WAV independent row census closes the intrinsic bounded-work contract",asy
 
 import frontiers from "./🧫️fixtures/🧵️frontiers/🔣️.json";
 
-import {validateJsonSchemaSubset} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/framework/schema";
 function frontierSnapshot(caseKind:"samples"|"group"|"census"):WavSnapshot{const{ext,...fmt}=fixtureSnapshot().fmt;return {schema:frontiers.schema,fmt,fmtPadByte:0,dataPadByte:0,data:{kind:"pcm16",value:caseKind==="samples"?Array.from({length:frontiers.entities},(_,i)=>i+frontiers.sampleBase):[]},otherChunks:caseKind==="samples"?[]:caseKind==="group"?[{padByte:0,fourcc:frontiers.chunkGroup,data:Array.from({length:frontiers.entities},(_,i)=>i%frontiers.octetCycle)}]:Array.from({length:frontiers.entities},(_,i)=>({padByte:0,fourcc:String(i).padStart(frontiers.chunkWidth,"0"),data:[]})),chunkOrder:[]};}
 async function frontierDatabase(caseKind:"samples"|"group"|"census"){const snapshot=frontierSnapshot(caseKind),database=await wavSnapshotToSqliteDatabase(snapshot),table=caseKind==="samples"?"wav_pcm16_sample":caseKind==="group"?"wav_other_chunk_byte":"wav_other_chunk";return {snapshot,table,database:{tables:database.tables.map(value=>value.name===table?{...value,rows:[...value.rows].reverse()}:value)}};}
 test("WAV frontier corpus is closed and independently preserves reversed ordinal relationships",async()=>{

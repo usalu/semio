@@ -1,13 +1,14 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { AnySchema } from "ajv";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { parseJackArtifact } from "../../🟦️.ts";
 import { parseJackSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseJackDiff } from "../../🔺️diff/🟦️.ts";
 import { parseJackJsonValue } from "../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 const json = (url: URL): unknown => JSON.parse(readFileSync(url, "utf8"));
 
@@ -24,16 +25,16 @@ export function testJackDocumentContract(): void {
     invalidDocuments: unknown[];
     invalidDiffs: unknown[];
   };
-  const ioSchema = schema(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json", import.meta.url));
-  const childSchema = schema(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json", import.meta.url));
+  const ioSchema = schema(frameworkSourceUrl("🔨️modules/🚪️io/🧬️schema/🔣️.json"));
+  const childSchema = schema(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"));
   const artifactSchema = schema(new URL("../../🔣️.json", import.meta.url));
   const snapshotSchema = schema(new URL("../../📸️snapshot/🔣️.json", import.meta.url));
   const diffSchema = schema(new URL("../../🔺️diff/🔣️.json", import.meta.url));
   const snapshot = json(new URL(cases.snapshotFixture, import.meta.url));
   const diff = json(new URL(cases.diffFixture, import.meta.url));
   const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
-  ajv.addSchema(schema(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",import.meta.url)));
-  ajv.addSchema(schema(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",import.meta.url)));
+  ajv.addSchema(schema(frameworkSourceUrl("🔨️modules/🌱️value/🧬️schema/🔣️.json")));
+  ajv.addSchema(schema(frameworkSourceUrl("🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json")));
   ajv.addSchema(ioSchema);
   ajv.addSchema(childSchema);
   ajv.addSchema(artifactSchema);

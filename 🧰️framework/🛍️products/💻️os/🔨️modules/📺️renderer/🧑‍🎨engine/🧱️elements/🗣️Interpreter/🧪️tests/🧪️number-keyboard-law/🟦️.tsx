@@ -8,7 +8,7 @@ import { uiNumberFieldKey, type SliderKey } from "../../../../../../../../../�
 
 type TestSource = { readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "UiDocumentStore"> & Pick<typeof import("../../🟦️.tsx"), "UiNodeView">, _source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView">, _source: TestSource): Promise<void> {
   const { UiDocumentStore, UiNodeView } = dependencies;
   type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").Component;
   type UiIntent = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiIntent;

@@ -47,7 +47,7 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
 /// 🧭️ One app-declared panel tab as a dock node, children included — the wgpu twin of React's
 /// `panelTabDefinitionToNode`. The label comes off the manifest's own `LocalizedLabel` through the live
 /// terminology and locale, so this carries no shell dictionary and no default language.
-pub(crate) fn dock_tab_node_of(tab: &PanelTabDefinition, terminology: Terminology, locale: Locale, order: i32) -> DockTabNode {
+pub fn dock_tab_node_of(tab: &PanelTabDefinition, terminology: Terminology, locale: Locale, order: i32) -> DockTabNode {
     DockTabNode {
         id: tab.id().to_string(),
         label: tab.label.resolve(terminology, locale).to_string(),
@@ -63,7 +63,7 @@ pub(crate) fn dock_tab_node_of(tab: &PanelTabDefinition, terminology: Terminolog
 /// (`🏛️ShellHost/🟦️.tsx:10058`), through the SAME `semio_framework::manifest` pair React's
 /// `🛠️ShellHelpers/🟦️.tsx:1348-1355` twins, so `" · "` is one separator constant and a terminology
 /// override (`reuse` → `Entwerfen mit Bestand · Aggregator`) lands identically on both renderers.
-pub(crate) fn shell_navbar_title(app: &AppDefinition, terminology_id: &str) -> String {
+pub fn shell_navbar_title(app: &AppDefinition, terminology_id: &str) -> String {
     semio_framework::manifest::app_breadcrumb(semio_framework::manifest::resolve_app_breadcrumb(app, terminology_id))
 }
 
@@ -76,7 +76,7 @@ pub(crate) fn shell_navbar_title(app: &AppDefinition, terminology_id: &str) -> S
 /// default document is already that first fixture. An id the open dialect does not author falls back
 /// rather than faulting: a url is not a place to hard-fail a shell, the rule `?role=` and `?mode=`
 /// already follow. A dialect that authored no example answers `""`.
-pub(crate) fn resolve_boot_example_id(active_example_id: &str, example_ids: &[String], default_example_id: Option<&str>) -> String {
+pub fn resolve_boot_example_id(active_example_id: &str, example_ids: &[String], default_example_id: Option<&str>) -> String {
     let authored = |candidate: &str| !candidate.is_empty() && example_ids.iter().any(|id| id == candidate);
     if authored(active_example_id) {
         return active_example_id.to_string();
@@ -115,7 +115,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// with no panel-eligible action, `:4260`). A chip with no body behind it is not React's
     /// disabled-toggle case — that case is the Utilities/Measures rail, which React mounts
     /// unconditionally — so these two do not mount at all.
-    pub(crate) fn window_pane_chips(&self, window_id: &str) -> Vec<(WindowPaneChip, bool, bool)> {
+    pub fn window_pane_chips(&self, window_id: &str) -> Vec<(WindowPaneChip, bool, bool)> {
         let has_utilities = self.docs.session.as_ref().is_some_and(|session| !self.dock.derive_window_utility_nodes(session, window_id, &self.prefs, &self.windows).is_empty());
         WindowPaneChip::ALL
             .into_iter()

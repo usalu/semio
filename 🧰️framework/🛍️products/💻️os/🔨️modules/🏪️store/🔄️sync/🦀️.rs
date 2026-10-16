@@ -17,7 +17,7 @@
 mod workspace_identity;
 
 /// 🏠️ Admits only a declared package workspace with regular build authority.
-fn is_repository_root(path: &std::path::Path) -> Result<bool, String> {
+pub fn is_repository_root(path: &std::path::Path) -> Result<bool, String> {
     workspace_identity::is_workspace_root(path, |source| semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| matches!(value.get("workspaces"), Some(semio_framework_pack_json::Value::Array(_) | semio_framework_pack_json::Value::Object(_)))).map_err(|error| error.to_string()))
 }
 
@@ -25,16 +25,13 @@ use semio_framework_value::DslValue;
 use semio_framework_value::FromValue as FromValueTrait;
 use semio_framework_value::ToValue as ToValueTrait;
 use semio_framework_value::ValueError;
-use crate::os_spr::{PresencePeer, PresenceToolRun};
-use crate::os_spr::{
-    decode_document_backbone_envelopes_exact, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits,
-    ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, OpBinary, RuntimeFrontierSummary, ServerFrame,
-};
-use crate::os_spr::{ActorId, MutationId};
-use crate::os_store::{
-    backbone::decode_hot_backbone_message_exact, serialization::ArtifactPackFiles, ArtifactStore, text_format::ArtifactTextFiles, backbone::BackboneMessage, backbone::Backbones, backbone::ChannelBackbone, backbone::ChannelBackboneRemote, backbone::BACKBONE_CHANNEL_MAXIMUM_BYTES, backbone::BACKBONE_CHANNEL_MAXIMUM_MESSAGES,
-    backbone::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
-};
+use semio_framework_os_spr::{PresencePeer, PresenceToolRun};
+use semio_framework_os_spr::{decode_document_backbone_envelopes_exact, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, OpBinary, RuntimeFrontierSummary, ServerFrame};
+use semio_framework_os_spr::{ActorId, MutationId};
+use semio_framework_os_store_backbone::{decode_hot_backbone_message_exact, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote, BACKBONE_CHANNEL_MAXIMUM_BYTES, BACKBONE_CHANNEL_MAXIMUM_MESSAGES, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES};
+use semio_framework_os_store_text_io::ArtifactPackFiles;
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_framework_os_store_text_io::text_format::ArtifactTextFiles;
 use semio_framework_value_derive::{FromValue, ToValue};
 use tokio::sync::broadcast;
 
@@ -57,41 +54,41 @@ impl std::fmt::Display for SyncError {
 impl std::error::Error for SyncError {}
 //#endregion 🔖️Errors
 
-fn actor_identity_admission_admits(grant:semio_framework_value::RetainedCloneGrant)->bool{let demand=semio_framework_value::SharedUtf8::admission_demand();grant.maximum_items>=1&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_depth>=demand.depth}
+pub fn actor_identity_admission_admits(grant:semio_framework_value::RetainedCloneGrant)->bool{let demand=semio_framework_value::SharedUtf8::admission_demand();grant.maximum_items>=1&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_depth>=demand.depth}
 fn actor_identity_batch_admits(count:usize,grant:semio_framework_value::RetainedCloneGrant)->bool{let demand=semio_framework_value::SharedUtf8::lease_demand();count<=grant.maximum_items&&count.checked_mul(demand.copy_bytes).is_some_and(|bytes|bytes<=grant.maximum_copy_bytes)&&grant.maximum_depth>=demand.depth}
-fn add_actor_identity_progress(total:&mut semio_framework_value::RetainedCloneProgress,receipt:semio_framework_value::RetainedCloneProgress){total.copied_items=total.copied_items.checked_add(receipt.copied_items).expect("original identity item conservation overflow");total.copied_bytes=total.copied_bytes.checked_add(receipt.copied_bytes).expect("original identity copy conservation overflow");total.retained_capacity_bytes=total.retained_capacity_bytes.checked_add(receipt.retained_capacity_bytes).expect("original identity capacity conservation overflow");total.released_bytes=total.released_bytes.checked_add(receipt.released_bytes).expect("original identity release conservation overflow");}
-fn wire_envelopes_with_original_actor(envelopes:&[MutationEnvelope],actor:&semio_framework_value::SharedUtf8,grant:semio_framework_value::RetainedCloneGrant)->Result<(Vec<MutationEnvelope>,semio_framework_value::RetainedCloneProgress),ValueError>{if !actor_identity_batch_admits(envelopes.len(),grant){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original socket identity batch exceeds caller lease authority"));}let mut total=semio_framework_value::RetainedCloneProgress::default();let mut rows=Vec::with_capacity(envelopes.len());for original in envelopes{let(actor,receipt)=actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:grant.maximum_copy_bytes-total.copied_bytes,..grant})?;add_actor_identity_progress(&mut total,receipt);rows.push(MutationEnvelope{mutation_id:original.mutation_id.clone(),document_id:original.document_id.clone(),actor:ActorId(actor),dependencies:original.dependencies.clone(),observed:original.observed.clone(),target:original.target.clone(),diff:original.diff.clone(),inverse:original.inverse.clone(),timestamp:original.timestamp,transaction:original.transaction.clone(),verb:original.verb.clone(),line:original.line.clone()});}Ok((rows,total))}
+pub fn add_actor_identity_progress(total:&mut semio_framework_value::RetainedCloneProgress,receipt:semio_framework_value::RetainedCloneProgress){total.copied_items=total.copied_items.checked_add(receipt.copied_items).expect("original identity item conservation overflow");total.copied_bytes=total.copied_bytes.checked_add(receipt.copied_bytes).expect("original identity copy conservation overflow");total.retained_capacity_bytes=total.retained_capacity_bytes.checked_add(receipt.retained_capacity_bytes).expect("original identity capacity conservation overflow");total.released_bytes=total.released_bytes.checked_add(receipt.released_bytes).expect("original identity release conservation overflow");}
+pub fn wire_envelopes_with_original_actor(envelopes:&[MutationEnvelope],actor:&semio_framework_value::SharedUtf8,grant:semio_framework_value::RetainedCloneGrant)->Result<(Vec<MutationEnvelope>,semio_framework_value::RetainedCloneProgress),ValueError>{if !actor_identity_batch_admits(envelopes.len(),grant){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original socket identity batch exceeds caller lease authority"));}let mut total=semio_framework_value::RetainedCloneProgress::default();let mut rows=Vec::with_capacity(envelopes.len());for original in envelopes{let(actor,receipt)=actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:grant.maximum_copy_bytes-total.copied_bytes,..grant})?;add_actor_identity_progress(&mut total,receipt);rows.push(MutationEnvelope{mutation_id:original.mutation_id.clone(),document_id:original.document_id.clone(),actor:ActorId(actor),dependencies:original.dependencies.clone(),observed:original.observed.clone(),target:original.target.clone(),diff:original.diff.clone(),inverse:original.inverse.clone(),timestamp:original.timestamp,transaction:original.transaction.clone(),verb:original.verb.clone(),line:original.line.clone()});}Ok((rows,total))}
 
 //#region 🔖️EnvelopeSerde
 /// 🧵️ JSON worker seam: `MutationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
 mod envelope_serde {
-    use crate::os_spr::{decode_envelopes, encode_envelopes, MutationEnvelope};
+    use semio_framework_os_spr::{decode_envelopes, encode_envelopes, MutationEnvelope};
 
     /// 🧵️ Byte framing for the `ArtifactActorMsg::LocalMutations`/`ArtifactEvent::
     /// RemoteMutations` `#[value(serialize_with = ..., deserialize_with = ...)]` field bridge —
     /// wire shape is a `DslValue::Array` of `DslValue::Number` (one per byte), matching what the
     /// former serde `serialize_seq` path produced.
-    pub fn to_value(envelopes: &[MutationEnvelope]) -> super::DslValue {
+    pub fn to_value(envelopes: &[MutationEnvelope]) -> semio_framework_value::DslValue {
         let bytes = encode_envelopes(envelopes);
-        super::DslValue::Array(bytes.into_iter().map(|byte| super::DslValue::uint(byte as u64)).collect())
+        semio_framework_value::DslValue::Array(bytes.into_iter().map(|byte| semio_framework_value::DslValue::uint(byte as u64)).collect())
     }
 
     /// 🧵️ `FromValue` twin of `deserialize` above.
-    pub fn from_value(value: super::DslValue) -> Result<Vec<MutationEnvelope>, super::ValueError> {
-        let super::DslValue::Array(items) = value else {
-            return Err(super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected array of bytes"));
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<Vec<MutationEnvelope>, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Array(items) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected array of bytes"));
         };
         let mut bytes = Vec::with_capacity(items.len());
         for item in items {
-            let super::DslValue::Number(n) = item else {
-                return Err(super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected byte number"));
+            let semio_framework_value::DslValue::Number(n) = item else {
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected byte number"));
             };
             let Some(n) = n.as_u64() else {
-                return Err(super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected byte number"));
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected byte number"));
             };
             bytes.push(n as u8);
         }
-        decode_envelopes(&bytes).map_err(|error| super::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
+        decode_envelopes(&bytes).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
     }
 }
 //#endregion 🔖️EnvelopeSerde
@@ -256,7 +253,7 @@ pub enum ArtifactActorMsg {
     /// 🛟️ The host re-seeded a rebootstrapping hub document ([`ArtifactEvent::RebootstrapRequired`]): the canonical
     /// checkpoint pair it verified against the control and already loaded into the guest. The actor adopts it as its baseline,
     /// hands its unacked local operations back to the guest and dials at once, saying Hello at the pair's baseline.
-    Reseed { pack: Vec<u8>, spr: Vec<u8>, baseline: crate::os_directory::ArtifactFrontier },
+    Reseed { pack: Vec<u8>, spr: Vec<u8>, baseline: semio_framework_os_directory::ArtifactFrontier },
     /// 🔄️ Forces an immediate re-read + diff of the folder binding (test/manual poke hook).
     ExternalChanged,
     /// ✂️ Flushes any pending outbound operations, then stops the actor.
@@ -264,7 +261,7 @@ pub enum ArtifactActorMsg {
 }
 
 pub const ARTIFACT_MAILBOX_ITEMS: usize = 64;
-pub const ARTIFACT_MAILBOX_BYTES: usize = crate::os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 65_536;
+pub const ARTIFACT_MAILBOX_BYTES: usize = semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 65_536;
 
 #[derive(Debug)]
 pub enum ArtifactMailboxSendError {
@@ -283,18 +280,18 @@ impl ArtifactMailboxSendError {
 }
 
 struct ArtifactMailboxSlot {
-    generation: u64,
-    bytes: usize,
-    message: ArtifactActorMsg,
+    pub generation: u64,
+    pub bytes: usize,
+    pub message: ArtifactActorMsg,
 }
 
 struct ArtifactMailboxState {
-    slots: [Option<ArtifactMailboxSlot>; ARTIFACT_MAILBOX_ITEMS],
-    head: usize,
-    len: usize,
-    bytes: usize,
-    generation: u64,
-    closed: bool,
+    pub slots: [Option<ArtifactMailboxSlot>; ARTIFACT_MAILBOX_ITEMS],
+    pub head: usize,
+    pub len: usize,
+    pub bytes: usize,
+    pub generation: u64,
+    pub closed: bool,
     wake_armed: bool,
     waker: Option<std::task::Waker>,
     wake: Option<std::sync::Arc<dyn Fn() + Send + Sync>>,
@@ -307,7 +304,7 @@ impl ArtifactMailboxState {
 }
 
 struct ArtifactMailboxAuthority {
-    state: std::sync::Mutex<ArtifactMailboxState>,
+    pub state: std::sync::Mutex<ArtifactMailboxState>,
 }
 
 #[derive(Clone)]
@@ -316,13 +313,13 @@ pub struct ArtifactMailboxSender {
     generation: u64,
 }
 
-struct ArtifactMailboxReceiver {
-    authority: std::sync::Arc<ArtifactMailboxAuthority>,
-    generation: u64,
+pub struct ArtifactMailboxReceiver {
+    pub authority: std::sync::Arc<ArtifactMailboxAuthority>,
+    pub generation: u64,
 }
 
 #[derive(Clone)]
-struct ArtifactMailboxClose {
+pub struct ArtifactMailboxClose {
     authority: std::sync::Arc<ArtifactMailboxAuthority>,
     generation: u64,
 }
@@ -363,7 +360,7 @@ impl ArtifactMailboxSender {
 }
 
 impl ArtifactMailboxReceiver {
-    fn try_recv(&self) -> Option<ArtifactActorMsg> {
+    pub fn try_recv(&self) -> Option<ArtifactActorMsg> {
         let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if self.generation != state.generation || state.len == 0 {
             return None;
@@ -379,7 +376,7 @@ impl ArtifactMailboxReceiver {
         (slot.generation == self.generation).then_some(slot.message)
     }
 
-    async fn recv(&self) -> Option<ArtifactActorMsg> {
+    pub async fn recv(&self) -> Option<ArtifactActorMsg> {
         std::future::poll_fn(|context| {
             if let Some(message) = self.try_recv() {
                 return std::task::Poll::Ready(Some(message));
@@ -399,7 +396,7 @@ impl ArtifactMailboxReceiver {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn set_wake(&self, wake: std::sync::Arc<dyn Fn() + Send + Sync>) {
+    pub fn set_wake(&self, wake: std::sync::Arc<dyn Fn() + Send + Sync>) {
         let ready = {
             let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if self.generation != state.generation || state.closed {
@@ -413,21 +410,21 @@ impl ArtifactMailboxReceiver {
         }
     }
 
-    fn close(&self) {
+    pub fn close(&self) {
         self.close_handle().close();
     }
 
-    fn close_one(&self) -> bool {
+    pub fn close_one(&self) -> bool {
         self.close_handle().close_one()
     }
 
-    fn close_handle(&self) -> ArtifactMailboxClose {
+    pub fn close_handle(&self) -> ArtifactMailboxClose {
         ArtifactMailboxClose { authority: self.authority.clone(), generation: self.generation }
     }
 }
 
 impl ArtifactMailboxClose {
-    fn close(&self) {
+    pub fn close(&self) {
         let waker = {
             let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if self.generation != state.generation {
@@ -444,7 +441,7 @@ impl ArtifactMailboxClose {
         }
     }
 
-    fn close_one(&self) -> bool {
+    pub fn close_one(&self) -> bool {
         let owner = {
             let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if state.len == 0 {
@@ -466,17 +463,17 @@ impl ArtifactMailboxClose {
         true
     }
 
-    fn has_pending(&self) -> bool {
+    pub fn has_pending(&self) -> bool {
         self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len != 0
     }
 }
 
-fn artifact_mailbox_pair() -> (ArtifactMailboxSender, ArtifactMailboxReceiver) {
+pub fn artifact_mailbox_pair() -> (ArtifactMailboxSender, ArtifactMailboxReceiver) {
     let authority = std::sync::Arc::new(ArtifactMailboxAuthority { state: std::sync::Mutex::new(ArtifactMailboxState::new()) });
     (ArtifactMailboxSender { authority: authority.clone(), generation: 1 }, ArtifactMailboxReceiver { authority, generation: 1 })
 }
 
-fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
+pub fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
     fn field(bytes: usize) -> Option<usize> {
         4usize.checked_add(bytes)
     }
@@ -535,7 +532,7 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
             add(&mut bytes, field(message.len())?)?;
         }
         ArtifactActorMsg::LocalDocumentArchive { archive } => {
-            if archive.is_empty() || archive.len() > crate::os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES || archive[0] != 1 {
+            if archive.is_empty() || archive.len() > semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES || archive[0] != 1 {
                 return None;
             }
             add(&mut bytes, field(archive.len())?)?;
@@ -575,9 +572,9 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
                 add(
                     &mut bytes,
                     match &view.kind {
-                        crate::os_spr::PresenceViewKind::Canvas { .. } => 24,
-                        crate::os_spr::PresenceViewKind::Orbit { .. } => 80,
-                        crate::os_spr::PresenceViewKind::Geo { .. } => 40,
+                        semio_framework_os_spr::PresenceViewKind::Canvas { .. } => 24,
+                        semio_framework_os_spr::PresenceViewKind::Orbit { .. } => 80,
+                        semio_framework_os_spr::PresenceViewKind::Geo { .. } => 40,
                     },
                 )?;
                 add(&mut bytes, 17)?;
@@ -636,7 +633,7 @@ pub struct ArtifactSyncStatus {
     pub remote: RemoteState,
     /// 📌️ The edited head the hub acknowledged, present only while nothing local is unacknowledged —
     /// the head a hub Check In names. `None` before the first edit and while mutations are in flight.
-    pub acknowledged_head: Option<crate::os_directory::EditedArtifactFrontierV1>,
+    pub acknowledged_head: Option<semio_framework_os_directory::EditedArtifactFrontierV1>,
 }
 
 impl Default for ArtifactSyncStatus {
@@ -672,7 +669,7 @@ pub enum ArtifactEvent {
     /// 🛟️ The hub made this document rebuild from its canonical checkpoint (fan-out lag, an approval checkpoint): the actor
     /// dropped its projection and socket, keeps its unacked work and waits for the host's [`ArtifactActorMsg::Reseed`] with the
     /// pair `control` names — the pair only the host's directory client fetches and only the host can load into the guest.
-    RebootstrapRequired { control: crate::os_directory::RebootstrapRequired },
+    RebootstrapRequired { control: semio_framework_os_directory::RebootstrapRequired },
     /// 🎨️ The hub assigned (or re-confirmed, on reconnect) this connection's session color —
     /// `crate::os_spr::wire::ServerFrame::Session`, sent once per connection after `Welcome`. The
     /// actor stores it and stamps it onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
@@ -701,7 +698,7 @@ pub enum ArtifactEvent {
     Conflict(MutationMessage),
 }
 
-fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<MutationEnvelope>, String> {
+pub fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<MutationEnvelope>, String> {
     match decode_hot_backbone_message_exact(message).map_err(|error| error.to_string())? {
         BackboneMessage::Mutations { envelopes } => decode_document_backbone_envelopes_exact(&envelopes).map_err(|error| error.to_string()),
         BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } | BackboneMessage::Member { .. } | BackboneMessage::Retract { .. } => Err("document backbone requires a canonical mutation message".into()),
@@ -709,14 +706,14 @@ fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<Mutation
 }
 
 #[derive(Default)]
-struct DocumentBackboneRetentionV1 {
+pub struct DocumentBackboneRetentionV1 {
     entries: std::collections::HashMap<String, (usize, usize)>,
     bytes: usize,
     messages: usize,
 }
 
 impl DocumentBackboneRetentionV1 {
-    fn retain(&mut self, message_bytes: usize, envelopes: &[MutationEnvelope]) -> Result<(), CommandAckOutcome> {
+    pub fn retain(&mut self, message_bytes: usize, envelopes: &[MutationEnvelope]) -> Result<(), CommandAckOutcome> {
         if envelopes.is_empty() {
             return Ok(());
         }
@@ -742,7 +739,7 @@ impl DocumentBackboneRetentionV1 {
         Ok(())
     }
 
-    fn release(&mut self, envelopes: &[MutationEnvelope]) {
+    pub fn release(&mut self, envelopes: &[MutationEnvelope]) {
         for envelope in envelopes {
             if let Some((bytes, messages)) = self.entries.remove(&envelope.mutation_id.0) {
                 self.bytes = self.bytes.checked_sub(bytes).expect("document backbone retained byte ledger underflow");
@@ -751,18 +748,18 @@ impl DocumentBackboneRetentionV1 {
         }
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.entries.clear();
         self.bytes = 0;
         self.messages = 0;
     }
 }
 
-const ARTIFACT_BOOTSTRAP_DEADLINE_MS: u64 = 15_000;
+pub const ARTIFACT_BOOTSTRAP_DEADLINE_MS: u64 = 15_000;
 
 /// 🧬️ Binds a public artifact bootstrap to the already-selected document codec before
 /// allocating or accepting any payload bytes.
-fn validate_artifact_bootstrap_identity(bootstrap: &ArtifactBootstrap, document_id: &str, schema: &str, pack_schema_hash: [u8; 32], server_frontier: &RuntimeFrontierSummary) -> Result<(), String> {
+pub fn validate_artifact_bootstrap_identity(bootstrap: &ArtifactBootstrap, document_id: &str, schema: &str, pack_schema_hash: [u8; 32], server_frontier: &RuntimeFrontierSummary) -> Result<(), String> {
     if bootstrap.artifact_schema != schema {
         return Err(format!("artifact schema mismatch: expected {schema:?}, got {:?}", bootstrap.artifact_schema));
     }
@@ -780,13 +777,13 @@ fn validate_artifact_bootstrap_identity(bootstrap: &ArtifactBootstrap, document_
 
 
 /// 📌️ The hub's frontier in the Check In head grammar; `None` for a genesis (never edited) frontier.
-fn acknowledged_edited_head(frontier: &RuntimeFrontierSummary) -> Option<crate::os_directory::EditedArtifactFrontierV1> {
+fn acknowledged_edited_head(frontier: &RuntimeFrontierSummary) -> Option<semio_framework_os_directory::EditedArtifactFrontierV1> {
     let chain_sha256: String = frontier.chain_hash.iter().map(|byte| format!("{byte:02x}")).collect();
-    let head = crate::os_directory::EditedArtifactFrontierV1 { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_sha256 };
+    let head = semio_framework_os_directory::EditedArtifactFrontierV1 { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_sha256 };
     head.validate().then_some(head)
 }
 
-fn frontier_reaches(actual: &RuntimeFrontierSummary, required: &RuntimeFrontierSummary) -> bool {
+pub fn frontier_reaches(actual: &RuntimeFrontierSummary, required: &RuntimeFrontierSummary) -> bool {
     actual == required
 }
 
@@ -873,7 +870,7 @@ impl CommandAckOutcome {
 /// 🧵️ Binary worker seam: `MAGIC` + `crate::os_pack::pack_rt::encode_wire_value` over a `DslValue`
 /// tree (serde-shaped), shared by the wasm `store_worker` and `🏪️store/👷️worker/🟦️.ts`.
 pub mod backbone_worker_wire {
-    use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
+    use crate::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
     
     use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -925,7 +922,7 @@ pub mod backbone_worker_wire {
     pub fn encode_request(request: &BackboneWorkerRequest) -> Vec<u8> {
         let dsl = semio_framework_value::ToValue::to_value(request);
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_pack::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(semio_framework_os_pack::pack_rt::encode_wire_value(&dsl));
         bytes
     }
 
@@ -934,14 +931,14 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = semio_framework_os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 
     pub fn encode_response(response: &BackboneWorkerResponse) -> Vec<u8> {
         let dsl = semio_framework_value::ToValue::to_value(response);
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_pack::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(semio_framework_os_pack::pack_rt::encode_wire_value(&dsl));
         bytes
     }
 
@@ -950,7 +947,7 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = semio_framework_os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 }
@@ -959,7 +956,7 @@ pub mod backbone_worker_wire {
 //#region 🔖️Endpoints
 // 🧱️ `ArtifactId` names the document of every envelope `envelopes_from_history_edit` rebuilds off an spr
 // log, which both actors (native and browser) read.
-use crate::os_spr::ArtifactId;
+use semio_framework_os_spr::ArtifactId;
 
 /// 🆔️ One `HistoryEdit`'s op ids, matching `crate::os_spr::mutation_envelope_from_edit`'s own
 /// fallback convention (`meta[i].op_id` when present, else `"{edit.id}#{i}"`) so this is the SAME
@@ -967,7 +964,7 @@ use crate::os_spr::ArtifactId;
 /// actor's dedup set uses — computed here and ONLY here, so a locally-flushed edit's spr entry
 /// and the envelope built from re-reading that same spr always agree, fixing the actor's old
 /// self-re-ingest bug (mixing envelope op ids with raw JSON edit ids) by construction.
-async fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
+async fn op_ids_of(edit: &semio_framework_os_spr::HistoryEdit) -> Vec<String> {
     match &edit.meta {
         Some(metas) if metas.len() == edit.ops.len() => metas.iter().enumerate().map(|(index, meta)| meta.op_id.clone().unwrap_or_else(|| format!("{}#{index}", edit.id))).collect(),
         _ => (0..edit.ops.len()).map(|index| format!("{}#{index}", edit.id)).collect(),
@@ -975,7 +972,7 @@ async fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn document_archive_hash(archive: &[u8]) -> String {
+pub fn document_archive_hash(archive: &[u8]) -> String {
     semio_framework_hash::hash_bytes(archive)
 }
 
@@ -983,8 +980,8 @@ fn document_archive_hash(archive: &[u8]) -> String {
 /// actor's dedup/known-ids set, read directly off the binary history (NEVER via
 /// `parse_document_spr`, whose meta-absent branch mints fresh random ids on every read).
 #[cfg(not(target_arch = "wasm32"))]
-async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
-    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
+pub async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
+    let log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
     let mut ids = std::collections::HashSet::new();
     for edit in &log.edits {
         ids.extend(op_ids_of(edit).await);
@@ -996,8 +993,8 @@ async fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, Str
 /// 📜️ Every event an spr byte log persists, as the causal envelopes a store ingests: each
 /// edit's operations in log order, then every history transition — a persisted document IS its
 /// genesis pack plus exactly these events.
-async fn spr_events(spr: &[u8], document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
-    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
+pub async fn spr_events(spr: &[u8], document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
+    let log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| error.to_string())?;
     let mut events = Vec::new();
     for edit in &log.edits {
         events.extend(envelopes_from_history_edit(edit, document_id, schema, actor_identity_grant).await?);
@@ -1011,7 +1008,7 @@ async fn spr_events(spr: &[u8], document_id: &str, schema: &str, actor_identity_
 /// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
 /// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
-async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
+pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryEdit, document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
     if !actor_identity_batch_admits(edit.ops.len(),actor_identity_grant){return Err("original history identity batch exceeds caller lease authority".into());}
     for index in 0..edit.ops.len(){if edit.meta.as_ref().and_then(|metas|metas.get(index)).and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).is_none(){return Err(format!("edit {} op {index} has no authentic actor identity",edit.id));}}
     let op_ids = op_ids_of(edit).await;
@@ -1024,8 +1021,8 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
         let original_actor=meta.and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).expect("original actor presence validated before envelope birth");
         let(actor,receipt)=original_actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:actor_identity_grant.maximum_copy_bytes-identity_copied,..actor_identity_grant}).map_err(ValueError::into_message)?;identity_copied+=receipt.copied_bytes;
         let timestamp = match meta.and_then(|meta| meta.hlt) {
-            Some((actor, physical_ms, logical)) => crate::os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
-            None => crate::os_spr::HybridLogicalTimestamp::new(0, 0),
+            Some((actor, physical_ms, logical)) => semio_framework_os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
+            None => semio_framework_os_spr::HybridLogicalTimestamp::new(0, 0),
         };
         let inverse_payload = edit.inverse.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
         envelopes.push(MutationEnvelope {
@@ -1035,8 +1032,8 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
             dependencies,
             observed: None,
             target: Vec::new(),
-            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
-            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
+            diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId(schema.to_string()), payload },
+            inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
             transaction: None, verb: edit.verb.clone(), line: edit.line.clone(),
         });
@@ -1059,15 +1056,15 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
 /// already resolved any contribution or transaction locally and shipped the resulting
 /// OWNER ops, so this side records exactly what it receives — an owner edit.
 #[cfg(not(target_arch = "wasm32"))]
-async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::HistoryEdit {
-    crate::os_spr::HistoryEdit {
+pub async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> semio_framework_os_spr::HistoryEdit {
+    semio_framework_os_spr::HistoryEdit {
         id: envelope.mutation_id.0.clone(),
         actor: Some(envelope.actor.0.clone()),
         started_at: now_ms().await.to_string(),
         finished_at: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
-        ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
-        inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
-        meta: Some(vec![crate::os_spr::HistoryOpMeta {
+        ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
+        inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
+        meta: Some(vec![semio_framework_os_spr::HistoryOpMeta {
             op_id: Some(envelope.mutation_id.0.clone()),
             dependencies: envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect(),
             base_version: 0,
@@ -1076,7 +1073,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
             undo_policy: 0,
             payload_hash: None,
             group_id: None,
-            origin: crate::os_spr::command::MutationOrigin::Owner,
+            origin: semio_framework_os_spr::command::MutationOrigin::Owner,
             messages: Vec::new(),
             transaction: envelope.transaction.clone(),
         }]),
@@ -1090,13 +1087,13 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
 /// 26/08/16/HUB-SPACES-…: `(space_id, document_id, surface)` — `surface` rides outside the wire
 /// protocol rather than widening `PresencePeer`'s already-full flag byte). Actor identity is never
 /// a query parameter — the server binds it from the session credential.
-async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: Option<&str>) -> String {
+pub async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: Option<&str>) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    let scope = crate::os_directory::client::encode_url_component(&format!("{space_id}/{document_id}"));
+    let scope = semio_framework_os_directory_client::encode_url_component(&format!("{space_id}/{document_id}"));
     match surface {
-        Some(surface) => format!("{scheme}://{authority}/scopes/{scope}/document/ws?surface={}", crate::os_directory::client::encode_url_component(surface)),
+        Some(surface) => format!("{scheme}://{authority}/scopes/{scope}/document/ws?surface={}", semio_framework_os_directory_client::encode_url_component(surface)),
         None => format!("{scheme}://{authority}/scopes/{scope}/document/ws"),
     }
 }
@@ -1109,17 +1106,17 @@ async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: 
 /// exactly as the hub's trusted catalog asks it), otherwise the verified execution-target lease's — the
 /// hub-selected package a client that mounted no owning component will run. Neither is no identity at
 /// all, and the caller refuses to dial rather than guess.
-pub async fn document_pack_schema_hash(schema: &str, lease: Option<&crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> Option<[u8; 32]> {
-    if let Ok(Some(codec)) = crate::os_store::codec_registry::document_kind_codec(schema).await {
+pub async fn document_pack_schema_hash(schema: &str, lease: Option<&semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> Option<[u8; 32]> {
+    if let Ok(Some(codec)) = semio_framework_os_store_codec_registry::document_kind_codec(schema).await {
         return codec.pack_schema_hash().await.ok();
     }
     let lease = lease.filter(|lease| lease.artifact.schema == schema)?;
-    crate::os_directory::client::decode_lower_hex_32(&lease.artifact.pack_schema_hash)
+    semio_framework_os_directory_client::decode_lower_hex_32(&lease.artifact.pack_schema_hash)
 }
 
 /// 🎫️ What a document actor asks of the hub's open plan for its binding.
-pub fn document_socket_expectation(schema: &str, pack_schema_hash: [u8; 32], surface: Option<&str>, lease: Option<&crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> crate::os_directory::client::DocumentSocketExpectationV1 {
-    crate::os_directory::client::DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash, requested_surface_id: surface.map(str::to_string), lease: lease.cloned() }
+pub fn document_socket_expectation(schema: &str, pack_schema_hash: [u8; 32], surface: Option<&str>, lease: Option<&semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> semio_framework_os_directory_client::DocumentSocketExpectationV1 {
+    semio_framework_os_directory_client::DocumentSocketExpectationV1 { artifact_schema: schema.to_string(), pack_schema_hash, requested_surface_id: surface.map(str::to_string), lease: lease.cloned() }
 }
 
 /// 🧷️ The one binding a document actor holds a hub socket for.
@@ -1131,13 +1128,13 @@ pub struct DocumentSocketBinding<'a> {
     pub schema: &'a str,
     pub pack_schema_hash: [u8; 32],
     pub surface: Option<&'a str>,
-    pub lease: Option<&'a crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub lease: Option<&'a semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
 }
 
 /// ⚖️ Whether one admitted authority may carry this binding at `now_ms`: unexpired, from the bound
 /// hub origin, for exactly this scope, schema, pack identity and surface, and — when the client verified
 /// an execution-target lease — for exactly that lease.
-pub fn document_socket_authority_admits(authority: &crate::os_directory::client::DocumentSocketAuthorityV1, binding: &DocumentSocketBinding<'_>, now_ms: u64) -> bool {
+pub fn document_socket_authority_admits(authority: &semio_framework_os_directory_client::DocumentSocketAuthorityV1, binding: &DocumentSocketBinding<'_>, now_ms: u64) -> bool {
     authority.expires_at_unix_ms > now_ms
         && authority.hub_origin.trim_end_matches('/') == binding.hub_base_url.trim_end_matches('/')
         && authority.scope.space_id == binding.space_id
@@ -1149,19 +1146,19 @@ pub fn document_socket_authority_admits(authority: &crate::os_directory::client:
 }
 
 /// 🪢️ A canonical pair's public baseline in the runtime frontier grammar a `SocketHelloV1` advertises.
-fn canonical_pair_baseline(frontier: &crate::os_directory::ArtifactFrontier) -> RuntimeFrontierSummary {
+pub fn canonical_pair_baseline(frontier: &semio_framework_os_directory::ArtifactFrontier) -> RuntimeFrontierSummary {
     RuntimeFrontierSummary { document_id: ArtifactId(frontier.document_id.clone()), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: frontier.chain_hash.0 }
 }
 
 /// 🛟️ A wire `RebootstrapRequired` control as the directory contract names it (its frontier already projected onto the
 /// public document id by the hub).
-fn rebootstrap_control(control: &crate::os_spr::RebootstrapRequired) -> crate::os_directory::RebootstrapRequired {
+pub fn rebootstrap_control(control: &semio_framework_os_spr::RebootstrapRequired) -> semio_framework_os_directory::RebootstrapRequired {
     let frontier = &control.baseline_frontier;
-    crate::os_directory::RebootstrapRequired {
-        scope: crate::os_directory::DocumentScope::new(control.space_id.as_str(), control.document_id.as_str()),
-        checkpoint_id: crate::os_directory::ArtifactHash(control.checkpoint_id),
-        descriptor_digest_v1: crate::os_directory::ArtifactHash(control.descriptor_hash),
-        baseline_frontier: crate::os_directory::ArtifactFrontier { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: crate::os_directory::ArtifactHash(frontier.chain_hash) },
+    semio_framework_os_directory::RebootstrapRequired {
+        scope: semio_framework_os_directory::DocumentScope::new(control.space_id.as_str(), control.document_id.as_str()),
+        checkpoint_id: semio_framework_os_directory::ArtifactHash(control.checkpoint_id),
+        descriptor_digest_v1: semio_framework_os_directory::ArtifactHash(control.descriptor_hash),
+        baseline_frontier: semio_framework_os_directory::ArtifactFrontier { document_id: frontier.document_id.0.clone(), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: semio_framework_os_directory::ArtifactHash(frontier.chain_hash) },
     }
 }
 
@@ -1221,8 +1218,8 @@ pub async fn commands_frames_within(max_frame_bytes: usize, first_batch_id: u64,
 
 /// 🎲️ One document actor's hybrid-logical-clock replica seed: platform entropy, so two replicas
 /// of one user (two tabs, two processes) never tie on `(seed, counter)` — H4's per-replica law.
-pub fn replica_hlc_seed() -> Result<u64, crate::os_identity::EntropyError> {
-    crate::os_identity::entropy_u64()
+pub fn replica_hlc_seed() -> Result<u64, semio_framework_os_identity::EntropyError> {
+    semio_framework_os_identity::entropy_u64()
 }
 //#endregion 🔖️DocumentSocketConnect
 
@@ -1254,9 +1251,9 @@ impl DocumentLinkShortagePolicy {
 /// 🔌️ The policy every shell drives (`🧫️fixtures/document-link-shortage-v1` `policy`, the React twin
 /// `DOCUMENT_LINK_SHORTAGE_POLICY` in `🏪️store/🟦️.ts`).
 pub const DOCUMENT_LINK_SHORTAGE_POLICY: DocumentLinkShortagePolicy = DocumentLinkShortagePolicy {
-    reconnect_min_ms: crate::os_directory::client::HUB_RECONNECT_MIN_MS,
-    reconnect_max_ms: crate::os_directory::client::HUB_RECONNECT_MAX_MS,
-    shortage_bound_ms: 2 * crate::os_directory::client::HUB_RECONNECT_MAX_MS,
+    reconnect_min_ms: semio_framework_os_directory_client::HUB_RECONNECT_MIN_MS,
+    reconnect_max_ms: semio_framework_os_directory_client::HUB_RECONNECT_MAX_MS,
+    shortage_bound_ms: 2 * semio_framework_os_directory_client::HUB_RECONNECT_MAX_MS,
 };
 
 /// 🚫️ The HTTP statuses of a document admission that mean the hub withdrew access (`accessRefusedStatuses`):
@@ -1264,10 +1261,10 @@ pub const DOCUMENT_LINK_SHORTAGE_POLICY: DocumentLinkShortagePolicy = DocumentLi
 pub const DOCUMENT_LINK_ACCESS_REFUSED_STATUSES: [u16; 4] = [401, 403, 404, 410];
 
 /// 🚫️ Whether a document admission failed because the hub withdrew access rather than because the link is short.
-pub fn document_admission_refuses_access(error: &crate::os_directory::client::DirectoryClientError) -> bool {
+pub fn document_admission_refuses_access(error: &semio_framework_os_directory_client::DirectoryClientError) -> bool {
     match error {
-        crate::os_directory::client::DirectoryClientError::Unauthorized => true,
-        crate::os_directory::client::DirectoryClientError::Http { status, .. } => DOCUMENT_LINK_ACCESS_REFUSED_STATUSES.contains(status),
+        semio_framework_os_directory_client::DirectoryClientError::Unauthorized => true,
+        semio_framework_os_directory_client::DirectoryClientError::Http { status, .. } => DOCUMENT_LINK_ACCESS_REFUSED_STATUSES.contains(status),
         _ => false,
     }
 }
@@ -1497,8 +1494,8 @@ pub trait DocumentSocketDialer {
 /// original forward diff (inverse-of-inverse) — `crate::os_spr::causal::InverseMutation` carries no
 /// `target_mutation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
 /// than the old kernel-local one), so those are gone, not defaulted.
-async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelope> {
-    if crate::os_spr::is_history_transition(envelope) {
+pub async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelope> {
+    if semio_framework_os_spr::is_history_transition(envelope) {
         return None;
     }
     let undo_id = MutationId(format!("{}~undo", envelope.mutation_id.0));
@@ -1509,8 +1506,8 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelo
         dependencies: vec![envelope.mutation_id.clone()],
         observed: None,
         target: Vec::new(),
-        diff: crate::os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
-        inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
         transaction: None, verb: None, line: None,
     })
@@ -1525,8 +1522,8 @@ pub const HISTORY_TRANSITION_REFUSED_CODE: &str = "history.transition-refused";
 /// and from its persisted log, and the author converges with the hub, which never took them. The message targets every
 /// refused transition, so the runtime can say which history step the hub did not take (ticket 26/09/30
 /// NON-DESTRUCTIVE-HISTORY-EDITING).
-fn transition_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
-    let transitions: Vec<String> = refused.iter().filter(|envelope| crate::os_spr::is_history_transition(envelope)).map(|envelope| envelope.mutation_id.0.clone()).collect();
+pub fn transition_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
+    let transitions: Vec<String> = refused.iter().filter(|envelope| semio_framework_os_spr::is_history_transition(envelope)).map(|envelope| envelope.mutation_id.0.clone()).collect();
     (!transitions.is_empty()).then(|| MutationMessage {
         level: semio_framework_diagnostic::Severity::Error,
         code: semio_framework_diagnostic::FaultCode::new(HISTORY_TRANSITION_REFUSED_CODE),
@@ -1539,13 +1536,13 @@ fn transition_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<Muta
 /// 📡️ `PresencePeer` -> the binary blob `crate::os_spr::wire::ClientFrame::Presence` carries
 /// opaquely (`crate::os_spr::encode_presence_peer` — `protocol_wire` has no dependency on
 /// this crate's `PresencePeer` type, so the frame only ever moves the pre-encoded bytes).
-async fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
-    crate::os_spr::encode_presence_peer(peer).await
+pub async fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
+    semio_framework_os_spr::encode_presence_peer(peer).await
 }
 
 /// 📡️ The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
-async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
-    crate::os_spr::decode_presence_peer(bytes).await.ok()
+pub async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
+    semio_framework_os_spr::decode_presence_peer(bytes).await.ok()
 }
 
 // 🎯️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
@@ -1560,7 +1557,7 @@ async fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
 /// `PresencePeer` right before {@link presence_to_bytes} — the ONE place either field is ever
 /// filled; shells never set `peer.color`/`peer.surface` themselves (contract-freeze §C7.4). Pure so
 /// both the native and wasm actors (and their tests) can share it.
-async fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surface: Option<&str>) {
+pub async fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surface: Option<&str>) {
     peer.color = session_color;
     peer.surface = surface.map(str::to_string);
 }
@@ -1568,14 +1565,14 @@ async fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surfa
 /// ⏰️ Millisecond wall-clock reads for {@link next_timestamp} and the native folder endpoint — the only
 /// readers, both native: the browser actor never stamps a clock, it carries the author's.
 #[cfg(not(target_arch = "wasm32"))]
-async fn now_ms() -> u64 {
+pub async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 
 /// 🧮️ A stable, deterministic `u64` seed for an actor id string, for
 /// `crate::os_spr::HybridLogicalTimestamp::actor` (which is `u64`-shaped; this actor's own id is a
 /// free-form `String`).
-async fn actor_seed(actor: &str) -> u64 {
+pub async fn actor_seed(actor: &str) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     actor.hash(&mut hasher);
@@ -1587,9 +1584,9 @@ async fn actor_seed(actor: &str) -> u64 {
 /// crosses the wire exactly as the author folded it, so every replica orders it — and resolves the last
 /// supersession of an operation — by the same key (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING).
 #[cfg(not(target_arch = "wasm32"))]
-async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLogicalTimestamp {
+pub async fn next_timestamp(seed: u64, counter: &mut u64) -> semio_framework_os_spr::HybridLogicalTimestamp {
     *counter = counter.wrapping_add(1);
-    crate::os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms().await, logical: *counter }
+    semio_framework_os_spr::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms().await, logical: *counter }
 }
 //#endregion 🔖️WireBridge
 
@@ -1599,19 +1596,19 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+    Mutation: Clone + semio_framework_os_spr::Mutation<P> + OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub store: ArtifactStore<P, Mutation>,
-    cmd_tx: Option<ArtifactMailboxSender>,
-    events: Option<broadcast::Receiver<ArtifactEvent>>,
-    status: ArtifactSyncStatus,
+    pub cmd_tx: Option<ArtifactMailboxSender>,
+    pub events: Option<broadcast::Receiver<ArtifactEvent>>,
+    pub status: ArtifactSyncStatus,
 }
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+    Mutation: Clone + semio_framework_os_spr::Mutation<P> + OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
@@ -1619,7 +1616,7 @@ where
 
     /// 🔌️ Attaches this session's store to a document actor: the actor's `ChannelBackbone` end
     /// is wired into the store, and the command/event channels are retained for wake + status.
-    pub async fn attach(&mut self, channels: ArtifactChannels, events: broadcast::Receiver<ArtifactEvent>) -> Result<(), SyncError> {
+    pub async fn attach<Runner>(&mut self, channels: ArtifactChannelsOf<Runner>, events: broadcast::Receiver<ArtifactEvent>) -> Result<(), SyncError> {
         self.store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.map_err(|error| SyncError::Vcs(error.to_string()))?;
         self.cmd_tx = Some(channels.cmd_tx);
         self.events = Some(events);
@@ -1668,11 +1665,11 @@ where
 
     /// 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub async fn receive(&mut self, envelope: MutationEnvelope, identity: &mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), SyncError> {
-        self.store.dispatch(crate::os_store::store_schema::ArtifactCommand::IngestRemote { envelope }, identity).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
+    pub async fn receive(&mut self, envelope: MutationEnvelope, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), SyncError> {
+        self.store.dispatch(semio_framework_os_store_space_schema::ArtifactCommand::IngestRemote { envelope }, identity).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
-    pub async fn reconcile_branch(&mut self, _alternative_name: &str, _message: Option<String>, _authors: Vec<vcs::Author>) -> Result<String, SyncError> {
+    pub async fn reconcile_branch(&mut self, _alternative_name: &str, _message: Option<String>, _authors: Vec<semio_framework_os_vcs::Author>) -> Result<String, SyncError> {
         Err(SyncError::Vcs("branch reconciliation requires the retained envelope candidate job; synchronous whole-envelope duplication is forbidden".into()))
     }
 }
@@ -1748,88 +1745,67 @@ impl PresenceHeartbeatProducer {
 }
 
 /// 🎛️ The channels {@link ArtifactHost::open} hands back to a caller: attach `channel_backbone`
-/// to your `ArtifactStore`, and send control messages (or wakes) on `cmd_tx`.
-pub struct ArtifactChannels {
+/// to your `ArtifactStore`, and send control messages (or wakes) on `cmd_tx`. `Runner` is the
+/// platform's per-document runner ticket (`()` in the browser, which has no runner).
+pub struct ArtifactChannelsOf<Runner> {
     pub cmd_tx: ArtifactMailboxSender,
     pub document_key: ArtifactDocumentKey,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub runner: ArtifactActorRunnerTicket,
+    pub runner: Runner,
     /// 🔗️ The store-side backbone end. The caller owns store attachment:
     /// `store.attach_backbone(Backbones::Channel(channels.channel_backbone))`.
     pub channel_backbone: ChannelBackbone,
 }
 
-struct OpenDocument {
-    generation: u64,
-    cancel: semio_framework_async::CancelToken,
-    cmd_tx: ArtifactMailboxSender,
-    events: broadcast::Sender<ArtifactEvent>,
-    presence: PresenceHeartbeatProducer,
-    #[cfg(not(target_arch = "wasm32"))]
-    runner: ArtifactActorRunnerHandle,
+pub struct OpenDocument<Runner> {
+    pub generation: u64,
+    pub cancel: semio_framework_async::CancelToken,
+    pub cmd_tx: ArtifactMailboxSender,
+    pub events: broadcast::Sender<ArtifactEvent>,
+    pub presence: PresenceHeartbeatProducer,
+    pub runner: Runner,
 }
 
-struct ArtifactHostState {
-    documents: std::collections::HashMap<ArtifactDocumentKey, OpenDocument>,
-    document_execution_target_leases: std::collections::HashMap<ArtifactDocumentKey, crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-    document_seeds: std::collections::HashMap<ArtifactDocumentKey, crate::os_directory::CanonicalCheckpointPairV1>,
-    #[cfg(not(target_arch = "wasm32"))]
-    closing: std::collections::HashMap<u64, ArtifactActorRunnerHandle>,
-    next_generation: u64,
-    host_references: usize,
+pub struct ArtifactHostState<Runner> {
+    pub documents: std::collections::HashMap<ArtifactDocumentKey, OpenDocument<Runner>>,
+    pub document_execution_target_leases: std::collections::HashMap<ArtifactDocumentKey, semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    pub document_seeds: std::collections::HashMap<ArtifactDocumentKey, semio_framework_os_directory::CanonicalCheckpointPairV1>,
+    pub closing: std::collections::HashMap<u64, Runner>,
+    pub next_generation: u64,
+    pub host_references: usize,
 }
 
-impl ArtifactHostState {
-    fn new() -> Self {
+impl<Runner> ArtifactHostState<Runner> {
+    pub fn new() -> Self {
         Self {
             documents: std::collections::HashMap::new(),
             document_execution_target_leases: std::collections::HashMap::new(),
             document_seeds: std::collections::HashMap::new(),
-            #[cfg(not(target_arch = "wasm32"))]
             closing: std::collections::HashMap::new(),
             next_generation: 1,
             host_references: 1,
         }
     }
 
-    fn claim_generation(&mut self) -> u64 {
+    pub fn claim_generation(&mut self) -> u64 {
         let generation = self.next_generation;
         self.next_generation = self.next_generation.checked_add(1).expect("artifact actor generation exhausted");
         generation
     }
 }
 
-/// 🏛️ Registry of open per-document actors. One `ArtifactHost` per host process (wgpu native,
-/// tests, or the browser wgpu build) owns every open document's actor + event fan-out.
-pub struct ArtifactHost {
-    inner: std::sync::Arc<std::sync::Mutex<ArtifactHostState>>,
-    pool: std::sync::Arc<semio_framework_async::WorkerPool>,
-    credential: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<crate::os_directory::client::LocalHubCredential>>>>,
-    socket_grant_source: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
-    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-    document_socket_dialer: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn DocumentSocketDialer>>>>,
-    cancel: semio_framework_async::CancelToken,
+/// 🏛️ The platform-neutral half of `ArtifactHost`: the registry of open per-document actors, their
+/// event fan-out, presence cadence and the late-bound hub binding. Each platform crate owns the
+/// `ArtifactHost` that composes this core with the actor it spawns, so this core never names an actor.
+pub struct ArtifactHostCore<Runner> {
+    pub inner: std::sync::Arc<std::sync::Mutex<ArtifactHostState<Runner>>>,
+    pub pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+    pub credential: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<semio_framework_os_directory_client::LocalHubCredential>>>>,
+    pub socket_grant_source: std::sync::Arc<std::sync::RwLock<Option<std::sync::Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>>>>,
+    pub cancel: semio_framework_async::CancelToken,
 }
 
-impl Clone for ArtifactHost {
-    fn clone(&self) -> Self {
-        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        state.host_references = state.host_references.checked_add(1).expect("artifact host reference capacity exhausted");
-        drop(state);
-        Self {
-            inner: self.inner.clone(),
-            pool: self.pool.clone(),
-            credential: self.credential.clone(),
-            socket_grant_source: self.socket_grant_source.clone(),
-            #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-            document_socket_dialer: self.document_socket_dialer.clone(),
-            cancel: self.cancel.clone(),
-        }
-    }
-}
-
-impl ArtifactHost {
-    /// 🧩️ Creates a host on the process WorkerPool; callers must inject the same pool
+impl<Runner> ArtifactHostCore<Runner> {
+    /// 🧩️ Creates a core on the process WorkerPool; callers must inject the same pool
     /// used by their service and renderer runtimes.
     pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>) -> Self {
         Self {
@@ -1837,26 +1813,43 @@ impl ArtifactHost {
             pool,
             credential: std::sync::Arc::new(std::sync::RwLock::new(None)),
             socket_grant_source: std::sync::Arc::new(std::sync::RwLock::new(None)),
-            #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-            document_socket_dialer: std::sync::Arc::new(std::sync::RwLock::new(None)),
             cancel: semio_framework_async::CancelToken::root_now(),
         }
     }
 
-    pub fn set_local_hub_credential(&self, credential: std::sync::Arc<crate::os_directory::client::LocalHubCredential>) {
+    pub fn state(&self) -> std::sync::MutexGuard<'_, ArtifactHostState<Runner>> {
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    /// 🔗️ Counts one more owner of the shared registry and returns its handle.
+    pub fn retain(&self) -> Self {
+        let mut state = self.state();
+        state.host_references = state.host_references.checked_add(1).expect("artifact host reference capacity exhausted");
+        drop(state);
+        Self { inner: self.inner.clone(), pool: self.pool.clone(), credential: self.credential.clone(), socket_grant_source: self.socket_grant_source.clone(), cancel: self.cancel.clone() }
+    }
+
+    /// 🔓️ Releases one owner; `true` when it was the last.
+    pub fn release(&self) -> bool {
+        let mut state = self.state();
+        state.host_references = state.host_references.checked_sub(1).expect("artifact host reference underflow");
+        state.host_references == 0
+    }
+
+    pub fn set_local_hub_credential(&self, credential: std::sync::Arc<semio_framework_os_directory_client::LocalHubCredential>) {
         *self.credential.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(credential);
     }
 
-    pub fn set_hub_socket_grant_source(&self, source: std::sync::Arc<dyn crate::os_directory::client::HubSocketGrantSource>) {
+    pub fn set_hub_socket_grant_source(&self, source: std::sync::Arc<dyn semio_framework_os_directory_client::HubSocketGrantSource>) {
         *self.socket_grant_source.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(source);
     }
 
     /// 🪪️ Binds one complete verified execution-target lease before this document actor is opened.
-    pub fn set_document_execution_target_lease(&self, document_key: &ArtifactDocumentKey, surface: crate::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> bool {
+    pub fn set_document_execution_target_lease(&self, document_key: &ArtifactDocumentKey, surface: semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1) -> bool {
         if !matches!(document_key, ArtifactDocumentKey::Hub { .. }) {
             return false;
         }
-        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut state = self.state();
         if state.documents.contains_key(document_key) || state.document_execution_target_leases.contains_key(document_key) {
             return false;
         }
@@ -1867,15 +1860,15 @@ impl ArtifactHost {
     /// 🪢️ Hands the next actor of a hub document the canonical checkpoint pair its shell verified and loaded into the
     /// guest ([`crate::os_directory::DirectoryClient::document_canonical_checkpoint_pair`]): the actor starts at that
     /// pair — its history known, its first `SocketHelloV1` naming the pair's baseline frontier, so the hub tails only
-    /// what came after it. Consumed by the next [`Self::open`] of the same key.
-    pub fn set_document_seed(&self, document_key: &ArtifactDocumentKey, pair: crate::os_directory::CanonicalCheckpointPairV1) -> bool {
+    /// what came after it. Consumed by the next open of the same key.
+    pub fn set_document_seed(&self, document_key: &ArtifactDocumentKey, pair: semio_framework_os_directory::CanonicalCheckpointPairV1) -> bool {
         let ArtifactDocumentKey::Hub { space_id, document_id } = document_key else {
             return false;
         };
         if pair.scope.space_id != *space_id || pair.scope.document_id != *document_id {
             return false;
         }
-        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut state = self.state();
         if state.documents.contains_key(document_key) || state.document_seeds.contains_key(document_key) {
             return false;
         }
@@ -1883,89 +1876,23 @@ impl ArtifactHost {
         true
     }
 
-    /// ☎️ Installs the browser's document-socket dialer; every later hub document actor dials through it.
-    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-    pub fn set_document_socket_dialer(&self, dialer: std::sync::Arc<dyn DocumentSocketDialer>) {
-        *self.document_socket_dialer.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(dialer);
+    /// 🟢️ Whether a credential and a grant source are bound; a browser adds its socket dialer on top.
+    pub fn hub_binding_present(&self) -> bool {
+        self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
     }
 
-    /// 🟢️ Whether a hub document opened now can dial at once: a credential, a grant source and,
-    /// in a browser, the socket dialer the page owns.
-    pub fn local_hub_ready(&self) -> bool {
-        let admitted = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() && self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
-        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-        let admitted = admitted && self.document_socket_dialer.read().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
-        admitted
+    /// 🎫️ Takes the lease and the seed bound for the next open of `document_key`.
+    pub fn take_open_inputs(&self, document_key: &ArtifactDocumentKey) -> (Option<semio_framework_os_directory::DocumentExecutionTargetLeaseFieldsV1>, Option<semio_framework_os_directory::CanonicalCheckpointPairV1>) {
+        let mut state = self.state();
+        (state.document_execution_target_leases.remove(document_key), state.document_seeds.remove(document_key))
     }
 
-    /// 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
-    /// caller wires into its store. Idempotent per id: opening an already-open id closes the old actor.
-    ///
-    /// 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
-    /// bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
-    /// component target neither actor exists — `native_actor` is `tokio_tungstenite`/
-    /// `tokio::net::TcpStream`, which a component cannot open — so `open` registers the document
-    /// and hands back its channels WITHOUT a sync actor, which is the only thing a component
-    /// with no socket of its own can do. That is already the documented story: no plugin
-    /// activates the `sync`/`worker` features that reach this module (see `mod wasm_actor`).
-    /// `OpenDocument::runner` and `ArtifactChannels::runner` are themselves
-    /// `cfg(not(target_arch = "wasm32"))`, so nothing downstream expects a runner here.
-    pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
-        let document_id = config.document_id.clone();
-        let document_key = ArtifactDocumentKey::for_config(&config);
-        let (document_execution_target_lease, seed) = {
-            let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            (state.document_execution_target_leases.remove(&document_key), state.document_seeds.remove(&document_key))
-        };
-        let _ = self.close_key(&document_key);
-        let generation = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).claim_generation();
-        let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}")).await;
-        let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
-        let (event_tx, _event_rx) = broadcast::channel(256);
-        let document_cancel = self.cancel.child_now();
-        #[cfg(not(target_arch = "wasm32"))]
-        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone(), self.credential.clone(), self.socket_grant_source.clone(), document_execution_target_lease, seed, document_cancel.clone()).await;
-        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-        spawn_actor(
-            config,
-            remote,
-            cmd_rx,
-            event_tx.clone(),
-            wasm_actor::WasmActorHub { credential: self.credential.clone(), socket_grant_source: self.socket_grant_source.clone(), dialer: self.document_socket_dialer.clone(), lease: document_execution_target_lease, seed, cancel: document_cancel.clone() },
-        )
-        .await;
-        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-        let _ = (&self.pool, config, remote, cmd_rx, document_execution_target_lease, seed);
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let weak_host = std::sync::Arc::downgrade(&self.inner);
-            runner.set_terminal_empty_callback(std::sync::Arc::new(move |generation| {
-                if let Some(host) = weak_host.upgrade() {
-                    host.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.remove(&generation);
-                }
-            }));
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        let runner_ticket = runner.issue_ticket(self.inner.clone());
-        let entry = OpenDocument {
-            generation,
-            cancel: document_cancel,
-            cmd_tx: cmd_tx.clone(),
-            events: event_tx,
-            presence: PresenceHeartbeatProducer::default(),
-            #[cfg(not(target_arch = "wasm32"))]
-            runner: runner.clone(),
-        };
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.insert(document_key.clone(), entry);
-        #[cfg(not(target_arch = "wasm32"))]
-        runner.start();
-        ArtifactChannels {
-            cmd_tx,
-            document_key,
-            #[cfg(not(target_arch = "wasm32"))]
-            runner: runner_ticket,
-            channel_backbone,
-        }
+    pub fn insert_document(&self, document_key: ArtifactDocumentKey, document: OpenDocument<Runner>) {
+        self.state().documents.insert(document_key, document);
+    }
+
+    pub fn remove_document(&self, document_key: &ArtifactDocumentKey) -> Option<OpenDocument<Runner>> {
+        self.state().documents.remove(document_key)
     }
 
     /// 📬️ A fresh event receiver for `document_id`. If the document is not open the receiver's
@@ -1975,7 +1902,7 @@ impl ArtifactHost {
     }
 
     pub async fn subscribe_key(&self, document_key: &ArtifactDocumentKey) -> broadcast::Receiver<ArtifactEvent> {
-        let guard = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let guard = self.state();
         match guard.documents.get(document_key) {
             Some(document) => document.events.subscribe(),
             None => {
@@ -1991,7 +1918,7 @@ impl ArtifactHost {
     }
 
     pub async fn send_key(&self, document_key: &ArtifactDocumentKey, message: ArtifactActorMsg) {
-        if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.get(document_key) {
+        if let Some(document) = self.state().documents.get(document_key) {
             let _ = document.cmd_tx.send(message);
         }
     }
@@ -2006,3328 +1933,41 @@ impl ArtifactHost {
     /// ⏯️ Records an open document's latest tool run summary for its presence heartbeats — the host
     /// calls this with each `AppFrame::Ephemeral.tool_run` it decodes. `false` when the document is not open.
     pub fn observe_presence_tool_run_key(&self, document_key: &ArtifactDocumentKey, tool_run: Option<PresenceToolRun>) -> bool {
-        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut state = self.state();
         let Some(document) = state.documents.get_mut(document_key) else { return false };
         document.presence.observe_tool_run(tool_run);
         true
     }
 
     pub fn presence_heartbeat_key(&self, document_key: &ArtifactDocumentKey, now_ms: u64, peer: PresencePeer) -> bool {
-        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut state = self.state();
         let Some(document) = state.documents.get_mut(document_key) else { return false };
         let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
         document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer) }).is_ok()
-    }
-
-    /// ✂️ Transfers a document into generation-keyed retained close ownership. The runner
-    /// rejects later mailbox ingress and drains one mailbox, backbone, actor, or job owner per grant.
-    /// 🚫️async: E1 pure lock/remove + sync channel send, no real suspension point — consumed by
-    /// `impl Drop` (sync-only external trait); see R9.
-    pub fn close(&self, document_id: &str) -> Option<u64> {
-        self.close_key(&ArtifactDocumentKey::local(document_id))
-    }
-
-    pub fn close_key(&self, document_key: &ArtifactDocumentKey) -> Option<u64> {
-        let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.remove(document_key);
-        if let Some(document) = document {
-            document.cancel.cancel_now();
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                let generation = document.generation;
-                let runner = document.runner;
-                self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.insert(generation, runner.clone());
-                if matches!(runner.terminal_state(), ArtifactActorTerminalState::Complete(_)) {
-                    self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.remove(&generation);
-                    return Some(generation);
-                }
-                runner.request_close();
-                return Some(generation);
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
-                return Some(document.generation);
-            }
-        }
-        None
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn closing_runner(&self, generation: u64) -> Option<ArtifactActorRunnerHandle> {
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.get(&generation).cloned()
     }
 
     /// 🧹️ Ids of every currently-open document.
     /// 🚫️async: E1 pure lock-and-collect consumed by `impl Drop` (sync-only external trait) — see
     /// R9. No I/O, no suspension point.
     pub fn open_artifacts(&self) -> Vec<ArtifactDocumentKey> {
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.keys().cloned().collect()
+        self.state().documents.keys().cloned().collect()
     }
 }
 
-impl Drop for ArtifactHost {
-    fn drop(&mut self) {
-        let is_last_host = {
-            let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            state.host_references = state.host_references.checked_sub(1).expect("artifact host reference underflow");
-            state.host_references == 0
-        };
-        if !is_last_host {
-            return;
-        }
-        self.cancel.cancel_now();
-        for document_key in self.open_artifacts() {
-            self.close_key(&document_key);
-        }
-    }
-}
 //#endregion 🔖️Host
-
 //#region 🔖️NativeActor
-#[cfg(not(target_arch = "wasm32"))]
-mod native_actor {
-    use super::*;
-    use futures::{SinkExt, StreamExt};
-    use std::collections::HashSet;
-    use std::path::{Path, PathBuf};
-    use std::sync::Arc;
-    use std::time::Duration;
-    use tokio::time::Instant;
-    use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message};
 
-    type WsStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
-    type WsSink = futures::stream::SplitSink<WsStream, Message>;
-    type WsRead = futures::stream::SplitStream<WsStream>;
-    struct ConnectedDocumentSocket {
-        stream: WsStream,
-        socket_actor: semio_framework_value::SharedUtf8,
-        authority: crate::os_directory::client::DocumentSocketAuthorityV1,
-        identity_progress: semio_framework_value::RetainedCloneProgress,
-    }
 
-    struct ArtifactReadinessWake(Arc<dyn Fn() + Send + Sync>);
 
-    impl std::task::Wake for ArtifactReadinessWake {
-        fn wake(self: Arc<Self>) {
-            (self.0)();
-        }
-
-        fn wake_by_ref(self: &Arc<Self>) {
-            (self.0)();
-        }
-    }
-
-    struct WipeSocketHeader(String);
-
-    impl Drop for WipeSocketHeader {
-        fn drop(&mut self) {
-            unsafe { self.0.as_mut_vec().fill(0) };
-        }
-    }
-
-    type ConnectFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<ConnectedDocumentSocket, DocumentConnectFailure>> + Send>>;
-
-    /// 🔌️ Why a hub dial did not produce a socket: the hub withdrew access (the link is revoked), or the
-    /// link is short (it backs off along [`DOCUMENT_LINK_SHORTAGE_POLICY`]).
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    enum DocumentConnectFailure {
-        Refused,
-        Short,
-    }
-
-    /// ⏰️ The wall clock the link state machine reads.
-    fn wall_ms() -> u64 {
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
-    }
-
-    /// ⏰️ The `Instant` of a wall-clock deadline, for the actor's timer-driven drive.
-    fn instant_at(at_ms: u64, now_ms: u64) -> Instant {
-        Instant::now() + Duration::from_millis(at_ms.saturating_sub(now_ms))
-    }
-
-    struct HubConn {
-        write: WsSink,
-        read: WsRead,
-    }
-
-    struct PendingArtifactBootstrap {
-        assembler: ArtifactBootstrapAssembler,
-        started_at: Instant,
-        resume_token: String,
-        baseline_frontier: RuntimeFrontierSummary,
-        required_tail_frontier: RuntimeFrontierSummary,
-        pack_schema_hash: [u8; 32],
-    }
-
-    struct NativeBootstrapControl {
-        cancelled: bool,
-        now_ms: u64,
-        events: broadcast::Sender<ArtifactEvent>,
-    }
-
-    impl ArtifactBootstrapControl for NativeBootstrapControl {
-        fn is_cancelled(&mut self) -> bool {
-            self.cancelled
-        }
-
-        fn now_ms(&mut self) -> u64 {
-            self.now_ms
-        }
-
-        fn on_progress(&mut self, progress: ArtifactBootstrapProgress) {
-            let _ = self.events.send(ArtifactEvent::BootstrapProgress { received_bytes: progress.received_bytes, total_bytes: progress.total_bytes, received_chunks: progress.received_chunks, total_chunks: progress.total_chunks });
-        }
-    }
-
-    #[derive(Clone, Copy)]
-    enum ArtifactDrivePhase {
-        Connect,
-        Hub,
-        ConnectResult,
-        Watch,
-        Reconnect,
-        Folder,
-        Backbone,
-        Status,
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    enum ArtifactDrive {
-        MoreWork,
-        Idle { deadline: Option<Instant> },
-        Terminal,
-    }
-
-    /// 📁️ A folder/file binding's storage driver, keyed for multi-document sqlite or single
-    /// pack-backed blob. Both variants move real `pack`+`spr` bytes end to end — this actor never
-    /// touches JSON. `Sqlite` is fully codec-free (its row IS the pack+spr pair, no bridging
-    /// needed). `Pack` requires the schema codec for both authoritative DSL fallback validation
-    /// and synchronized text mirrors.
-    enum FolderEndpoint {
-        EventLog { storage: FolderEventLogStorage, document_id: String, schema: String },
-        Pack { storage: FolderTextStorage, document_id: String, extension: String, schema: String },
-    }
-
-    impl FolderEndpoint {
-        /// 🗃️ Reads one exact versioned recursive-document archive.
-        async fn read_archive(&self) -> Result<Option<Vec<u8>>, String> {
-            match self {
-                FolderEndpoint::EventLog { storage, document_id, .. } => storage.read_archive(document_id).await.map_err(|error| error.to_string()),
-                FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    if let Some(archive) = storage.read_archive(document_id, extension).await.map_err(|error| error.to_string())? {
-                        return Ok(Some(archive));
-                    }
-                    let pair = match storage.read_pack(document_id, extension).await.map_err(|error| error.to_string())? {
-                        Some(files) => Some((files.pack, files.spr)),
-                        None => match storage.read(document_id, extension).await.map_err(|error| error.to_string())? {
-                            Some(files) => {
-                                let codec = crate::os_store::codec_registry::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only source"))?;
-                                let (pack, _) = (codec.compile_dsl)(&files.dsl, &files.ops).await.map_err(|error| error.to_string())?;
-                                Some((pack.pack, pack.spr))
-                            }
-                            None => None,
-                        },
-                    };
-                    pair.map(|(parent_pack, parent_spr)| {
-                        crate::os_spr::encode_document_archive_bytes(&crate::os_spr::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).map_err(|error| error.to_string())
-                    })
-                    .transpose()
-                }
-            }
-        }
-
-        /// 🗃️ Persists one exact versioned recursive-document archive and its root text mirrors.
-        async fn write_archive(&self, archive_bytes: &[u8]) -> Result<(), String> {
-            let archive = crate::os_spr::decode_document_archive_bytes(archive_bytes).await.map_err(|error| error.to_string())?;
-            match self {
-                FolderEndpoint::EventLog { storage, document_id, schema } => storage.write_archive(document_id, schema, archive_bytes).await.map_err(|error| error.to_string()),
-                FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let codec = crate::os_store::codec_registry::document_kind_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {schema:?} — cannot persist synchronized archive mirrors"))?;
-                    let mirror = codec.print_mirror(&archive.parent_pack, &archive.parent_spr).await.map_err(|error| error.to_string())?;
-                    let pack_files = ArtifactPackFiles { pack: archive.parent_pack, spr: archive.parent_spr, ops: mirror.ops };
-                    storage.write_archive(document_id, extension, archive_bytes, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
-                }
-            }
-        }
-
-    }
-
-    /// 🎭️ One document's backbone actor: drains the store's outbound queue to persist + relay,
-    /// ingests semio_hub/file changes back into the store, and keeps subscribers current with status/events.
-    pub(super) struct ArtifactActor {
-        pool: Arc<semio_framework_async::WorkerPool>,
-        document_id: String,
-        schema: String,
-        actor: String,
-        actor_identity_grant: semio_framework_value::RetainedCloneGrant,
-        actor_identity_progress: semio_framework_value::RetainedCloneProgress,
-        remote: ChannelBackboneRemote,
-        events: broadcast::Sender<ArtifactEvent>,
-        cmd_rx: ArtifactMailboxReceiver,
-        folder: Option<FolderEndpoint>,
-        folder_watch_path: Option<PathBuf>,
-        watch_external: bool,
-        hub_base_url: Option<String>,
-        hub_space_id: Option<String>,
-        credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
-        socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
-        document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-        operation_cancel: semio_framework_async::CancelToken,
-        hub_surface: Option<String>,
-        socket_actor: Option<semio_framework_value::SharedUtf8>,
-        socket_actor_confirmed: bool,
-        /// 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
-        /// `None` until the hub sends it (or for a folder-only document, which never connects to a
-        /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
-        session_color: Option<u8>,
-        semio_hub: Option<HubConn>,
-        connect_future: Option<ConnectFuture>,
-        /// 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
-        /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
-        server_frontier: Option<RuntimeFrontierSummary>,
-        /// 🎟️ The semio_hub's last `Welcome.resume_token`, echoed in the next `SocketHelloV1` after a
-        /// reconnect so the semio_hub can resume rather than replay from scratch.
-        resume_token: Option<String>,
-        pending_resume_token: Option<String>,
-        required_tail_frontier: Option<RuntimeFrontierSummary>,
-        artifact_rebootstrap_required: bool,
-        artifact_bootstrap: Option<PendingArtifactBootstrap>,
-        /// 🔌️ The hub link ([`DocumentLink`]): `reconnect_at` and `link_expires_at` are its two deadlines as instants.
-        link: DocumentLink,
-        reconnect_at: Option<Instant>,
-        link_expires_at: Option<Instant>,
-        /// 🧺️ Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`, so `Rejected`/
-        /// `Transformed` can roll back exactly the envelopes that batch sent.
-        pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
-        outbox: Vec<MutationEnvelope>,
-        document_backbone_retention: DocumentBackboneRetentionV1,
-        next_batch_id: u64,
-        next_local_rejection_batch_id: u64,
-        /// ⏰️ This actor's `HybridLogicalTimestamp` seed (derived from `actor`) + logical tick
-        /// counter, for {@link next_timestamp} on an external folder envelope without a clock.
-        hlc_seed: u64,
-        hlc_counter: u64,
-        current_pack: Option<Vec<u8>>,
-        current_spr: Option<Vec<u8>>,
-        current_archive: Option<Vec<u8>>,
-        known_op_ids: HashSet<String>,
-        /// 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
-        applied_op_ids: HashSet<String>,
-        last_written_hash: Option<String>,
-        /// 🪞️ The hash of the archive the folder is known to hold — the last one read or written, none after a read that found
-        /// the folder empty: an archive with these bytes is not written again.
-        folder_held_hash: Option<String>,
-        /// 🪹️ Whether this open's first folder read was answered, or an archive was read or written: no later read announces an
-        /// absent archive ([`ArtifactEvent::DocumentArchiveAbsent`]).
-        folder_bootstrapped: bool,
-        #[cfg(test)]
-        folder_writes: usize,
-        remote_state: RemoteState,
-        last_status: Option<ArtifactSyncStatus>,
-        watcher: Option<semio_framework_os_services::OwnedFileChangeWatcher>,
-        fs_deadline: Option<Instant>,
-        started: bool,
-        command_turns: u8,
-        drive_phase: ArtifactDrivePhase,
-        closing: bool,
-        close_drain_deadline: Option<Instant>,
-        readiness: Option<Arc<dyn Fn() + Send + Sync>>,
-        readiness_requested: Arc<std::sync::atomic::AtomicBool>,
-        #[cfg(test)]
-        fail_bootstrap_local_replay_once: bool,
-    }
-
-    /// ⏳️ How long a closing actor keeps reading its hub socket so a catch-up in flight can complete
-    /// and flush operations the store handed over before the close; after it the outbox is dropped.
-    const ARTIFACT_CLOSE_OUTBOX_DRAIN: Duration = Duration::from_secs(2);
-
-    impl ArtifactActor {
-        pub(super) async fn new(
-            pool: Arc<semio_framework_async::WorkerPool>,
-            config: ArtifactActorConfig,
-            remote: ChannelBackboneRemote,
-            cmd_rx: ArtifactMailboxReceiver,
-            events: broadcast::Sender<ArtifactEvent>,
-            credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
-            socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
-            document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-            operation_cancel: semio_framework_async::CancelToken,
-        ) -> Self {
-            let mut folder = None;
-            let mut folder_watch_path = None;
-            let mut hub_base_url = None;
-            let mut hub_space_id = None;
-            let mut hub_surface = None;
-            for binding in &config.bindings {
-                match binding {
-                    PersistenceBinding::Folder { path } => {
-                        if folder.is_none() {
-                            folder = Some(build_folder_endpoint(path, &config.document_id, &config.schema).await);
-                            folder_watch_path = Some(folder_watch_path_for(path).await);
-                        }
-                    }
-                    PersistenceBinding::Hub { base_url, space_id, surface } => {
-                        if hub_base_url.is_none() {
-                            hub_base_url = Some(base_url.clone());
-                            hub_space_id = Some(space_id.clone());
-                            hub_surface = surface.clone();
-                        }
-                    }
-                }
-            }
-            let hlc_seed = actor_seed(&config.actor).await;
-            Self {
-                pool,
-                document_id: config.document_id,
-                schema: config.schema,
-                actor: config.actor,
-                actor_identity_grant: config.actor_identity_grant,
-                actor_identity_progress: Default::default(),
-                remote,
-                events,
-                cmd_rx,
-                folder,
-                folder_watch_path,
-                watch_external: config.watch_external,
-                hub_base_url,
-                hub_space_id,
-                credential,
-                socket_grant_source,
-                document_execution_target_lease,
-                operation_cancel,
-                hub_surface,
-                socket_actor: None,
-                socket_actor_confirmed: false,
-                session_color: None,
-                semio_hub: None,
-                connect_future: None,
-                server_frontier: None,
-                resume_token: None,
-                pending_resume_token: None,
-                required_tail_frontier: None,
-                artifact_bootstrap: None,
-                artifact_rebootstrap_required: false,
-                link: DocumentLink::opened(wall_ms()),
-                reconnect_at: None,
-                link_expires_at: None,
-                pending_batches: std::collections::HashMap::new(),
-                outbox: Vec::new(),
-                document_backbone_retention: DocumentBackboneRetentionV1::default(),
-                next_batch_id: 0,
-                next_local_rejection_batch_id: u64::MAX,
-                hlc_seed,
-                hlc_counter: 0,
-                current_pack: None,
-                current_spr: None,
-                current_archive: None,
-                known_op_ids: HashSet::new(),
-                applied_op_ids: HashSet::new(),
-                last_written_hash: None,
-                folder_held_hash: None,
-                folder_bootstrapped: false,
-                #[cfg(test)]
-                folder_writes: 0,
-                remote_state: RemoteState::Detached,
-                last_status: None,
-                watcher: None,
-                fs_deadline: None,
-                started: false,
-                command_turns: 0,
-                drive_phase: ArtifactDrivePhase::Connect,
-                closing: false,
-                close_drain_deadline: None,
-                readiness: None,
-                readiness_requested: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-                #[cfg(test)]
-                fail_bootstrap_local_replay_once: false,
-            }
-        }
-
-        fn set_readiness(&mut self, readiness: Arc<dyn Fn() + Send + Sync>) {
-            self.readiness = Some(readiness);
-        }
-
-        /// 🪢️ Starts this hub document at the canonical checkpoint pair its shell verified and already loaded into the
-        /// guest: the pair's history is known (a tail never re-applies it), a folder binding persists it, and the first
-        /// `SocketHelloV1` names its baseline, so the hub sends only what followed it. A pair whose SPR cannot be read
-        /// is reported as a conflict and the document starts unseeded.
-        pub(super) async fn seed_hub_document(&mut self, pair: crate::os_directory::CanonicalCheckpointPairV1) {
-            self.install_hub_seed(pair.pack_bytes, pair.spr_bytes, &pair.baseline_frontier).await;
-        }
-
-        /// 🛟️ Restarts a rebootstrapping hub document at the pair the host verified and loaded into the guest
-        /// ([`ArtifactActorMsg::Reseed`]): the pair becomes the baseline, the unacked local operations the pair does not already
-        /// hold go back to the guest, and the actor dials at once — no outage backoff, Hello at the baseline.
-        async fn reseed_hub_document(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: crate::os_directory::ArtifactFrontier) {
-            if !self.artifact_rebootstrap_required {
-                return;
-            }
-            if !self.install_hub_seed(pack, spr, &baseline).await {
-                return;
-            }
-            let known = &self.known_op_ids;
-            self.outbox.retain(|envelope| !known.contains(&envelope.mutation_id.0));
-            if !self.outbox.is_empty() {
-                self.emit(ArtifactEvent::RemoteMutations { envelopes: self.outbox.clone() });
-            }
-            self.artifact_rebootstrap_required = false;
-            self.reconnect_at = None;
-            self.start_connect_hub().await;
-        }
-
-        /// 🪢️ Adopts one verified pair as this document's baseline; `false` (and one conflict) when its SPR cannot be read.
-        async fn install_hub_seed(&mut self, pack: Vec<u8>, spr: Vec<u8>, baseline: &crate::os_directory::ArtifactFrontier) -> bool {
-            let seeded = match spr_op_ids(&spr).await {
-                Ok(op_ids) => crate::os_spr::encode_document_archive_bytes(&crate::os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() }).map(|archive| (op_ids, archive)).map_err(|error| error.to_string()),
-                Err(error) => Err(error),
-            };
-            let (op_ids, archive) = match seeded {
-                Ok(seeded) => seeded,
-                Err(error) => {
-                    self.emit(ArtifactEvent::Conflict(MutationMessage {
-                        level: semio_framework_diagnostic::Severity::Error,
-                        code: semio_framework_diagnostic::FaultCode::new("hubDocumentSeed"),
-                        message: format!("the canonical checkpoint pair could not seed the document: {error}"),
-                        target: vec![self.document_id.clone()],
-                        op_index: None,
-                    }));
-                    return false;
-                }
-            };
-            if let Some(folder) = self.folder.as_ref() {
-                if folder.write_archive(&archive).await.is_ok() {
-                    self.last_written_hash = Some(document_archive_hash(&archive));
-                }
-            }
-            self.known_op_ids = op_ids;
-            self.server_frontier = Some(canonical_pair_baseline(baseline));
-            self.current_pack = Some(pack);
-            self.current_spr = Some(spr);
-            self.current_archive = Some(archive);
-            true
-        }
-
-        /// 🏃️ Advances exactly one command, readiness source, timer, backbone owner, or status turn.
-        /// It idles only after observing an empty mailbox and an empty store outbound in the same turn:
-        /// a command that relayed one backbone owner consumes that owner's wake, so a second queued
-        /// owner has no wake left (ticket 26/09/23 `📓️wp-h6.md`).
-        async fn drive_one(&mut self) -> ArtifactDrive {
-            if !self.started {
-                self.started = true;
-                self.setup().await;
-                return ArtifactDrive::MoreWork;
-            }
-            if self.closing {
-                self.operation_cancel.cancel_now();
-                self.document_backbone_retention.clear();
-                if let Some(mut pending) = self.artifact_bootstrap.take() {
-                    pending.assembler.abort();
-                }
-                if self.cmd_rx.close_one() {
-                    return ArtifactDrive::MoreWork;
-                }
-                match self.relay_one_backbone().await {
-                    Ok(true) | Err(_) => return ArtifactDrive::MoreWork,
-                    Ok(false) => {}
-                }
-                if !self.outbox.is_empty() && self.semio_hub.is_some() {
-                    let deadline = *self.close_drain_deadline.get_or_insert_with(|| Instant::now() + ARTIFACT_CLOSE_OUTBOX_DRAIN);
-                    if Instant::now() < deadline {
-                        return match self.poll_hub_message() {
-                            Some(message) => {
-                                self.on_hub_message(message).await;
-                                ArtifactDrive::MoreWork
-                            }
-                            None => ArtifactDrive::Idle { deadline: Some(deadline) },
-                        };
-                    }
-                }
-                self.connect_future = None;
-                return ArtifactDrive::Terminal;
-            }
-            if self.command_turns < 32 {
-                if let Some(message) = self.cmd_rx.try_recv() {
-                    self.command_turns += 1;
-                    if self.handle_cmd(message).await {
-                        self.closing = true;
-                        self.cmd_rx.close();
-                    }
-                    return ArtifactDrive::MoreWork;
-                }
-            }
-            self.command_turns = 0;
-            if self.readiness_requested.swap(false, std::sync::atomic::Ordering::AcqRel) {
-                if self.connect_future.is_some() {
-                    self.drive_phase = ArtifactDrivePhase::ConnectResult;
-                } else if self.semio_hub.is_some() {
-                    self.drive_phase = ArtifactDrivePhase::Hub;
-                }
-            }
-            let phase = self.drive_phase;
-            self.drive_phase = match phase {
-                ArtifactDrivePhase::Connect => ArtifactDrivePhase::Hub,
-                ArtifactDrivePhase::Hub => ArtifactDrivePhase::ConnectResult,
-                ArtifactDrivePhase::ConnectResult => ArtifactDrivePhase::Watch,
-                ArtifactDrivePhase::Watch => ArtifactDrivePhase::Reconnect,
-                ArtifactDrivePhase::Reconnect => ArtifactDrivePhase::Folder,
-                ArtifactDrivePhase::Folder => ArtifactDrivePhase::Backbone,
-                ArtifactDrivePhase::Backbone => ArtifactDrivePhase::Status,
-                ArtifactDrivePhase::Status => ArtifactDrivePhase::Connect,
-            };
-            match phase {
-                ArtifactDrivePhase::Connect => self.start_connect_hub().await,
-                ArtifactDrivePhase::Hub => {
-                    if let Some(message) = self.poll_hub_message() {
-                        self.drive_phase = ArtifactDrivePhase::Hub;
-                        self.on_hub_message(message).await;
-                    }
-                }
-                ArtifactDrivePhase::ConnectResult => {
-                    let connection = self.readiness.clone().and_then(|readiness| {
-                        let waker = std::task::Waker::from(Arc::new(ArtifactReadinessWake(readiness)));
-                        let mut context = std::task::Context::from_waker(&waker);
-                        match self.connect_future.as_mut().map(|future| future.as_mut().poll(&mut context)) {
-                            Some(std::task::Poll::Ready(connection)) => Some(connection),
-                            Some(std::task::Poll::Pending) | None => None,
-                        }
-                    });
-                    if let Some(connection) = connection {
-                        self.connect_future = None;
-                        self.finish_connect_hub(connection).await;
-                        if self.semio_hub.is_some() {
-                            self.drive_phase = ArtifactDrivePhase::Hub;
-                        }
-                    }
-                }
-                ArtifactDrivePhase::Watch => {
-                    if self.watcher.as_mut().is_some_and(|watcher| watcher.poll_changed()) {
-                        self.fs_deadline = Some(Instant::now() + Duration::from_millis(200));
-                    }
-                }
-                ArtifactDrivePhase::Reconnect => {
-                    if self.reconnect_at.is_some_and(|deadline| deadline <= Instant::now()) {
-                        self.reconnect_at = None;
-                        self.start_connect_hub().await;
-                    }
-                }
-                ArtifactDrivePhase::Folder => {
-                    if self.fs_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
-                        self.fs_deadline = None;
-                        self.handle_external_change().await;
-                    }
-                }
-                ArtifactDrivePhase::Backbone => {
-                    if !matches!(self.relay_one_backbone().await, Ok(false)) {
-                        self.drive_phase = ArtifactDrivePhase::Backbone;
-                    }
-                }
-                ArtifactDrivePhase::Status => {
-                    self.tick_link().await;
-                    self.emit_status_if_changed().await;
-                    if self.cmd_rx.close_handle().has_pending() {
-                        return ArtifactDrive::MoreWork;
-                    }
-                    if !matches!(self.relay_one_backbone().await, Ok(false)) {
-                        self.drive_phase = ArtifactDrivePhase::Backbone;
-                        return ArtifactDrive::MoreWork;
-                    }
-                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.link_expires_at, self.fs_deadline].into_iter().flatten().min() };
-                }
-            }
-            ArtifactDrive::MoreWork
-        }
-
-        /// 📡️ Polls one hub frame under the actor's readiness waker; `None` parks until the socket wakes it.
-        fn poll_hub_message(&mut self) -> Option<Option<Result<Message, tokio_tungstenite::tungstenite::Error>>> {
-            let readiness = self.readiness.clone()?;
-            let waker = std::task::Waker::from(Arc::new(ArtifactReadinessWake(readiness)));
-            let mut context = std::task::Context::from_waker(&waker);
-            match self.semio_hub.as_mut().map(|connection| connection.read.poll_next_unpin(&mut context)) {
-                Some(std::task::Poll::Ready(message)) => Some(message),
-                Some(std::task::Poll::Pending) | None => None,
-            }
-        }
-
-        /// 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher. A bound folder
-        /// whose bootstrap read finds no archive is announced once ([`ArtifactEvent::DocumentArchiveAbsent`]).
-        async fn setup(&mut self) {
-            let read = match self.folder.as_ref().filter(|_| self.current_pack.is_none()) {
-                Some(folder) => Some(folder.read_archive().await),
-                None => None,
-            };
-            if matches!(read, Some(Ok(None))) && !self.folder_bootstrapped {
-                self.emit(ArtifactEvent::DocumentArchiveAbsent);
-            }
-            self.folder_bootstrapped |= matches!(read, Some(Ok(_)));
-            let seeded = read.and_then(|read| read.ok().flatten());
-            self.folder_held_hash = seeded.as_deref().map(document_archive_hash).or(self.folder_held_hash.take());
-            if let Some(bytes) = seeded {
-                if let Ok(archive) = crate::os_spr::decode_document_archive_bytes(&bytes).await {
-                    let pack = archive.parent_pack;
-                    let spr = archive.parent_spr;
-                    if let Ok(op_ids) = spr_op_ids(&spr).await {
-                    self.known_op_ids = op_ids;
-                    self.last_written_hash = Some(document_archive_hash(&bytes));
-                    self.current_pack = Some(pack);
-                    self.current_spr = Some(spr);
-                    self.current_archive = Some(bytes);
-                    }
-                }
-            }
-            if self.watch_external {
-                if let Some(watch_path) = self.folder_watch_path.clone() {
-                    if let Some(readiness) = self.readiness.clone() {
-                        self.watcher = Some(install_watcher(&watch_path, self.pool.clone(), readiness));
-                    }
-                }
-            }
-        }
-
-        /// 📨️ Handles a caller control message. Returns `true` when the actor should stop.
-        async fn handle_cmd(&mut self, message: ArtifactActorMsg) -> bool {
-            match message {
-                ArtifactActorMsg::LocalMutations { envelopes } => {
-                    let drained = self.relay_one_backbone().await.unwrap_or(false);
-                    if !drained && !envelopes.is_empty() {
-                        self.persist_operations(&envelopes).await;
-                        self.relay_operations_to_hub(&envelopes).await;
-                    }
-                    false
-                }
-                ArtifactActorMsg::DocumentBackbone { message } => {
-                    let envelopes = match decode_document_backbone_message_exact(&message) {
-                        Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
-                        Ok(envelopes) => {
-                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneScopeMismatch, "document backbone scope mismatch", CommandRejectionDetail { envelopes: Some(envelopes.len() as u64), ..CommandRejectionDetail::default() }));
-                            return false;
-                        }
-                        Err(_) => {
-                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneMalformed, "document backbone malformed", CommandRejectionDetail { bytes: Some(message.len() as u64), ..CommandRejectionDetail::default() }));
-                            return false;
-                        }
-                    };
-                    if let Err(refusal) = self.document_backbone_retention.retain(message.len(), &envelopes) {
-                        self.reject_document_backbone(refusal);
-                        return false;
-                    }
-                    self.persist_operations(&envelopes).await;
-                    if self.hub_space_id.is_some() {
-                        self.relay_operations_to_hub(&envelopes).await;
-                    } else {
-                        self.document_backbone_retention.release(&envelopes);
-                    }
-                    false
-                }
-                ArtifactActorMsg::LocalDocumentArchive { archive } => {
-                    if let Ok(decoded) = crate::os_spr::decode_document_archive_bytes(&archive).await {
-                        self.persist_archive(archive, decoded).await;
-                    }
-                    false
-                }
-                ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
-                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
-                    self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
-                    false
-                }
-                ArtifactActorMsg::PublishPreview { key, seq, payload } => {
-                    self.send_client_frame(ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview).await;
-                    false
-                }
-                ArtifactActorMsg::ExternalChanged => {
-                    self.handle_external_change().await;
-                    false
-                }
-                ArtifactActorMsg::Reseed { pack, spr, baseline } => {
-                    self.reseed_hub_document(pack, spr, baseline).await;
-                    false
-                }
-                ArtifactActorMsg::Detach => true,
-            }
-        }
-
-        fn reject_document_backbone(&mut self, outcome: CommandAckOutcome) {
-            let batch_id = self.next_local_rejection_batch_id;
-            self.next_local_rejection_batch_id = self.next_local_rejection_batch_id.wrapping_sub(1);
-            self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome });
-        }
-
-        /// 📤️ Pops and advances exactly one store-to-actor FIFO owner.
-        async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
-            let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
-            match message {
-                BackboneMessage::Mutations { envelopes } => {
-                    let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
-                    self.persist_operations(&envelopes).await;
-                    self.relay_operations_to_hub(&envelopes).await;
-                }
-                BackboneMessage::Genesis { pack } => self.persist_genesis(pack).await,
-                BackboneMessage::Ack { .. } => {}
-                BackboneMessage::Member { .. } => return Err(vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
-                BackboneMessage::Retract { .. } => return Err(vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
-            }
-            Ok(true)
-        }
-
-        //#region 🔖️Folder
-        /// ✍️ Persists the current recursive archive to the folder binding and records the
-        /// content hash for self-write suppression. A write failure (e.g. no `crate::os_store::serialization::ArtifactCodec`
-        /// registered for this document's schema on the `Pack` endpoint — see `FolderEndpoint::write_archive`)
-        /// is swallowed here the same way every other best-effort path in this actor already is, but
-        /// deliberately does NOT record `last_written_hash` on failure — a false "persisted" mark
-        /// would make `handle_external_change` mistake the still-stale on-disk content for a
-        /// self-write and ignore a real external change.
-        ///
-        /// Bytes the folder is known to hold already — the last archive read or written — are not written again.
-        async fn persist_write_archive(&mut self, archive: &[u8]) {
-            let Some(folder) = self.folder.as_ref() else { return };
-            let hash = document_archive_hash(archive);
-            if self.folder_held_hash.as_deref() == Some(hash.as_str()) {
-                return;
-            }
-            if folder.write_archive(archive).await.is_ok() {
-                self.last_written_hash = Some(hash.clone());
-                self.folder_held_hash = Some(hash);
-                self.folder_bootstrapped = true;
-                #[cfg(test)]
-                {
-                    self.folder_writes += 1;
-                }
-            }
-        }
-
-        async fn persist_archive(&mut self, bytes: Vec<u8>, archive: crate::os_spr::DocumentArchivePack) {
-            if let Ok(op_ids) = spr_op_ids(&archive.parent_spr).await {
-                self.known_op_ids = op_ids;
-            }
-            self.persist_write_archive(&bytes).await;
-            self.current_pack = Some(archive.parent_pack);
-            self.current_spr = Some(archive.parent_spr);
-            self.current_archive = Some(bytes);
-        }
-
-        /// 🧬️ Adopts the store's genesis: an empty binding persists it as the document's
-        /// initial snapshot with an event-free history; a bound document must share it, otherwise
-        /// the store names a different document and the mismatch is reported, never merged.
-        async fn persist_genesis(&mut self, pack: Vec<u8>) {
-            if let Some(current) = self.current_pack.as_ref() {
-                if *current != pack {
-                    self.emit(ArtifactEvent::Conflict(MutationMessage {
-                        level: semio_framework_diagnostic::Severity::Error,
-                        code: semio_framework_diagnostic::FaultCode::new("genesisMismatch"),
-                        message: "the attached store names a different initial snapshot than the persisted document".into(),
-                        target: vec![format!("folder://{}", self.document_id)],
-                        op_index: None,
-                    }));
-                }
-                return;
-            }
-            let spr = crate::os_store::text_format::empty_document_spr(&self.document_id, &self.schema).await;
-            let archive = crate::os_spr::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
-            if let Ok(bytes) = crate::os_spr::encode_document_archive_bytes(&archive) {
-                self.persist_archive(bytes, archive).await;
-            }
-        }
-
-        /// ➕️ Appends locally-applied operations to the persisted spr log (append-only),
-        /// keeping the on-disk copy coherent so self-writes are never mistaken for external edits.
-        async fn persist_operations(&mut self, envelopes: &[MutationEnvelope]) {
-            if self.folder.is_none() {
-                return;
-            }
-            let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
-            let mut new_edits: Vec<crate::os_spr::HistoryEdit> = Vec::new();
-            let mut new_transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();
-            for envelope in envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.mutation_id.0.clone())) {
-                if crate::os_spr::is_history_transition(envelope) {
-                    new_transitions.push(crate::os_spr::HistoryTransitionRecord::from_envelope(envelope));
-                } else {
-                    new_edits.push(history_edit_from_envelope(envelope).await);
-                }
-            }
-            if new_edits.is_empty() && new_transitions.is_empty() {
-                return;
-            }
-            let Ok(new_spr) = crate::os_store::text_format::append_history_events_to_spr(&spr, &new_edits, &new_transitions).await else { return };
-            self.persist_spr(pack, new_spr).await;
-        }
-
-        /// 🪒️ Drops from the persisted log the transitions `refused` retracts — the same ones the store drops
-        /// ([`crate::os_store::transition_retraction_closure`]) — so a reload never resurrects what the hub refused.
-        async fn persist_retraction(&mut self, refused: &[String]) {
-            if self.folder.is_none() {
-                return;
-            }
-            let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
-            let Ok((spr, retracted)) = crate::os_store::retract_history_transitions_from_spr(&spr, refused).await else { return };
-            for id in &retracted {
-                self.known_op_ids.remove(id);
-            }
-            self.persist_spr(pack, spr).await;
-        }
-
-        /// 💾️ Persists `spr` as the recursive archive's parent log beside `pack`.
-        async fn persist_spr(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
-            let mut archive = match self.current_archive.as_deref() {
-                Some(bytes) => crate::os_spr::decode_document_archive_bytes(bytes).await.ok(),
-                None => None,
-            }
-            .unwrap_or(crate::os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() });
-            archive.parent_spr = spr.clone();
-            if let Ok(bytes) = crate::os_spr::encode_document_archive_bytes(&archive) {
-                self.persist_write_archive(&bytes).await;
-                self.current_archive = Some(bytes);
-            }
-            self.current_pack = Some(pack);
-            self.current_spr = Some(spr);
-        }
-
-        /// 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteMutations`,
-        /// divergence → `DocumentArchiveReplaced`, divergence with local pending operations → `Conflict`. Self-writes
-        /// (content hash match) are ignored.
-        ///
-        /// Append-only spr events decoded without HistoryOpMeta carry HLT(0,0). Ingest merges
-        /// by HLC, so a zero stamp would reorder under already-applied local edits and leave
-        /// the live snapshot at the older head. Stamp each new envelope with this actor clock.
-        ///
-        /// The first answered read of an open that finds no archive, with none read or written before, announces
-        /// [`ArtifactEvent::DocumentArchiveAbsent`] once; a later empty answer only forgets the archive the folder held.
-        async fn handle_external_change(&mut self) {
-            let read = match self.folder.as_ref() {
-                Some(folder) => folder.read_archive().await,
-                None => return,
-            };
-            let bytes = match read {
-                Ok(Some(bytes)) => bytes,
-                Ok(None) => {
-                    if !self.folder_bootstrapped {
-                        self.emit(ArtifactEvent::DocumentArchiveAbsent);
-                    }
-                    self.folder_bootstrapped = true;
-                    self.folder_held_hash = None;
-                    return;
-                }
-                Err(_) => return,
-            };
-            self.folder_bootstrapped = true;
-            let Ok(archive) = crate::os_spr::decode_document_archive_bytes(&bytes).await else { return };
-            let pack = archive.parent_pack.clone();
-            let spr = archive.parent_spr.clone();
-            let hash = document_archive_hash(&bytes);
-            self.folder_held_hash = Some(hash.clone());
-            if self.last_written_hash.as_deref() == Some(hash.as_str()) {
-                return;
-            }
-            let Ok(file_ids) = spr_op_ids(&spr).await else { return };
-            let lost: Vec<String> = self.known_op_ids.difference(&file_ids).cloned().collect();
-            let new_ids: HashSet<String> = file_ids.difference(&self.known_op_ids).cloned().collect();
-
-            if lost.is_empty() && !new_ids.is_empty() {
-                let Ok(events) = spr_events(&spr, &self.document_id, &self.schema,self.actor_identity_grant).await else { return };
-                let mut appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
-                for envelope in &mut appended {
-                    if envelope.timestamp == crate::os_spr::HybridLogicalTimestamp::new(0, 0) {
-                        envelope.timestamp = next_timestamp(self.hlc_seed, &mut self.hlc_counter).await;
-                    }
-                }
-                self.known_op_ids.extend(new_ids);
-                self.current_pack = Some(pack);
-                self.current_spr = Some(spr);
-                self.current_archive = Some(bytes);
-                self.last_written_hash = Some(hash);
-                let _ = self.deliver_remote_operations(appended).await;
-            } else if !lost.is_empty() {
-                if !self.pending_batches.is_empty() {
-                    self.emit(ArtifactEvent::Conflict(MutationMessage {
-                        level: semio_framework_diagnostic::Severity::Error,
-                        code: semio_framework_diagnostic::FaultCode::new("externalDivergence"),
-                        message: "external history diverged while local operations are pending".into(),
-                        target: vec![format!("folder://{}", self.document_id)],
-                        op_index: None,
-                    }));
-                } else {
-                    self.known_op_ids = file_ids;
-                    self.current_pack = Some(pack.clone());
-                    self.current_spr = Some(spr.clone());
-                    self.current_archive = Some(bytes.clone());
-                    self.last_written_hash = Some(hash);
-                    self.deliver_archive(bytes).await;
-                }
-            }
-        }
-        //#endregion 🔖️Folder
-
-        //#region 🔖️Hub
-        fn bootstrap_control(&self, started_at: Instant) -> NativeBootstrapControl {
-            NativeBootstrapControl { cancelled: self.closing, now_ms: started_at.elapsed().as_millis().min(u128::from(u64::MAX)) as u64, events: self.events.clone() }
-        }
-
-        fn abort_artifact_bootstrap(&mut self) {
-            if let Some(mut pending) = self.artifact_bootstrap.take() {
-                pending.assembler.abort();
-            }
-            self.pending_resume_token = None;
-            self.required_tail_frontier = None;
-        }
-
-        fn requeue_pending_batches(&mut self) {
-            let mut batches: Vec<(u64, Vec<MutationEnvelope>)> = self.pending_batches.drain().collect();
-            batches.sort_by_key(|(batch_id, _)| *batch_id);
-            for (_, envelopes) in batches {
-                self.queue_outbox(envelopes);
-            }
-        }
-
-        fn queue_outbox(&mut self, envelopes: impl IntoIterator<Item = MutationEnvelope>) {
-            let mut queued: HashSet<String> = self.outbox.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
-            for envelope in envelopes {
-                if queued.insert(envelope.mutation_id.0.clone()) {
-                    self.outbox.push(envelope);
-                }
-            }
-        }
-
-        fn clear_socket_epoch(&mut self) {
-            self.socket_actor = None;
-            self.socket_actor_confirmed = false;
-            self.session_color = None;
-        }
-
-        async fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
-            self.abort_artifact_bootstrap();
-            self.requeue_pending_batches();
-            self.emit(ArtifactEvent::Conflict(MutationMessage { level: semio_framework_diagnostic::Severity::Error, code: semio_framework_diagnostic::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
-            self.semio_hub = None;
-            self.clear_socket_epoch();
-            self.schedule_reconnect().await;
-        }
-
-        /// ♻️ Hub lag forces a canonical pair refresh: clear the live projection tokens, keep unacked work queued,
-        /// drop the socket and ask the host for the pair ([`ArtifactEvent::RebootstrapRequired`]); the actor dials again only
-        /// once the host re-seeded it ([`Self::reseed_hub_document`]) — never into a Welcome it would have to refuse, and never
-        /// after an outage backoff (the rebuild's own close is not a shortage).
-        async fn require_artifact_rebootstrap(&mut self, control: crate::os_directory::RebootstrapRequired) {
-            self.requeue_pending_batches();
-            self.abort_artifact_bootstrap();
-            self.current_pack = None;
-            self.current_spr = None;
-            self.current_archive = None;
-            self.server_frontier = None;
-            self.resume_token = None;
-            self.pending_resume_token = None;
-            self.required_tail_frontier = None;
-            self.artifact_rebootstrap_required = true;
-            self.known_op_ids.clear();
-            self.semio_hub = None;
-            self.clear_socket_epoch();
-            self.reconnect_at = None;
-            self.set_remote_state(RemoteState::Connecting).await;
-            self.emit(ArtifactEvent::RebootstrapRequired { control });
-        }
-
-        async fn flush_outbox(&mut self) {
-            if self.outbox.is_empty() || self.semio_hub.is_none() {
-                return;
-            }
-            let envelopes = std::mem::take(&mut self.outbox);
-            self.relay_operations_to_hub(&envelopes).await;
-        }
-
-        async fn finish_catchup_if_ready(&mut self) {
-            let Some(required) = self.required_tail_frontier.clone() else { return };
-            let Some(actual) = self.server_frontier.as_ref() else { return };
-            if !frontier_reaches(actual, &required) {
-                return;
-            }
-            self.required_tail_frontier = None;
-            if let Some(resume_token) = self.pending_resume_token.take() {
-                self.resume_token = Some(resume_token);
-            }
-            self.set_remote_state(RemoteState::Live { peer_count: 0 }).await;
-            self.flush_outbox().await;
-        }
-
-        async fn start_connect_hub(&mut self) {
-            let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.artifact_rebootstrap_required || self.semio_hub.is_some() || self.connect_future.is_some() || !self.link.admits_local_edits() || self.reconnect_at.is_some_and(|deadline| deadline > Instant::now()) {
-                return;
-            }
-            let Some(credential) = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone() else {
-                self.schedule_reconnect().await;
-                return;
-            };
-            let Some(source) = self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone() else {
-                self.schedule_reconnect().await;
-                return;
-            };
-            let space_id = self.hub_space_id.clone().unwrap_or_default();
-            let document_id = self.document_id.clone();
-            let surface = self.hub_surface.clone();
-            let schema = self.schema.clone();
-            let Some(pack_schema_hash) = document_pack_schema_hash(&schema, self.document_execution_target_lease.as_ref()).await else {
-                self.schedule_reconnect().await;
-                return;
-            };
-            let expectation = crate::os_directory::client::DocumentSocketExpectationV1 { artifact_schema: schema, pack_schema_hash, requested_surface_id: surface, lease: self.document_execution_target_lease.clone() };
-            let client_instance_id = format!("native-document-{:016x}", self.hlc_seed);
-            let actor_identity_grant=self.actor_identity_grant;
-            if !actor_identity_admission_admits(actor_identity_grant){self.schedule_reconnect().await;return;}
-            let operation_cancel = self.operation_cancel.child_now();
-            let pool = self.pool.clone();
-            self.set_remote_state(RemoteState::Connecting).await;
-            self.connect_future = Some(Box::pin(async move {
-                let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: operation_cancel, capability: None };
-                let admission_ctx = ctx.clone();
-                let (admission_sender, admission_receiver) = semio_framework_async::oneshot::channel();
-                let admission_job = Box::new(move || {
-                    let admission = source.admit_document_socket(&admission_ctx, &space_id, &document_id, &expectation, &client_instance_id, 5_000);
-                    let _ = admission_sender.send(admission);
-                });
-                pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Io, admission_job);
-                let admission = admission_receiver.await.map_err(|_| DocumentConnectFailure::Short)?.map_err(|error| if document_admission_refuses_access(&error) { DocumentConnectFailure::Refused } else { DocumentConnectFailure::Short })?;
-                if ctx.cancel.is_cancelled_now() || admission.authority.expires_at_unix_ms <= now_ms().await {
-                    return Err(DocumentConnectFailure::Short);
-                }
-                if base_url.trim_end_matches('/') != admission.authority.hub_origin.trim_end_matches('/') {
-                    return Err(DocumentConnectFailure::Short);
-                }
-                let crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority } = admission;
-                let url = hub_ws_url(
-                    &authority.hub_origin,
-                    &authority.scope.space_id,
-                    &authority.scope.document_id,
-                    Some(&authority.surface.surface_id),
-                )
-                .await;
-                let mut request = url.into_client_request().map_err(|_| DocumentConnectFailure::Short)?;
-                let session = credential.capability().map_err(|_| DocumentConnectFailure::Short)?;
-                let protocol_header = format!("{}, {session}", socket.protocol);
-                request.headers_mut().insert(
-                    tokio_tungstenite::tungstenite::http::header::SEC_WEBSOCKET_PROTOCOL,
-                    protocol_header.parse().map_err(|_| DocumentConnectFailure::Short)?,
-                );
-                let (mut stream, _response) = tokio::time::timeout(Duration::from_secs(5), tokio_tungstenite::connect_async(request)).await.map_err(|_| DocumentConnectFailure::Short)?.map_err(|_| DocumentConnectFailure::Short)?;
-                if ctx.cancel.is_cancelled_now() || authority.expires_at_unix_ms <= now_ms().await {
-                    let _ = stream.close(None).await;
-                    return Err(DocumentConnectFailure::Short);
-                }
-                let(socket_actor,identity_progress)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original pre-admitted socket actor invariant: {error}"));
-                Ok(ConnectedDocumentSocket { stream, socket_actor, authority,identity_progress })
-            }));
-        }
-
-        async fn finish_connect_hub(&mut self, connection: Result<ConnectedDocumentSocket, DocumentConnectFailure>) {
-            match connection {
-                Ok(ConnectedDocumentSocket { mut stream, socket_actor, authority,identity_progress }) => {
-                    add_actor_identity_progress(&mut self.actor_identity_progress,identity_progress);
-                    let local_schema_hash = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await;
-                    let now = now_ms().await;
-                    if self.operation_cancel.is_cancelled_now()
-                        || authority.expires_at_unix_ms <= now
-                        || authority.hub_origin.trim_end_matches('/') != self.hub_base_url.as_deref().unwrap_or_default().trim_end_matches('/')
-                        || authority.scope.space_id != self.hub_space_id.as_deref().unwrap_or_default()
-                        || authority.scope.document_id != self.document_id
-                        || authority.artifact.schema != self.schema
-                        || local_schema_hash != Some(authority.pack_schema_hash)
-                        || self.hub_surface.as_ref().is_some_and(|surface| surface != &authority.surface.surface_id)
-                        || self.document_execution_target_lease.as_ref().is_some_and(|lease| !authority.matches_lease_fields(lease))
-                    {
-                        let _ = stream.close(None).await;
-                        self.clear_socket_epoch();
-                        self.schedule_reconnect().await;
-                        return;
-                    }
-                    let pack_schema_hash = authority.pack_schema_hash;
-                    let (write, read) = stream.split();
-                    self.semio_hub = Some(HubConn { write, read });
-                    self.socket_actor = Some(socket_actor);
-                    self.socket_actor_confirmed = false;
-                    self.hub_surface = Some(authority.surface.surface_id.clone());
-                    self.session_color = None;
-                    let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: self.schema.clone(), pack_schema_hash, resume_token: self.resume_token.clone(), frontier: self.server_frontier.clone() };
-                    self.send_client_frame(hello, Lane::Command).await;
-                }
-                Err(DocumentConnectFailure::Refused) => {
-                    self.clear_socket_epoch();
-                    self.link_event(DocumentLinkEvent::Refused { now_ms: wall_ms() }).await;
-                }
-                Err(DocumentConnectFailure::Short) => {
-                    self.clear_socket_epoch();
-                    self.schedule_reconnect().await;
-                }
-            }
-        }
-
-        /// 🔁️ A failed attempt or a lost socket: the link backs off along [`DOCUMENT_LINK_SHORTAGE_POLICY`] — or
-        /// expires, once the shortage outlasts its bound.
-        async fn schedule_reconnect(&mut self) {
-            if let Some(retry_in_ms) = self.fail_link().await {
-                self.set_remote_state(RemoteState::Backoff { retry_in_ms }).await;
-            }
-        }
-
-        /// 🔌️ Applies `Failed` to the link and arms its two deadlines; the retry delay while it stays unlinked.
-        async fn fail_link(&mut self) -> Option<u64> {
-            let now_ms = wall_ms();
-            self.link_event(DocumentLinkEvent::Failed { now_ms }).await;
-            let retry_at_ms = self.link.retry_at_ms()?;
-            self.reconnect_at = Some(instant_at(retry_at_ms, now_ms));
-            self.link_expires_at = self.link.expires_at_ms(&DOCUMENT_LINK_SHORTAGE_POLICY).map(|at_ms| instant_at(at_ms, now_ms));
-            Some(retry_at_ms.saturating_sub(now_ms))
-        }
-
-        /// 🔌️ Applies one link event; a link that turns terminal drops its socket and deadlines, reports
-        /// `Detached` and emits the coded terminal message a shell localizes ([`document_link_terminal_message`]).
-        async fn link_event(&mut self, event: DocumentLinkEvent) {
-            let was_open = self.link.admits_local_edits();
-            self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, event);
-            if was_open && !self.link.admits_local_edits() {
-                self.abort_artifact_bootstrap();
-                self.requeue_pending_batches();
-                self.connect_future = None;
-                if let Some(mut connection) = self.semio_hub.take() {
-                    let _ = tokio::time::timeout(Duration::from_millis(4), connection.write.close()).await;
-                }
-                self.clear_socket_epoch();
-                self.reconnect_at = None;
-                self.link_expires_at = None;
-                self.set_remote_state(RemoteState::Detached).await;
-                let _ = self.events.send(ArtifactEvent::Conflict(document_link_terminal_message(&self.document_id, self.link.status())));
-            }
-        }
-
-        /// ⏳️ Lets time pass for an unlinked hub link: past the shortage bound it expires.
-        async fn tick_link(&mut self) {
-            if self.hub_base_url.is_some() && matches!(self.link, DocumentLink::Unlinked { .. }) {
-                self.link_event(DocumentLinkEvent::Tick { now_ms: wall_ms() }).await;
-            }
-        }
-
-        async fn on_hub_message(&mut self, message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>) {
-            match message {
-                Some(Ok(Message::Binary(bytes))) => match decode_server_frame(&bytes).await {
-                    Ok((_lane, frame)) => self.on_hub_frame(frame).await,
-                    Err(error) => self.fail_artifact_bootstrap(format!("malformed hub frame: {error}")).await,
-                },
-                Some(Ok(Message::Ping(payload))) => {
-                    self.send_raw(Message::Pong(payload)).await;
-                }
-                Some(Ok(_)) => {}
-                Some(Err(_)) | None => {
-                    self.abort_artifact_bootstrap();
-                    self.requeue_pending_batches();
-                    self.semio_hub = None;
-                    self.clear_socket_epoch();
-                    self.schedule_reconnect().await;
-                }
-            }
-        }
-
-        async fn start_artifact_bootstrap(&mut self, bootstrap: ArtifactBootstrap, resume_token: String, server_frontier: RuntimeFrontierSummary) {
-            self.abort_artifact_bootstrap();
-            let Some(local_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
-                self.fail_artifact_bootstrap(format!("no pack schema identity resolves schema {:?}", self.schema)).await;
-                return;
-            };
-            if let Err(error) = validate_artifact_bootstrap_identity(&bootstrap, &self.document_id, &self.schema, local_schema_hash, &server_frontier) {
-                self.fail_artifact_bootstrap(error).await;
-                return;
-            }
-            let inline = bootstrap.inline.is_some();
-            let started_at = Instant::now();
-            let baseline_frontier = bootstrap.baseline_frontier.clone();
-            let required_tail_frontier = bootstrap.required_tail_frontier.clone();
-            let pack_schema_hash = bootstrap.pack_schema_hash;
-            let mut control = self.bootstrap_control(started_at);
-            let assembler = match ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, ArtifactBootstrapLimits::default(), Some(ARTIFACT_BOOTSTRAP_DEADLINE_MS), &mut control) {
-                Ok(assembler) => assembler,
-                Err(error) => {
-                    self.fail_artifact_bootstrap(error.to_string()).await;
-                    return;
-                }
-            };
-            let mut pending = PendingArtifactBootstrap { assembler, started_at, resume_token, baseline_frontier, required_tail_frontier, pack_schema_hash };
-            if !inline {
-                self.artifact_bootstrap = Some(pending);
-                return;
-            }
-            let mut control = self.bootstrap_control(started_at);
-            match pending.assembler.finish(None, &mut control) {
-                Ok(pair) => {
-                    if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
-                        self.fail_artifact_bootstrap(error).await;
-                    }
-                }
-                Err(error) => self.fail_artifact_bootstrap(error.to_string()).await,
-            }
-        }
-
-        async fn install_artifact_bootstrap(&mut self, pending: PendingArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-            let codec = crate::os_store::codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {:?}", self.schema))?;
-            if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
-                return Err("artifact bootstrap codec changed during transfer".into());
-            }
-            codec.print_mirror(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
-            let op_ids = spr_op_ids(&pair.spr).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
-            let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack.clone(), parent_spr: pair.spr.clone(), members: Vec::new() };
-            let archive_bytes = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
-            let previous = self.current_archive.clone();
-            if let Some(folder) = self.folder.as_ref() {
-                folder.write_archive(&archive_bytes).await.map_err(|error| format!("artifact bootstrap persistence failed: {error}"))?;
-            }
-            let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
-            let pushed = match self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await {
-                Ok(()) if !events.is_empty() => self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await,
-                result => result,
-            };
-            if let Err(error) = pushed {
-                if let (Some(folder), Some(previous)) = (self.folder.as_ref(), previous) {
-                    let _ = folder.write_archive(&previous).await;
-                }
-                return Err(format!("artifact bootstrap event delivery failed: {error}"));
-            }
-            self.known_op_ids = op_ids;
-            self.current_pack = Some(pair.pack.clone());
-            self.current_spr = Some(pair.spr.clone());
-            self.current_archive = Some(archive_bytes.clone());
-            if self.folder.is_some() {
-                self.last_written_hash = Some(document_archive_hash(&archive_bytes));
-            }
-            self.emit(ArtifactEvent::DocumentArchiveReplaced { archive: archive_bytes });
-            self.server_frontier = Some(pending.baseline_frontier);
-            self.pending_resume_token = Some(pending.resume_token);
-            self.required_tail_frontier = Some(pending.required_tail_frontier);
-            if !self.outbox.is_empty() && self.replay_local_outbox_after_bootstrap().await.is_err() {
-                self.emit(ArtifactEvent::Conflict(MutationMessage {
-                    level: semio_framework_diagnostic::Severity::Error,
-                    code: semio_framework_diagnostic::FaultCode::new("artifactBootstrapLocalReplay"),
-                    message: "artifact baseline committed; pending local replay will retry after reconnect".into(),
-                    target: vec![self.document_id.clone()],
-                    op_index: None,
-                }));
-                self.semio_hub = None;
-                self.clear_socket_epoch();
-                self.schedule_reconnect().await;
-                return Ok(());
-            }
-            self.finish_catchup_if_ready().await;
-            Ok(())
-        }
-
-        async fn replay_local_outbox_after_bootstrap(&mut self) -> Result<(), vcs::VcsError> {
-            #[cfg(test)]
-            if std::mem::take(&mut self.fail_bootstrap_local_replay_once) {
-                return Err(vcs::VcsError::Backbone("injected bootstrap local replay failure".into()));
-            }
-            self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await
-        }
-
-        #[cfg(test)]
-        pub(super) async fn inject_hub_frame(&mut self, frame: ServerFrame) {
-            self.on_hub_frame(frame).await;
-        }
-
-        #[cfg(test)]
-        pub(super) async fn handle_test_cmd(&mut self, message: ArtifactActorMsg) -> bool {
-            self.handle_cmd(message).await
-        }
-
-        #[cfg(test)]
-        pub(super) fn inject_bootstrap_local_replay_failure(&mut self) {
-            self.fail_bootstrap_local_replay_once = true;
-        }
-
-        #[cfg(test)]
-        pub(super) fn cancel_test_bootstrap(&mut self) {
-            self.abort_artifact_bootstrap();
-        }
-
-        #[cfg(test)]
-        pub(super) fn queue_test_outbox(&mut self, envelopes: Vec<MutationEnvelope>) {
-            self.queue_outbox(envelopes);
-        }
-
-        #[cfg(test)]
-        pub(super) fn install_test_socket_actor(&mut self, actor: &str) {
-            let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
-            self.socket_actor_confirmed = false;
-        }
-
-        #[cfg(test)]
-        pub(super) async fn connect_test_socket(&mut self, url: &str, actor: &str) {
-            let (stream, _) = tokio_tungstenite::connect_async(url).await.expect("test socket connects");
-            let (write, read) = stream.split();
-            self.semio_hub = Some(HubConn { write, read });
-            let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
-            self.socket_actor_confirmed = false;
-            self.session_color = None;
-            self.send_client_frame(
-                ClientFrame::SocketHelloV1 {
-                    wire_version: 1,
-                    protocol_version: 1,
-                    schema: self.schema.clone(),
-                    pack_schema_hash: crate::os_store::codec_registry::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
-                    resume_token: self.resume_token.clone(),
-                    frontier: self.server_frontier.clone(),
-                },
-                Lane::Command,
-            )
-            .await;
-        }
-
-        #[cfg(test)]
-        pub(super) fn socket_epoch_test_state(&self) -> (Option<String>, bool, usize, Vec<String>) {
-            (self.socket_actor.as_ref().map(|actor|actor.as_str().to_owned()), self.socket_actor_confirmed, self.pending_batches.len(), self.outbox.iter().map(|envelope| envelope.actor.0.as_str().to_owned()).collect())
-        }
-
-        #[cfg(test)]
-        pub(super) async fn fail_test_connection(&mut self) {
-            self.on_hub_message(None).await;
-        }
-
-        #[cfg(test)]
-        pub(super) async fn fail_test_bootstrap(&mut self) {
-            self.fail_artifact_bootstrap("injected bootstrap failure").await;
-        }
-
-        #[cfg(test)]
-        pub(super) async fn run_test_connect_attempt(&mut self) {
-            self.start_connect_hub().await;
-            if let Some(future) = self.connect_future.take() {
-                let outcome = future.await;
-                self.finish_connect_hub(outcome).await;
-            }
-        }
-
-        #[cfg(test)]
-        pub(super) async fn relay_test_envelope(&mut self, envelope: MutationEnvelope) {
-            self.relay_operations_to_hub(std::slice::from_ref(&envelope)).await;
-        }
-
-        #[cfg(test)]
-        pub(super) async fn handle_test_document_archive(&mut self, archive: Vec<u8>) {
-            let _ = self.handle_cmd(ArtifactActorMsg::LocalDocumentArchive { archive }).await;
-        }
-
-        #[cfg(test)]
-        pub(super) fn current_archive_test(&self) -> Option<Vec<u8>> {
-            self.current_archive.clone()
-        }
-
-        #[cfg(test)]
-        pub(super) async fn setup_test(&mut self) {
-            self.setup().await;
-        }
-
-        #[cfg(test)]
-        pub(super) fn folder_writes_test(&self) -> usize {
-            self.folder_writes
-        }
-
-        #[cfg(test)]
-        pub(super) fn bootstrap_test_state(&self) -> (Option<Vec<u8>>, Option<Vec<u8>>, Option<RuntimeFrontierSummary>, Option<RuntimeFrontierSummary>, Option<String>, Option<String>, RemoteState, Vec<String>, bool) {
-            (
-                self.current_pack.clone(),
-                self.current_spr.clone(),
-                self.server_frontier.clone(),
-                self.required_tail_frontier.clone(),
-                self.resume_token.clone(),
-                self.pending_resume_token.clone(),
-                self.remote_state.clone(),
-                self.outbox.iter().map(|envelope| envelope.mutation_id.0.clone()).collect(),
-                self.artifact_rebootstrap_required,
-            )
-        }
-
-        #[cfg(test)]
-        pub(super) fn parity_test_state(&self) -> (Option<String>, Option<String>, RemoteState, Vec<String>, usize, bool, bool, Vec<String>) {
-            (
-                self.resume_token.clone(),
-                self.server_frontier.as_ref().map(|frontier| frontier.head_edit_id.clone()),
-                self.remote_state.clone(),
-                self.outbox.iter().map(|envelope| envelope.mutation_id.0.clone()).collect(),
-                self.pending_batches.len(),
-                self.socket_actor_confirmed,
-                self.artifact_rebootstrap_required,
-                self.known_op_ids.union(&self.applied_op_ids).cloned().collect(),
-            )
-        }
-
-        /// 🪙️ Command-lane credit-based flow control: no client-side backpressure
-        /// implemented this wave (scope is frame plumbing, not congestion control) —
-        /// accepted and ignored.
-        async fn on_hub_frame(&mut self, frame: ServerFrame) {
-            match frame {
-                ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
-                    self.requeue_pending_batches();
-                    match bootstrap {
-                        Bootstrap::None => {
-                            self.abort_artifact_bootstrap();
-                            self.resume_token = Some(resume_token);
-                            self.server_frontier = Some(server_frontier);
-                            self.set_remote_state(RemoteState::Live { peer_count: 0 }).await;
-                            self.flush_outbox().await;
-                        }
-                        Bootstrap::Tail => {
-                            self.abort_artifact_bootstrap();
-                            self.pending_resume_token = Some(resume_token);
-                            self.required_tail_frontier = Some(server_frontier);
-                            self.finish_catchup_if_ready().await;
-                        }
-                        Bootstrap::Snapshot { .. } => {
-                            self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client").await;
-                        }
-                        Bootstrap::ArtifactBootstrap(bootstrap) => {
-                            self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
-                        }
-                    }
-                }
-                ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => {
-                    self.fail_artifact_bootstrap("database-private snapshot frame cannot seed an artifact client").await;
-                }
-                ServerFrame::RebootstrapRequired { control } => {
-                    if control.document_id != self.document_id || self.hub_space_id.as_deref() != Some(control.space_id.as_str()) || control.baseline_frontier.document_id.0 != self.document_id {
-                        self.fail_artifact_bootstrap("rebootstrap control scope mismatch").await;
-                    } else {
-                        self.require_artifact_rebootstrap(rebootstrap_control(&control)).await;
-                    }
-                }
-                ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
-                    let Some(mut pending) = self.artifact_bootstrap.take() else {
-                        self.fail_artifact_bootstrap("artifact bootstrap chunk arrived without an active transfer").await;
-                        return;
-                    };
-                    let mut control = self.bootstrap_control(pending.started_at);
-                    match pending.assembler.push(descriptor_hash, index, bytes.as_slice(), &mut control) {
-                        Ok(_) => self.artifact_bootstrap = Some(pending),
-                        Err(error) => self.fail_artifact_bootstrap(error.to_string()).await,
-                    }
-                }
-                ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count } => {
-                    let Some(mut pending) = self.artifact_bootstrap.take() else {
-                        self.fail_artifact_bootstrap("artifact bootstrap completion arrived without an active transfer").await;
-                        return;
-                    };
-                    let mut control = self.bootstrap_control(pending.started_at);
-                    match pending.assembler.finish(Some((descriptor_hash, chunk_count)), &mut control) {
-                        Ok(pair) => {
-                            if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
-                                self.fail_artifact_bootstrap(error).await;
-                            }
-                        }
-                        Err(error) => self.fail_artifact_bootstrap(error.to_string()).await,
-                    }
-                }
-                ServerFrame::Commands { envelopes, frontier, .. } => {
-                    if self.artifact_bootstrap.is_some() {
-                        self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion").await;
-                        return;
-                    }
-                    let settled = settle_committed_envelopes(&mut self.outbox, &mut self.pending_batches, &envelopes);
-                    self.document_backbone_retention.release(&settled);
-                    note_authored_envelopes(&mut self.applied_op_ids, &settled);
-                    let persisted = &self.known_op_ids;
-                    let fresh = admit_remote_envelopes(&mut self.applied_op_ids, envelopes.into_iter().filter(|envelope| !persisted.contains(&envelope.mutation_id.0)));
-                    if !fresh.is_empty() {
-                        self.persist_operations(&fresh).await;
-                        if !self.deliver_remote_operations(fresh).await {
-                            self.fail_artifact_bootstrap("artifact tail could not be installed").await;
-                            return;
-                        }
-                    }
-                    self.server_frontier = Some(frontier);
-                    self.finish_catchup_if_ready().await;
-                }
-                ServerFrame::Ack { batch_id, stages, frontier } => {
-                    if self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
-                        self.fail_artifact_bootstrap("ack arrived before artifact catch-up completion").await;
-                        return;
-                    }
-                    self.server_frontier = Some(frontier);
-                    self.handle_ack(batch_id, stages).await;
-                }
-                ServerFrame::Preview { actor, key, seq, payload } => {
-                    if self.socket_actor.as_deref() != Some(actor.0.as_str()) {
-                        self.emit(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
-                    }
-                }
-                ServerFrame::Presence { peers } => {
-                    let mut decoded: Vec<PresencePeer> = Vec::new();
-                    for p in &peers {
-                        if let Some(peer) = presence_from_bytes(p).await {
-                            decoded.push(peer);
-                        }
-                    }
-                    let peers = decoded;
-                    if matches!(self.remote_state, RemoteState::Live { .. }) && self.artifact_bootstrap.is_none() && self.required_tail_frontier.is_none() {
-                        self.set_remote_state(RemoteState::Live { peer_count: peers.len() }).await;
-                    }
-                    self.emit(ArtifactEvent::Presence { peers });
-                }
-                ServerFrame::Session { actor, color } => {
-                    if self.socket_actor.as_deref() != Some(actor.as_str()) {
-                        self.fail_artifact_bootstrap("socket receipt actor mismatch").await;
-                        return;
-                    }
-                    self.socket_actor_confirmed = true;
-                    self.session_color = Some(color);
-                    self.emit(ArtifactEvent::Session { actor, color });
-                    self.flush_outbox().await;
-                }
-                ServerFrame::CreditGrant { .. } => {
-                }
-                ServerFrame::Error { code, message } => {
-                    self.emit(ArtifactEvent::Conflict(MutationMessage { level: semio_framework_diagnostic::Severity::Error, code: semio_framework_diagnostic::FaultCode::new(code), message, target: vec![self.hub_base_url.clone().unwrap_or_default()], op_index: None }));
-                }
-            }
-        }
-
-        /// 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage: `Accepted`
-        /// just clears the pending batch; `Transformed`/`Rejected` both roll back the speculative
-        /// local head first (via {@link rollback_envelope}, replayed as remote operations), and
-        /// `Transformed` then delivers the semio_hub's replacement envelope the same way.
-        async fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
-            for stage in stages {
-                let AckStage::Applied { outcome } = stage else { continue };
-                let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
-                self.document_backbone_retention.release(&sent);
-                match *outcome {
-                    ApplyOutcome::Accepted => {
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
-                    }
-                    ApplyOutcome::Transformed { envelope } => {
-                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
-                        for envelope in sent.iter().rev() {
-                            rollbacks.extend(rollback_envelope(envelope).await);
-                        }
-                        self.persist_operations(&rollbacks).await;
-                        let _ = self.deliver_remote_operations(rollbacks).await;
-                        let refusal = self.retract_refused_transitions(&sent, "transformed").await;
-                        let converted = *envelope;
-                        self.persist_operations(std::slice::from_ref(&converted)).await;
-                        let _ = self.deliver_remote_operations(vec![converted]).await;
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
-                        if let Some(refusal) = refusal {
-                            self.emit(ArtifactEvent::Conflict(refusal));
-                        }
-                    }
-                    ApplyOutcome::Rejected { reason, messages } => {
-                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
-                        for envelope in sent.iter().rev() {
-                            rollbacks.extend(rollback_envelope(envelope).await);
-                        }
-                        self.persist_operations(&rollbacks).await;
-                        let _ = self.deliver_remote_operations(rollbacks).await;
-                        let refusal = self.retract_refused_transitions(&sent, &reason).await;
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::hub_rejected(reason, &messages) });
-                        if let Some(refusal) = refusal {
-                            self.emit(ArtifactEvent::Conflict(refusal));
-                        }
-                    }
-                }
-            }
-            self.emit_status_if_changed().await;
-        }
-
-        /// 🔙️ Retracts the history transitions of `refused`, a batch the hub did not take as sent: the persisted log and
-        /// the store drop them ([`transition_refusal`]); answers the typed refusal naming them.
-        async fn retract_refused_transitions(&mut self, refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
-            let refusal = transition_refusal(refused, reason)?;
-            self.persist_retraction(&refusal.target).await;
-            let _ = self.deliver_retraction(refusal.target.clone()).await;
-            Some(refusal)
-        }
-
-        async fn relay_operations_to_hub(&mut self, envelopes: &[MutationEnvelope]) {
-            if envelopes.is_empty() {
-                return;
-            }
-            note_authored_envelopes(&mut self.applied_op_ids, envelopes);
-            let Some(socket_actor) = self.socket_actor.as_ref() else {
-                self.queue_outbox(envelopes.iter().cloned());
-                return;
-            };
-            if !self.socket_actor_confirmed || self.semio_hub.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
-                self.queue_outbox(envelopes.iter().cloned());
-                return;
-            }
-            let batch_id = self.next_batch_id;
-            self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let(wire_envelopes,identity_receipt)=match wire_envelopes_with_original_actor(envelopes,socket_actor,self.actor_identity_grant){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
-            add_actor_identity_progress(&mut self.actor_identity_progress,identity_receipt);
-            self.pending_batches.insert(batch_id, envelopes.to_vec());
-            self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
-            self.emit_status_if_changed().await;
-        }
-
-        async fn send_client_frame(&mut self, frame: ClientFrame, lane: Lane) {
-            let bytes = encode_client_frame(&frame, lane).await;
-            self.send_raw(Message::Binary(bytes.into())).await;
-        }
-
-        async fn send_raw(&mut self, message: Message) {
-            let mut failed = false;
-            if let Some(conn) = self.semio_hub.as_mut() {
-                if conn.write.send(message).await.is_err() {
-                    failed = true;
-                }
-            }
-            if failed {
-                self.abort_artifact_bootstrap();
-                self.requeue_pending_batches();
-                self.semio_hub = None;
-                self.clear_socket_epoch();
-                self.schedule_reconnect().await;
-            }
-        }
-        //#endregion 🔖️Hub
-
-        //#region 🔖️Deliver
-        /// 🕸️ Pushes remote operations into the store's inbound queue and notifies subscribers.
-        async fn deliver_remote_operations(&mut self, envelopes: Vec<MutationEnvelope>) -> bool {
-            if envelopes.is_empty() {
-                return true;
-            }
-            if self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await.is_err() {
-                return false;
-            }
-            if self.hub_space_id.is_some() {
-                let message = match (BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).encode_op() {
-                    Ok(message) => message,
-                    Err(_) => return false,
-                };
-                self.emit(ArtifactEvent::DocumentBackbone { message });
-            } else {
-                self.emit(ArtifactEvent::RemoteMutations { envelopes });
-            }
-            true
-        }
-
-        /// 🛎️ Asks the store to retract `mutation_ids` (`BackboneMessage::Retract`), through the document backbone too when
-        /// a hub space binds this document.
-        async fn deliver_retraction(&mut self, mutation_ids: Vec<String>) -> bool {
-            let message = BackboneMessage::Retract { mutation_ids };
-            let encoded = message.encode_op();
-            if self.remote.push(message).await.is_err() {
-                return false;
-            }
-            if self.hub_space_id.is_some() {
-                let Ok(message) = encoded else { return false };
-                self.emit(ArtifactEvent::DocumentBackbone { message });
-            }
-            true
-        }
-
-        /// 🗃️ Publishes a replaced recursive archive. An external rewrite that LOST events cannot be
-        /// expressed as new events, so it is a document replacement: the host reloads the store from
-        /// the archive by replaying its events — nothing is pushed into (or merged by) the live store.
-        async fn deliver_archive(&mut self, bytes: Vec<u8>) {
-            self.emit(ArtifactEvent::DocumentArchiveReplaced { archive: bytes });
-        }
-
-        /// 🚫️async: E1 pure sync body — `broadcast::Sender::send` never suspends. Declaring this
-        /// `async fn` forced `&ArtifactActor` to live across an await, which demanded
-        /// `ArtifactActor: Sync` from every `!Sync` field it owns (the folder watcher's `Receiver`,
-        /// `connect_future`, the codec table's `dyn Fn`) and made the whole actor turn non-`Send`.
-        fn emit(&self, event: ArtifactEvent) {
-            let _ = self.events.send(event);
-        }
-
-        /// 🚫️async: E1 pure sync body — see `emit` above; same `&self`-across-await mechanism.
-        fn status(&self) -> ArtifactSyncStatus {
-            let pending_mutations = self.pending_batches.values().map(Vec::len).sum();
-            let acknowledged_head = if pending_mutations == 0 && self.outbox.is_empty() { self.server_frontier.as_ref().and_then(acknowledged_edited_head) } else { None };
-            ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pending_mutations, remote: self.remote_state.clone(), acknowledged_head }
-        }
-
-        async fn set_remote_state(&mut self, state: RemoteState) {
-            if matches!(state, RemoteState::Live { .. }) {
-                self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, DocumentLinkEvent::Restored { now_ms: wall_ms() });
-                self.link_expires_at = None;
-            }
-            self.remote_state = state;
-            self.emit_status_if_changed().await;
-        }
-
-        async fn emit_status_if_changed(&mut self) {
-            let status = self.status();
-            if self.last_status.as_ref() != Some(&status) {
-                self.last_status = Some(status.clone());
-                self.emit(ArtifactEvent::Status(status));
-            }
-        }
-        //#endregion 🔖️Deliver
-    }
-
-    /// 🔀️ A binding path with a file extension addresses one document's text blob directly
-    /// (`Text`, generalizing the deleted single-file `FileJsonStorage` beyond `.json`); an extensionless
-    /// directory path is the canonical multi-document append-only store (`EventLog`).
-    async fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
-        match path.extension().and_then(|ext| ext.to_str()) {
-            Some(extension) => {
-                let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
-                FolderEndpoint::Pack { storage: FolderTextStorage::new(folder).await, document_id: document_id.to_string(), extension: extension.to_string(), schema: schema.to_string() }
-            }
-            None => FolderEndpoint::EventLog { storage: FolderEventLogStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
-        }
-    }
-
-    /// 📍️ The on-disk path a folder binding writes to: the `<document_id>.<extension>` text blob
-    /// itself, or the multi-document sqlite db under `<folder>/.semio/documents.db`.
-    async fn folder_watch_path_for(path: &Path) -> PathBuf {
-        if path.extension().is_some() {
-            path.to_path_buf()
-        } else {
-            path.join(".semio").join("documents.db")
-        }
-    }
-
-    /// 👁️ Creates the owned non-recursive watcher; its first probe establishes a
-    /// baseline and later snapshots feed the actor's existing 200 ms debounce.
-    fn install_watcher(watch_path: &Path, pool: Arc<semio_framework_async::WorkerPool>, readiness: Arc<dyn Fn() + Send + Sync>) -> semio_framework_os_services::OwnedFileChangeWatcher {
-        semio_framework_os_services::OwnedFileChangeWatcher::new(watch_path, pool, readiness)
-    }
-
-    const ACTOR_RUNNER_RETRY_MS: u64 = 1;
-    const ACTOR_RUNNER_RETRY_LIMIT: u8 = 8;
-
-    type ActorTurnFuture = std::pin::Pin<Box<dyn std::future::Future<Output = (Box<ArtifactActor>, ArtifactDrive)> + Send>>;
-
-    enum ActorTurnOwner {
-        Actor(Box<ArtifactActor>),
-        Future(ActorTurnFuture),
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum ArtifactActorTerminalReason {
-        Detached,
-        Cancelled,
-        TurnFault,
-        Pool(semio_framework_async::WorkerSubmitErrorKind),
-    }
-
-    struct ActorTerminalJob {
-        reason: ArtifactActorTerminalReason,
-        job: semio_framework_async::Job,
-    }
-
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum ArtifactActorTerminalState {
-        Live,
-        Closing(ArtifactActorTerminalReason),
-        Complete(ArtifactActorTerminalReason),
-    }
-
-    #[derive(Clone)]
-    pub struct ArtifactActorRunnerHandle {
-        generation: u64,
-        runner: Arc<ActorRunner>,
-    }
-
-    pub struct ArtifactActorRunnerTicket {
-        generation: u64,
-        runner: std::sync::Weak<ActorRunner>,
-        host: Option<Arc<std::sync::Mutex<ArtifactHostState>>>,
-        returned: bool,
-    }
-
-    pub struct ArtifactActorTerminalJob {
-        handle: ArtifactActorRunnerHandle,
-        owner: Option<ActorTerminalJob>,
-    }
-
-    struct ActorRunner {
-        pool: Arc<semio_framework_async::WorkerPool>,
-        io_reactor: Option<tokio::runtime::Handle>,
-        generation: u64,
-        turn: std::sync::Mutex<Option<ActorTurnOwner>>,
-        terminal_turn: std::sync::Mutex<Option<ActorTurnOwner>>,
-        mailbox: ArtifactMailboxClose,
-        scheduled: std::sync::atomic::AtomicBool,
-        wake_requested: std::sync::atomic::AtomicBool,
-        turn_generation: std::sync::atomic::AtomicU64,
-        deadline_armed: std::sync::atomic::AtomicBool,
-        deadline_generation: std::sync::atomic::AtomicU64,
-        deadline_at_ms: std::sync::atomic::AtomicU64,
-        retry_armed: std::sync::atomic::AtomicBool,
-        retry_generation: std::sync::atomic::AtomicU64,
-        retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
-        terminal_job: std::sync::Mutex<Option<ActorTerminalJob>>,
-        terminal_reason: std::sync::Mutex<Option<ArtifactActorTerminalReason>>,
-        terminal_empty_callback: std::sync::Mutex<Option<Arc<dyn Fn(u64) + Send + Sync>>>,
-        self_retained: std::sync::Mutex<Option<Arc<ActorRunner>>>,
-        external_tickets: std::sync::atomic::AtomicUsize,
-        close_requested: std::sync::atomic::AtomicBool,
-        terminal: std::sync::atomic::AtomicBool,
-        complete: std::sync::atomic::AtomicBool,
-    }
-
-    impl ArtifactActorRunnerHandle {
-        pub fn generation(&self) -> u64 {
-            self.generation
-        }
-
-        pub fn cancel(&self) {
-            self.runner.cancel();
-        }
-
-        pub fn terminal_state(&self) -> ArtifactActorTerminalState {
-            let reason = *self.runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            match reason {
-                None => ArtifactActorTerminalState::Live,
-                Some(reason) if self.runner.complete.load(std::sync::atomic::Ordering::Acquire) => ArtifactActorTerminalState::Complete(reason),
-                Some(reason) => ArtifactActorTerminalState::Closing(reason),
-            }
-        }
-
-        pub fn close_step(&self) -> bool {
-            if !self.runner.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                self.runner.request_close();
-                return false;
-            }
-            let advanced = self.runner.close_one_terminal_owner();
-            if !advanced && self.runner.terminal_is_empty() {
-                self.runner.finish_terminal();
-            }
-            advanced
-        }
-
-        pub fn terminal_is_empty(&self) -> bool {
-            self.runner.terminal_is_empty()
-        }
-
-        pub fn take_terminal_job(&self) -> Option<ArtifactActorTerminalJob> {
-            self.runner.take_terminal_job().map(|owner| ArtifactActorTerminalJob { handle: self.clone(), owner: Some(owner) })
-        }
-
-        pub(super) fn start(&self) {
-            self.runner.schedule();
-        }
-
-        pub(super) fn request_close(&self) {
-            self.runner.request_close();
-        }
-
-        pub(super) fn issue_ticket(&self, host: Arc<std::sync::Mutex<ArtifactHostState>>) -> ArtifactActorRunnerTicket {
-            self.runner.external_tickets.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| count.checked_add(1)).expect("artifact actor ticket capacity exhausted");
-            ArtifactActorRunnerTicket { generation: self.generation, runner: Arc::downgrade(&self.runner), host: Some(host), returned: false }
-        }
-
-        pub(super) fn set_terminal_empty_callback(&self, callback: Arc<dyn Fn(u64) + Send + Sync>) {
-            *self.runner.terminal_empty_callback.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(callback);
-            if self.runner.terminal_is_empty() {
-                self.runner.finish_terminal();
-            }
-        }
-    }
-
-    impl ArtifactActorRunnerTicket {
-        pub fn generation(&self) -> u64 {
-            self.generation
-        }
-
-        pub fn terminal_state(&self) -> Option<ArtifactActorTerminalState> {
-            self.runner.upgrade().map(|runner| ArtifactActorRunnerHandle { generation: self.generation, runner }.terminal_state())
-        }
-
-        pub fn return_to_host(mut self) {
-            self.return_once();
-        }
-
-        fn return_once(&mut self) {
-            if self.returned {
-                return;
-            }
-            self.returned = true;
-            if let Some(runner) = self.runner.upgrade() {
-                if runner.generation == self.generation {
-                    runner.return_ticket();
-                }
-            }
-            self.host.take();
-        }
-    }
-
-    impl Drop for ArtifactActorRunnerTicket {
-        fn drop(&mut self) {
-            self.return_once();
-        }
-    }
-
-    impl ArtifactActorTerminalJob {
-        pub fn reason(&self) -> ArtifactActorTerminalReason {
-            self.owner.as_ref().expect("terminal job owner already resolved").reason
-        }
-
-        pub fn resume(mut self) {
-            let owner = self.owner.take().expect("terminal job owner already resolved");
-            self.handle.runner.resume_terminal_job(owner);
-        }
-
-        pub fn close(mut self) {
-            let owner = self.owner.take().expect("terminal job owner already resolved");
-            self.handle.runner.close_terminal_job(owner);
-        }
-    }
-
-    impl Drop for ArtifactActorTerminalJob {
-        fn drop(&mut self) {
-            if let Some(owner) = self.owner.take() {
-                self.handle.runner.return_terminal_job(owner);
-            }
-        }
-    }
-
-    struct ActorTurnWake {
-        runner: std::sync::Weak<ActorRunner>,
-        generation: u64,
-    }
-
-    impl std::task::Wake for ActorTurnWake {
-        fn wake(self: Arc<Self>) {
-            if let Some(runner) = self.runner.upgrade() {
-                runner.request_wake(self.generation);
-            }
-        }
-
-        fn wake_by_ref(self: &Arc<Self>) {
-            if let Some(runner) = self.runner.upgrade() {
-                runner.request_wake(self.generation);
-            }
-        }
-    }
-
-    impl ActorRunner {
-        /// 📬️ A mailbox, readiness or close wake targets whichever turn is current: it carries no
-        /// generation, so a turn that completes between the sender's read and its request cannot
-        /// turn it into a stale wake (the actor then idled with a queued command, ticket 26/09/23
-        /// `📓️wp-h6.md`).
-        fn schedule(self: &Arc<Self>) {
-            if self.complete.load(std::sync::atomic::Ordering::Acquire) || self.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                return;
-            }
-            let _ = self.wake_requested.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
-            self.enqueue(false);
-        }
-
-        /// ⏰️ A turn future's own waker, or its deadline: only the turn that armed it may wake it.
-        fn request_wake(self: &Arc<Self>, generation: u64) {
-            if generation != self.turn_generation.load(std::sync::atomic::Ordering::Acquire) {
-                return;
-            }
-            self.schedule();
-        }
-
-        fn enqueue(self: &Arc<Self>, terminal_close: bool) {
-            if self.complete.load(std::sync::atomic::Ordering::Acquire) || (!terminal_close && self.terminal.load(std::sync::atomic::Ordering::Acquire)) {
-                return;
-            }
-            if self.scheduled.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
-                return;
-            }
-            let runner = self.clone();
-            self.submit_exact(Box::new(move || runner.run_job()), 0);
-        }
-
-        fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
-            match self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) {
-                Ok(()) => {}
-                Err(error) => match error.kind() {
-                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ACTOR_RUNNER_RETRY_LIMIT => {
-                        *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
-                        self.arm_retry();
-                    }
-                    kind => {
-                        let job = error.into_job();
-                        self.begin_terminal(ArtifactActorTerminalReason::Pool(kind));
-                        *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTerminalJob { reason: ArtifactActorTerminalReason::Pool(kind), job });
-                    }
-                },
-            }
-        }
-
-        fn arm_retry(self: &Arc<Self>) {
-            if self.retry_armed.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
-                return;
-            }
-            let generation = self.retry_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel).wrapping_add(1);
-            let runner = self.clone();
-            self.pool.callback_at(self.pool.now_ms().saturating_add(ACTOR_RUNNER_RETRY_MS), move || {
-                if generation != runner.retry_generation.load(std::sync::atomic::Ordering::Acquire) {
-                    return;
-                }
-                runner.retry_armed.store(false, std::sync::atomic::Ordering::Release);
-                let retry = runner.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-                if let Some((job, attempt)) = retry {
-                    if runner.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                        let reason = runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner).unwrap_or(ArtifactActorTerminalReason::Cancelled);
-                        *runner.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTerminalJob { reason, job });
-                    } else {
-                        runner.submit_exact(job, attempt);
-                    }
-                }
-            });
-        }
-
-        /// 🏃️ TurnFault retains the future in `terminal_turn`. Do not `enqueue` a drain job:
-        /// against a shut-down pool that would mint a second `Pool(Shutdown)` terminal_job
-        /// grant and leak mailbox ownership (one-owner-per-grant). Host `close_one` drains.
-        fn run_job(self: Arc<Self>) {
-            if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                self.close_one_terminal_owner();
-                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                if self.has_terminal_owner() {
-                    self.enqueue(true);
-                } else {
-                    self.finish_terminal();
-                }
-                return;
-            }
-            self.wake_requested.store(false, std::sync::atomic::Ordering::Release);
-            let owner = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            let Some(owner) = owner else {
-                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                return;
-            };
-            let mut future = match owner {
-                ActorTurnOwner::Actor(mut actor) => {
-                    if self.close_requested.load(std::sync::atomic::Ordering::Acquire) {
-                        actor.closing = true;
-                        actor.cmd_rx.close();
-                    }
-                    Box::pin(async move {
-                        let outcome = actor.drive_one().await;
-                        (actor, outcome)
-                    }) as ActorTurnFuture
-                }
-                ActorTurnOwner::Future(future) => future,
-            };
-            let generation = self.turn_generation.load(std::sync::atomic::Ordering::Acquire);
-            let waker = std::task::Waker::from(Arc::new(ActorTurnWake { runner: Arc::downgrade(&self), generation }));
-            let mut context = std::task::Context::from_waker(&waker);
-            let _io_reactor = self.io_reactor.as_ref().map(tokio::runtime::Handle::enter);
-            let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| future.as_mut().poll(&mut context)));
-            match polled {
-                Ok(std::task::Poll::Pending) => {
-                    if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                        *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
-                        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                        self.enqueue(true);
-                        return;
-                    }
-                    *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
-                    if self.release_scheduled_after_turn_with(|| {}) {
-                        self.enqueue(false);
-                    }
-                }
-                Ok(std::task::Poll::Ready((mut actor, mut outcome))) => {
-                    self.turn_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-                    self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-                    self.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
-                    self.deadline_at_ms.store(u64::MAX, std::sync::atomic::Ordering::Release);
-                    if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                        *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Actor(actor));
-                        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                        self.enqueue(true);
-                        return;
-                    }
-                    if self.close_requested.load(std::sync::atomic::Ordering::Acquire) && !actor.closing && outcome != ArtifactDrive::Terminal {
-                        actor.closing = true;
-                        actor.cmd_rx.close();
-                        outcome = ArtifactDrive::MoreWork;
-                    }
-                    match outcome {
-                        ArtifactDrive::Terminal => {
-                            *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Actor(actor));
-                            self.begin_terminal(ArtifactActorTerminalReason::Detached);
-                            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                            self.enqueue(true);
-                        }
-                        ArtifactDrive::MoreWork | ArtifactDrive::Idle { .. } => {
-                            *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Actor(actor));
-                            let woke = self.release_scheduled_after_turn_with(|| {});
-                            if outcome == ArtifactDrive::MoreWork || woke {
-                                self.schedule();
-                            } else if let ArtifactDrive::Idle { deadline } = outcome {
-                                self.arm_deadline(deadline);
-                            }
-                        }
-                    }
-                }
-                Err(_) => {
-                    *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
-                    self.begin_terminal(ArtifactActorTerminalReason::TurnFault);
-                    self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                }
-            }
-        }
-
-        fn release_scheduled_after_turn_with(&self, after_release: impl FnOnce()) -> bool {
-            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-            after_release();
-            self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel)
-        }
-
-        fn arm_deadline(self: &Arc<Self>, deadline: Option<Instant>) {
-            let Some(deadline) = deadline else {
-                self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-                self.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
-                self.deadline_at_ms.store(u64::MAX, std::sync::atomic::Ordering::Release);
-                return;
-            };
-            if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                return;
-            }
-            let delay_ms = u64::try_from(deadline.saturating_duration_since(Instant::now()).as_millis()).unwrap_or(u64::MAX).max(1);
-            let at_ms = self.pool.now_ms().saturating_add(delay_ms);
-            if self.deadline_armed.load(std::sync::atomic::Ordering::Acquire) && self.deadline_at_ms.load(std::sync::atomic::Ordering::Acquire) <= at_ms {
-                return;
-            }
-            self.deadline_at_ms.store(at_ms, std::sync::atomic::Ordering::Release);
-            self.deadline_armed.store(true, std::sync::atomic::Ordering::Release);
-            let generation = self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel).wrapping_add(1);
-            let turn_generation = self.turn_generation.load(std::sync::atomic::Ordering::Acquire);
-            let runner = self.clone();
-            self.pool.callback_at(at_ms, move || {
-                if generation != runner.deadline_generation.load(std::sync::atomic::Ordering::Acquire) {
-                    return;
-                }
-                runner.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
-                runner.deadline_at_ms.store(u64::MAX, std::sync::atomic::Ordering::Release);
-                runner.request_wake(turn_generation);
-            });
-        }
-
-        fn begin_terminal(&self, reason: ArtifactActorTerminalReason) {
-            if self.terminal.swap(true, std::sync::atomic::Ordering::AcqRel) {
-                return;
-            }
-            self.mailbox.close();
-            self.turn_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-            self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-            self.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
-            self.retry_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-            *self.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(reason);
-            if let Some((job, _)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTerminalJob { reason, job });
-            }
-            if self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
-                let owner = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-                *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = owner;
-            }
-        }
-
-        fn cancel(self: &Arc<Self>) {
-            self.begin_terminal(ArtifactActorTerminalReason::Cancelled);
-            self.enqueue(true);
-        }
-
-        fn request_close(self: &Arc<Self>) {
-            if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
-                return;
-            }
-            self.close_requested.store(true, std::sync::atomic::Ordering::Release);
-            self.mailbox.close();
-            self.schedule();
-        }
-
-        fn close_one_terminal_owner(&self) -> bool {
-            if let Some(owner) = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                drop(owner);
-                return true;
-            }
-            if self.mailbox.close_one() {
-                return true;
-            }
-            let owner = self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            if owner.is_none() {
-                return false;
-            }
-            drop(owner);
-            true
-        }
-
-        fn has_terminal_owner(&self) -> bool {
-            self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
-                || self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
-                || self.mailbox.has_pending()
-                || self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.terminal.load(std::sync::atomic::Ordering::Acquire)
-                && !self.scheduled.load(std::sync::atomic::Ordering::Acquire)
-                && self.external_tickets.load(std::sync::atomic::Ordering::Acquire) == 0
-                && !self.has_terminal_owner()
-                && self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
-        }
-
-        fn finish_terminal(&self) {
-            if !self.terminal_is_empty() {
-                return;
-            }
-            if self.complete.swap(true, std::sync::atomic::Ordering::AcqRel) {
-                return;
-            }
-            if let Some(callback) = self.terminal_empty_callback.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                callback(self.generation);
-            }
-            self.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        }
-
-        fn return_ticket(&self) {
-            let previous = self.external_tickets.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-            debug_assert!(previous > 0, "artifact actor ticket returned twice");
-            if previous == 1 && self.terminal_is_empty() {
-                self.finish_terminal();
-            }
-        }
-
-        fn take_terminal_job(&self) -> Option<ActorTerminalJob> {
-            self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()
-        }
-
-        fn resume_terminal_job(self: &Arc<Self>, terminal: ActorTerminalJob) {
-            self.scheduled.store(true, std::sync::atomic::Ordering::Release);
-            self.submit_exact(terminal.job, 0);
-        }
-
-        fn return_terminal_job(&self, terminal: ActorTerminalJob) {
-            let mut slot = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            debug_assert!(slot.is_none(), "terminal job handback slot already occupied");
-            if slot.is_none() {
-                *slot = Some(terminal);
-            }
-        }
-
-        fn close_terminal_job(&self, terminal: ActorTerminalJob) {
-            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-            drop(terminal);
-            if self.terminal_is_empty() {
-                self.finish_terminal();
-            }
-        }
-    }
-
-    /// 🔌️ The one platform I/O reactor every native document actor polls its hub socket against: a
-    /// current-thread Tokio runtime whose only thread (`semio-document-io`) parks on the I/O and time
-    /// drivers, created on first use and never shut down, like `db_storage_driver_runtime`. Actors keep
-    /// running on the `WorkerPool` and only enter this handle while polled. It used to be whatever
-    /// runtime the spawning thread happened to be inside; a native wgpu shell spawns from a plain
-    /// thread, so the first hub dial panicked with `there is no reactor running` and the document
-    /// socket never left `Connecting` (ticket 26/09/23 slice WG8, `hub-live-collaboration-check` run 1).
-    /// `None` only when the operating system refuses the reactor, which the dial then reports as a fault.
-    fn document_socket_io_reactor() -> Option<tokio::runtime::Handle> {
-        static REACTOR: std::sync::OnceLock<Option<tokio::runtime::Handle>> = std::sync::OnceLock::new();
-        REACTOR
-            .get_or_init(|| {
-                let runtime = tokio::runtime::Builder::new_current_thread().enable_io().enable_time().build().ok()?;
-                let handle = runtime.handle().clone();
-                std::thread::Builder::new().name("semio-document-io".to_string()).stack_size(1 << 20).spawn(move || runtime.block_on(std::future::pending::<()>())).ok()?;
-                Some(handle)
-            })
-            .clone()
-    }
-
-    /// 🚀️ Creates one finite-turn actor on the process WorkerPool. Tokio remains only the
-    /// platform I/O reactor ([`document_socket_io_reactor`]); it never owns an actor or timer thread.
-    pub(super) async fn spawn_actor(
-        pool: Arc<semio_framework_async::WorkerPool>,
-        generation: u64,
-        config: ArtifactActorConfig,
-        remote: ChannelBackboneRemote,
-        cmd_rx: ArtifactMailboxReceiver,
-        events: broadcast::Sender<ArtifactEvent>,
-        credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
-        socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
-        document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-        seed: Option<crate::os_directory::CanonicalCheckpointPairV1>,
-        operation_cancel: semio_framework_async::CancelToken,
-    ) -> ArtifactActorRunnerHandle {
-        let io_reactor = document_socket_io_reactor();
-        let mailbox = cmd_rx.close_handle();
-        let mut actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_execution_target_lease, operation_cancel).await;
-        if let Some(pair) = seed {
-            actor.seed_hub_document(pair).await;
-        }
-        let runner = Arc::new(ActorRunner {
-            pool,
-            io_reactor,
-            generation,
-            turn: std::sync::Mutex::new(Some(ActorTurnOwner::Actor(Box::new(actor)))),
-            terminal_turn: std::sync::Mutex::new(None),
-            mailbox,
-            scheduled: std::sync::atomic::AtomicBool::new(false),
-            wake_requested: std::sync::atomic::AtomicBool::new(false),
-            turn_generation: std::sync::atomic::AtomicU64::new(1),
-            deadline_armed: std::sync::atomic::AtomicBool::new(false),
-            deadline_generation: std::sync::atomic::AtomicU64::new(1),
-            deadline_at_ms: std::sync::atomic::AtomicU64::new(u64::MAX),
-            retry_armed: std::sync::atomic::AtomicBool::new(false),
-            retry_generation: std::sync::atomic::AtomicU64::new(1),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            terminal_reason: std::sync::Mutex::new(None),
-            terminal_empty_callback: std::sync::Mutex::new(None),
-            self_retained: std::sync::Mutex::new(None),
-            external_tickets: std::sync::atomic::AtomicUsize::new(0),
-            close_requested: std::sync::atomic::AtomicBool::new(false),
-            terminal: std::sync::atomic::AtomicBool::new(false),
-            complete: std::sync::atomic::AtomicBool::new(false),
-        });
-        *runner.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(runner.clone());
-        let weak = Arc::downgrade(&runner);
-        let schedule: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
-            if let Some(runner) = weak.upgrade() {
-                runner.schedule();
-            }
-        });
-        if let Some(ActorTurnOwner::Actor(actor)) = runner.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut() {
-            let readiness_requested = actor.readiness_requested.clone();
-            let readiness_schedule = schedule.clone();
-            let readiness: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
-                readiness_requested.store(true, std::sync::atomic::Ordering::Release);
-                readiness_schedule();
-            });
-            actor.remote.set_outbound_wake(schedule.clone());
-            actor.cmd_rx.set_wake(schedule);
-            actor.set_readiness(readiness);
-        }
-        ArtifactActorRunnerHandle { generation, runner }
-    }
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️native-actor-retained-turn-fixtures/🦀️.rs");
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-use native_actor::spawn_actor;
-#[cfg(not(target_arch = "wasm32"))]
-pub use native_actor::{ArtifactActorRunnerHandle, ArtifactActorRunnerTicket, ArtifactActorTerminalJob, ArtifactActorTerminalReason, ArtifactActorTerminalState};
 //#endregion 🔖️NativeActor
-
 //#region 🔖️WasmActor
-/// 🌐️ Browser wgpu build: the document actor runs on the isolate's own executor and reaches its
-/// hub through the same `semio.session.v1` admission the native actor uses (open plan → plan-bound socket
-/// grant → one socket whose single subprotocol value carries the session capability), over the socket
-/// the host's injected [`DocumentSocketDialer`] opens. No filesystem, so a folder binding is never
-/// served here — the shell refuses one before an actor exists.
-/// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only bridge, so it is
-/// narrowed to exclude the WASI component target.
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-mod wasm_actor {
-    use super::*;
-    use std::sync::{Arc, RwLock};
-    use wasm_bindgen::JsCast;
 
-    /// ⏱️ How often a dialed socket's page-owned receive queue is read while it is connecting or live.
-    const DOCUMENT_SOCKET_POLL_MS: u64 = 16;
-    /// ⏱️ The longest the actor sleeps with nothing dialed and nothing scheduled.
-    const DOCUMENT_ACTOR_IDLE_MS: u64 = 1_000;
-    /// 📃️ Frames one socket turn hands to the actor before it yields to its mailbox again.
-    const DOCUMENT_SOCKET_FRAMES_PER_TURN: usize = 32;
-    /// ⏱️ The admission deadline, the native actor's own.
-    const DOCUMENT_ADMISSION_TIMEOUT_MS: u64 = 5_000;
 
-    type SharedCredential = Arc<RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>;
-    type SharedGrantSource = Arc<RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>;
-    type SharedDialer = Arc<RwLock<Option<Arc<dyn DocumentSocketDialer>>>>;
 
-    /// 🔐️ What the host lends one browser actor for its hub binding: the late-bound credential, grant
-    /// source and dialer (sign-in may come after the open), the verified lease, and the document's cancel.
-    pub(super) struct WasmActorHub {
-        pub(super) credential: SharedCredential,
-        pub(super) socket_grant_source: SharedGrantSource,
-        pub(super) dialer: SharedDialer,
-        pub(super) lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-        pub(super) seed: Option<crate::os_directory::CanonicalCheckpointPairV1>,
-        pub(super) cancel: semio_framework_async::CancelToken,
-    }
-
-    struct PendingWasmArtifactBootstrap {
-        assembler: ArtifactBootstrapAssembler,
-        started_ms: u64,
-        resume_token: String,
-        baseline_frontier: RuntimeFrontierSummary,
-        required_tail_frontier: RuntimeFrontierSummary,
-        pack_schema_hash: [u8; 32],
-    }
-
-    struct WasmBootstrapControl {
-        cancelled: bool,
-        now_ms: u64,
-        events: broadcast::Sender<ArtifactEvent>,
-    }
-
-    impl ArtifactBootstrapControl for WasmBootstrapControl {
-        fn is_cancelled(&mut self) -> bool {
-            self.cancelled
-        }
-
-        fn now_ms(&mut self) -> u64 {
-            self.now_ms
-        }
-
-        fn on_progress(&mut self, progress: ArtifactBootstrapProgress) {
-            let _ = self.events.send(ArtifactEvent::BootstrapProgress { received_bytes: progress.received_bytes, total_bytes: progress.total_bytes, received_chunks: progress.received_chunks, total_chunks: progress.total_chunks });
-        }
-    }
-
-    /// 🕰️ Wall-clock milliseconds; `std`'s `SystemTime` panics on this target.
-    fn wall_ms() -> u64 {
-        js_sys::Date::now() as u64
-    }
-
-    /// 💤️ Resolves after `ms` on the global `setTimeout`, which a page and a dedicated Worker both own —
-    /// the actor's own cadence, independent of whoever pumps the renderer's cooperative pool.
-    async fn sleep_ms(ms: u64) {
-        let promise = js_sys::Promise::new(&mut |resolve, _reject| {
-            let global = js_sys::global();
-            if let Ok(set_timeout) = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("setTimeout")).and_then(|value| value.dyn_into::<js_sys::Function>().map_err(Into::into)) {
-                let _ = set_timeout.call2(&global, &resolve, &wasm_bindgen::JsValue::from_f64(ms as f64));
-            }
-        });
-        let _ = semio_framework_async::browser::JsFuture::from(promise).await;
-    }
-
-    /// 🧯️ Overwrites a secret string's bytes before it is dropped.
-    fn wipe(value: &mut String) {
-        unsafe { value.as_mut_vec().fill(0) };
-    }
-
-    struct WasmActor {
-        actor_identity_grant: semio_framework_value::RetainedCloneGrant,
-        actor_identity_progress: semio_framework_value::RetainedCloneProgress,
-        document_id: String,
-        schema: String,
-        remote: ChannelBackboneRemote,
-        events: broadcast::Sender<ArtifactEvent>,
-        hub_base_url: Option<String>,
-        hub_space_id: Option<String>,
-        hub_surface: Option<String>,
-        credential: SharedCredential,
-        socket_grant_source: SharedGrantSource,
-        dialer: SharedDialer,
-        document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-        operation_cancel: semio_framework_async::CancelToken,
-        socket: Option<Box<dyn DocumentSocket>>,
-        hello: Option<ClientFrame>,
-        socket_actor: Option<semio_framework_value::SharedUtf8>,
-        socket_actor_confirmed: bool,
-        /// 🎨️ See the native actor's matching field — same role, browser side.
-        session_color: Option<u8>,
-        server_frontier: Option<RuntimeFrontierSummary>,
-        resume_token: Option<String>,
-        pending_resume_token: Option<String>,
-        required_tail_frontier: Option<RuntimeFrontierSummary>,
-        artifact_rebootstrap_required: bool,
-        artifact_bootstrap: Option<PendingWasmArtifactBootstrap>,
-        pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
-        outbox: Vec<MutationEnvelope>,
-        /// 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
-        applied_op_ids: std::collections::HashSet<String>,
-        document_backbone_retention: DocumentBackboneRetentionV1,
-        next_batch_id: u64,
-        next_local_rejection_batch_id: u64,
-        hlc_seed: Option<u64>,
-        remote_state: RemoteState,
-        last_status: Option<ArtifactSyncStatus>,
-        link: DocumentLink,
-    }
-
-    impl WasmActor {
-        //#region 🔖️Status
-        fn status(&self) -> ArtifactSyncStatus {
-            let pending_mutations = self.pending_batches.values().map(Vec::len).sum();
-            let acknowledged_head = if pending_mutations == 0 && self.outbox.is_empty() { self.server_frontier.as_ref().and_then(acknowledged_edited_head) } else { None };
-            ArtifactSyncStatus { persisted: self.server_frontier.is_some(), pending_mutations, remote: self.remote_state.clone(), acknowledged_head }
-        }
-
-        fn set_remote_state(&mut self, state: RemoteState) {
-            if matches!(state, RemoteState::Live { .. }) {
-                self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, DocumentLinkEvent::Restored { now_ms: wall_ms() });
-            }
-            self.remote_state = state;
-            self.emit_status_if_changed();
-        }
-
-        fn emit_status_if_changed(&mut self) {
-            let status = self.status();
-            if self.last_status.as_ref() != Some(&status) {
-                self.last_status = Some(status.clone());
-                let _ = self.events.send(ArtifactEvent::Status(status));
-            }
-        }
-        //#endregion 🔖️Status
-
-        //#region 🔖️Connect
-        /// 🌐️ One hub admission and dial, the native actor's `start_connect_hub`/`finish_connect_hub`
-        /// sequence on this isolate: every refusal backs off with the same doubling law and nothing
-        /// is dialed until credential, grant source, dialer, replica seed and kind identity all exist.
-        async fn connect(&mut self) {
-            let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.artifact_rebootstrap_required || self.socket.is_some() || self.operation_cancel.is_cancelled_now() || !self.link.retry_due(wall_ms()) {
-                return;
-            }
-            let credential = self.credential.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
-            let source = self.socket_grant_source.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
-            let dialer = self.dialer.read().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
-            let (Some(credential), Some(source), Some(dialer), Some(hlc_seed)) = (credential, source, dialer, self.hlc_seed) else {
-                self.schedule_reconnect();
-                return;
-            };
-            let Some(pack_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
-                self.schedule_reconnect();
-                return;
-            };
-            let space_id = self.hub_space_id.clone().unwrap_or_default();
-            let expectation = document_socket_expectation(&self.schema, pack_schema_hash, self.hub_surface.as_deref(), self.document_execution_target_lease.as_ref());
-            if !actor_identity_admission_admits(self.actor_identity_grant){self.schedule_reconnect();return;}
-            let client_instance_id = format!("browser-document-{hlc_seed:016x}");
-            self.set_remote_state(RemoteState::Connecting);
-            let ctx = semio_framework_async::OperationContext { actor: 0, generation: 0, trace: semio_framework_async::TraceId(0), lane: 1, deadline_ms: None, cancel: self.operation_cancel.child_now(), capability: None };
-            let admission = source.admit_document_socket(&ctx, &space_id, &self.document_id, &expectation, &client_instance_id, DOCUMENT_ADMISSION_TIMEOUT_MS).await;
-            let crate::os_directory::client::DocumentSocketAdmissionV1 { mut socket, authority } = match admission {
-                Ok(admission) => admission,
-                Err(error) if document_admission_refuses_access(&error) => {
-                    self.link_event(DocumentLinkEvent::Refused { now_ms: wall_ms() });
-                    return;
-                }
-                Err(_) => {
-                    self.schedule_reconnect();
-                    return;
-                }
-            };
-            let binding = DocumentSocketBinding {
-                hub_base_url: &base_url,
-                space_id: &space_id,
-                document_id: &self.document_id,
-                schema: &self.schema,
-                pack_schema_hash,
-                surface: self.hub_surface.as_deref(),
-                lease: self.document_execution_target_lease.as_ref(),
-            };
-            if ctx.cancel.is_cancelled_now() || !document_socket_authority_admits(&authority, &binding, wall_ms()) {
-                self.schedule_reconnect();
-                return;
-            }
-            let url = hub_ws_url(&authority.hub_origin, &authority.scope.space_id, &authority.scope.document_id, Some(&authority.surface.surface_id)).await;
-            let Ok(capability) = credential.capability() else {
-                self.schedule_reconnect();
-                return;
-            };
-            let mut protocols = document_socket_protocols(&socket.protocol, capability);
-            let dialed = dialer.dial(&url, &protocols);
-            wipe(&mut protocols[1]);
-            let Ok(dialed) = dialed else {
-                self.schedule_reconnect();
-                return;
-            };
-            self.socket = Some(dialed);
-            let(original_actor,receipt)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original pre-admitted browser actor invariant: {error}"));
-            add_actor_identity_progress(&mut self.actor_identity_progress,receipt);
-            self.socket_actor = Some(original_actor);
-            self.socket_actor_confirmed = false;
-            self.hub_surface = Some(authority.surface.surface_id.clone());
-            self.hello = Some(document_socket_hello(&self.schema, pack_schema_hash, self.resume_token.clone(), self.server_frontier.clone()));
-            self.session_color = None;
-        }
-
-        /// 🔁️ A failed attempt or a lost socket: the link backs off along [`DOCUMENT_LINK_SHORTAGE_POLICY`] — or
-        /// expires, once the shortage outlasts its bound.
-        fn schedule_reconnect(&mut self) {
-            let now_ms = wall_ms();
-            self.link_event(DocumentLinkEvent::Failed { now_ms });
-            if let Some(retry_at_ms) = self.link.retry_at_ms() {
-                self.set_remote_state(RemoteState::Backoff { retry_in_ms: retry_at_ms.saturating_sub(now_ms) });
-            }
-        }
-
-        /// 🔌️ Applies one link event; a link that turns terminal closes its socket, reports `Detached` and emits the
-        /// coded terminal message a shell localizes ([`document_link_terminal_message`]). Local work stays queued.
-        fn link_event(&mut self, event: DocumentLinkEvent) {
-            let was_open = self.link.admits_local_edits();
-            self.link = self.link.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, event);
-            if was_open && !self.link.admits_local_edits() {
-                self.abort_artifact_bootstrap();
-                self.requeue_pending_batches();
-                self.close_socket();
-                self.set_remote_state(RemoteState::Detached);
-                let _ = self.events.send(ArtifactEvent::Conflict(document_link_terminal_message(&self.document_id, self.link.status())));
-            }
-        }
-
-        /// ⏳️ Lets time pass for an unlinked hub link: past the shortage bound it expires.
-        fn tick_link(&mut self) {
-            if self.hub_base_url.is_some() && matches!(self.link, DocumentLink::Unlinked { .. }) {
-                self.link_event(DocumentLinkEvent::Tick { now_ms: wall_ms() });
-            }
-        }
-
-        fn clear_socket_epoch(&mut self) {
-            self.socket_actor = None;
-            self.socket_actor_confirmed = false;
-            self.session_color = None;
-            self.hello = None;
-        }
-
-        fn close_socket(&mut self) {
-            if let Some(mut socket) = self.socket.take() {
-                socket.close();
-            }
-            self.clear_socket_epoch();
-        }
-
-        /// 🔁️ A socket that closed, lost frames or broke the protocol: keep unacknowledged work, drop the
-        /// epoch, and back off before a fresh admission (a catch-up resumes from the last frontier).
-        fn disconnect(&mut self) {
-            self.abort_artifact_bootstrap();
-            self.requeue_pending_batches();
-            self.close_socket();
-            self.schedule_reconnect();
-        }
-
-        /// ⏳️ How long the loop may sleep before this actor has work of its own.
-        fn next_wake_ms(&self) -> u64 {
-            if self.socket.is_some() {
-                return DOCUMENT_SOCKET_POLL_MS;
-            }
-            match (self.hub_base_url.as_ref(), self.link.next_deadline_ms(&DOCUMENT_LINK_SHORTAGE_POLICY)) {
-                (Some(_), Some(at)) => at.saturating_sub(wall_ms()).clamp(1, DOCUMENT_ACTOR_IDLE_MS),
-                _ => DOCUMENT_ACTOR_IDLE_MS,
-            }
-        }
-
-        /// 📥️ One socket turn: greet the hub once the page reports the socket open, then hand at most one
-        /// page of frames to the protocol. A close or any lost frame reconnects; the admission plan's
-        /// expiry bounds when its grant may be exchanged, never the live socket (the hub re-proves the
-        /// socket's authority every second).
-        async fn pump_socket(&mut self) {
-            let Some(socket) = self.socket.as_mut() else { return };
-            if self.hello.is_some() && socket.is_open() {
-                let hello = self.hello.take().expect("hello was just observed");
-                let bytes = encode_client_frame(&hello, Lane::Command).await;
-                let Some(socket) = self.socket.as_mut() else { return };
-                if socket.send_binary(bytes).is_err() {
-                    self.disconnect();
-                    return;
-                }
-            }
-            for _ in 0..DOCUMENT_SOCKET_FRAMES_PER_TURN {
-                let Some(socket) = self.socket.as_mut() else { return };
-                match socket.poll() {
-                    DocumentSocketPoll::Frame(bytes) => self.on_binary(&bytes).await,
-                    DocumentSocketPoll::Pending => return,
-                    DocumentSocketPoll::Closed(_) | DocumentSocketPoll::Lost(_) => {
-                        self.disconnect();
-                        return;
-                    }
-                }
-            }
-        }
-
-        async fn send_frame(&mut self, frame: &ClientFrame, lane: Lane) {
-            let bytes = encode_client_frame(frame, lane).await;
-            self.send_encoded(bytes).await;
-        }
-
-        async fn send_encoded(&mut self, bytes: Vec<u8>) {
-            if self.hello.is_some() || !self.socket.as_ref().is_some_and(|socket| socket.is_open()) {
-                return;
-            }
-            let Some(socket) = self.socket.as_mut() else { return };
-            if socket.send_binary(bytes).is_err() {
-                self.disconnect();
-            }
-        }
-        //#endregion 🔖️Connect
-
-        //#region 🔖️Relay
-        /// 🧺️ Builds + sends `Commands` batches under the hub-issued socket actor, tracking each in
-        /// `pending_batches` for {@link WasmActor::handle_ack}. Mirrors the native `relay_operations_to_hub`:
-        /// nothing leaves before the hub confirmed the socket actor and every catch-up completed. A batch
-        /// whose frame exceeds the socket's own ceiling is halved until it fits; one envelope that can never
-        /// fit is rolled back locally and reported, never retried into a reconnect loop.
-        async fn relay_operations(&mut self, envelopes: &[MutationEnvelope]) {
-            if envelopes.is_empty() {
-                return;
-            }
-            note_authored_envelopes(&mut self.applied_op_ids, envelopes);
-            let Some(socket_actor) = self.socket_actor.as_ref() else {
-                self.queue_outbox(envelopes.iter().cloned());
-                return;
-            };
-            if !self.socket_actor_confirmed || self.socket.is_none() || self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
-                self.queue_outbox(envelopes.iter().cloned());
-                return;
-            }
-            let max_frame = self.socket.as_ref().map_or(usize::MAX, |socket| socket.max_frame_bytes());
-            let(wire_envelopes,identity_receipt)=match wire_envelopes_with_original_actor(envelopes,socket_actor,self.actor_identity_grant){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
-            add_actor_identity_progress(&mut self.actor_identity_progress,identity_receipt);
-            let plan = commands_frames_within(max_frame, self.next_batch_id, envelopes.to_vec(), wire_envelopes).await;
-            for frame in plan.frames {
-                self.next_batch_id = frame.batch_id.wrapping_add(1);
-                self.pending_batches.insert(frame.batch_id, frame.local);
-                self.send_encoded(frame.bytes).await;
-            }
-            if !plan.oversized.is_empty() {
-                self.refuse_oversized_batch(plan.oversized).await;
-            }
-            self.emit_status_if_changed();
-        }
-
-        /// 📏️ One envelope whose `Commands` frame exceeds the socket's ceiling on its own: the hub can never
-        /// receive it, so its speculative local head is rolled back and the refusal is published.
-        async fn refuse_oversized_batch(&mut self, local: Vec<MutationEnvelope>) {
-            self.document_backbone_retention.release(&local);
-            let mut rollbacks: Vec<MutationEnvelope> = Vec::with_capacity(local.len());
-            for envelope in local.iter().rev() {
-                rollbacks.extend(rollback_envelope(envelope).await);
-            }
-            let _ = self.deliver_remote_operations(rollbacks).await;
-            let refusal = self.retract_refused_transitions(&local, "document socket frame exceeds the socket's ceiling").await;
-            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalSocketFrameCeiling, "document socket frame exceeds the socket's ceiling", CommandRejectionDetail { envelopes: Some(local.len() as u64), ..CommandRejectionDetail::default() }));
-            if let Some(refusal) = refusal {
-                let _ = self.events.send(ArtifactEvent::Conflict(refusal));
-            }
-        }
-
-        async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
-            let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
-            match message {
-                BackboneMessage::Mutations { envelopes } => {
-                    let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
-                    self.relay_operations(&envelopes).await;
-                }
-                BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => {}
-                BackboneMessage::Member { .. } => return Err(vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
-                BackboneMessage::Retract { .. } => return Err(vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
-            }
-            Ok(true)
-        }
-
-        async fn handle_cmd(&mut self, message: ArtifactActorMsg) {
-            match message {
-                ArtifactActorMsg::LocalMutations { envelopes } => {
-                    let drained = self.relay_one_backbone().await.unwrap_or(false);
-                    if !drained && !envelopes.is_empty() {
-                        self.relay_operations(&envelopes).await;
-                    }
-                }
-                ArtifactActorMsg::DocumentBackbone { message } => {
-                    let envelopes = match decode_document_backbone_message_exact(&message) {
-                        Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
-                        Ok(envelopes) => {
-                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneScopeMismatch, "document backbone scope mismatch", CommandRejectionDetail { envelopes: Some(envelopes.len() as u64), ..CommandRejectionDetail::default() }));
-                            return;
-                        }
-                        Err(_) => {
-                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneMalformed, "document backbone malformed", CommandRejectionDetail { bytes: Some(message.len() as u64), ..CommandRejectionDetail::default() }));
-                            return;
-                        }
-                    };
-                    if let Err(refusal) = self.document_backbone_retention.retain(message.len(), &envelopes) {
-                        self.reject_document_backbone(refusal);
-                        return;
-                    }
-                    if self.hub_space_id.is_some() {
-                        self.relay_operations(&envelopes).await;
-                    } else {
-                        self.document_backbone_retention.release(&envelopes);
-                    }
-                }
-                ArtifactActorMsg::LocalDocumentArchive { archive } => {
-                    let _ = crate::os_spr::decode_document_archive_bytes(&archive).await;
-                }
-                ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
-                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
-                    self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
-                }
-                ArtifactActorMsg::PublishPreview { key, seq, payload } => {
-                    self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview).await;
-                }
-                ArtifactActorMsg::Reseed { baseline, .. } => self.reseed_hub_document(baseline),
-                ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
-            }
-        }
-
-        fn reject_document_backbone(&mut self, outcome: CommandAckOutcome) {
-            let batch_id = self.next_local_rejection_batch_id;
-            self.next_local_rejection_batch_id = self.next_local_rejection_batch_id.wrapping_sub(1);
-            let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome });
-        }
-
-        fn requeue_pending_batches(&mut self) {
-            let mut batches: Vec<(u64, Vec<MutationEnvelope>)> = self.pending_batches.drain().collect();
-            batches.sort_by_key(|(batch_id, _)| *batch_id);
-            for (_, envelopes) in batches {
-                self.queue_outbox(envelopes);
-            }
-        }
-
-        fn queue_outbox(&mut self, envelopes: impl IntoIterator<Item = MutationEnvelope>) {
-            let mut queued: std::collections::HashSet<String> = self.outbox.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
-            for envelope in envelopes {
-                if queued.insert(envelope.mutation_id.0.clone()) {
-                    self.outbox.push(envelope);
-                }
-            }
-        }
-
-        async fn flush_outbox(&mut self) {
-            if self.outbox.is_empty() || self.socket.is_none() {
-                return;
-            }
-            let envelopes = std::mem::take(&mut self.outbox);
-            self.relay_operations(&envelopes).await;
-        }
-        //#endregion 🔖️Relay
-
-        //#region 🔖️Bootstrap
-        fn bootstrap_control(&self, cancelled: bool) -> WasmBootstrapControl {
-            WasmBootstrapControl { cancelled, now_ms: wall_ms(), events: self.events.clone() }
-        }
-
-        fn abort_artifact_bootstrap(&mut self) {
-            if let Some(mut pending) = self.artifact_bootstrap.take() {
-                pending.assembler.abort();
-            }
-            self.pending_resume_token = None;
-            self.required_tail_frontier = None;
-        }
-
-        /// ⚠️ A bootstrap or protocol fault is reported as the native actor reports it — one `Conflict` —
-        /// and the socket reconnects for a fresh catch-up.
-        fn fail_artifact_bootstrap(&mut self, detail: impl Into<String>) {
-            let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage { level: semio_framework_diagnostic::Severity::Error, code: semio_framework_diagnostic::FaultCode::new("artifactBootstrap"), message: detail.into(), target: vec![self.document_id.clone()], op_index: None }));
-            self.disconnect();
-        }
-
-        /// ♻️ Hub lag forces a canonical pair refresh: keep unacked work queued, clear the projection tokens, drop the socket
-        /// and ask the host for the pair — the native `require_artifact_rebootstrap`; no dial until the host's reseed.
-        fn require_artifact_rebootstrap(&mut self, control: crate::os_directory::RebootstrapRequired) {
-            self.requeue_pending_batches();
-            self.abort_artifact_bootstrap();
-            self.server_frontier = None;
-            self.resume_token = None;
-            self.artifact_rebootstrap_required = true;
-            self.close_socket();
-            self.set_remote_state(RemoteState::Connecting);
-            let _ = self.events.send(ArtifactEvent::RebootstrapRequired { control });
-        }
-
-        /// 🛟️ The browser twin of the native reseed: the pair's baseline is the next Hello's frontier, the unacked local
-        /// operations go back to the guest, and the next turn dials at once.
-        fn reseed_hub_document(&mut self, baseline: crate::os_directory::ArtifactFrontier) {
-            if !self.artifact_rebootstrap_required {
-                return;
-            }
-            self.server_frontier = Some(canonical_pair_baseline(&baseline));
-            if !self.outbox.is_empty() {
-                let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes: self.outbox.clone() });
-            }
-            self.artifact_rebootstrap_required = false;
-        }
-
-        async fn finish_catchup_if_ready(&mut self) {
-            let Some(required) = self.required_tail_frontier.clone() else { return };
-            let Some(actual) = self.server_frontier.as_ref() else { return };
-            if !frontier_reaches(actual, &required) {
-                return;
-            }
-            self.required_tail_frontier = None;
-            if let Some(resume_token) = self.pending_resume_token.take() {
-                self.resume_token = Some(resume_token);
-            }
-            self.set_remote_state(RemoteState::Live { peer_count: 0 });
-            self.flush_outbox().await;
-        }
-
-        async fn start_artifact_bootstrap(&mut self, bootstrap: ArtifactBootstrap, resume_token: String, server_frontier: RuntimeFrontierSummary) {
-            self.abort_artifact_bootstrap();
-            let Some(pack_schema_hash) = document_pack_schema_hash(&self.schema, self.document_execution_target_lease.as_ref()).await else {
-                self.fail_artifact_bootstrap(format!("no pack schema identity for schema {:?}", self.schema));
-                return;
-            };
-            if let Err(error) = validate_artifact_bootstrap_identity(&bootstrap, &self.document_id, &self.schema, pack_schema_hash, &server_frontier) {
-                self.fail_artifact_bootstrap(error);
-                return;
-            }
-            let inline = bootstrap.inline.is_some();
-            let started_ms = wall_ms();
-            let baseline_frontier = bootstrap.baseline_frontier.clone();
-            let required_tail_frontier = bootstrap.required_tail_frontier.clone();
-            let mut control = self.bootstrap_control(false);
-            let assembler = match ArtifactBootstrapAssembler::new(bootstrap.clone(), bootstrap.descriptor_hash, ArtifactBootstrapLimits::default(), Some(started_ms.saturating_add(ARTIFACT_BOOTSTRAP_DEADLINE_MS)), &mut control) {
-                Ok(assembler) => assembler,
-                Err(error) => {
-                    self.fail_artifact_bootstrap(error.to_string());
-                    return;
-                }
-            };
-            let mut pending = PendingWasmArtifactBootstrap { assembler, started_ms, resume_token, baseline_frontier, required_tail_frontier, pack_schema_hash };
-            if !inline {
-                self.artifact_bootstrap = Some(pending);
-                return;
-            }
-            let mut control = self.bootstrap_control(false);
-            match pending.assembler.finish(None, &mut control) {
-                Ok(pair) => {
-                    if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
-                        self.fail_artifact_bootstrap(error);
-                    }
-                }
-                Err(error) => self.fail_artifact_bootstrap(error.to_string()),
-            }
-        }
-
-        /// 🗃️ Installs one assembled canonical pair. With a codec this process resolves for the kind
-        /// (linked, or the mounted component's — [`crate::os_store::codec_registry::document_kind_codec`]) the pair is
-        /// decoded here first; without one the pair's identity was already bound to the verified lease's
-        /// pack schema hash, and the mounted guest that owns the kind validates the archive when the shell
-        /// loads it.
-        async fn install_artifact_bootstrap(&mut self, pending: PendingWasmArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-            if let Some(codec) = crate::os_store::codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())? {
-                if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
-                    return Err("artifact bootstrap codec changed during transfer".into());
-                }
-                codec.print_mirror(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
-            }
-            let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
-            self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
-            if !events.is_empty() {
-                self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
-            }
-            let archive = crate::os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
-            let archive = crate::os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
-            let _ = self.events.send(ArtifactEvent::DocumentArchiveReplaced { archive });
-            self.server_frontier = Some(pending.baseline_frontier);
-            self.pending_resume_token = Some(pending.resume_token);
-            self.required_tail_frontier = Some(pending.required_tail_frontier);
-            if !self.outbox.is_empty() && self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await.is_err() {
-                let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
-                    level: semio_framework_diagnostic::Severity::Error,
-                    code: semio_framework_diagnostic::FaultCode::new("artifactBootstrapLocalReplay"),
-                    message: "artifact baseline committed; pending local replay will retry after reconnect".into(),
-                    target: vec![self.document_id.clone()],
-                    op_index: None,
-                }));
-                self.close_socket();
-                self.schedule_reconnect();
-                return Ok(());
-            }
-            self.finish_catchup_if_ready().await;
-            Ok(())
-        }
-        //#endregion 🔖️Bootstrap
-
-        //#region 🔖️Protocol
-        /// 📡️ The native actor's `on_hub_frame`, frame for frame: the socket actor the grant named is the
-        /// only origin this replica filters as its own, `Session` must confirm it, and `Live` is reached
-        /// only after every catch-up.
-        async fn on_binary(&mut self, bytes: &[u8]) {
-            let frame = match decode_server_frame(bytes).await {
-                Ok((_lane, frame)) => frame,
-                Err(error) => {
-                    self.fail_artifact_bootstrap(format!("malformed hub frame: {error}"));
-                    return;
-                }
-            };
-            match frame {
-                ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
-                    self.requeue_pending_batches();
-                    match bootstrap {
-                        Bootstrap::None => {
-                            self.abort_artifact_bootstrap();
-                            self.resume_token = Some(resume_token);
-                            self.server_frontier = Some(server_frontier);
-                            self.set_remote_state(RemoteState::Live { peer_count: 0 });
-                            self.flush_outbox().await;
-                        }
-                        Bootstrap::Tail => {
-                            self.abort_artifact_bootstrap();
-                            self.pending_resume_token = Some(resume_token);
-                            self.required_tail_frontier = Some(server_frontier);
-                            self.finish_catchup_if_ready().await;
-                        }
-                        Bootstrap::Snapshot { .. } => self.fail_artifact_bootstrap("database-private snapshot cannot seed an artifact client"),
-                        Bootstrap::ArtifactBootstrap(bootstrap) => {
-                            self.start_artifact_bootstrap(*bootstrap, resume_token, server_frontier).await;
-                        }
-                    }
-                }
-                ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => self.fail_artifact_bootstrap("database-private snapshot frame cannot seed an artifact client"),
-                ServerFrame::RebootstrapRequired { control } => {
-                    if control.document_id != self.document_id || self.hub_space_id.as_deref() != Some(control.space_id.as_str()) || control.baseline_frontier.document_id.0 != self.document_id {
-                        self.fail_artifact_bootstrap("rebootstrap control scope mismatch");
-                    } else {
-                        self.require_artifact_rebootstrap(rebootstrap_control(&control));
-                    }
-                }
-                ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index, bytes } => {
-                    let Some(mut pending) = self.artifact_bootstrap.take() else {
-                        self.fail_artifact_bootstrap("artifact bootstrap chunk arrived without an active transfer");
-                        return;
-                    };
-                    let mut control = self.bootstrap_control(false);
-                    match pending.assembler.push(descriptor_hash, index, bytes.as_slice(), &mut control) {
-                        Ok(_) => self.artifact_bootstrap = Some(pending),
-                        Err(error) => self.fail_artifact_bootstrap(error.to_string()),
-                    }
-                }
-                ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count } => {
-                    let Some(mut pending) = self.artifact_bootstrap.take() else {
-                        self.fail_artifact_bootstrap("artifact bootstrap completion arrived without an active transfer");
-                        return;
-                    };
-                    let mut control = self.bootstrap_control(false);
-                    match pending.assembler.finish(Some((descriptor_hash, chunk_count)), &mut control) {
-                        Ok(pair) => {
-                            if let Err(error) = self.install_artifact_bootstrap(pending, pair).await {
-                                self.fail_artifact_bootstrap(error);
-                            }
-                        }
-                        Err(error) => self.fail_artifact_bootstrap(error.to_string()),
-                    }
-                }
-                ServerFrame::Commands { envelopes, frontier, .. } => {
-                    if self.artifact_bootstrap.is_some() {
-                        self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion");
-                        return;
-                    }
-                    let settled = settle_committed_envelopes(&mut self.outbox, &mut self.pending_batches, &envelopes);
-                    self.document_backbone_retention.release(&settled);
-                    note_authored_envelopes(&mut self.applied_op_ids, &settled);
-                    let fresh = admit_remote_envelopes(&mut self.applied_op_ids, envelopes);
-                    if !self.deliver_remote_operations(fresh).await {
-                        self.fail_artifact_bootstrap("artifact tail could not be installed");
-                        return;
-                    }
-                    self.server_frontier = Some(frontier);
-                    self.finish_catchup_if_ready().await;
-                }
-                ServerFrame::Ack { batch_id, stages, frontier } => {
-                    if self.artifact_bootstrap.is_some() || self.required_tail_frontier.is_some() {
-                        self.fail_artifact_bootstrap("ack arrived before artifact catch-up completion");
-                        return;
-                    }
-                    self.server_frontier = Some(frontier);
-                    self.handle_ack(batch_id, stages).await;
-                }
-                ServerFrame::Preview { actor, key, seq, payload } => {
-                    if self.socket_actor.as_deref() != Some(actor.0.as_str()) {
-                        let _ = self.events.send(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
-                    }
-                }
-                ServerFrame::Presence { peers } => {
-                    let mut decoded: Vec<PresencePeer> = Vec::with_capacity(peers.len());
-                    for peer in &peers {
-                        if let Some(peer) = presence_from_bytes(peer).await {
-                            decoded.push(peer);
-                        }
-                    }
-                    if matches!(self.remote_state, RemoteState::Live { .. }) && self.artifact_bootstrap.is_none() && self.required_tail_frontier.is_none() {
-                        self.set_remote_state(RemoteState::Live { peer_count: decoded.len() });
-                    }
-                    let _ = self.events.send(ArtifactEvent::Presence { peers: decoded });
-                }
-                ServerFrame::Session { actor, color } => {
-                    if self.socket_actor.as_deref() != Some(actor.as_str()) {
-                        self.fail_artifact_bootstrap("socket receipt actor mismatch");
-                        return;
-                    }
-                    self.socket_actor_confirmed = true;
-                    self.session_color = Some(color);
-                    let _ = self.events.send(ArtifactEvent::Session { actor, color });
-                    self.flush_outbox().await;
-                }
-                ServerFrame::CreditGrant { .. } => {}
-                ServerFrame::Error { code, message } => {
-                    let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
-                        level: semio_framework_diagnostic::Severity::Error,
-                        code: semio_framework_diagnostic::FaultCode::new(code),
-                        message,
-                        target: vec![self.hub_base_url.clone().unwrap_or_default()],
-                        op_index: None,
-                    }));
-                }
-            }
-        }
-
-        /// 📮️ Mirrors the native actor's `handle_ack` — see its doc comment.
-        async fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
-            for stage in stages {
-                let AckStage::Applied { outcome } = stage else { continue };
-                let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
-                self.document_backbone_retention.release(&sent);
-                match *outcome {
-                    ApplyOutcome::Accepted => {
-                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
-                    }
-                    ApplyOutcome::Transformed { envelope } => {
-                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
-                        for envelope in sent.iter().rev() {
-                            rollbacks.extend(rollback_envelope(envelope).await);
-                        }
-                        let _ = self.deliver_remote_operations(rollbacks).await;
-                        let refusal = self.retract_refused_transitions(&sent, "transformed").await;
-                        let _ = self.deliver_remote_operations(vec![*envelope]).await;
-                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
-                        if let Some(refusal) = refusal {
-                            let _ = self.events.send(ArtifactEvent::Conflict(refusal));
-                        }
-                    }
-                    ApplyOutcome::Rejected { reason, messages } => {
-                        let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
-                        for envelope in sent.iter().rev() {
-                            rollbacks.extend(rollback_envelope(envelope).await);
-                        }
-                        let _ = self.deliver_remote_operations(rollbacks).await;
-                        let refusal = self.retract_refused_transitions(&sent, &reason).await;
-                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::hub_rejected(reason, &messages) });
-                        if let Some(refusal) = refusal {
-                            let _ = self.events.send(ArtifactEvent::Conflict(refusal));
-                        }
-                    }
-                }
-            }
-            self.emit_status_if_changed();
-        }
-
-        async fn deliver_remote_operations(&self, envelopes: Vec<MutationEnvelope>) -> bool {
-            if envelopes.is_empty() {
-                return true;
-            }
-            if self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await.is_err() {
-                return false;
-            }
-            if self.hub_space_id.is_some() {
-                let message = match (BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).encode_op() {
-                    Ok(message) => message,
-                    Err(_) => return false,
-                };
-                let _ = self.events.send(ArtifactEvent::DocumentBackbone { message });
-            } else {
-                let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
-            }
-            true
-        }
-
-        /// 🪞️ Mirrors the native actor's `retract_refused_transitions`; a browser actor persists no log of its own.
-        async fn retract_refused_transitions(&self, refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
-            let refusal = transition_refusal(refused, reason)?;
-            let _ = self.deliver_retraction(refusal.target.clone()).await;
-            Some(refusal)
-        }
-
-        /// 🪩️ Mirrors the native actor's `deliver_retraction`.
-        async fn deliver_retraction(&self, mutation_ids: Vec<String>) -> bool {
-            let message = BackboneMessage::Retract { mutation_ids };
-            let encoded = message.encode_op();
-            if self.remote.push(message).await.is_err() {
-                return false;
-            }
-            if self.hub_space_id.is_some() {
-                let Ok(message) = encoded else { return false };
-                let _ = self.events.send(ArtifactEvent::DocumentBackbone { message });
-            }
-            true
-        }
-        //#endregion 🔖️Protocol
-    }
-
-    /// 🚀️ Spawns one browser document actor on the isolate's executor. Its loop owns one cadence: the
-    /// mailbox, or — when the mailbox is quiet — the next socket poll or scheduled redial, whichever
-    /// comes first. A cancelled document (closed by the host) ends the loop and closes its socket.
-    pub(super) async fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: ArtifactMailboxReceiver, events: broadcast::Sender<ArtifactEvent>, hub: WasmActorHub) {
-        let mut hub_base_url = None;
-        let mut hub_space_id = None;
-        let mut hub_surface = None;
-        for binding in &config.bindings {
-            if let PersistenceBinding::Hub { base_url, space_id, surface } = binding {
-                if hub_base_url.is_none() {
-                    hub_base_url = Some(base_url.clone());
-                    hub_space_id = Some(space_id.clone());
-                    hub_surface = surface.clone();
-                }
-            }
-        }
-        let mut actor = WasmActor {
-            actor_identity_grant: config.actor_identity_grant,
-            actor_identity_progress: Default::default(),
-            document_id: config.document_id,
-            schema: config.schema,
-            remote,
-            events,
-            hub_base_url,
-            hub_space_id,
-            hub_surface,
-            credential: hub.credential,
-            socket_grant_source: hub.socket_grant_source,
-            dialer: hub.dialer,
-            document_execution_target_lease: hub.lease,
-            operation_cancel: hub.cancel,
-            socket: None,
-            hello: None,
-            socket_actor: None,
-            socket_actor_confirmed: false,
-            session_color: None,
-            server_frontier: hub.seed.as_ref().map(|pair| canonical_pair_baseline(&pair.baseline_frontier)),
-            resume_token: None,
-            pending_resume_token: None,
-            required_tail_frontier: None,
-            artifact_rebootstrap_required: false,
-            artifact_bootstrap: None,
-            pending_batches: std::collections::HashMap::new(),
-            outbox: Vec::new(),
-            applied_op_ids: std::collections::HashSet::new(),
-            document_backbone_retention: DocumentBackboneRetentionV1::default(),
-            next_batch_id: 0,
-            next_local_rejection_batch_id: u64::MAX,
-            hlc_seed: replica_hlc_seed().ok(),
-            remote_state: RemoteState::Detached,
-            last_status: None,
-            link: DocumentLink::opened(wall_ms()),
-        };
-        semio_framework_async::browser::spawn_local(async move {
-            loop {
-                actor.tick_link();
-                actor.connect().await;
-                let wake_ms = actor.next_wake_ms();
-                tokio::select! {
-                    biased;
-                    cmd = cmd_rx.recv() => match cmd {
-                        None => {
-                            actor.document_backbone_retention.clear();
-                            actor.close_socket();
-                            break;
-                        }
-                        Some(ArtifactActorMsg::Detach) => {
-                            actor.document_backbone_retention.clear();
-                            let _ = actor.relay_one_backbone().await;
-                            actor.close_socket();
-                            break;
-                        }
-                        Some(message) => actor.handle_cmd(message).await,
-                    },
-                    _ = sleep_ms(wake_ms) => actor.pump_socket().await,
-                }
-                if actor.operation_cancel.is_cancelled_now() {
-                    actor.close_socket();
-                    break;
-                }
-            }
-        });
-    }
-}
-
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use wasm_actor::spawn_actor;
 //#endregion 🔖️WasmActor
 
-#[cfg(test)]
-mod fixtures {
-    use super::*;
+#[cfg(any(test, feature = "testing"))]
+pub mod fixtures {
 //#region 🔖️Fixtures
 /// 🎬️ A scripted actor test vector shared by cargo test (here) and vitest (WS-E's TS twin).
 /// Each fixture drives inbound events at a document actor and asserts the resulting `ArtifactEvent`
@@ -5490,452 +2130,40 @@ pub async fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 }
 
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 use fixtures::*;
 //#endregion 🔖️Fixtures
-
 //#region 🔖️FolderStorage
-/// 📜️ Owned append-only folder event log. Documents are written as indivisible
-/// `(schema, pack, spr)` snapshot events; blobs are content-addressed put/delete events. Reads fold
-/// the log deterministically, so persistence follows the repo's event-sourced model without a CRUD
-/// database. Every record is length-delimited and checksummed; an incomplete final record from a
-/// process interruption is ignored, while corruption in a complete record is reported.
-#[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone)]
-pub struct FolderEventLogStorage {
-    folder: std::path::PathBuf,
-    writer: std::sync::Arc<std::sync::Mutex<()>>,
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-const FOLDER_EVENT_MAGIC: &[u8; 8] = b"SEMIOEL1";
 
-#[cfg(not(target_arch = "wasm32"))]
-const MAX_FOLDER_EVENT_BYTES: u64 = 16 * 1024 * 1024 * 1024;
 
-#[cfg(not(target_arch = "wasm32"))]
-const DOCUMENT_PUT_EVENT: u8 = 1;
 
-#[cfg(not(target_arch = "wasm32"))]
-const BLOB_PUT_EVENT: u8 = 2;
 
-#[cfg(not(target_arch = "wasm32"))]
-const BLOB_DELETE_EVENT: u8 = 3;
 
-#[cfg(not(target_arch = "wasm32"))]
-const DOCUMENT_ARCHIVE_PUT_EVENT: u8 = 4;
 
-#[cfg(not(target_arch = "wasm32"))]
-struct FolderEvent {
-    kind: u8,
-    updated_at_ms: u64,
-    key: String,
-    metadata: String,
-    primary: Vec<u8>,
-    secondary: Vec<u8>,
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-struct FolderEventReader<'a> {
-    bytes: &'a [u8],
-    cursor: usize,
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-impl<'a> FolderEventReader<'a> {
-    fn take(&mut self, len: usize) -> Result<&'a [u8], vcs::VcsError> {
-        let end = self.cursor.checked_add(len).ok_or_else(|| vcs::VcsError::Backbone("folder event length overflow".into()))?;
-        let value = self.bytes.get(self.cursor..end).ok_or_else(|| vcs::VcsError::Backbone("truncated folder event".into()))?;
-        self.cursor = end;
-        Ok(value)
-    }
 
-    fn u8(&mut self) -> Result<u8, vcs::VcsError> {
-        Ok(self.take(1)?[0])
-    }
 
-    fn u32(&mut self) -> Result<u32, vcs::VcsError> {
-        Ok(u32::from_le_bytes(self.take(4)?.try_into().unwrap()))
-    }
 
-    fn u64(&mut self) -> Result<u64, vcs::VcsError> {
-        Ok(u64::from_le_bytes(self.take(8)?.try_into().unwrap()))
-    }
 
-    fn text(&mut self) -> Result<String, vcs::VcsError> {
-        let len = self.u32()? as usize;
-        String::from_utf8(self.take(len)?.to_vec()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))
-    }
 
-    fn data(&mut self) -> Result<Vec<u8>, vcs::VcsError> {
-        let len = usize::try_from(self.u64()?).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        Ok(self.take(len)?.to_vec())
-    }
-}
 
-#[cfg(not(target_arch = "wasm32"))]
-impl FolderEventLogStorage {
-    pub fn new(folder: std::path::PathBuf) -> Self {
-        static WRITERS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<std::path::PathBuf, std::sync::Weak<std::sync::Mutex<()>>>>> = std::sync::OnceLock::new();
-        let canonical_key = std::fs::canonicalize(&folder).unwrap_or_else(|_| folder.clone());
-        let mut writers = WRITERS.get_or_init(Default::default).lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        let writer = writers.get(&canonical_key).and_then(std::sync::Weak::upgrade).unwrap_or_else(|| {
-            let writer = std::sync::Arc::new(std::sync::Mutex::new(()));
-            writers.insert(canonical_key, std::sync::Arc::downgrade(&writer));
-            writer
-        });
-        Self { folder, writer }
-    }
 
-    fn event_path(&self) -> std::path::PathBuf {
-        self.folder.join(".semio").join("events.semio")
-    }
 
-    fn checksum(bytes: &[u8]) -> u64 {
-        bytes.iter().fold(0xcbf29ce484222325, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3))
-    }
 
-    fn encode_event(event: &FolderEvent) -> Result<Vec<u8>, vcs::VcsError> {
-        let mut bytes = Vec::new();
-        bytes.push(event.kind);
-        bytes.extend_from_slice(&event.updated_at_ms.to_le_bytes());
-        Self::encode_text(&mut bytes, &event.key)?;
-        Self::encode_text(&mut bytes, &event.metadata)?;
-        Self::encode_data(&mut bytes, &event.primary)?;
-        Self::encode_data(&mut bytes, &event.secondary)?;
-        Ok(bytes)
-    }
 
-    fn encode_text(output: &mut Vec<u8>, value: &str) -> Result<(), vcs::VcsError> {
-        let len = u32::try_from(value.len()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        output.extend_from_slice(&len.to_le_bytes());
-        output.extend_from_slice(value.as_bytes());
-        Ok(())
-    }
 
-    fn encode_data(output: &mut Vec<u8>, value: &[u8]) -> Result<(), vcs::VcsError> {
-        let len = u64::try_from(value.len()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        output.extend_from_slice(&len.to_le_bytes());
-        output.extend_from_slice(value);
-        Ok(())
-    }
 
-    fn decode_event(bytes: &[u8]) -> Result<FolderEvent, vcs::VcsError> {
-        let mut reader = FolderEventReader { bytes, cursor: 0 };
-        let event = FolderEvent { kind: reader.u8()?, updated_at_ms: reader.u64()?, key: reader.text()?, metadata: reader.text()?, primary: reader.data()?, secondary: reader.data()? };
-        if !matches!(event.kind, DOCUMENT_PUT_EVENT | BLOB_PUT_EVENT | BLOB_DELETE_EVENT | DOCUMENT_ARCHIVE_PUT_EVENT) {
-            return Err(vcs::VcsError::Backbone(format!("unknown folder event kind {}", event.kind)));
-        }
-        if reader.cursor != bytes.len() {
-            return Err(vcs::VcsError::Backbone("folder event has trailing bytes".into()));
-        }
-        Ok(event)
-    }
 
-    /// 🚫 The repository root is not a document space. Paired build authority and a package workspace declaration identify this folder as the repository workspace, and writing `.semio/events.semio` there recreates a tracked event log.
-    fn refuse_repository_root(&self) -> Result<(), vcs::VcsError> {
-        if is_repository_root(&self.folder).map_err(vcs::VcsError::Backbone)? {
-            return Err(vcs::VcsError::Backbone(format!("refusing to write {} at the repository root", self.event_path().display())));
-        }
-        Ok(())
-    }
 
-    fn append(&self, event: &FolderEvent) -> Result<(), vcs::VcsError> {
-        use std::io::Write;
-        self.refuse_repository_root()?;
-        let payload = Self::encode_event(event)?;
-        if payload.len() as u64 > MAX_FOLDER_EVENT_BYTES {
-            return Err(vcs::VcsError::Backbone("folder event exceeds the 16 GiB record boundary".into()));
-        }
-        let _guard = self.writer.lock().map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        let semio_dir = self.folder.join(".semio");
-        std::fs::create_dir_all(&semio_dir).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.event_path()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(FOLDER_EVENT_MAGIC).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(&(payload.len() as u64).to_le_bytes()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(&Self::checksum(&payload).to_le_bytes()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        file.write_all(&payload).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        file.sync_data().map_err(|error| vcs::VcsError::Backbone(error.to_string()))
-    }
 
-    fn events(&self) -> Result<Vec<FolderEvent>, vcs::VcsError> {
-        use std::io::Read;
-        let _guard = self.writer.lock().map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        let mut file = match std::fs::File::open(self.event_path()) {
-            Ok(file) => file,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
-            Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
-        };
-        let mut events = Vec::new();
-        loop {
-            let mut magic = [0; 8];
-            match file.read_exact(&mut magic) {
-                Ok(()) => {}
-                Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
-                Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
-            }
-            if &magic != FOLDER_EVENT_MAGIC {
-                return Err(vcs::VcsError::Backbone("invalid folder event magic".into()));
-            }
-            let mut header = [0; 16];
-            match file.read_exact(&mut header) {
-                Ok(()) => {}
-                Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
-                Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
-            }
-            let len = u64::from_le_bytes(header[..8].try_into().unwrap());
-            if len > MAX_FOLDER_EVENT_BYTES {
-                return Err(vcs::VcsError::Backbone(format!("folder event length {len} exceeds the record boundary")));
-            }
-            let expected_checksum = u64::from_le_bytes(header[8..].try_into().unwrap());
-            let mut payload = vec![0; usize::try_from(len).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?];
-            match file.read_exact(&mut payload) {
-                Ok(()) => {}
-                Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
-                Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
-            }
-            if Self::checksum(&payload) != expected_checksum {
-                return Err(vcs::VcsError::Backbone("folder event checksum mismatch".into()));
-            }
-            events.push(Self::decode_event(&payload)?);
-        }
-        Ok(events)
-    }
 
-    /// 📖️ Folds the latest stored `(pack, spr)` event for `document_id`.
-    pub async fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
-        Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_PUT_EVENT && event.key == document_id).map(|event| (event.primary, event.secondary)))
-    }
-
-    /// ✍️ Appends an indivisible document snapshot event.
-    pub async fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
-        self.append(&FolderEvent { kind: DOCUMENT_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: pack.into(), secondary: spr.into() })
-    }
-
-    /// 🗃️ Folds the latest exact recursive archive for `document_id`.
-    pub async fn read_archive(&self, document_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
-        Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_ARCHIVE_PUT_EVENT && event.key == document_id).map(|event| event.primary))
-    }
-
-    /// 🗃️ Appends one indivisible recursive-document archive event.
-    pub async fn write_archive(&self, document_id: &str, schema: &str, archive: &[u8]) -> Result<(), vcs::VcsError> {
-        crate::os_spr::decode_document_archive_bytes(archive).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        self.append(&FolderEvent { kind: DOCUMENT_ARCHIVE_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: archive.into(), secondary: Vec::new() })
-    }
-
-    /// 📇️ Lists latest document events in newest-write-first order.
-    pub async fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
-        let mut latest = std::collections::HashMap::<String, u64>::new();
-        for event in self.events()? {
-            if matches!(event.kind, DOCUMENT_PUT_EVENT | DOCUMENT_ARCHIVE_PUT_EVENT) {
-                latest.insert(event.key, event.updated_at_ms);
-            }
-        }
-        let mut ids = latest.into_iter().collect::<Vec<_>>();
-        ids.sort_by(|(left_id, left_time), (right_id, right_time)| right_time.cmp(left_time).then_with(|| left_id.cmp(right_id)));
-        Ok(ids.into_iter().map(|(id, _)| id).collect())
-    }
-}
-
-/// 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
-/// snapshot), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::text_format::print_document_text`/
-/// `crate::os_store::text_format::parse_document_text`). No `Backbone` impl: like `FolderEventLogStorage` above, this actor
-/// layer drives it from its own thread; this crate only owns the file format. Additive alongside the
-/// sqlite storage today — a technology adopts it by implementing `ArtifactDsl`/`OpText` and having
-/// its sync endpoint construct one of these instead; nothing currently reads or writes through it
-/// automatically.
-#[cfg(not(target_arch = "wasm32"))]
-pub struct FolderTextStorage {
-    folder: std::path::PathBuf,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl FolderTextStorage {
-    pub async fn new(folder: std::path::PathBuf) -> Self {
-        Self { folder }
-    }
-
-    async fn dsl_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Dsl))
-    }
-
-    async fn ops_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Op))
-    }
-
-    /// 🏷️ Path of the authoritative binary pack file.
-    pub async fn pack_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Pack))
-    }
-
-    /// 🏷️ Path of the authoritative binary op-log file.
-    pub async fn spr_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder.join(crate::os_store::semio_format::semio_filename(document_id, envelope_id, crate::os_store::semio_format::Component::Spr))
-    }
-
-    /// 🗃️ Path of the authoritative recursive-document archive.
-    pub async fn archive_path(&self, document_id: &str, envelope_id: &str) -> std::path::PathBuf {
-        self.folder.join(format!("{document_id}.{envelope_id}.archive.semio"))
-    }
-
-    /// 🗃️ Reads one exact recursive-document archive, or `None` when none was persisted.
-    pub async fn read_archive(&self, document_id: &str, envelope_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
-        let bytes = match std::fs::read(self.archive_path(document_id, envelope_id).await) {
-            Ok(bytes) => bytes,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-            Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
-        };
-        crate::os_spr::decode_document_archive_bytes(&bytes).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        Ok(Some(bytes))
-    }
-
-    /// 🗃️ Publishes derived root mirrors before atomically replacing archive authority.
-    pub async fn write_archive(&self, document_id: &str, envelope_id: &str, archive: &[u8], files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
-        crate::os_spr::decode_document_archive_bytes(archive).await.map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        std::fs::create_dir_all(&self.folder).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        let target = self.archive_path(document_id, envelope_id).await;
-        let staged = target.with_extension("semio.stage");
-        std::fs::write(&staged, archive).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
-        if let Err(error) = self.write_pack(document_id, envelope_id, files, dsl_mirror).await {
-            let _ = std::fs::remove_file(&staged);
-            return Err(error);
-        }
-        if let Err(error) = std::fs::rename(&staged, &target) {
-            let _ = std::fs::remove_file(&staged);
-            return Err(vcs::VcsError::Backbone(error.to_string()));
-        }
-        Ok(())
-    }
-
-    /// 📖️ Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
-    pub async fn read(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactTextFiles>, vcs::VcsError> {
-        let dsl = match std::fs::read_to_string(self.dsl_path(document_id, envelope_id).await) {
-            Ok(text) => text,
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
-        };
-        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id).await) {
-            Ok(text) => text,
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
-            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
-        };
-        Ok(Some(ArtifactTextFiles { dsl, ops }))
-    }
-
-    /// ✍️ Overwrites both files wholesale — the structural-command cold path (undo/redo/
-    /// checkpoint/alternative).
-    pub async fn write(&self, document_id: &str, envelope_id: &str, files: &ArtifactTextFiles) -> Result<(), vcs::VcsError> {
-        std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, envelope_id).await, &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, envelope_id).await, &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
-    }
-
-    /// 📖️ pack+spr-first read: reads the AUTHORITATIVE pair for `document_id`, or `None` if
-    /// the `.pack` file itself doesn't exist (unlike `read`, the DSL mirror's existence alone
-    /// doesn't count — pack+spr are authoritative per the disk-layout LAW, the DSL file is
-    /// import-only). A present `.pack` with a missing `.spr` is a hard error — no legacy: they are
-    /// always written together (see `write_pack`), so a missing `.spr` means corruption or a
-    /// manual edit, never a valid state to silently recover from.
-    pub async fn read_pack(&self, document_id: &str, envelope_id: &str) -> Result<Option<ArtifactPackFiles>, vcs::VcsError> {
-        let pack = match std::fs::read(self.pack_path(document_id, envelope_id).await) {
-            Ok(bytes) => bytes,
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
-        };
-        let spr = std::fs::read(self.spr_path(document_id, envelope_id).await).map_err(|err| {
-            if err.kind() == std::io::ErrorKind::NotFound {
-                vcs::VcsError::Backbone(format!("{document_id} pack.semio exists but spr.semio is missing for envelope {envelope_id}"))
-            } else {
-                vcs::VcsError::Backbone(err.to_string())
-            }
-        })?;
-        let ops = match std::fs::read_to_string(self.ops_path(document_id, envelope_id).await) {
-            Ok(text) => text,
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
-            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
-        };
-        Ok(Some(ArtifactPackFiles { pack, spr, ops }))
-    }
-
-    /// ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
-    /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
-    /// initial snapshot) — the pack-aware sibling of `write`.
-    pub async fn write_pack(&self, document_id: &str, envelope_id: &str, files: &ArtifactPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
-        std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.pack_path(document_id, envelope_id).await, &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.spr_path(document_id, envelope_id).await, &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.ops_path(document_id, envelope_id).await, &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        std::fs::write(self.dsl_path(document_id, envelope_id).await, dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
-    }
-
-    /// ➕️ Appends already-printed op-log lines (one complete {@link print_edit_lines} unit:
-    /// edit + inverse + metadata) to the `.ops` file without rewriting it — O(new edit).
-    pub async fn append_ops(&self, document_id: &str, envelope_id: &str, lines: &str) -> Result<(), vcs::VcsError> {
-        use std::io::Write;
-        std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, envelope_id).await).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        file.write_all(lines.as_bytes()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
-    }
-
-    /// 📇️ Lists every stored document id (by DSL `.semio` file stem) for a given envelope id.
-    pub async fn document_ids(&self, envelope_id: &str) -> Result<Vec<String>, vcs::VcsError> {
-        let suffix = format!(".{envelope_id}.dsl.semio");
-        let entries = match std::fs::read_dir(&self.folder) {
-            Ok(entries) => entries,
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
-            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
-        };
-        let mut ids = Vec::new();
-        for entry in entries {
-            let entry = entry.map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-            if let Some(name) = entry.file_name().to_str() {
-                if let Some(id) = name.strip_suffix(&suffix) {
-                    ids.push(id.to_string());
-                }
-            }
-        }
-        Ok(ids)
-    }
-}
 //#endregion 🔖️FolderStorage
-
 //#region 🔖️BlobStoreImpl
 
-/// 🗄️ Content-addressed blob events in [`FolderEventLogStorage`].
-#[cfg(not(target_arch = "wasm32"))]
-impl crate::os_store::BlobStore for FolderEventLogStorage {
-    async fn put(&self, bytes: &[u8], media_type: &str) -> Result<crate::os_store::BlobRef, vcs::VcsError> {
-        let hash = semio_framework_hash::hash_bytes(bytes);
-        self.append(&FolderEvent { kind: BLOB_PUT_EVENT, updated_at_ms: now_ms().await, key: hash.clone(), metadata: media_type.into(), primary: bytes.into(), secondary: Vec::new() })?;
-        Ok(crate::os_store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.into() })
-    }
-
-    async fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
-        for event in self.events()?.into_iter().rev() {
-            if event.key == hash {
-                return match event.kind {
-                    BLOB_PUT_EVENT => Ok(Some(event.primary)),
-                    BLOB_DELETE_EVENT => Ok(None),
-                    _ => continue,
-                };
-            }
-        }
-        Ok(None)
-    }
-
-    async fn has(&self, hash: &str) -> Result<bool, vcs::VcsError> {
-        Ok(self.get(hash).await?.is_some())
-    }
-
-    async fn delete(&self, hash: &str) -> Result<(), vcs::VcsError> {
-        self.append(&FolderEvent { kind: BLOB_DELETE_EVENT, updated_at_ms: now_ms().await, key: hash.into(), metadata: String::new(), primary: Vec::new(), secondary: Vec::new() })
-    }
-}
 //#endregion 🔖️BlobStoreImpl
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️persistence-data-class/🦀️.rs"]
 mod persistence_data_class_tests;

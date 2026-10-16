@@ -7,7 +7,7 @@ use super::*;
 //#region ActionPanelAndUtilities
 //#region ⌨️ShellShortcutTable
 /// ⌨️ The verb a control id names — the single mapping from React's control ids to this target's chrome.
-pub(crate) fn shell_shortcut_for_control_id(control_id: &str) -> Option<ShellShortcut> {
+pub fn shell_shortcut_for_control_id(control_id: &str) -> Option<ShellShortcut> {
     Some(match control_id {
         "ui.search.toggle" => ShellShortcut::ToggleSearch,
         "ui.find.toggle" => ShellShortcut::ToggleFind,
@@ -35,7 +35,7 @@ pub(crate) fn shell_shortcut_for_control_id(control_id: &str) -> Option<ShellSho
 
 /// ⌨️ The shell verb a key event asks for against a RESOLVED table, or `None` when the event belongs
 /// to the app/content. First matching row wins, in table order, exactly like React's own scan.
-pub(crate) fn shell_shortcut_for_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
+pub fn shell_shortcut_for_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
     table.iter().find(|(_, keys)| keys.split(',').any(|chord| key_event_matches_chord(action, modifiers, chord.trim()))).and_then(|(control_id, _)| shell_shortcut_for_control_id(control_id))
 }
 
@@ -44,13 +44,13 @@ pub(crate) fn shell_shortcut_for_in(table: &[(String, String)], action: &ui_wgpu
 /// [`SHELL_SHORTCUT_ROWS`] — React dispatches them AFTER the app-declared keybinding loop, so an app
 /// that declares `mod+z` itself shadows them, and they are therefore never reserved chords.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ShellEditVerb {
+pub enum ShellEditVerb {
     Undo,
     Redo,
 }
 
 impl ShellEditVerb {
-    pub(crate) fn action_id(self) -> &'static str {
+    pub fn action_id(self) -> &'static str {
         match self {
             ShellEditVerb::Undo => "undo",
             ShellEditVerb::Redo => "redo",
@@ -59,7 +59,7 @@ impl ShellEditVerb {
 }
 
 /// ⏪️ The undo/redo verb a key event asks for.
-pub(crate) fn shell_edit_verb_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellEditVerb> {
+pub fn shell_edit_verb_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellEditVerb> {
     if key_event_matches_chord(action, modifiers, "mod+z") {
         return Some(ShellEditVerb::Undo);
     }
@@ -79,7 +79,7 @@ impl<'ctx> PointerCtx<'ctx> {
     /// `shell.panelToggle` command, differing only in the `panel` id and the post-toggle `visible`
     /// flag — the caller has already flipped `right_panel_open`/`active_right_kind` before this runs,
     /// so `visible` reads the POST-toggle state directly (no separate before/after bookkeeping).
-    pub(crate) async fn note_panel_toggle_command(&mut self, control_id: &str, panel: &str) -> Result<(), String> {
+    pub async fn note_panel_toggle_command(&mut self, control_id: &str, panel: &str) -> Result<(), String> {
         let visible = match panel {
             "details" => self.dock.anchor_open(PanelAnchor::TopRight),
             "settings" => self.dock.anchor_open(PanelAnchor::BottomRight),
@@ -90,4 +90,16 @@ impl<'ctx> PointerCtx<'ctx> {
     }
 }
 //#endregion ShellCommandHistory
+//#endregion ActionPanelAndUtilities
+
+//#region ActionPanelAndUtilities
+//#region ⌨️ShellShortcutTable
+/// ⌨️ The shell verb a key event asks for with NO override applied — the default-table projection the
+/// shortcut LAWS assert against (production always resolves through `ShellState::shortcut_table`, so an
+/// override is never bypassed).
+#[cfg(any(test, feature = "testkit"))]
+pub fn shell_shortcut_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
+    shell_shortcut_for_in(&shell_shortcut_table(&HashMap::new()), action, modifiers)
+}
+//#endregion ⌨️ShellShortcutTable
 //#endregion ActionPanelAndUtilities

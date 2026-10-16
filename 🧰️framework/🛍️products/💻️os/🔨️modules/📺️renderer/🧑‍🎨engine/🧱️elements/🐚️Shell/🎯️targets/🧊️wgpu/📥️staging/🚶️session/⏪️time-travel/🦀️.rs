@@ -3,21 +3,20 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::time_travel::*;
 use semio_framework::kernel::{HistoryReprojection, HistoryReprojectionStatus, HistoryTimeTravel, HistoryTimeTravelReview, HistoryTimeTravelStage};
 
 //#region ⏪️TimeTravelControls
 /// ⏱️ How often the native shell re-reads the history while the runtime replays or finalizes: the replay advances in
 /// reactor turns that answer no dispatch, so the band's progress is polled rather than pushed.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) const TIME_TRAVEL_POLL_MS: f64 = 150.0;
+pub const TIME_TRAVEL_POLL_MS: f64 = 150.0;
 
 //#endregion ⏪️TimeTravelControls
 //#region 🎯️TimeTravelFocus
 /// 🧭️ What one change of the focused program's session asks of the chrome — React's `TimeTravelTransitionV1`, pinned for
 /// both shells by the band corpus's `transitions`: `reveal` opens the History panel, `focus` moves keyboard focus.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct TimeTravelTransition {
+pub struct TimeTravelTransition {
     pub reveal: bool,
     pub focus: Option<TimeTravelFocus>,
     pub scroll_to: Option<String>,
@@ -25,7 +24,7 @@ pub(crate) struct TimeTravelTransition {
 
 /// ⏱️ How long a focus target may take to reach the screen before the move is given up — React retries across 30
 /// animation frames.
-pub(crate) const TIME_TRAVEL_FOCUS_SETTLE_MS: f64 = 1000.0;
+pub const TIME_TRAVEL_FOCUS_SETTLE_MS: f64 = 1000.0;
 
 /// 🧭️ The chrome's answer to the session moving from `previous` to `next` (`None` = no session) — React's
 /// `timeTravelTransitionV1`: the edge into a new session reveals the History panel (whoever began it — a person, a chord
@@ -33,7 +32,7 @@ pub(crate) const TIME_TRAVEL_FOCUS_SETTLE_MS: f64 = 1000.0;
 /// a review puts it on the band; the finalize prompt takes it; a progress step, a draft edit, the commit and the close
 /// move nothing. The edge into a review that names its first blocking mutation reveals the panel again and names that
 /// mutation's row (`scroll_to`) to bring into view.
-pub(crate) fn time_travel_transition(previous: Option<&HistoryTimeTravel>, next: Option<&HistoryTimeTravel>) -> TimeTravelTransition {
+pub fn time_travel_transition(previous: Option<&HistoryTimeTravel>, next: Option<&HistoryTimeTravel>) -> TimeTravelTransition {
     let Some(next) = next else { return TimeTravelTransition { reveal: false, focus: None, scroll_to: None } };
     let same = previous.is_some_and(|previous| previous.session_id == next.session_id);
     let moved = !same || previous.is_some_and(|previous| previous.stage != next.stage);
@@ -53,7 +52,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// ([`time_travel_transition`]): the edge into a new session reveals the History panel tab — or, below the mobile
     /// breakpoint, opens the one mobile panel on it — whose Rust-built body holds the editor, and every edge that names a
     /// focus target leaves it waiting for [`Self::resolve_time_travel_focus`]. A closed session drops a focus still waiting.
-    pub(crate) fn observe_history_time_travel(&mut self, time_travel: Option<&HistoryTimeTravel>) {
+    pub fn observe_history_time_travel(&mut self, time_travel: Option<&HistoryTimeTravel>) {
         let transition = time_travel_transition(self.history.history_time_travel.as_ref(), time_travel);
         if let Some(focus) = transition.focus {
             self.history.time_travel_focus = Some((focus, chrome_now_ms() + TIME_TRAVEL_FOCUS_SETTLE_MS));
@@ -71,7 +70,7 @@ impl<'ctx> SessionCtx<'ctx> {
 
     /// 📱️ Opens the one mobile panel on `tab_id` — the phone-width twin of the anchor reveal, since below the mobile
     /// breakpoint no anchor paints and the History body (the editor) lives in that panel.
-    pub(super) fn reveal_mobile_panel_tab(&mut self, tab_id: &str) {
+    pub fn reveal_mobile_panel_tab(&mut self, tab_id: &str) {
         let Some((_, path)) = self.dock.dock_tabs.locate(tab_id) else { return };
         self.dock.mobile_panel_path = mobile_panel_reconcile_path(&self.mobile_panel_tabs(), &path);
         self.dock.mobile_panel_visible = true;
@@ -80,7 +79,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🧱️ The height of the subfooter — the shell's last layout row, under the footer, in which the session band, the
     /// reprojection band and the folder offer are stacked (React's `subfooter`); zero while none shows. The body and the footer
     /// end above it, so a band never covers content.
-    pub(crate) fn subfooter_height(&self, theme: &Theme) -> f32 {
+    pub fn subfooter_height(&self, theme: &Theme) -> f32 {
         let session = self.history.history_time_travel.as_ref().map(|status| self.prefs.time_travel_band_plan_for(status, theme, &self.chrome).band.y);
         let reprojection = self.prefs.history_reprojection_band_plan_for(theme, &self.chrome, &self.history).map(|(_, plan)| plan.band.y);
         let folder = self.docs.folder_reconnect_band_offer(&self.history, &self.sync).map(|offer| self.prefs.folder_reconnect_band_plan_for(&offer, theme, &self.chrome, &self.history).band.y);
@@ -94,7 +93,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// [`ShellState::observe_invocation_history`] with the next exchange; this poll is what moves the band between two
     /// exchanges. `true` when the status changed.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) async fn poll_time_travel_progress(&mut self) -> bool {
+    pub async fn poll_time_travel_progress(&mut self) -> bool {
         let polling = self.history.history_time_travel.as_ref().is_some_and(|status| (matches!(status.stage, HistoryTimeTravelStage::Replaying | HistoryTimeTravelStage::Finalizing) || status.stage == HistoryTimeTravelStage::Editing && status.total.is_some())) || self.history.history_reprojection.as_ref().is_some_and(|reprojection| !reprojection.paused && reprojection.total > 0);
         let now = chrome_now_ms();
         if !polling || now - self.history.time_travel_polled_at_ms < TIME_TRAVEL_POLL_MS {

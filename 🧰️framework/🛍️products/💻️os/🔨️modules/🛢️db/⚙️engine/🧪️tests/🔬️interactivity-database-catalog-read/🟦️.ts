@@ -1,4 +1,4 @@
-import { interactivityDatabaseCatalogReadFailures } from "../../../../../../../../📜️script.ts";
+import { interactivityDatabaseCatalogReadFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity database catalog read policy assertions. */
 export function interactivityDatabaseCatalogReadSelfTests(): void {

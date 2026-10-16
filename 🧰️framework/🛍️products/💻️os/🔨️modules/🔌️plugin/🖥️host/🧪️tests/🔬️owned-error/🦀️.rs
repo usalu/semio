@@ -1,5 +1,6 @@
 use super::*;
 use std::error::Error;
+use semio_framework_plugin_guest_contract::{PluginHostError, TurnFault};
 
 #[semio_framework_async_macros::async_test]
 async fn owned_errors_preserve_display_source_and_from() {

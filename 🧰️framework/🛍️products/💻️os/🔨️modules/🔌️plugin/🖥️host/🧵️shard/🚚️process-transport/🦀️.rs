@@ -23,16 +23,16 @@ use std::path::Path;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use std::thread;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use std::time::Duration;
 
 const PIPE_READ_BYTES_PER_POLL: usize = 64 * 1024;
 const PIPE_FRAMES_PER_POLL: usize = 32;
-const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
+pub const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 
-fn now_ms() -> u64 {
+pub fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 
@@ -99,7 +99,7 @@ mod framing {
 
     #[derive(Default)]
     pub struct Decoder {
-        bytes: Vec<u8>,
+        pub bytes: Vec<u8>,
         frames: VecDeque<Frame>,
     }
 
@@ -167,7 +167,7 @@ mod framing {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub fn read_frame<R: Read>(reader: &mut R) -> io::Result<Option<Frame>> {
         let mut tag = [0u8; 1];
         match reader.read_exact(&mut tag) {
@@ -202,7 +202,7 @@ pub struct ProcessTransport {
     stdin: Mutex<ChildStdin>,
     stdout: Mutex<ChildStdout>,
     decoder: Mutex<framing::Decoder>,
-    inbound: Mutex<VecDeque<Vec<u8>>>,
+    pub inbound: Mutex<VecDeque<Vec<u8>>>,
     heartbeat_ms: Arc<AtomicU64>,
     alive: Arc<AtomicBool>,
     killed: Arc<AtomicBool>,
@@ -327,9 +327,9 @@ pub struct StdioTransport {
     stdout: Arc<Mutex<io::Stdout>>,
     stdin: Mutex<io::Stdin>,
     decoder: Mutex<framing::Decoder>,
-    inbound: Mutex<VecDeque<Vec<u8>>>,
+    pub inbound: Mutex<VecDeque<Vec<u8>>>,
     alive: Arc<AtomicBool>,
-    _heartbeat: super::PeriodicPoolTimer,
+    _heartbeat: semio_framework_plugin_host_engine::PeriodicPoolTimer,
 }
 
 impl StdioTransport {
@@ -348,7 +348,7 @@ impl StdioTransport {
         let heartbeat = {
             let alive = alive.clone();
             let stdout = stdout.clone();
-            super::PeriodicPoolTimer::start(&super::plugin_host_worker_pool(), heartbeat_interval_ms, move || {
+            semio_framework_plugin_host_engine::PeriodicPoolTimer::start(&semio_framework_plugin_host_engine::plugin_host_worker_pool(), heartbeat_interval_ms, move || {
                 if !alive.load(Ordering::SeqCst) {
                     return false;
                 }
@@ -416,7 +416,7 @@ impl ShardTransport for StdioTransport {
 /// selectable instead of thread shards" — never the default this packet (`📌️important.md`'s P1
 /// scope). Repo-wide grep before writing this (`grep -rn "ThreadTransport::new_pair"`) found ZERO
 /// non-test callers: no live `Kernel`/`ShardTable` constructs a shard of EITHER kind outside
-/// `🧵️shard/🦀️.rs`'s own `#[cfg(test)]` module and `🦀️.rs`'s wasmtime tests. This
+/// `🧵️shard/🦀️.rs`'s own `#[cfg(any(test, feature = "testkit"))]` module and `🦀️.rs`'s wasmtime tests. This
 /// enum is therefore the selection SEAM a future scheduler wires through — landed ahead of its
 /// caller, the same "land the seam, not a synthesized caller" shape `design-runtime.md`'s own
 /// `GuestRuntime` trait + `MockGuestRuntime` landed in before `WasmtimeRuntime` existed — not a
@@ -496,6 +496,6 @@ impl ProcessShardWatchdog {
 }
 //#endregion 🚑️Watchdog
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub use framing::{Decoder, Frame, PipeState, TAG_DATA, TAG_HEARTBEAT, write_frame};
+#[cfg(any(test, feature = "testkit"))]
+pub use framing::read_frame;

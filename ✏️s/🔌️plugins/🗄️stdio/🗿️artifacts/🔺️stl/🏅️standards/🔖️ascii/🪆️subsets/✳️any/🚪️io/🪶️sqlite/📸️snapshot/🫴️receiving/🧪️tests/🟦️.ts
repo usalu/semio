@@ -7,11 +7,11 @@ import input from "./🧫️fixtures/🏛️input.json";
 import empty from "./🧫️fixtures/∅️input.json";
 import malformed from "./🧫️fixtures/⚠️malformed.json";
 import grants from "./🧫️fixtures/🎟️grants.json";
-import relational from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🏛️relational/🔣️.json";
-import grantSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { sqliteSnapshotRelationalSchema as relational } from "@semio-tech/framework/io/sqlite-snapshot/schema/relational";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/framework/value/retained-clone/wire/schema";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import {stlSnapshotFromSqliteDatabase,stlSnapshotToSqliteDatabase,stlSnapshotValidateSqliteSubset} from "../../🟦️.ts";
-import type {SqliteValue,SqliteDatabase} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import type {SqliteValue,SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 const scalar=(value:unknown):SqliteValue=>value!==null&&typeof value==="object"?BigInt((value as {integer:string}).integer):value as SqliteValue;
 const database=(value:typeof input):SqliteDatabase=>({tables:value.tables.map(table=>({...table,rows:table.rows.map(row=>({rowid:BigInt(row.rowid),values:row.values.map(scalar)}))}))});

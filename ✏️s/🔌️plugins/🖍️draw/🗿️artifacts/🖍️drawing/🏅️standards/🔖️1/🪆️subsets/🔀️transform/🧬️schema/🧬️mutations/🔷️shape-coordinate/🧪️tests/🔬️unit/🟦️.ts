@@ -6,7 +6,7 @@ import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutation
 import {applyShapeCoordinate} from "../../🦠️mutation/🟦️.ts";
 import {shapeCoordinate,type ShapeCoordinateField} from "../../../../../../✳️any/🧬️schema/🔷️shape/✏️coordinates/🟦️.ts";
 import type {DrawingArtifact,DrawingLayerNode} from "../../../../../../✳️any/🧬️schema/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 test("sparse coordinate mutation matches shared fixture and independent Immer output",()=>{
  const validate=new Ajv({strict:false}).compile(schema);
  const shape={id:"shape",kind:"shape",shapeKind:"rect",rect:{x:binary64(0),y:binary64(0),width:binary64(128),height:binary64(96)}} as Extract<DrawingLayerNode,{kind:"shape"}>;

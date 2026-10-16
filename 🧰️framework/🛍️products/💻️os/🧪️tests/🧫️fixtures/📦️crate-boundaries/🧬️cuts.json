@@ -324,6 +324,48 @@
       "consumer": "🔨️modules/🏪️store/🦀️.rs",
       "canonical": "pub use semio_framework_os_store_codec_registry as codec_registry;",
       "definition": "pub fn validate_owned_sqlite_snapshot_subset"
+    },
+    {
+      "producer": "semio-framework-os-store-member-open",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_member_open::*;",
+      "definition": "pub const MEMBER_OPEN_IDENTITY_BYTES"
+    },
+    {
+      "producer": "semio-framework-os-store-engine-owners",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_engine_owners as document_store_owners;",
+      "definition": "pub struct DocumentCatalogOwner"
+    },
+    {
+      "producer": "semio-framework-os-store-initialization-replay",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_initialization_replay::*;",
+      "definition": "pub const ARTIFACT_STORE_REPLAY_FIELD_BYTES"
+    },
+    {
+      "producer": "semio-framework-os-store-document",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_document::*;",
+      "definition": "pub fn create_document_envelope"
+    },
+    {
+      "producer": "semio-framework-os-store-durable-group",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_durable_group::*;",
+      "definition": "pub struct DurableOwnedThreeMemberDecisionV1"
+    },
+    {
+      "producer": "semio-framework-os-store-composition",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_composition as composition_coordinator;",
+      "definition": "pub struct ChildDispatch"
+    },
+    {
+      "producer": "semio-framework-os-store-test-support",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_test_support as test_support;",
+      "definition": "pub fn mutation_report_json"
     }
   ],
   "mutationOwners": [

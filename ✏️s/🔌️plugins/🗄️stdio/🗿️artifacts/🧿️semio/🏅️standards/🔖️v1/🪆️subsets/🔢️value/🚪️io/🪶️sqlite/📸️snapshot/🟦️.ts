@@ -1,7 +1,7 @@
 /** 🔢️ Native SemioValue syntax and owned structural relationships. */
 import type {SemioValue,SemioValueSnapshot,SemioValueNode,SemioValueEntry} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteBoolean,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,artifactSqliteTextBytes,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteDatabase,SqliteRow,SqliteValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteBoolean,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,artifactSqliteTextBytes,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteDatabase,SqliteRow,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_VALUE_SQLITE_SCHEMA=`CREATE TABLE semio_value_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, root_value_id INTEGER NOT NULL REFERENCES semio_value_value(id));
 CREATE TABLE semio_value_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes','list','map','ref')), boolean_value INTEGER CHECK (boolean_value IN (0,1)), integer_lexeme TEXT, float_lexeme TEXT, string_value TEXT, bytes_value BLOB, target_node_id INTEGER REFERENCES semio_value_node(id));
 CREATE TABLE semio_value_node (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_value_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), native_id TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES semio_value_value(id));

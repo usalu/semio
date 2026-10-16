@@ -1,6 +1,6 @@
 /** 🔍️ Full bigint relation lookup uses concrete caller-owned sorted row positions. */
-import {ValueError,type SqliteOperation,type SqliteRow} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {artifactSqliteCheckpoint} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {ValueError,type SqliteOperation,type SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
+import {artifactSqliteCheckpoint} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 function invalid(message:string):never{throw new ValueError("invalidValue","Layout "+message)}
 function words(operation:SqliteOperation,length:number):Uint32Array{if(!Number.isSafeInteger(length)||length<0||length>0xffffffff)throw new ValueError("workLimit","Layout row lookup extent");const bytes=operation.allocateBytes(length*4);return new Uint32Array(bytes.buffer,bytes.byteOffset,length)}
 /** 📍️ Sorts the actual row positions and resolves complete literal identities without deletion maps. */

@@ -2,29 +2,29 @@
 use super::*;
 
 //#region 📮️RuntimeMailbox
-pub(crate) struct FrameTransaction {
-    pub(crate) retained: semio_framework_job::RetainedCloneGrant,
+pub struct FrameTransaction {
+    pub retained: semio_framework_job::RetainedCloneGrant,
     directives: Option<FrameDirectives>,
-    pub(crate) operation: semio_framework_trace::OperationId,
-    pub(crate) generation: semio_framework_trace::Generation,
+    pub operation: semio_framework_trace::OperationId,
+    pub generation: semio_framework_trace::Generation,
     base_witness: Option<RuntimePresentationWitness>,
     effect_opportunities: u32,
-    pub(crate) stage: FrameTransactionStage,
-    pub(crate) phase: AppFrameTransactionPhase,
+    pub stage: FrameTransactionStage,
+    pub phase: AppFrameTransactionPhase,
     board_authority_cursor: usize,
     world3d_authority_cursor: usize,
-    scene_camera_cursor: Option<scenes::SceneCameraDispatchCursor>,
+    scene_camera_cursor: Option<semio_framework_os_renderer_wgpu_scene_state::SceneCameraDispatchCursor>,
     /// 🥽️ How many world surfaces this frame has already offered a `registerBrushMesh` step — a
     /// plain index into `world3d_states`, so the phase owns no closable authority.
     brush_mesh_cursor: usize,
-    pub(crate) build_cursor: Option<FrameBuildCursor>,
+    pub build_cursor: Option<FrameBuildCursor>,
     finish_cursor: Option<FrameFinishCursor>,
-    pub(crate) after_chrome: Option<AppFrameAfterChrome>,
-    raster_uploads: Option<scenes::PendingRasterUploadCursor>,
+    pub after_chrome: Option<AppFrameAfterChrome>,
+    raster_uploads: Option<semio_framework_os_renderer_wgpu_scene_state::PendingRasterUploadCursor>,
     raster_rejected: Option<ui_wgpu::wgpu::PreparedRasterProducer>,
 }
 
-pub(crate) enum AppFrameTransactionStep {
+pub enum AppFrameTransactionStep {
     Pending,
     Complete(AppFrameBuild),
     /// 🌀️ This opportunity's inputs moved under it — a newer input generation, a newer scene
@@ -44,7 +44,7 @@ pub(crate) enum AppFrameTransactionStep {
 
 /// 🧭️ The mounted frame's seven monotonic publication stages.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum FrameTransactionStage {
+pub enum FrameTransactionStage {
     DrainProjectionDeltas,
     RouteIntents,
     FlushEffects,
@@ -55,7 +55,7 @@ pub(crate) enum FrameTransactionStage {
 }
 
 impl FrameTransactionStage {
-    pub(crate) fn latency_stage(self) -> frame_latency::FrameLatencyStage {
+    pub fn latency_stage(self) -> frame_latency::FrameLatencyStage {
         match self {
             Self::DrainProjectionDeltas => frame_latency::FrameLatencyStage::TransactionDrainProjectionDeltas,
             Self::RouteIntents => frame_latency::FrameLatencyStage::TransactionRouteIntents,
@@ -83,7 +83,7 @@ enum AppFrameTransactionPhase {
 }
 
 impl FrameTransaction {
-    pub(crate) fn new(directives: FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, retained: semio_framework_job::RetainedCloneGrant) -> Self {
+    pub fn new(directives: FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, retained: semio_framework_job::RetainedCloneGrant) -> Self {
         Self {
             retained,
             directives: Some(directives),
@@ -179,7 +179,7 @@ impl FrameTransaction {
     /// `render_ui_image_step` owns `UiNode::Image` then), so this is free here and is what
     /// makes the no-scene-host paint path in `ui_wgpu` actually show a decoded `data:` image
     /// instead of the `alt` placeholder.
-    pub(crate) fn step(&mut self, runtime: &AppMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
+    pub fn step(&mut self, runtime: &AppMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
         let _latency = frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(self.generation.0), self.stage.latency_stage(), 1);
         context.set_stage(self.stage_label());
         if context.operation() != self.operation || context.generation() != self.generation || context.is_cancelled() || context.deadline_exceeded() {
@@ -231,7 +231,7 @@ impl FrameTransaction {
             AppFrameTransactionPhase::SceneCamera => {
                 let grant = context.retained_grant();
                 if self.scene_camera_cursor.is_none() {
-                    match scenes::SceneCameraDispatchCursor::begin(app_now_ms(), grant) {
+                    match semio_framework_os_renderer_wgpu_scene_state::SceneCameraDispatchCursor::begin(app_now_ms(), grant) {
                         Ok((cursor, progress)) => {
                             self.scene_camera_cursor = Some(cursor);
                             if context.consume_retained(progress).is_err() { runtime.record_frame_fault("camera original admission receipt exceeded frame authority"); return AppFrameTransactionStep::Fault; }
@@ -254,8 +254,8 @@ impl FrameTransaction {
                 };
                 if context.consume_retained(progress).is_err() { runtime.record_frame_fault("camera original transition receipt exceeded frame authority"); return AppFrameTransactionStep::Fault; }
                 match step {
-                scenes::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
-                scenes::SceneCameraDispatchStep::Action(action) => {
+                semio_framework_os_renderer_wgpu_scene_state::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
+                semio_framework_os_renderer_wgpu_scene_state::SceneCameraDispatchStep::Action(action) => {
                     if let Err(_action) = app.frame_actions.try_push(action) {
                         runtime.record_frame_fault("frame deferred action credits exceeded");
                         self.phase = AppFrameTransactionPhase::Terminal;
@@ -263,12 +263,12 @@ impl FrameTransaction {
                     }
                     AppFrameTransactionStep::Pending
                 }
-                scenes::SceneCameraDispatchStep::Complete => {
+                semio_framework_os_renderer_wgpu_scene_state::SceneCameraDispatchStep::Complete => {
                     self.stage = FrameTransactionStage::RouteIntents;
                     self.phase = AppFrameTransactionPhase::BrushMesh;
                     AppFrameTransactionStep::Pending
                 }
-                scenes::SceneCameraDispatchStep::Fault(fault) => {
+                semio_framework_os_renderer_wgpu_scene_state::SceneCameraDispatchStep::Fault(fault) => {
                     runtime.record_frame_fault(fault);
                     self.phase = AppFrameTransactionPhase::Terminal;
                     AppFrameTransactionStep::Fault
@@ -353,9 +353,9 @@ impl FrameTransaction {
                                 return AppFrameTransactionStep::Fault;
                             }
                         }
-                        match engine_canvas::drive_text_editor_retained_action_step() {
-                            Ok(engine_canvas::TextEditorRetainedActionStep::Pending) => return AppFrameTransactionStep::Pending,
-                            Ok(engine_canvas::TextEditorRetainedActionStep::Ready(actions)) => {
+                        match semio_framework_os_renderer_wgpu_engine_text::text_editor::drive_text_editor_retained_action_step() {
+                            Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorRetainedActionStep::Pending) => return AppFrameTransactionStep::Pending,
+                            Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorRetainedActionStep::Ready(actions)) => {
                                 let admitted = match actions.second {
                                     Some(second) => app.frame_actions.try_push_queued_pair(actions.first, second).is_ok(),
                                     None => app.frame_actions.try_push_queued(actions.first).is_ok(),
@@ -367,14 +367,14 @@ impl FrameTransaction {
                                 }
                                 return AppFrameTransactionStep::Pending;
                             }
-                            Ok(engine_canvas::TextEditorRetainedActionStep::Idle) => {}
+                            Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorRetainedActionStep::Idle) => {}
                             Err(_) => {
                                 runtime.record_frame_fault("retained text editor action transport failed");
                                 self.phase = AppFrameTransactionPhase::Terminal;
                                 return AppFrameTransactionStep::Fault;
                             }
                         }
-                        match engine_canvas::drive_text_editor_outbox_step(&mut app.input) {
+                        match semio_framework_os_renderer_wgpu_engine_text::text_editor::drive_text_editor_outbox_step(&mut app.input) {
                             Ok(true) => return AppFrameTransactionStep::Pending,
                             Ok(false) => {}
                             Err(fault) => {
@@ -392,10 +392,10 @@ impl FrameTransaction {
                         return AppFrameTransactionStep::Fault;
                     }
                 }
-                if interpreter::drive_scene_interaction_step(&mut app.input) {
+                if semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::drive_scene_interaction_step(&mut app.input) {
                     return AppFrameTransactionStep::Pending;
                 }
-                match interpreter::drive_clipboard_io_step(&mut app.input,context) { Ok(true)=>return AppFrameTransactionStep::Pending,Ok(false)=>{},Err(failure)=>return AppFrameTransactionStep::CloseFailure(failure) }
+                match semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::drive_clipboard_io_step(&mut app.input,context) { Ok(true)=>return AppFrameTransactionStep::Pending,Ok(false)=>{},Err(failure)=>return AppFrameTransactionStep::CloseFailure(failure) }
                 let Some(next) = self.effect_opportunities.checked_add(1) else {
                     runtime.record_frame_fault("frame effect opportunity counter exhausted");
                     self.phase = AppFrameTransactionPhase::Terminal;
@@ -444,10 +444,10 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 }
                 let controller_id = surface.controller_id.clone();
-                match engine_canvas::drive_board_authority_step(&surface_id, context) {
+                match semio_framework_os_renderer_wgpu_engine_board::board2d::drive_board_authority_step(&surface_id, context) {
                     infinite_canvas::BoardAuthorityStep::Pending => AppFrameTransactionStep::Pending,
                     infinite_canvas::BoardAuthorityStep::Cancelled => {
-                        if let Err(fault) = engine_canvas::release_board_pointer_claim(&surface_id, &mut app.input) {
+                        if let Err(fault) = semio_framework_os_renderer_wgpu_engine_board::board2d::release_board_pointer_claim(&surface_id, &mut app.input) {
                             app.input.record_action_fault(fault);
                             runtime.record_frame_fault("board cancelled claim release faulted");
                             self.phase = AppFrameTransactionPhase::Terminal;
@@ -457,17 +457,17 @@ impl FrameTransaction {
                         AppFrameTransactionStep::Pending
                     }
                     infinite_canvas::BoardAuthorityStep::Fault => {
-                        let _ = engine_canvas::release_board_pointer_claim(&surface_id, &mut app.input);
+                        let _ = semio_framework_os_renderer_wgpu_engine_board::board2d::release_board_pointer_claim(&surface_id, &mut app.input);
                         runtime.record_frame_fault("board retained authority faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         AppFrameTransactionStep::Fault
                     }
-                    infinite_canvas::BoardAuthorityStep::Complete => match engine_canvas::publish_board_pointer_step(&surface_id, &mut app.input) {
+                    infinite_canvas::BoardAuthorityStep::Complete => match semio_framework_os_renderer_wgpu_engine_board::board2d::publish_board_pointer_step(&surface_id, &mut app.input) {
                         Ok(true) => {
                             self.phase = AppFrameTransactionPhase::InputEvents;
                             AppFrameTransactionStep::Pending
                         }
-                        Ok(false) => match engine_canvas::publish_board_event_step(&surface_id, &controller_id, &mut app.input) {
+                        Ok(false) => match semio_framework_os_renderer_wgpu_engine_board::board2d::publish_board_event_step(&surface_id, &controller_id, &mut app.input) {
                             Ok(true) => {
                                 self.phase = AppFrameTransactionPhase::InputEvents;
                                 AppFrameTransactionStep::Pending
@@ -630,13 +630,13 @@ impl FrameTransaction {
             }
             AppFrameTransactionPhase::RasterUploads => {
                 if let Some(upload) = ui_wgpu::wgpu::take_ui_image_upload() {
-                    scenes::queue_decoded_raster_upload("ui-image", upload.key, upload.width, upload.height, upload.pixels);
+                    semio_framework_os_renderer_wgpu_scene_canvas2d::queue_decoded_raster_upload("ui-image", upload.key, upload.width, upload.height, upload.pixels);
                     return AppFrameTransactionStep::Pending;
                 }
                 let cursor = self.raster_uploads.get_or_insert_with(Default::default);
                 match cursor.step() {
-                    scenes::PendingRasterUploadStep::Pending => AppFrameTransactionStep::Pending,
-                    scenes::PendingRasterUploadStep::Upload(checked_out) => {
+                    semio_framework_os_renderer_wgpu_scene_state::PendingRasterUploadStep::Pending => AppFrameTransactionStep::Pending,
+                    semio_framework_os_renderer_wgpu_scene_state::PendingRasterUploadStep::Upload(checked_out) => {
                         let Ok(mut producer) = checked_out.take() else {
                             runtime.record_frame_fault("frame raster producer checkout was stale");
                             self.phase = AppFrameTransactionPhase::Terminal;
@@ -690,13 +690,13 @@ impl FrameTransaction {
                         }
                         AppFrameTransactionStep::Pending
                     }
-                    scenes::PendingRasterUploadStep::Complete => {
+                    semio_framework_os_renderer_wgpu_scene_state::PendingRasterUploadStep::Complete => {
                         self.raster_uploads = None;
                         self.stage = FrameTransactionStage::BuildRenderPackets;
                         self.phase = AppFrameTransactionPhase::Finish;
                         AppFrameTransactionStep::Pending
                     }
-                    scenes::PendingRasterUploadStep::Fault(fault) => {
+                    semio_framework_os_renderer_wgpu_scene_state::PendingRasterUploadStep::Fault(fault) => {
                         runtime.record_frame_fault(fault);
                         self.phase = AppFrameTransactionPhase::Terminal;
                         AppFrameTransactionStep::Fault
@@ -732,12 +732,12 @@ impl FrameTransaction {
     }
 
     /// ♻️ Preserves the camera child's physical receipts before any other frame child is considered.
-    pub(crate) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
         if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let grant=cx.retained_grant();
         if let Some(camera) = self.scene_camera_cursor.as_mut() {
             if !camera.terminal_is_empty() { return frame_receive_close(frame_child_step(camera.close_step(grant),grant,camera.terminal_is_empty()),cx); }
-            let bytes = std::mem::size_of::<Option<scenes::SceneCameraDispatchCursor>>();
+            let bytes = std::mem::size_of::<Option<semio_framework_os_renderer_wgpu_scene_state::SceneCameraDispatchCursor>>();
             if let Some(step) = frame_inline_gate(grant,bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
             self.scene_camera_cursor = None;
             return frame_receive_close(frame_inline_progress(bytes),cx);
@@ -770,11 +770,11 @@ impl FrameTransaction {
     }
 
     /// 🧭️ Other nested frame children still require their own physical retirement witnesses.
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         false
     }
 
-    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {
+    pub fn discard_presented_input_candidate(&mut self, runtime: &AppMailbox) -> bool {
         if let Some(cursor) = self.build_cursor.as_mut() {
             if !discard_frame_input_candidate(runtime, &mut cursor.input_candidate) {
                 return false;
@@ -801,7 +801,7 @@ impl FrameTransaction {
 /// `handle_pointer_button`, whose Shell path opens the context menu. The redundant callbacks-only
 /// `handle_context_menu` wrapper is deleted with its sole caller. See `📓️p3c-explicit-app-handle.md`.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn boot_runtime(
+pub async fn boot_runtime(
     window: Arc<Window>,
     gpu: impl std::future::Future<Output = Result<GpuContext, String>> + Send + 'static,
     plugin_filter: String,
@@ -851,7 +851,7 @@ pub(crate) async fn boot_runtime(
     #[cfg(not(target_arch = "wasm32"))]
     let entries = filter_plugins(load_wasm_plugins(&plugin_filter, &plugin_modules_root).await?, &plugin_filter);
 
-    let (locale, terminology) = shell::shell_language_axes()?;
+    let (locale, terminology) = semio_framework_os_renderer_wgpu_shell_prefs::shell_language_axes()?;
     let mut shell = ShellState::new(entries, plugin_filter.clone(), locale, terminology);
     shell.install_document_services(services);
     shell.screen_w = css_width;
@@ -904,7 +904,7 @@ pub(crate) async fn boot_runtime(
     });
     let presenter = AppPresenter {
         gpu,
-        engine: engine_canvas::EngineCanvasPresenter::default(),
+        engine: semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter::default(),
         gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
         runtime: runtime.clone(),
         presentation_authority: runtime.presentation_authority(),

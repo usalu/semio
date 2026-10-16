@@ -1,7 +1,7 @@
 /** 🛡️ Exact PresentationML profiles over literal OPC relationships and typed XML nodes. */
 import type{PptxSnapshot,XmlDocument,XmlNode,XmlAttr}from"../🟦️.ts";
-import {NativeDecodeControl,type NativeDecodeProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {textUtf8ByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts";
+import {NativeDecodeControl,type NativeDecodeProgress} from "@semio-tech/framework/value/decode";
+import {textUtf8ByteLength} from "@semio-tech/framework/value/text";
 export interface PptxProfileOptions{readonly maximumBytes?:number;readonly signal?:AbortSignal;readonly onProgress?:(progress:NativeDecodeProgress)=>void}
 export interface PptxProfileDiagnostic{readonly code:string;readonly severity:"error"|"warning";readonly message:string}
 const STRICT="http://purl.oclc.org/ooxml/presentationml/main",TRANS="http://schemas.openxmlformats.org/presentationml/2006/main",TRANS_DRAW="http://schemas.openxmlformats.org/drawingml/2006/main",STRICT_REL="http://purl.oclc.org/ooxml/officeDocument/relationships",TRANS_REL="http://schemas.openxmlformats.org/officeDocument/2006/relationships",VML="urn:schemas-microsoft-com:vml",MC="http://schemas.openxmlformats.org/markup-compatibility/2006";

@@ -56,7 +56,7 @@ import {
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import React, { type ReactNode } from "react";
-import { faultNotice, historyNotice } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { faultNotice, historyNotice } from "../../../../../../../../🔨️modules/🎠️kernel/🏷️notice-labels/🟦️.ts";
 import { registerPendingWorldProjection } from "../../🌐️World3dHost/🟦️.tsx";
 import { type InputDraftDispositionV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { type ExtraWindowInstance, type LoadedProgramState } from "../../🐚️Shell/🟦️.tsx";

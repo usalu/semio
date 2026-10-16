@@ -1,5 +1,5 @@
 /** 🔎️ Query output defined by the Jack artifact schema QueryResult. */
-import type { DslValue } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import type { DslValue } from "@semio-tech/framework/value/schema";
 import type { JackSnapshot } from "../📸️snapshot/🟦️.ts";
 
 export interface QueryResult {

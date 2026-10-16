@@ -1,8 +1,8 @@
 /** 🎪️ Handwritten semantic ownership of the actual Playground marker. */
 import { parsePlaygroundSnapshot, type PlaygroundSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import { ArtifactSqliteProjection, artifactSqliteTables, artifactSqliteInteger, artifactSqliteText, artifactSqliteCheckpoint, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
+import { ArtifactSqliteProjection, artifactSqliteTables, artifactSqliteInteger, artifactSqliteText, artifactSqliteCheckpoint, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 export const PLAYGROUND_SQLITE_SCHEMA = String.raw`CREATE TABLE playground_document (
  id INTEGER PRIMARY KEY,

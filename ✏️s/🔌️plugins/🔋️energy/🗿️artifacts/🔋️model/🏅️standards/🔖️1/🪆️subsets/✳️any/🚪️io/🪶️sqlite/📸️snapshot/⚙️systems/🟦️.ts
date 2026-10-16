@@ -1,7 +1,7 @@
 /** ⚙️ Explicit gains, HVAC, electrical, airflow and reporting projections. */
 import type {EnergyModel,EnergySetpointManagerKind} from "../../../../🧬️schema/📸️snapshot/⚡️model/🟦️.ts";
 import {columns,emit,write,ids,readIds,uint,bool,optionalId,literal,type Reader,type Options} from "../🟦️.ts";
-import type {ArtifactSqliteProjection} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type {ArtifactSqliteProjection} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 const PEOPLE=columns([7,8,9,10]),LIGHTING=columns([6,7,8,9]),EQUIPMENT=columns([6,7,8]),THERMOSTAT=columns([7,8]),RESET=columns([1,2,3,4]),IDEAL=columns([5,6,7,8,9,10]),ZONE_EQUIPMENT=columns([7,8]),AIR_LOOP=columns([7]),PLANT=columns([6,7,8]),OUTDOOR=columns([5]),INFILTRATION=columns([7,8,9,10,11,12,13,14,15]),PV=columns([4,5,6,7,8,9]),BATTERY=columns([4,5,6,7]),SHW=columns([4,5,6]),SOLAR=columns([4,5,6,7,8]),REFRIGERATION=columns([5]),FAULT=columns([6]),DAYLIGHT=columns([5,6,7]);
 const EQUIPMENT_TYPES=["Baseboard","Radiant","FanCoil","Ptac","VrfTerminal","Erv","UnitHeater","WaterToAirHp"]as const,PLANT_TYPES=["Heating","Cooling","Condenser"]as const,INFILTRATION_TYPES=["ScheduledAch","PerExteriorArea","EffectiveLeakageArea","WindAndStack"]as const,FAULT_TYPES=["SensorBias","CoilFouling","DamperStuck","ChillerFouling","BoilerEfficiencyDegradation"]as const,FREQUENCIES=["Timestep","Hourly","Daily","Monthly","RunPeriod"]as const,ROOM_TYPES=["WellMixed","OneNodeDisplacement","TwoNodeBuoyancy","UnderFloorAirDistribution"]as const;
 export async function projectSystems(m:EnergyModel,p:ArtifactSqliteProjection,o:Options):Promise<void>{

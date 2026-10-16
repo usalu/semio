@@ -562,19 +562,11 @@ import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, to
 // is just `UiNodeRecord.activity`). `UiNodeView`/`UiPresenceOverlay*` are new: `UiNodeView` is the
 // atomic per-node subscribing render unit, `UiPresenceOverlay*` is the hover/selection channel that
 // deliberately does NOT live on the document store (see `🟦️Interpreter`'s own header doc).
-import {
-  type UiInterpreterContext,
-  usePluginSurfaceActions,
-  uiNodeDomId,
-  interpretUiNode,
-  InterpretedUiNode,
-  UiNodeView,
-  PluginSurfaceActionsContext,
-  UiPresenceOverlayContext,
-  usePresenceOverlayEntry,
-  type UiPresenceOverlayEntry,
-  type UiPresenceOverlayValue,
-} from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { type UiInterpreterContext, usePluginSurfaceActions, PluginSurfaceActionsContext } from "../../🧱️elements/🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
+import { uiNodeDomId } from "../../🧱️elements/🗣️Interpreter/🪪️stable-dom-ids/🟦️.ts";
+import { interpretUiNode, InterpretedUiNode } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
+import { UiPresenceOverlayContext, usePresenceOverlayEntry, type UiPresenceOverlayEntry, type UiPresenceOverlayValue } from "../../🧱️elements/🗣️Interpreter/👥️presence-overlay/🟦️.ts";
 export {
   type UiInterpreterContext,
   usePluginSurfaceActions,
@@ -596,6 +588,10 @@ export {
   type UiPresenceOverlayValue,
 };
 export { builtNodeToSnapshot, UiDocumentStore, emitIntent, useUiNode, useUiDocumentRoot, useUiDocumentRevision, type UiDocumentState } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
+import { registerElementHostsV1 } from "../../🧱️elements/🪢️ElementHosts/🟦️.ts";
+
+/** 🪢️ The renderer package is a composition root of the element hosts: the Interpreter resolves every scene and extension host through its registry. */
+registerElementHostsV1();
 //#endregion 🔖️UiInterpreter
 
 //#region 🔖️OsShell

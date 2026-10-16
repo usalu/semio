@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalFixture } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
@@ -12,7 +12,7 @@ import type {Mp3Snapshot} from "../../../../🧬️schema/📸️snapshot/🟦�
 import {parseMp3Snapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseMp3Diff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
 import {MP3_SQLITE_SCHEMA,mp3SnapshotToSqliteDatabase,mp3SnapshotFromSqliteDatabase} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 const emptyTrailer=()=>({title:"",artist:"",album:"",year:"",comment:"",track:null,genre:null});
 test("MP3 semantic metadata exposes independent joined text and named trailer edits",async()=>{
@@ -37,7 +37,7 @@ test("MP3 independent GraphQL returns typed metadata content",async()=>{
 import Ajv2020 from "ajv/dist/2020.js";
 import controls from "./🧫️fixtures/🎛️control.json";
 
-import {independentSqliteExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {independentSqliteExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("MP3 complete literal and optional tag extents agree with independent SQLite at copied limits",async()=>{
  expect(controls["largeOctetBytes"]).toEqual(196608);expect(controls["cancelAt"]).toEqual(256);expect(controls["maxOwnedBytes"]).toEqual(65536);
  for(const item of controls.semanticCells.cases){const source=structuredClone(fixture) as unknown as Mp3Snapshot;if(item.id==="absent"){source.frames=[];source.id3v1=null;source.id3v2=null;}else if(item.id==="presentEmpty"){source.frames=[];source.id3v2!.frames=[];source.id3v1=emptyTrailer();}const database=await mp3SnapshotToSqliteDatabase(source);console.log("[DEBUG] MP3 independent logical SQLite extent",item.id,JSON.stringify(independentSqliteExtent(await exportSqliteDatabase(database))));expect(independentSqliteExtent(await exportSqliteDatabase(database))).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:controls.semanticCells.schemaBytes,tableWidths:controls.semanticCells.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:controls.semanticCells.schemaBytes,maxTables:8,maxColumns:15};expect(await mp3SnapshotToSqliteDatabase(source,limits)).toEqual(database);

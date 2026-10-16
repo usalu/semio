@@ -1,12 +1,15 @@
 //! 👷️ Original reserved payload work and whole backing release consume distinct currencies.
 use semio_framework_job::Operation;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
-pub(crate) fn demands(raw:&Vec<u8>,operation:&Option<Operation>)->RetirementDemand{
+#[doc(hidden)]
+pub fn demands(raw:&Vec<u8>,operation:&Option<Operation>)->RetirementDemand{
  RetirementDemand{copy_bytes:if !raw.is_empty(){1}else if raw.capacity()!=0{0}else if operation.is_some(){size_of::<Operation>()}else{0},capacity_bytes:0,release_bytes:if raw.is_empty(){raw.capacity()}else{0},depth:usize::from(!raw.is_empty()||raw.capacity()!=0||operation.is_some())}
 }
 
-pub(crate) fn close(raw:&mut Vec<u8>,operation:&mut Option<Operation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+#[doc(hidden)]
+pub fn close(raw:&mut Vec<u8>,operation:&mut Option<Operation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
  let empty=RetainedCloneProgress::default();
  let demand=demands(raw,operation);
  if demand==RetirementDemand::default(){return Ok(RetainedCloneStep::Complete(empty))}

@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { partitionRefreshWindowInstancesV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { partitionRefreshWindowInstancesV1 } from "../../../../../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const engineRoot = join(import.meta.dir, "..", "..");

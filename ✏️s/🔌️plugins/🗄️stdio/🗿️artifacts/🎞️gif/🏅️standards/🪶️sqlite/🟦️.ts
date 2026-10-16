@@ -1,7 +1,7 @@
 /** 🎨️ Shared indexed-palette primitives for the individually authored GIF dialects. */
 import type { GifColorTable } from "../7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
-import { ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteBoolean,artifactSqliteOrderedRows,type ArtifactSqliteOptions } from "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteRow } from "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteBoolean,artifactSqliteOrderedRows,type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 🔢️ Requires one exact unsigned source-field width. */
 export function gifInteger(value:number,maximum=4294967295):bigint {if(!Number.isSafeInteger(value)||value<0||value>maximum)throw new Error("GIF integer exceeds its declared width");return BigInt(value);}

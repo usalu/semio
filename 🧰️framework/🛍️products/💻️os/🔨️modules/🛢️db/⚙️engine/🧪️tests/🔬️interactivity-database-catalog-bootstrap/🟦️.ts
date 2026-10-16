@@ -1,4 +1,4 @@
-import { interactivityDatabaseCatalogBootstrapFailures } from "../../../../../../../../📜️script.ts";
+import { interactivityDatabaseCatalogBootstrapFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity database catalog bootstrap policy assertions. */
 export function interactivityDatabaseCatalogBootstrapSelfTests(): void {

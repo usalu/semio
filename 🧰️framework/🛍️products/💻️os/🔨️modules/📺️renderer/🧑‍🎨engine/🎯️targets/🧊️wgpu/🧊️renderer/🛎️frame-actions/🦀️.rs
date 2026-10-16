@@ -1,45 +1,41 @@
 //! 🛎️ Frame actions: runtime dispatch cursor, frame action owners, deferred cursor, maintenance authority and runtime apply.
 use super::*;
 
-#[path = "🔁️runtime-apply/🦀️.rs"]
-mod runtime_apply;
-pub(crate) use runtime_apply::*;
-
 #[path = "🎮️interaction-state/🦀️.rs"]
 mod interaction_state;
-pub(crate) use interaction_state::*;
+pub use interaction_state::*;
 
 //#region 📮️RuntimeMailbox
 
-pub(crate) struct RuntimeDispatchCursor {
-    pub(crate) events: ui_host::DrainedEvents,
-    pub(crate) generation: u64,
+pub struct RuntimeDispatchCursor {
+    pub events: ui_host::DrainedEvents,
+    pub generation: u64,
     discrete_index: usize,
-    pub(crate) original: Option<RuntimeDispatchSource>,
-    pub(crate) inflight: Option<ui_render::DispatchEvent>,
+    pub original: Option<RuntimeDispatchSource>,
+    pub inflight: Option<ui_render::DispatchEvent>,
 }
 
-pub(crate) struct RuntimeDispatchSource{original:semio_framework_job::OriginalCallerSourceLoan,epoch:u64}
+pub struct RuntimeDispatchSource{original:semio_framework_job::OriginalCallerSourceLoan,epoch:u64}
 impl RuntimeDispatchSource{
-    pub(crate) fn admit(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source requires its actual admitted input epoch"))?;let parent=cx.original_source_parent()?;Ok(parent.admit_loan(cx)?.map(|original|Self{original,epoch}))}
+    pub fn admit(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source requires its actual admitted input epoch"))?;let parent=cx.original_source_parent()?;Ok(parent.admit_loan(cx)?.map(|original|Self{original,epoch}))}
     fn original_clock_source(&self)->Result<(u64,fn()->Option<u64>,u64),semio_framework_value::ValueError>{self.original.original_clock_source()}
     fn validate_opportunity(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{let(binding,clock,deadline)=self.original_clock_source()?;if cx.original_clock_binding()!=Some(binding)||!std::ptr::fn_addr_eq(clock,cx.clock_source())||deadline!=cx.original_absolute_deadline_us(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source changed original bound clock or absolute deadline").into())}if !cx.original_source_epoch().is_some_and(|epoch|epoch>=self.epoch){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch cursor incoming epoch precedes its admitted intent").into())}Ok(())}
     fn validate_context(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{self.validate_opportunity(cx)?;self.original.validate_context(cx)}
-    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_opportunity(cx)?;let parent=cx.original_source_parent()?;let _=self.original.close_step(parent,cx)?;Ok(self.original.terminal_is_empty())}
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_opportunity(cx)?;let parent=cx.original_source_parent()?;let _=self.original.close_step(parent,cx)?;Ok(self.original.terminal_is_empty())}
 }
 
 impl RuntimeDispatchCursor {
-    pub(crate) fn new(mut events: ui_host::DrainedEvents,original:RuntimeDispatchSource) -> Self {
+    pub fn new(mut events: ui_host::DrainedEvents,original:RuntimeDispatchSource) -> Self {
         events.metrics = None;
         Self { events, generation: frame_latency::latest_frame_generation(), discrete_index: 0,original:Some(original),inflight:None }
     }
 
-    pub(crate) fn new_for_generation(mut events: ui_host::DrainedEvents, generation: u64,original:RuntimeDispatchSource) -> Self {
+    pub fn new_for_generation(mut events: ui_host::DrainedEvents, generation: u64,original:RuntimeDispatchSource) -> Self {
         events.metrics = None;
         Self { events, generation, discrete_index: 0,original:Some(original),inflight:None }
     }
 
-    pub(crate) fn take_next(&mut self) -> Option<ui_render::DispatchEvent> {
+    pub fn take_next(&mut self) -> Option<ui_render::DispatchEvent> {
         while self.discrete_index < self.events.discrete.len() && self.events.discrete[self.discrete_index].is_none() {
             self.discrete_index += 1;
         }
@@ -63,12 +59,12 @@ impl RuntimeDispatchCursor {
 
     fn events_terminal_is_empty(&self)->bool{self.inflight.is_none()&&self.events.pointer_move.is_none()&&self.events.metrics.is_none()&&self.events.discrete.iter().all(Option::is_none)}
 
-    pub(crate) fn close_inflight_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_inflight_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(event)=self.inflight.as_ref()else{return Ok(true)};self.validate_original(cx)?;let remaining=cx.retained_grant();let released_bytes=dispatch_event_retained_capacity(event);let depth=match event{ui_render::DispatchEvent::Accessibility{..}=>4,_=>2};if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_release_bytes<released_bytes||remaining.maximum_depth<depth{return Ok(false)}
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})?;cx.consume_fuel(1);drop(self.inflight.take());Ok(false)
     }
 
-    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if !self.close_inflight_step(cx)?{return Ok(false)}
         if self.terminal_is_empty(){return Ok(true)}
         if !self.events_terminal_is_empty(){
@@ -80,7 +76,7 @@ impl RuntimeDispatchCursor {
         let original=self.original.as_mut().unwrap();if original.close_step(cx)?{self.original=None}Ok(self.terminal_is_empty())
     }
 
-    pub(crate) fn terminal_is_empty(&self)->bool{self.events_terminal_is_empty()&&self.original.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.events_terminal_is_empty()&&self.original.is_none()}
 }
 
 fn dispatch_event_retained_capacity(event:&ui_render::DispatchEvent)->usize{
@@ -100,23 +96,23 @@ struct FrameActionEnvelope {
 }
 
 /// 🧾️ Routes a renderer-local completion to the exact owner that admitted it.
-pub(crate) fn settle_renderer_action_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, outcome: engine_canvas::TextEditorActionOutcome<'_>) {
+pub fn settle_renderer_action_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, outcome: semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome<'_>) {
     match receipt.source {
-        ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor => engine_canvas::settle_text_editor_action_receipt(receipt, outcome),
+        ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor => semio_framework_os_renderer_wgpu_engine_text::text_editor::settle_text_editor_action_receipt(receipt, outcome),
         ui_wgpu::wgpu::ActionQueueReceiptSource::RetainedInput => {
-            let discard = matches!(outcome, engine_canvas::TextEditorActionOutcome::Refused(reason) if shell::dispatch_refusal_discards_input_draft(reason));
-            interpreter::settle_retained_input_receipt(receipt, discard);
+            let discard = matches!(outcome, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(reason) if semio_framework_os_renderer_wgpu_shell_prefs::dispatch_refusal_discards_input_draft(reason));
+            semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::settle_retained_input_receipt(receipt, discard);
         }
     }
 }
 
 /// 🛟️ Settles the checked-out receipt even when its async dispatch future is cancelled.
-pub(crate) struct FrameActionReceiptOwner {
-    pub(crate) receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
+pub struct FrameActionReceiptOwner {
+    pub receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
 }
 
 impl FrameActionReceiptOwner {
-    pub(crate) fn settle(&mut self, outcome: engine_canvas::TextEditorActionOutcome<'_>) {
+    pub fn settle(&mut self, outcome: semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome<'_>) {
         if let Some(receipt) = self.receipt.take() {
             settle_renderer_action_receipt(receipt, outcome);
         }
@@ -125,14 +121,14 @@ impl FrameActionReceiptOwner {
 
 impl Drop for FrameActionReceiptOwner {
     fn drop(&mut self) {
-        self.settle(engine_canvas::TextEditorActionOutcome::Cancelled);
+        self.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
     }
 }
 
 impl FrameActionEnvelope {
     fn cancel(self) {
         if let Some(receipt) = self.receipt {
-            settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+            settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
         }
     }
 }
@@ -163,11 +159,11 @@ impl FrameActionBatchOwner {
     }
 }
 
-pub(crate) struct FrameActionOwners {
-    pub(crate) slots: [Option<FrameActionEnvelope>; WORLD3D_DEADLINE_CAPACITY],
+pub struct FrameActionOwners {
+    pub slots: [Option<FrameActionEnvelope>; WORLD3D_DEADLINE_CAPACITY],
     head: usize,
-    pub(crate) len: usize,
-    pub(crate) batch: Option<FrameActionBatchOwner>,
+    pub len: usize,
+    pub batch: Option<FrameActionBatchOwner>,
 }
 
 impl Default for FrameActionOwners {
@@ -183,7 +179,7 @@ enum FrameActionBatchStage {
 }
 
 impl FrameActionOwners {
-    pub(crate) fn try_push_queued(&mut self, action: ui_wgpu::wgpu::QueuedActionDescriptor) -> Result<(), ui_wgpu::wgpu::QueuedActionDescriptor> {
+    pub fn try_push_queued(&mut self, action: ui_wgpu::wgpu::QueuedActionDescriptor) -> Result<(), ui_wgpu::wgpu::QueuedActionDescriptor> {
         if self.batch.is_some() || self.len == self.slots.len() {
             return Err(action);
         }
@@ -197,7 +193,7 @@ impl FrameActionOwners {
         Ok(())
     }
 
-    pub(crate) fn try_push_queued_pair(&mut self, first: ui_wgpu::wgpu::QueuedActionDescriptor, second: ui_wgpu::wgpu::QueuedActionDescriptor) -> Result<(), (ui_wgpu::wgpu::QueuedActionDescriptor, ui_wgpu::wgpu::QueuedActionDescriptor)> {
+    pub fn try_push_queued_pair(&mut self, first: ui_wgpu::wgpu::QueuedActionDescriptor, second: ui_wgpu::wgpu::QueuedActionDescriptor) -> Result<(), (ui_wgpu::wgpu::QueuedActionDescriptor, ui_wgpu::wgpu::QueuedActionDescriptor)> {
         if self.batch.is_some() || self.len.checked_add(2).is_none_or(|len| len > self.slots.len()) {
             return Err((first, second));
         }
@@ -212,7 +208,7 @@ impl FrameActionOwners {
         Ok(())
     }
 
-    pub(crate) fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor> {
+    pub fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor> {
         if self.batch.is_some() || self.len == self.slots.len() {
             return Err(action);
         }
@@ -234,7 +230,7 @@ impl FrameActionOwners {
         true
     }
 
-    pub(crate) fn staged_batch_remaining(&self) -> Option<usize> {
+    pub fn staged_batch_remaining(&self) -> Option<usize> {
         self.batch.as_ref().map(FrameActionBatchOwner::remaining)
     }
 
@@ -312,7 +308,7 @@ impl FrameActionOwners {
             match input.take_action_step() {
                 Ok(Some(action)) => {
                     if let Some(receipt) = action.receipt() {
-                        settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+                        settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
                     }
                     batch.source_remaining -= 1;
                     return Some(Ok(FrameInputActionStep::Pending));
@@ -325,7 +321,7 @@ impl FrameActionOwners {
         Some(Err(fault))
     }
 
-    pub(crate) fn pop_front(&mut self) -> Option<FrameActionEnvelope> {
+    pub fn pop_front(&mut self) -> Option<FrameActionEnvelope> {
         if self.len == 0 {
             return None;
         }
@@ -335,7 +331,7 @@ impl FrameActionOwners {
         Some(action)
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         if let Some(batch) = self.batch.as_mut() {
             if batch.len > 0 {
                 batch.len -= 1;
@@ -354,7 +350,7 @@ impl FrameActionOwners {
         true
     }
 
-    pub(crate) fn cancel_correlation(&mut self, token: std::num::NonZeroU64) {
+    pub fn cancel_correlation(&mut self, token: std::num::NonZeroU64) {
         for action in self.slots.iter_mut().flatten().chain(self.batch.iter_mut().flat_map(|batch| batch.slots.iter_mut().flatten())) {
             if action.receipt.is_some_and(|receipt| receipt.token == token) {
                 action.cancelled = true;
@@ -362,13 +358,13 @@ impl FrameActionOwners {
         }
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len == 0 && self.batch.is_none()
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FrameInputActionStep {
+pub enum FrameInputActionStep {
     Empty,
     Deferred,
     Pending,
@@ -382,7 +378,7 @@ fn fail_frame_action_batch(input: &mut InputState<ActionDescriptor>, actions: &m
     actions.retire_failed_batch_step(input).unwrap_or(Err(fault))
 }
 
-pub(crate) fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, actions: &mut FrameActionOwners) -> Result<FrameInputActionStep, &'static str> {
+pub fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, actions: &mut FrameActionOwners) -> Result<FrameInputActionStep, &'static str> {
     if let Some(step) = actions.retire_failed_batch_step(input) {
         return step;
     }
@@ -408,7 +404,7 @@ pub(crate) fn transfer_frame_input_action(input: &mut InputState<ActionDescripto
     };
     if !actions.consume_batch_source() {
         if let Some(receipt) = action.receipt() {
-            settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+            settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
         }
         return fail_frame_action_batch(input, actions, "bounded frame input action batch source accounting faulted");
     }
@@ -417,7 +413,7 @@ pub(crate) fn transfer_frame_input_action(input: &mut InputState<ActionDescripto
         Ok(action) => FrameActionEnvelope::from(action),
         Err(_) => {
             if let Some(receipt) = receipt {
-                settle_renderer_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+                settle_renderer_action_receipt(receipt, semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Cancelled);
             }
             return fail_frame_action_batch(input, actions, "bounded frame input action failed materialization");
         }
@@ -429,25 +425,25 @@ pub(crate) fn transfer_frame_input_action(input: &mut InputState<ActionDescripto
     }
 }
 
-pub(crate) struct FrameDeferredCursor {
-    pub(crate) actions: FrameActionOwners,
-    pub(crate) pump_sync: bool,
-    pub(crate) flush_tutorial: bool,
-    pub(crate) shell_maintenance: bool,
-    pub(crate) settle: bool,
-    pub(crate) phase: u8,
-    pub(crate) generation: u64,
-    pub(crate) cancel: semio_framework_async::CancelToken,
-    pub(crate) closing: bool,
+pub struct FrameDeferredCursor {
+    pub actions: FrameActionOwners,
+    pub pump_sync: bool,
+    pub flush_tutorial: bool,
+    pub shell_maintenance: bool,
+    pub settle: bool,
+    pub phase: u8,
+    pub generation: u64,
+    pub cancel: semio_framework_async::CancelToken,
+    pub closing: bool,
 }
 
 /// 🔁️ How often a frame owes the shell's sync pump (`ShellState::pump_sync_events`: the document actors'
 /// events, the directory lane, the hub creation door, the agent bridge) — on BOTH builds. The browser build
 /// used to skip it (the cadence was native-only), so a browser document actor reached `Live` on the wire
 /// while its shell never heard a `Status`, `Presence` or `RemoteMutations` event (ticket 26/09/23 WG7, run s12b).
-pub(crate) const SHELL_SYNC_PUMP_INTERVAL_MS: f64 = 100.0;
+pub const SHELL_SYNC_PUMP_INTERVAL_MS: f64 = 100.0;
 
-pub(crate) enum FrameDeferredWork {
+pub enum FrameDeferredWork {
     ShellMaintenance,
     PumpSync,
     Action(FrameActionEnvelope),
@@ -459,11 +455,11 @@ pub(crate) enum FrameDeferredWork {
 }
 
 impl FrameDeferredCursor {
-    pub(crate) fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool, settle: bool, generation: u64, cancel: semio_framework_async::CancelToken) -> Self {
+    pub fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool, settle: bool, generation: u64, cancel: semio_framework_async::CancelToken) -> Self {
         Self { actions, pump_sync, flush_tutorial, shell_maintenance, settle, phase: 0, generation, cancel, closing: false }
     }
 
-    pub(crate) fn checkout_site(&self) -> &'static str {
+    pub fn checkout_site(&self) -> &'static str {
         if self.phase == 0 && self.shell_maintenance {
             "frame-deferred-shell-maintenance"
         } else if self.phase <= 1 && self.pump_sync {
@@ -479,7 +475,7 @@ impl FrameDeferredCursor {
         }
     }
 
-    pub(crate) fn take_next(&mut self) -> Option<FrameDeferredWork> {
+    pub fn take_next(&mut self) -> Option<FrameDeferredWork> {
         if self.phase == 0 {
             self.phase = 1;
             if self.shell_maintenance {
@@ -510,11 +506,11 @@ impl FrameDeferredCursor {
         None
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         !self.closing && self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial) && (self.phase > 3 || !self.settle)
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         if !self.actions.close_step() {
             return false;
         }
@@ -539,11 +535,11 @@ impl FrameDeferredCursor {
         true
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    #[cfg(any(not(target_arch = "wasm32"), test))]
+    #[cfg(any(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
     fn return_shell_maintenance(&mut self) {
         self.phase = 0;
         self.shell_maintenance = true;
@@ -552,9 +548,9 @@ impl FrameDeferredCursor {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameExecutionOwnerCell<T> {
-    pub(crate) state: std::sync::atomic::AtomicU8,
-    pub(crate) owner: std::cell::UnsafeCell<Option<T>>,
+pub struct FrameExecutionOwnerCell<T> {
+    pub state: std::sync::atomic::AtomicU8,
+    pub owner: std::cell::UnsafeCell<Option<T>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -565,16 +561,16 @@ unsafe impl<T: Send> Sync for FrameExecutionOwnerCell<T> {}
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<T> FrameExecutionOwnerCell<T> {
-    pub(crate) fn new(owner: T) -> Self {
+    pub fn new(owner: T) -> Self {
         Self { state: std::sync::atomic::AtomicU8::new(0), owner: std::cell::UnsafeCell::new(Some(owner)) }
     }
 
-    pub(crate) fn try_take(&self) -> Option<T> {
+    pub fn try_take(&self) -> Option<T> {
         self.state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).ok()?;
         unsafe { (&mut *self.owner.get()).take() }
     }
 
-    pub(crate) fn try_restore(&self, owner: T) -> Result<(), T> {
+    pub fn try_restore(&self, owner: T) -> Result<(), T> {
         if self.state.load(Ordering::Acquire) != 1 {
             return Err(owner);
         }
@@ -587,7 +583,7 @@ impl<T> FrameExecutionOwnerCell<T> {
         Ok(())
     }
 
-    pub(crate) fn restore_taken(&self, owner: T) {
+    pub fn restore_taken(&self, owner: T) {
         unsafe {
             *self.owner.get() = Some(owner);
         }
@@ -596,10 +592,10 @@ impl<T> FrameExecutionOwnerCell<T> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameExecutionRegistry<T> {
-    pub(crate) state: std::sync::atomic::AtomicU8,
-    pub(crate) generation: AtomicU64,
-    pub(crate) owner: std::cell::UnsafeCell<Option<Arc<FrameExecutionOwnerCell<T>>>>,
+pub struct FrameExecutionRegistry<T> {
+    pub state: std::sync::atomic::AtomicU8,
+    pub generation: AtomicU64,
+    pub owner: std::cell::UnsafeCell<Option<Arc<FrameExecutionOwnerCell<T>>>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -616,11 +612,11 @@ impl<T> FrameExecutionRegistry<T> {
     const ABANDONED: u8 = 4;
     const RECOVERING: u8 = 5;
 
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { state: std::sync::atomic::AtomicU8::new(0), generation: AtomicU64::new(0), owner: std::cell::UnsafeCell::new(None) }
     }
 
-    pub(crate) fn try_publish(&self, generation: u64, owner: Arc<FrameExecutionOwnerCell<T>>) -> Result<(), Arc<FrameExecutionOwnerCell<T>>> {
+    pub fn try_publish(&self, generation: u64, owner: Arc<FrameExecutionOwnerCell<T>>) -> Result<(), Arc<FrameExecutionOwnerCell<T>>> {
         if self.state.compare_exchange(0, Self::WRITING, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(owner);
         }
@@ -632,7 +628,7 @@ impl<T> FrameExecutionRegistry<T> {
         Ok(())
     }
 
-    pub(crate) fn try_begin(&self, generation: u64) -> Option<Arc<FrameExecutionOwnerCell<T>>> {
+    pub fn try_begin(&self, generation: u64) -> Option<Arc<FrameExecutionOwnerCell<T>>> {
         if self.generation.load(Ordering::Acquire) != generation {
             return None;
         }
@@ -640,7 +636,7 @@ impl<T> FrameExecutionRegistry<T> {
         unsafe { (&*self.owner.get()).as_ref().cloned() }
     }
 
-    pub(crate) fn abandon(&self, generation: u64) -> bool {
+    pub fn abandon(&self, generation: u64) -> bool {
         if self.generation.load(Ordering::Acquire) != generation {
             return false;
         }
@@ -651,7 +647,7 @@ impl<T> FrameExecutionRegistry<T> {
         self.state.compare_exchange(state, Self::ABANDONED, Ordering::AcqRel, Ordering::Acquire).is_ok()
     }
 
-    pub(crate) fn complete(&self, generation: u64) -> bool {
+    pub fn complete(&self, generation: u64) -> bool {
         if self.generation.load(Ordering::Acquire) != generation || self.state.compare_exchange(Self::RUNNING, Self::WRITING, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
         }
@@ -662,7 +658,7 @@ impl<T> FrameExecutionRegistry<T> {
         true
     }
 
-    pub(crate) fn reclaim_rejected(&self, generation: u64, fallback: Arc<FrameExecutionOwnerCell<T>>) -> Arc<FrameExecutionOwnerCell<T>> {
+    pub fn reclaim_rejected(&self, generation: u64, fallback: Arc<FrameExecutionOwnerCell<T>>) -> Arc<FrameExecutionOwnerCell<T>> {
         if self.generation.load(Ordering::Acquire) != generation {
             return fallback;
         }
@@ -678,7 +674,7 @@ impl<T> FrameExecutionRegistry<T> {
         }
     }
 
-    pub(crate) fn try_take_abandoned(&self) -> Option<(u64, Arc<FrameExecutionOwnerCell<T>>)> {
+    pub fn try_take_abandoned(&self) -> Option<(u64, Arc<FrameExecutionOwnerCell<T>>)> {
         self.state.compare_exchange(Self::ABANDONED, Self::RECOVERING, Ordering::AcqRel, Ordering::Acquire).ok()?;
         let generation = self.generation.load(Ordering::Acquire);
         let owner = unsafe { (&mut *self.owner.get()).take() }?;
@@ -689,18 +685,18 @@ impl<T> FrameExecutionRegistry<T> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameMaintenanceAuthority {
-    pub(crate) state: std::sync::atomic::AtomicU8,
-    pub(crate) generation: AtomicU64,
+pub struct FrameMaintenanceAuthority {
+    pub state: std::sync::atomic::AtomicU8,
+    pub generation: AtomicU64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameMaintenanceAuthority {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { state: std::sync::atomic::AtomicU8::new(0), generation: AtomicU64::new(0) }
     }
 
-    pub(crate) fn try_reserve(&self, generation: u64) -> bool {
+    pub fn try_reserve(&self, generation: u64) -> bool {
         if self.state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
         }
@@ -708,11 +704,11 @@ impl FrameMaintenanceAuthority {
         true
     }
 
-    pub(crate) fn is_live(&self, generation: u64) -> bool {
+    pub fn is_live(&self, generation: u64) -> bool {
         self.state.load(Ordering::Acquire) == 1 && self.generation.load(Ordering::Acquire) == generation
     }
 
-    pub(crate) fn release(&self, generation: u64) -> bool {
+    pub fn release(&self, generation: u64) -> bool {
         if !self.is_live(generation) {
             return false;
         }
@@ -723,7 +719,7 @@ impl FrameMaintenanceAuthority {
 
 /// 🛑️ Classifies one maintenance terminal guard before any field work moves.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn frame_maintenance_terminal_fault(cancelled: bool, stale: bool, deadline_exceeded: bool) -> Option<&'static str> {
+pub fn frame_maintenance_terminal_fault(cancelled: bool, stale: bool, deadline_exceeded: bool) -> Option<&'static str> {
     if cancelled {
         Some("frame maintenance cancelled")
     } else if stale {
@@ -736,20 +732,20 @@ pub(crate) fn frame_maintenance_terminal_fault(cancelled: bool, stale: bool, dea
 }
 
 //#endregion 📮️RuntimeMailbox
-pub(crate) const WORLD3D_DEADLINE_CAPACITY: usize = 256;
-pub(crate) const WORLD3D_DEADLINE_ID_BYTES: usize = 256;
+pub const WORLD3D_DEADLINE_CAPACITY: usize = 256;
+pub const WORLD3D_DEADLINE_ID_BYTES: usize = 256;
 
 //#region 📥️FrameBuildInputs
 /// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub(crate) struct FrameBuildInputs {
+pub struct FrameBuildInputs {
     pub wheel_zoom_deadline_ms: f64,
     pub now_ms: f64,
 }
 
 /// 📤️ The worker's fixed scalar candidate, revalidated against live state before use.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub(crate) struct FrameDirectives {
+pub struct FrameDirectives {
     pub wheel_zoom_deadline_cleared: bool,
 }
 //#endregion 📥️FrameBuildInputs

@@ -1,4 +1,4 @@
-import { toolJobFixedOperationRegistryExact } from "../../../../../📜️script.ts";
+import { toolJobFixedOperationRegistryExact } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/⚙️fixed-operation/🟦️.ts";
 
 /** 🧪️ Executes tool job fixed operation registry policy assertions. */
 export function toolJobFixedOperationRegistrySelfTests(source: string): number {

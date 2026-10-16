@@ -1,9 +1,9 @@
 /** 📽️ Handwritten slide owners, shape details and their actual shared DocBlock collections. */
 import type {SemioPresentationSnapshot,SlideShape,PlaceholderKind} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {projectBlockCollection,reconstructBlockCollections,type DocSqliteTables} from "../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_PRESENTATION_SQLITE_SCHEMA=`CREATE TABLE semio_presentation_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_presentation_master (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL);
 CREATE TABLE semio_presentation_layout (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_presentation_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, master_id INTEGER NOT NULL REFERENCES semio_presentation_master(id));

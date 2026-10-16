@@ -6,6 +6,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ownedScriptRoutes, resolveOwnedScriptRoute } from "../../🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
+import { policyRootScriptModulePaths } from "../../⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts";
+import { rootScriptSources } from "../📎️root-script-sources/🟦️.ts";
 import fixture from "../🧫️fixtures/🧱️owned-script-routes/🔣️.json";
 import schema from "../../🧬️schema/🧱️owned-script-routes/🔣️.json";
 
@@ -35,20 +37,21 @@ test("real contributions bind Nx package commands and root coordinator imports n
     expect(project.targets[route.target].options.command).toContain("📜️script.ts");
     expect(project.targets[route.target].options.cwd).toBe(route.packageRoot);
   }
-  const source = readFileSync(join(root, "📜️script.ts"), "utf8"), ast = ts.createSourceFile("script.ts", source, ts.ScriptTarget.Latest, true);
   const imports: string[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) imports.push(node.moduleSpecifier.text);
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) imports.push(node.arguments[0].text);
     ts.forEachChild(node, visit);
   };
-  visit(ast);
+  for (const { path, text } of rootScriptSources(root)) visit(ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true));
   expect(imports.filter((specifier) => fixture.removedOwnerPrefixes.some(owner=>specifier.startsWith("./"+owner+"/")) || specifier.includes("/🗿️artifacts/"))).toEqual([]);
 }, 60_000);
 
 test("every real contribution is reachable from a dispatcher call site and no verify route shadows a root verify command", () => {
   const root = findWorkspaceRoot(import.meta.dir), routes = ownedScriptRoutes(root);
   const scripts = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "--", "📜️script.ts", "*/📜️script.ts"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 }).split("\n").filter((path) => path && !path.includes("/🎫️tickets/"));
+  const rootPaths = new Set(policyRootScriptModulePaths(root));
+  for (const path of rootPaths) if (!scripts.includes(path)) scripts.push(path);
   const dispatchers: { prefix: string[]; open: boolean; site: string }[] = [];
   let builtins: string[] = [];
   for (const path of scripts) {
@@ -60,12 +63,12 @@ test("every real contribution is reachable from a dispatcher call site and no ve
         for (const element of elements) { if (!ts.isStringLiteral(element)) break; prefix.push(element.text); }
         dispatchers.push({ prefix, open: prefix.length < elements.length, site: path });
       }
-      if (path === "📜️script.ts" && ts.isClassDeclaration(node) && node.name?.text === "VerifyScript") builtins = [...node.getText().matchAll(/segments\[0\] === "([^"]+)"/gu)].map((match) => match[1]!);
+      if (rootPaths.has(path) && ts.isClassDeclaration(node) && node.name?.text === "VerifyScript") builtins = [...node.getText().matchAll(/segments\[0\] === "([^"]+)"/gu)].map((match) => match[1]!);
       ts.forEachChild(node, visit);
     };
     visit(ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true));
   }
-  expect(dispatchers.some(({ prefix, open, site }) => site === "📜️script.ts" && open && prefix.join(" ") === "verify")).toBe(true);
+  expect(dispatchers.some(({ prefix, open, site }) => rootPaths.has(site) && open && prefix.join(" ") === "verify")).toBe(true);
   expect(builtins).toContain("taxonomy");
   const reachable = (command: readonly string[]): boolean => dispatchers.some(({ prefix, open }) => prefix.length > 0 && prefix.slice(0, command.length).every((word, index) => command[index] === word) && (open ? command.length >= prefix.length : command.length <= prefix.length));
   expect(routes.filter((route) => !reachable(route.command)).map((route) => `${route.project}:${route.target} ${route.command.join(" ")}`)).toEqual([]);

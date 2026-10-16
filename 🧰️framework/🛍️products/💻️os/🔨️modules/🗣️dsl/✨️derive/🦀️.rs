@@ -862,12 +862,12 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
             pub const __DSL_ENVELOPE_ID: &'static str = #envelope_id;
             pub const __DSL_EXTENSION: &'static str = #suffix;
             /// 🏭️ Forwards the actual DslRecord controlled metadata factories.
-            pub fn __artifact_record_spec_producer() -> ::semio_framework_os_kernel::os_store::RecordSpecProducer {
+            pub fn __artifact_record_spec_producer() -> ::semio_framework_dsl_record::RecordSpecProducer {
                 Self::__dsl_spec_producer()
             }
             /// 🫳️ Binds the same DslRecord authored static declaration.
-            pub fn __artifact_borrowed_record_spec_producer() -> ::semio_framework_os_kernel::os_store::BorrowedRecordSpecProducer {
-                ::semio_framework_os_kernel::os_store::BorrowedRecordSpecProducer::of::<Self>()
+            pub fn __artifact_borrowed_record_spec_producer() -> ::semio_framework_dsl_record::BorrowedRecordSpecProducer {
+                ::semio_framework_dsl_record::BorrowedRecordSpecProducer::of::<Self>()
             }
         }
     }.into()

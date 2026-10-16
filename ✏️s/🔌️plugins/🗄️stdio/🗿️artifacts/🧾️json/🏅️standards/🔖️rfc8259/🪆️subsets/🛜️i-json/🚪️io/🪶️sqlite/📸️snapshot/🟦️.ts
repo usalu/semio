@@ -1,10 +1,10 @@
-import {artifactSqliteValueControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {artifactSqliteValueControl} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 /** 🛡️ Borrowed I-JSON admission retains the entire owned JSON syntax domain. */
 import type {JsonSnapshot,JsonValue} from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import {jsonNumberMeaning} from "../../../../🧱️base/🧬️schema/📸️snapshot/🔢️number/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import type {SqliteDatabase} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import type {SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
+import {artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 /** 🧭️ An owned named-profile diagnostic without foreign runtime types. */
 export interface IJsonSqliteDiagnostic{readonly code:string;readonly severity:"error"|"warning";readonly message:string}
 /** 🔬️ Three ordered, iterative native-domain passes with controlled work. */

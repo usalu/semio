@@ -25,7 +25,7 @@ test("Energy independent SQLite retains duplicate unresolved domain IDs and raw 
 import {fixture} from "./🧫️corpus/🟦️.ts";
 import { energyModelToSqliteDatabase, energyModelFromSqliteDatabase } from "../🟦️.ts";
 import type {EnergyModelSnapshot,EnergyModelArtifact,EnergyModelDiff} from "../../../../../../../../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import {writeFileSync,mkdtempSync,rmSync} from "node:fs";
 import {join} from "node:path";
 test("Energy artifact and sparse diff consume the same exact typed persisted owner",async()=>{

@@ -2,7 +2,7 @@
 export type SemioTopology = "points" | "lines" | "lineStrip" | "triangles" | "triangleStrip" | "triangleFan";
 
 import type {SemioPoint3,SemioUv,SemioRgba} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
-import type {Binary32} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary32} from "@semio-tech/framework/value/ieee754";
 export type {SemioPoint3,SemioUv,SemioRgba} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export interface SemioPrimitive {

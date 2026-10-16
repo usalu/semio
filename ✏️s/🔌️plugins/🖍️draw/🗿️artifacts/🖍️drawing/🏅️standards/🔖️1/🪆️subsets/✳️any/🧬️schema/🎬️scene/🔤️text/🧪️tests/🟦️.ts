@@ -1,4 +1,4 @@
-import {unicodeSourceUrl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts";
+import {unicodeSourceUrl} from "@semio-tech/framework/2d/text/font/shape/unicode";
 import {drawingFontCatalogFamily,parseDrawingFontFamily,type DrawingFontFamily} from "../../../📝️text/🔤️family/🟦️.ts";
 /** 🧫️ Real font outlines feed the original scene paint and vector/raster consumers. */
 import {test,expect} from "bun:test";
@@ -12,7 +12,7 @@ import pathSchema from "../../../🧮️geometry/📷️raster/🧬️schema/�
 import {DocumentTextJob} from "../🟦️.ts";
 import {prepareDocumentVector} from "../../📋️prepare/🟦️.ts";
 import vectorRows from "../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import {exportDrawingPng} from "../../../../✏️editor/🎮️commands/📤️export-document/🟦️.ts";
 import type {DocumentScenePlan} from "../../📋️prepare/🟦️.ts";
 import {preparedSceneNodes} from "../../👁️view/🟦️.ts";
@@ -22,7 +22,7 @@ import {resolvedSceneInput} from "../../📋️prepare/🟦️.ts";
 import {RasterSceneJob} from "../../📷️raster/🟦️.ts";
 import {SvgWriteJob} from "../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts";
 import {PdfWriteJob} from "../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🟦️.ts";
-import {loadBuiltinFontSources} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";
+import {loadBuiltinFontSources} from "@semio-tech/framework/2d/text/font/catalog";
 const unicodeBytes=new Uint8Array(await Bun.file(unicodeSourceUrl).arrayBuffer());
 const sources=(family:DrawingFontFamily="anta")=>loadBuiltinFontSources(drawingFontCatalogFamily(family),async source=>new Uint8Array(await Bun.file(source.url).arrayBuffer()));
 const plan=(row:typeof rows[number]):DocumentScenePlan=>({assets:[],nodes:[{id:row.name,sourcePath:[0],lockedAncestors:0,groups:[],transform:row.transform as [number,number,number,number,number,number],opacity:1,blendMode:"normal",visible:true,content:{kind:"text",fontFamily:parseDrawingFontFamily(row.fontFamily),content:row.content,x:row.x,y:row.y,size:row.size,fillRule:row.fillRule as "nonzero",fill:row.fill as any,stroke:row.stroke}}]});

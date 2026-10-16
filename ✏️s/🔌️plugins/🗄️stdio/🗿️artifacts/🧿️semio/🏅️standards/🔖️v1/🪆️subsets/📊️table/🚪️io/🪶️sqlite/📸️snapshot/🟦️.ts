@@ -1,8 +1,8 @@
 /** 📊️ Native named columns, ordered rows and genuinely shared typed SemioValue cells. */
 import type {SemioTableSnapshot,SemioTableColumn,SemioTableCellKind,SemioTableRow} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {projectSemioValueTree,reconstructSemioValueForest,type ValueSqliteTables} from "../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_TABLE_SQLITE_SCHEMA=`CREATE TABLE semio_table_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_table_column (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_table_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), name TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('null','bool','int','float','str','bytes')));
 CREATE TABLE semio_table_row (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_table_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0));

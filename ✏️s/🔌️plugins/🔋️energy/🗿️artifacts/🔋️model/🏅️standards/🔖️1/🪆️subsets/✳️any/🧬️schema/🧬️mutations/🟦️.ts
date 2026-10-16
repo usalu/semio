@@ -1,4 +1,4 @@
-import {parseArtifactRef,type ArtifactRef} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import {parseArtifactRef,type ArtifactRef} from "@semio-tech/framework/schema/artifact-reference";
 /** 🧬️ Energy-model mutation vocabulary — TypeScript twin of `🧬️mutations/🦀️.rs`.
  *
  *  `EnergyModelMutation` carries `#[value(tag = "mutation", rename_all = "camelCase")]`, so the

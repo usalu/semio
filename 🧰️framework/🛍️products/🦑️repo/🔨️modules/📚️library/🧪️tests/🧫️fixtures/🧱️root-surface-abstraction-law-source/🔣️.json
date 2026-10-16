@@ -140,8 +140,29 @@
   ],
   "consumers": [
     {
-      "path": "📜️script.ts",
-      "owners": ["🔍️discovery/🗺️surface/🟦️.ts", "🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts", "🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts", "📏️ownership/🏛️abstraction/✅️verification/🟦️.ts", "🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts"]
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📚️examples/🟦️.ts",
+      "owners": [
+        "🔍️discovery/🗺️surface/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts",
+      "owners": [
+        "🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🟦️.ts",
+      "owners": [
+        "🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
+      "owners": [
+        "📏️ownership/🏛️abstraction/✅️verification/🟦️.ts",
+        "🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts"
+      ]
     }
   ],
   "sourceData": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧬️schema/🔣️.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"],

@@ -1,6 +1,6 @@
 /** 🧫️ Explicit test-only ownership of the independent finite Serde fixture. */
 import corpus from "../🧫️fixtures/🔣️.json";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 import type {EnergyModelSnapshot,EnergyVertex} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 const f=binary64;
 function vertex(v:readonly number[]):EnergyVertex{if(v.length!==3)throw Error("fixture vertex");return[f(v[0]!),f(v[1]!),f(v[2]!)]}

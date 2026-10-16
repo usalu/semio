@@ -4,7 +4,7 @@ import type { PdfEmbeddedFile,PdfOutputIntent,PdfEncryption,PdfViewerPreferences
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean } from "../🧩️entity/🟦️.ts";
 import { writePdfDate,readPdfDate } from "./📆️date/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 /** 🪟️ Verify the six explicitly authored viewer mode names. */
 export function pdfPageMode(value:string|null|undefined):PdfPageMode|null{switch(value){case undefined:case null:return null;case "useNone":return "useNone";case "useOutlines":return "useOutlines";case "useThumbs":return "useThumbs";case "fullScreen":return "fullScreen";case "useOc":return "useOc";case "useAttachments":return "useAttachments";default:throw new Error("Unknown PDF page mode");}}

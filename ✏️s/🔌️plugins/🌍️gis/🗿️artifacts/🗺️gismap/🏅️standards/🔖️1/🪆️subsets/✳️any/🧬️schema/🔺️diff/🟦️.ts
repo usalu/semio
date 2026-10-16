@@ -1,5 +1,5 @@
 /** 🔺️ Map document deltas reuse the canonical artifact and feature records. */
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseGisMapArtifact, parseGisMapFeatures, type GisMapArtifact, type GisMapFeature } from "../🟦️.ts";
 import { parseGisMapFeaturePatch, type GisMapFeaturePatch } from "../📍️feature/🟦️.ts";
 export type { GisMapArtifact, GisMapFeature } from "../🟦️.ts";

@@ -1,4 +1,16 @@
 use super::*;
+use std::sync::Arc;
+use semio_framework::kernel::Budget;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_plugin_host_guest_runtime::{GuestRuntimes, PackageRef};
+use semio_framework_plugin_guest_contract::{JobStep, PluginHostError};
+use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
+use semio_framework_plugin_host_post_turn_relay::PluginInstanceHandle;
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_plugin_host_guest_runtime::MockGuestRuntime;
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_plugin_host_post_turn_relay::test_relay_wake_authority;
+use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
 
 async fn owner_entry(mutation_id: &str) -> HostMutationRosterEntry {
     HostMutationRosterEntry { mutation_id: mutation_id.to_string(), verb: "set".into(), entity: "widget".into(), kind: "set-color".into(), record: "widget.doc".into(), contributor: None, artifact_kind: None, inputs: HostMutationInputs::Opaque }

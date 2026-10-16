@@ -1,10 +1,13 @@
-use super::*;
+
 use semio_framework_plugin_guest_contract::validate_cold_page;
 
 #[cfg(test)]
 #[path = "🧪️tests/📥️cold-pair/🦀️.rs"]
 mod tests;
 use semio_framework::kernel::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairPage, ColdPairIngressStatus};
+use semio_framework_plugin_guest_contract::TurnFault;
+use crate::conversion::{kernel_lifetime_to_wit, wit_lifetime_to_kernel};
+use crate::wit_reactor;
 
 fn invalid(reason: &str) -> TurnFault {
     TurnFault::Trapped(reason.to_owned())
@@ -61,7 +64,7 @@ pub(super) fn kernel_cold_page_to_wit(page: &ColdDocumentPairPage) -> Result<wit
     })
 }
 
-pub(super) fn wit_cold_ingress_to_kernel(value: wit_reactor::ColdPairIngressStatus) -> Result<ColdPairIngressStatus, TurnFault> {
+pub fn wit_cold_ingress_to_kernel(value: wit_reactor::ColdPairIngressStatus) -> Result<ColdPairIngressStatus, TurnFault> {
     use wit_reactor::ColdPairIngressStatus as W;
     let status = match value {
         W::Idle => ColdPairIngressStatus::Idle,

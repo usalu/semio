@@ -1,11 +1,11 @@
 /** 🧪️ Norm document facets share child identities and reject editor state and whole-document diffs. */
-import artifactReferenceSchema from "../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { assertDocumentContractOracle } from "../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
-import ioSchema from "../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
+import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import childSchema from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import vectors from "../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 

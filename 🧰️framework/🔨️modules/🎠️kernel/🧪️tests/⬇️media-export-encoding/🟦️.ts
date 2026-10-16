@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { mediaExportBytes, MediaExportEncodingError, MEDIA_EXPORT_BASE64_ENCODING, MEDIA_EXPORT_UTF8_ENCODING } from "../../🟦️.ts";
+import { mediaExportBytes, MediaExportEncodingError, MEDIA_EXPORT_BASE64_ENCODING, MEDIA_EXPORT_UTF8_ENCODING } from "../../🎬️media-export/🟦️.ts";
 import { base64StandardDecode, base64StandardEncode } from "../../../🚪️io/🔤️base64/🟦️.ts";
 import { wireEffectToFriendly, wireMediaExportEncoding } from "../../../🎭️actor/🖼️wire-turn/🟦️.ts";
 

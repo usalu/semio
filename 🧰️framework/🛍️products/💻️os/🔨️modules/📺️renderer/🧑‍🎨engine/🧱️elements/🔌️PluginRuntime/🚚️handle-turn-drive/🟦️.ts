@@ -4,7 +4,8 @@
  */
 
 import { decodeAppFrame, encodeAppFrame } from "@semio-tech/framework-os";
-import { FRAMEWORK_RESERVED_JOB_KIND, type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { FRAMEWORK_RESERVED_JOB_KIND } from "../../../../../../../../🔨️modules/🎠️kernel/🛠️spawned-job/🟦️.ts";
+import { type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
 import { createShardCommandIngressPages, type ShardEventEnvelope, type ShardJobStep } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { hostContinuations } from "../../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { wireTurnStatusTag } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";

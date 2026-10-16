@@ -2,7 +2,7 @@
 import type {JackArtifact} from "../../🟦️.ts";
 import type {JackFlatPosition,JackFlatPositionUv} from "../🟦️.ts";
 import {retainedJackGraph,type JackGraphQuery,type JackGraphEndpoint} from "../🪆️graph-query/🟦️.ts";
-import {ValueError} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "@semio-tech/framework/value/refusal";
 import {inferJackTopology} from "../🧭topology/🟦️.ts";
 export type {JackFlatPosition,JackFlatPositionUv};
 /** 🧩️ Deterministic root and component walks preserve each edge's selected displacement. */

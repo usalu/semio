@@ -1,7 +1,7 @@
 /** 🧬️ Forms durable document with exact owned-child coordinates. */
-import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { requireArtifactDialect } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { requireArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
 
 import { parseFormsDefinition, type FormsDefinition } from "./📝️definition/🟦️.ts";
 import { parseFormsResponse, type FormsResponse } from "./📨️response/🟦️.ts";

@@ -1,6 +1,6 @@
 /** 🗺️ Ordered complete feature objects and literal root properties. */
-import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {parseIntrinsicValue,type IntrinsicValue,type IntrinsicMember} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
+import {parseIntrinsicValue,type IntrinsicValue,type IntrinsicMember} from "@semio-tech/framework/value/schema";
 export type ImportedFeature=Extract<IntrinsicValue,{kind:"object"}>;
 export interface ImportedMap{positions:ImportedFeature[];routes:ImportedFeature[];regions:ImportedFeature[];properties:IntrinsicMember[]}
 /** 📥️ A typed map transport normalizes missing collections to empty while null refuses. */

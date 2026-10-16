@@ -1,6 +1,6 @@
 /** 🧬️ SemioCadSnapshot schema — real facet mirror of `🦀️.rs` (source of truth). */
 import type {SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 export type {SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export type CadEntity =

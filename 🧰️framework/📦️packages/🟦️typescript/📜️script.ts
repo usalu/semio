@@ -365,6 +365,14 @@ class PolygonMeshScript extends BundleScript {
   }
 }
 
+/** 🔌️ Executes the SDK surface law: explicit facades, resolvable names, loadable specifiers. */
+class SdkSurfaceScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-sdk-surface accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("./🧪️tests/🔌️sdk-surface/🟦️.ts", import.meta.url))], this.root, "framework:sdk-surface", 300_000);
+  }
+}
+
 /** 📏️ Executes the closed general command-owner boundary. */
 class ScriptBoundaryScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -379,6 +387,22 @@ class ArtifactReferenceScript extends BundleScript {
     if (args.length) throw Error("test-artifact-reference accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🧬️schema/🗿️artifact-reference/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:artifact-reference-value", cmdBudgetMs(process.env));
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:artifact-reference", cmdBudgetMs(process.env));
+  }
+}
+
+/** 🔌️ Executes the embedded child slot port law. */
+class IoPortsScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-io-ports accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🚪️io/🔌️ports/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:io-ports", cmdBudgetMs(process.env));
+  }
+}
+
+/** 📖️ Executes the framework source-text access law. */
+class SourceTextScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-source-text accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🧪️test/📖️source-text/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:source-text", cmdBudgetMs(process.env));
   }
 }
 
@@ -406,6 +430,6 @@ class InstallationIdentityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-polygon-mesh", PolygonMeshScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

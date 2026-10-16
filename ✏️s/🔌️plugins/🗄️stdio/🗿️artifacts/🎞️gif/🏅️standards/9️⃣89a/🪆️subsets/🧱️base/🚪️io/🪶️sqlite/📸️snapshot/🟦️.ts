@@ -2,8 +2,8 @@
 import sql from "./🗄️.sql" with {type:"text"};
 /** 🎞️ Individually authored GIF89a animation and extension relationships. */
 import type { GifDisposal,GifPlainText,GifSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteBoolean,artifactSqliteOrderedRows,artifactSqliteText,type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase,SqliteRow } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteBoolean,artifactSqliteOrderedRows,artifactSqliteText,type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase,SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 import { gifInteger,gifFlag,gifUnsigned,gifEntities,gifSingletons,gifGroups,gifWritePalette,gifReadPalette,gifReadPixels } from "../../../../../../🪶️sqlite/🟦️.ts";
 export const GIF89_SQLITE_SCHEMA:string=sql;
 const disposalClasses=["unspecified","do_not_dispose","restore_to_background","restore_to_previous"]as const;

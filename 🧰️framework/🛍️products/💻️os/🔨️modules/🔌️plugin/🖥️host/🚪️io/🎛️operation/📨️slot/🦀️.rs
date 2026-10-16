@@ -10,12 +10,12 @@ pub enum OperationRequest{Begin,Progress{completed:u64,total:u64,owned:u64},Allo
 /// 📬️ Returns only the original receiver's typed grant or refusal.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum OperationReply{Begin(Result<u64,u32>),Code(u32)}
-impl OperationRequest{fn refusal(self,code:u32)->OperationReply{match self{Self::Begin=>OperationReply::Begin(Err(code)),_=>OperationReply::Code(code)}}fn accepts(self,reply:OperationReply)->bool{matches!((self,reply),(Self::Begin,OperationReply::Begin(_)))||!matches!(self,Self::Begin)&&matches!(reply,OperationReply::Code(_))}}
+impl OperationRequest{pub fn refusal(self,code:u32)->OperationReply{match self{Self::Begin=>OperationReply::Begin(Err(code)),_=>OperationReply::Code(code)}}fn accepts(self,reply:OperationReply)->bool{matches!((self,reply),(Self::Begin,OperationReply::Begin(_)))||!matches!(self,Self::Begin)&&matches!(reply,OperationReply::Code(_))}}
 /// 🔗️ Identifies only the originally armed receiving operation.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct OperationLease(u64);
 /// 🪟️ Owns one scalar request and reply while borrowing executor wake handles.
-pub struct OperationSlot{generation:u64,active:bool,closed:u32,request:Option<OperationRequest>,inflight:Option<OperationRequest>,reply:Option<OperationReply>,pump:Option<Waker>,guest:Option<Waker>}
+pub struct OperationSlot{pub generation:u64,active:bool,closed:u32,pub request:Option<OperationRequest>,inflight:Option<OperationRequest>,reply:Option<OperationReply>,pump:Option<Waker>,guest:Option<Waker>}
 impl OperationSlot{
  /// 🌱️ Starts without allocating, granting capacity or retaining an original caller.
  pub fn new()->Self{Self{generation:0,active:false,closed:6,request:None,inflight:None,reply:None,pump:None,guest:None}}

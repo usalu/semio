@@ -5,9 +5,9 @@ import fixture from"./🧫️fixtures/🔣️.json";
 import * as snapshot from"../🟦️.ts";
 import{answerError}from"../../../../🧬️schema/✅️validation/🟦️.ts";
 import{prepareResponse}from"../../../../🧬️schema/📨️response/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {binary64Value} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import{NativeDecodeControl}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
+import {binary64Value} from "@semio-tech/framework/value/ieee754";
+import{NativeDecodeControl}from"@semio-tech/framework/value/decode";
 function portableValue(value:any):any{
  switch(value.kind){case"null":return{kind:"null"};case"boolean":case"text":return{kind:value.kind,value:value.value};case"unsigned":case"signed":return{kind:value.kind,value:BigInt(value.value)};case"float":return{kind:"float",value:{bits:BigInt("0x"+value.bits)}};case"bytes":return{kind:"bytes",value:new Uint8Array(value.octets)};case"array":return{kind:"array",items:value.items.map(portableValue)};case"object":return{kind:"object",members:value.members.map((member:any)=>({name:member.name,value:portableValue(member.value)}))};default:throw Error("fixture variant");}
 }
@@ -43,7 +43,7 @@ test("Forms owns deep values and conditions and rejects unreachable topology bef
 test("Intrinsic construction publishes exact Unicode work and admits ownership before copies",async()=>{
  const parse=(intrinsic as Record<string,any>).parseIntrinsicValueControlled;if(typeof parse!=="function")throw Error("missing controlled intrinsic owner");const value={kind:"text",value:fixture.unicodeText.repeat(fixture.unicodeRepeat)},events:any[]=[];const control=new NativeDecodeControl(1_000_000,event=>{events.push(event);return !(event.total===value.value.length&&event.completed>=256);});await expect(parse(value,control)).rejects.toThrow("canceled");expect(events.some(e=>e.total===value.value.length&&e.completed>=256&&e.completed<e.total)).toBe(true);const small=new NativeDecodeControl(1,()=>true);await expect(parse({kind:"bytes",value:new Uint8Array(65537)},small)).rejects.toThrow("limit");expect(small.ownedBytes).toBe(0);
 });
-import * as intrinsic from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import * as intrinsic from"@semio-tech/framework/value/schema";
 import * as jsonTransport from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 
 test("Forms JSON transport admits literal values separately from canonical snapshot admission",()=>{

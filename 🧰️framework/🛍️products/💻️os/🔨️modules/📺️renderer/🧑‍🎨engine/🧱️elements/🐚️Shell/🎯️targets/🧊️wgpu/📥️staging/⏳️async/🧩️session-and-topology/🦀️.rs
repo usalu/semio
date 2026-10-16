@@ -8,7 +8,7 @@ use super::*;
 
 //#endregion ShellLifecycle
 
-pub(crate) fn debug_log(line: &str) {
+pub fn debug_log(line: &str) {
     #[cfg(target_arch = "wasm32")]
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
     #[cfg(not(target_arch = "wasm32"))]
@@ -18,7 +18,7 @@ pub(crate) fn debug_log(line: &str) {
 /// 🏁️ The boot tail every path shares — chrome sync plus the first UI refresh. A boot that opened
 /// no session (every requested plugin faulted) still runs it, so the shell paints its chrome and
 /// its per-plugin status instead of leaving the page on the loader.
-pub(crate) fn instant_now_ms() -> f64 {
+pub fn instant_now_ms() -> f64 {
     #[cfg(target_arch = "wasm32")]
     {
         js_sys::Date::now()

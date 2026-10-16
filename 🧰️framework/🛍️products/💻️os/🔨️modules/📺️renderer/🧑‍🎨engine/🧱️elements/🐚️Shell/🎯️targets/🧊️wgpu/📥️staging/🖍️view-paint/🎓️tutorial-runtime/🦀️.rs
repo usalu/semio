@@ -7,7 +7,7 @@ use super::*;
 //#region 🎬️PureHelpers
 /// 🎚️ Pure scrub-bar progress (0–1) for a given playhead/duration — `0.0` for a zero-length timeline
 /// (the in-progress recording case) rather than dividing by zero.
-pub(crate) fn tutorial_scrub_progress(playhead_ms: f64, duration_ms: u64) -> f32 {
+pub fn tutorial_scrub_progress(playhead_ms: f64, duration_ms: u64) -> f32 {
     if duration_ms == 0 {
         0.0
     } else {
@@ -16,7 +16,7 @@ pub(crate) fn tutorial_scrub_progress(playhead_ms: f64, duration_ms: u64) -> f32
 }
 
 /// 🎚️ Pure scrub-bar hit math: pointer x within `track` → target playhead ms.
-pub(crate) fn tutorial_scrub_target_ms(pointer_x: f32, track: Rect, duration_ms: u64) -> f64 {
+pub fn tutorial_scrub_target_ms(pointer_x: f32, track: Rect, duration_ms: u64) -> f64 {
     let t = ((pointer_x - track.x) / track.w.max(1.0)).clamp(0.0, 1.0);
     t as f64 * duration_ms as f64
 }

@@ -1,7 +1,7 @@
 /** 📊️ CSV semantic entities mirror the adjacent handcrafted SQLite schema and Rust facet. */
 import type { CsvSnapshot, CsvRecord } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteTextBytes, artifactSqliteValueBudget, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase, SqliteRow } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteTextBytes, artifactSqliteValueBudget, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase, SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 🏛️ Handcrafted SQL kept byte-equal to the adjacent schema asset. */
 export const CSV_SQLITE_SCHEMA = `CREATE TABLE csv_document (

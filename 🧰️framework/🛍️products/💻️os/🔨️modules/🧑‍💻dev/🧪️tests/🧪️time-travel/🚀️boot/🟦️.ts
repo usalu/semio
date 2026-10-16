@@ -1,14 +1,17 @@
 export type TimeTravelPlaygroundV1 = Readonly<{ variant: string; aliases: readonly string[]; ports: Readonly<{ react: number; wgpu: number }> }>;
-export type TimeTravelServeSelectionV1 = Readonly<{ universal: boolean; url: string; renderer: "react" | "wgpu"; explicit?: string }>;
+export type TimeTravelServeSelectionV1 = Readonly<{ universal: boolean; url: string; renderer: "react" | "wgpu"; explicit?: string; scenarioVariant?: string }>;
 
-/** 🚀️ Selects a declared playground for a universal history serve. */
+/** 🚀️ Selects a declared playground for a history serve: the scenario's own for a specialized journey, else the one a universal route, explicit variant or catalog port names. */
 export function timeTravelServeVariantV1(selection: TimeTravelServeSelectionV1, catalog: readonly TimeTravelPlaygroundV1[]): string {
   const admit = (name: string) => {
     const rows = catalog.filter(row => row.variant === name || row.aliases.includes(name));
     if (rows.length !== 1) throw Error(`A uniquely declared playground is required: ${name}`);
     return rows[0]!.variant;
   };
-  if (!selection.universal) return admit("puzzle2d");
+  if (!selection.universal) {
+    if (selection.scenarioVariant === undefined) throw Error("A specialized journey names the playground it drives");
+    return admit(selection.scenarioVariant);
+  }
   const url = new URL(selection.url);
   const plugin = url.searchParams.get("plugin");
   const route = plugin === null ? undefined : admit(plugin);

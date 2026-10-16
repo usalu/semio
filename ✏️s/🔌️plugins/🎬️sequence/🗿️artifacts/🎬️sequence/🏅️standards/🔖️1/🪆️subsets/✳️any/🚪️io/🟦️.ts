@@ -1,5 +1,5 @@
 /** 🚪️ Registered Rust IO metadata for the Sequence subset, using the shared wire contract. */
-import { CARRIER_TEXT, parseDialectCoordinate, type IoEntryDescriptor } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
+import { CARRIER_TEXT, parseDialectCoordinate, type IoEntryDescriptor } from "@semio-tech/framework/io/schema";
 
 const SEQUENCE = parseDialectCoordinate("s.sequence.sequence@1/*");
 const CSV = parseDialectCoordinate("s.stdio.csv@rfc4180/*");

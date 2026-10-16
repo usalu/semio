@@ -1,7 +1,9 @@
-import { phaseCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import type { CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { requirePlaygroundVariant } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import { devHubCatalogBootstrapPublisherV1 } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
 /** 🧩️ Semantic collaboration verification owner. */
 
@@ -17,31 +19,26 @@ import { tmpdir } from "node:os";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
-import { DEFAULT_PLAYGROUND_VARIANT } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts";
 
-import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
-import { buildPlugin, preparePluginBuildTargets } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts";
+import {buildComponentClosureV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
 
-import { PLAYWRIGHT_MODULE_SPECIFIER, pluginOutRoot } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
-import { ensurePluginRegistry } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts";
 
-import { acquirePluginBuildLease, markPluginBuildLeaseReady, releasePluginBuildLease, waitForPluginBuildLeaseReady } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔐️lease/🟦️.ts";
 
 import { awaitChildExit, awaitHttpOk, awaitTcpReady } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🩺️readiness/🟦️.ts";
 
-import { ensureAppleDeveloperDir } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/📤️publication/🟦️.ts";
 
 import { spaceE2eAssert } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts";
 
@@ -423,63 +420,18 @@ async function collabSignIn(page: import("playwright").Page, email: string, pass
   await page.locator("[data-semio-hub-workspace]").waitFor({ state: "hidden", timeout: 15_000 });
 }
 
-/** 🎯️ The ONLY plugin crates this scenario touches: every host plugin id the generated catalog
- * declares (`🤖️generated/🧩️plugins/🟦️.ts`'s `PLUGIN_HOST_CONFIGS` — the `space` crate hosting Home and
- * Studio, never the `s` playground VARIANT that merely selects it) plus `"writer"`, the stdio-free
- * artifact kind this scenario creates (the brief's other suggestion, `"note"`, is a confirmed
- * pre-existing break — see `collabPrebuildPlugins`'s own doc comment). Building only these (not the
- * full ~58-crate catalog `buildPluginsStreaming(DEFAULT_PLAYGROUND_VARIANT)` would otherwise attempt) turns a
- * 20-40 minute run into a sub-minute one and matches the coordinator's own guidance: build just what the
- * scenario needs, per-crate try/catch, then gate on the artifacts actually existing. */
-const COLLAB_E2E_REQUIRED_PLUGIN_IDS: readonly string[] = [...PLUGIN_HOST_CONFIGS.map((entry) => entry.pluginId), "writer"];
-
-/** 📁️ The exact `.core.wasm` path `buildPlugin` (this same file, `🔖️PluginSizeMeasurement` region's
- * neighbor) writes for `target` — mirrors its own `jsBase`/`componentBase` derivation so this check
- * looks for precisely what a successful build would have produced, not a guess. */
-function collabPluginArtifactPath(target: DeployedRegistryEntryV1): string {
-  const jsBase = target.wasmOut.replace(/\.wasm$/, "");
-  return join(pluginOutRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})), `${jsBase}_component.core.wasm`);
+/** 🎯️ The finite host set discovered by the framework plugin registry and the writer component used by this collaboration scenario. */
+let collabRequiredPluginIdsCache: readonly string[] | undefined;
+function collabRequiredPluginIds(): readonly string[] {
+  collabRequiredPluginIdsCache ??= Object.freeze([...new Set([...generatePluginRegistry(repoRoot).filter(entry=>entry.host).map(entry=>entry.pluginId),"writer"])]);
+  return collabRequiredPluginIdsCache;
 }
 
-/** 🧱️ Prepares only the plugin components consumed by the collaboration scenario. */
-async function collabPrebuildPlugins(): Promise<void> {
-  const control = phaseCompilerAdmissionControlV1(new AbortController().signal, COLLAB_E2E_PREBUILD_BUDGET_MS, wait => console.log(`[DEBUG] Collaboration compiler wait ${wait.resource}`), () => new Promise(done => setImmediate(done)));
-  const defaultVariant = requirePlaygroundVariant(DEFAULT_PLAYGROUND_VARIANT);
-  ensureAppleDeveloperDir();
-  const lease = acquirePluginBuildLease(defaultVariant, 0);
-  if (lease.role === "follower") {
-    console.log(`[collab-e2e] plugin builds owned by pid ${lease.lease.pid}; waiting for ready`);
-    await waitForPluginBuildLeaseReady(defaultVariant, COLLAB_E2E_PREBUILD_BUDGET_MS);
-  } else {
-    try {
-      await ensurePluginRegistry();
-      const targets = await preparePluginBuildTargets(defaultVariant);
-      const required = targets.filter((target) => COLLAB_E2E_REQUIRED_PLUGIN_IDS.includes(target.pluginId));
-      const foundIds = new Set(required.map((target) => target.pluginId));
-      for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
-        if (!foundIds.has(pluginId)) console.error(`[collab-e2e] WARNING: no registry entry for required plugin "${pluginId}" at all — catalog may have changed`);
-      }
-      for (const target of required) {
-        try {
-          await buildPlugin(target, control);
-        } catch (error) {
-          console.error(`[collab-e2e] required plugin build failed: ${target.pluginId}`, error);
-        }
-      }
-      markPluginBuildLeaseReady(defaultVariant);
-    } finally {
-      releasePluginBuildLease(defaultVariant);
-    }
-  }
-  const targets = await preparePluginBuildTargets(defaultVariant);
-  const missing: string[] = [];
-  for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
-    const target = targets.find((entry) => entry.pluginId === pluginId);
-    if (!target || !existsSync(collabPluginArtifactPath(target))) missing.push(pluginId);
-  }
-  if (missing.length > 0) {
-    throw new Error(`collab e2e: required plugin wasm artifact(s) missing after build: ${missing.join(", ")} — see the compiler error printed above (search "required plugin build failed: ${missing[0]}")`);
-  }
+/** 🧱️ Produces the actual selected-mode browser closure under the caller's live Original. */
+async function collabPrebuildPlugins(invocation:ScriptInvocation,phaseControl:CompilerAdmissionControl):Promise<void>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);
+ if(readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot!==repoRoot)throw Error("Actual collaboration workspace required");
+ await withRequestedIssuedResourceControlV1(phaseControl,COLLAB_E2E_PREBUILD_BUDGET_MS,control=>buildComponentClosureV1(repoRoot,new Set(collabRequiredPluginIds()),{invocation,control,facet:"browser",network:repositoryCargoNetworkV1(invocation,repoRoot)}));
 }
 
 /** 📜️ The `🧑‍💻dev` bundle script both shell steps below drive. */
@@ -1578,7 +1530,9 @@ async function collabRunCollaborationBehaviours(opts: {
  * react dev servers, two independent Playwright browser contexts, the 10-step scenario, and teardown of
  * every spawned process (hub + both dev servers + browser) even on failure. Writes `STEP n: PASS/FAIL`
  * lines plus a final summary, and sets a non-zero exit code if any step failed. */
-async function runCollabE2eVerify(opts: { readonly hub: string | undefined; readonly locale: CollabLocale; readonly check: string }): Promise<void> {
+async function runCollabE2eVerify(opts: { readonly invocation:ScriptInvocation; readonly phaseControl:CompilerAdmissionControl; readonly hub: string | undefined; readonly locale: CollabLocale; readonly check: string }): Promise<void> {
+  requireIssuedResourceControlInvocationV1(opts.phaseControl,opts.invocation);
+  if(readNativeCallerAuthorityV1(opts.invocation.capabilities).repositoryRoot!==repoRoot)throw Error("Actual collaboration workspace required");
   const startedAt = new Date();
   const outDir = collabOutDir();
   const external = collabExternalHub(opts.hub);
@@ -1634,7 +1588,7 @@ async function runCollabE2eVerify(opts: { readonly hub: string | undefined; read
       if (process.env.S_COLLAB_SKIP_PREBUILD === "1") {
         console.log("[collab-e2e] S_COLLAB_SKIP_PREBUILD=1 — skipping plugin prebuild");
       } else {
-        await collabPrebuildPlugins();
+        await collabPrebuildPlugins(opts.invocation,opts.phaseControl);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -1774,14 +1728,16 @@ async function runCollabE2eVerify(opts: { readonly hub: string | undefined; read
 /** 🚪️ `verify collab [--hub <url>] [--locale en|de]` — the two-human React collaboration journey against the hub `--hub` names
  * (`S_COLLAB_HUB_URL` otherwise; neither: this run boots its own hub), both humans in `--locale`; the goal-gate record is
  * `react-collaboration-e2e-<locale>`, `blocked` when the hub cannot be reached. Credentials only via env. */
-async function runCollabE2eCli(segments: readonly string[]): Promise<void> {
+async function runCollabE2eCli(invocation:ScriptInvocation,phaseControl:CompilerAdmissionControl,segments: readonly string[]): Promise<void> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
+  if(readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot!==repoRoot)throw Error("Actual collaboration workspace required");
   const flag = (name: string): string | undefined => {
     const value = segments[segments.indexOf(name) + 1];
     return segments.includes(name) && value !== undefined && !value.startsWith("--") ? value : undefined;
   };
   const locale: CollabLocale = flag("--locale") === "de" ? "de" : "en";
   const check = `react-collaboration-e2e-${locale}`;
-  await withAcceptanceRecord(repoRoot, check, () => runCollabE2eVerify({ hub: flag("--hub") ?? process.env.S_COLLAB_HUB_URL, locale, check }), (error) => /ECONNREFUSED|ERR_CONNECTION_REFUSED|Unable to connect|hub never became ready|needs S_COLLAB_USER1_PASSWORD/u.test(String(error instanceof Error ? error.message : error)));
+  await withAcceptanceRecord(repoRoot, check, () => runCollabE2eVerify({ invocation,phaseControl,hub: flag("--hub") ?? process.env.S_COLLAB_HUB_URL, locale, check }), (error) => /ECONNREFUSED|ERR_CONNECTION_REFUSED|Unable to connect|hub never became ready|needs S_COLLAB_USER1_PASSWORD/u.test(String(error instanceof Error ? error.message : error)));
 }
 
-export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, type CollabCommandFrameCounter, type CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabPresenceColors, collabPresenceRows, collabRowIds, collabAwaitConvergence, collabEditorText, collabProvisionCredentials, collabRunCollaborationBehaviours, collabRunRestartStep, collabRunScenario, collabSignIn, collabUndo, collabScanPort, collabActivateShellRuntime, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForPresenceRoster, collabWaitForRow, runCollabE2eCli, runCollabE2eVerify };
+export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, type CollabCommandFrameCounter, type CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPrebuildPlugins, collabRequiredPluginIds, collabPresenceColors, collabPresenceRows, collabRowIds, collabAwaitConvergence, collabEditorText, collabProvisionCredentials, collabRunCollaborationBehaviours, collabRunRestartStep, collabRunScenario, collabSignIn, collabUndo, collabScanPort, collabActivateShellRuntime, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForPresenceRoster, collabWaitForRow, runCollabE2eCli, runCollabE2eVerify };

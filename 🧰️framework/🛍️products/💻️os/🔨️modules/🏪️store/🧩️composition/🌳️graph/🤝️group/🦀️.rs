@@ -1,5 +1,7 @@
-use crate::os_vcs::ArtifactGroupVisibility;
-use super::{ArtifactStoreOneItemGrant, CompositionGraph, OWNED_DOCUMENT_MAXIMUM_MEMBERS};
+use semio_framework_os_vcs::ArtifactGroupVisibility;
+use semio_framework_os_store_one_item::ArtifactStoreOneItemGrant;
+use crate::CompositionGraph;
+use crate::owned_document_closure::OWNED_DOCUMENT_MAXIMUM_MEMBERS;
 use semio_framework_value::{ValueError, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::sync::Arc;
 
@@ -10,20 +12,20 @@ type Row = (String, (String, String));
 pub(super) struct OwnsRoot(Vec<Row>);
 
 impl OwnsRoot {
-    pub(super) fn get(&self, key: &str) -> Option<&(String, String)> { self.0.binary_search_by(|row| row.0.as_str().cmp(key)).ok().map(|index| &self.0[index].1) }
-    pub(super) fn contains_key(&self, key: &str) -> bool { self.get(key).is_some() }
-    pub(super) fn len(&self) -> usize { self.0.len() }
-    pub(super) fn capacity(&self) -> usize { self.0.capacity() }
-    pub(super) fn is_empty(&self) -> bool { self.0.is_empty() }
+    pub fn get(&self, key: &str) -> Option<&(String, String)> { self.0.binary_search_by(|row| row.0.as_str().cmp(key)).ok().map(|index| &self.0[index].1) }
+    pub fn contains_key(&self, key: &str) -> bool { self.get(key).is_some() }
+    pub fn len(&self) -> usize { self.0.len() }
+    pub fn capacity(&self) -> usize { self.0.capacity() }
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
     pub(super) fn try_reserve(&mut self, count: usize) -> Result<(), std::collections::TryReserveError> { self.0.try_reserve_exact(count) }
-    pub(super) fn insert(&mut self, key: String, value: (String, String)) {
+    pub fn insert(&mut self, key: String, value: (String, String)) {
         match self.0.binary_search_by(|row| row.0.cmp(&key)) { Ok(index) => self.0[index].1 = value, Err(index) => self.0.insert(index, (key, value)) }
     }
     pub(super) fn remove_entry(&mut self, key: &str) -> Option<Row> { self.0.binary_search_by(|row| row.0.as_str().cmp(key)).ok().map(|index| self.0.remove(index)) }
-    pub(super) fn remove(&mut self, key: &str) -> Option<(String, String)> { self.remove_entry(key).map(|row| row.1) }
-    pub(super) fn keys(&self) -> impl Iterator<Item = &String> { self.0.iter().map(|row| &row.0) }
-    pub(super) fn retain(&mut self, mut keep: impl FnMut(&String, &mut (String, String)) -> bool) { self.0.retain_mut(|row| keep(&row.0, &mut row.1)); }
-    pub(super) fn extend(&mut self, rows: impl IntoIterator<Item = Row>) { for (key, value) in rows { self.insert(key, value); } }
+    pub fn remove(&mut self, key: &str) -> Option<(String, String)> { self.remove_entry(key).map(|row| row.1) }
+    pub fn keys(&self) -> impl Iterator<Item = &String> { self.0.iter().map(|row| &row.0) }
+    pub fn retain(&mut self, mut keep: impl FnMut(&String, &mut (String, String)) -> bool) { self.0.retain_mut(|row| keep(&row.0, &mut row.1)); }
+    pub fn extend(&mut self, rows: impl IntoIterator<Item = Row>) { for (key, value) in rows { self.insert(key, value); } }
 }
 
 /// 🚦️ Exact bounded forest admission outcome; an accepted edge is distinct from a sealed root.
@@ -42,23 +44,23 @@ enum Ancestor { Edge, Existing(usize), Pending(usize) }
 
 /// 🌲️ Private complete-root preparation retaining every metadata and backing owner until funded retirement.
 pub struct GroupOwnsPreparation {
-    authority: Option<Arc<()>>,
-    visibility: Option<Arc<ArtifactGroupVisibility>>,
-    generation: u64,
-    expected: usize,
-    accepted: usize,
-    phase: Phase,
+    pub authority: Option<Arc<()>>,
+    pub visibility: Option<Arc<ArtifactGroupVisibility>>,
+    pub generation: u64,
+    pub expected: usize,
+    pub accepted: usize,
+    pub phase: Phase,
     additions: Vec<Option<Row>>,
-    active: Option<Row>,
+    pub active: Option<Row>,
     ancestor: Option<Ancestor>,
-    hops: usize,
+    pub hops: usize,
     insertion: Option<usize>,
     original_index: usize,
     addition_index: usize,
-    replacement: OwnsRoot,
+    pub replacement: OwnsRoot,
     retired: Option<Row>,
-    refused: bool,
-    committed: bool,
+    pub refused: bool,
+    pub committed: bool,
 }
 
 fn row_bytes(row: &Row) -> usize { row.0.len().saturating_add(row.1.0.len()).saturating_add(row.1.1.len()) }

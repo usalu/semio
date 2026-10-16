@@ -1,4 +1,4 @@
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 /** 🛂️ Owned sparse-diff vectors retain native defaults, clearing and exact u64 ordinals. */
 import { expect, test } from "bun:test";
 import fixture from "../../../../🧪️tests/🧫️fixtures/🔺️diff/🛂️parsers/🔣️.json";

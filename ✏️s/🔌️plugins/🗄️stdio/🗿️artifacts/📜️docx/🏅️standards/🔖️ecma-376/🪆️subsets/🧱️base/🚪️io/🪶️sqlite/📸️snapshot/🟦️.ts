@@ -2,8 +2,8 @@
 /** 📕️ DOCX literal package and XML relations. */
 import sql from "./🗄️.sql" with {type:"text"};
 import type {DocxSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteValueBudget,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteTextBytes,artifactSqliteValueBudget,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 import{projectXmlDocuments,reconstructXmlDocuments,measureXmlDocuments,type XmlSqliteTables}from"../../../../../../../../📰️xml/🟦️.ts";
 import{materializeRetainedXmlDocument,retainXmlDocument}from"../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
 import{measureRetainedOpcPackage,projectRetainedOpcPackage,reconstructRetainedOpcPackage,type OpcSqliteTables}from"../../../../../../../../🎒️zip/📦️opc/🪶️sqlite/🟦️.ts";

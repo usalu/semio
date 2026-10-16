@@ -67,3 +67,27 @@ impl Default for DockUiState {
 //#endregion 🧭️PanelAnchorModel
 //#endregion ShellLifecycle
 
+//#region ShellLifecycle
+//#region 📏️WindowMeasures
+/// 🪟️ Resolves only the reserved pane identities to their concrete application window.
+pub fn window_pane_owner(surface_id: &str) -> Option<&str> {
+    [semio_framework::UiRefreshSection::Measures.body_key(), semio_framework::UiRefreshSection::Engagements.body_key(), WINDOW_SEARCH_BODY_KEY, WINDOW_PROJECTION_BODY_KEY]
+        .into_iter()
+        .find_map(|suffix| surface_id.strip_suffix(suffix).and_then(|owner| owner.strip_suffix('/')).filter(|owner| !owner.is_empty()))
+}
+
+/// 📏️ The retained engine surface one window instance's Measures overlay paints into — the window
+/// instance, then the reserved section body key, the same `{windowId}/{id}` rule React's
+/// `windowMeasureDomId` qualifies measure ids with. Window instance ids are plain identifiers, so the
+/// suffix can never collide with an app-authored surface.
+pub fn window_measures_surface_id(window_id: &str) -> String {
+    format!("{window_id}/{}", semio_framework::UiRefreshSection::Measures.body_key())
+}
+//#endregion 📏️WindowMeasures
+//#endregion ShellLifecycle
+
+//#region ShellLifecycle
+//#region 🧭️PanelAnchorModel
+pub const DOCK_SKELETON_VERSION: u8 = 3;
+//#endregion 🧭️PanelAnchorModel
+//#endregion ShellLifecycle

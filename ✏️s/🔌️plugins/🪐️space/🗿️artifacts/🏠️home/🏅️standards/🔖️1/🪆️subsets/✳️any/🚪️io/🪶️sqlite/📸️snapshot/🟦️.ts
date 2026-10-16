@@ -1,8 +1,8 @@
 /** 🏠️ Literal Home schema and exact unsigned64 generation SQLite fields. */
 import {parseSHomeSnapshot,type SHomeSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {SqliteDatabase} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueBudget,artifactSqliteInteger,artifactSqliteText,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type {SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueBudget,artifactSqliteInteger,artifactSqliteText,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 export const HOME_SQLITE_SCHEMA=String.raw`CREATE TABLE home_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, catalog_generation_high INTEGER NOT NULL CHECK(catalog_generation_high BETWEEN 0 AND 4294967295), catalog_generation_low INTEGER NOT NULL CHECK(catalog_generation_low BETWEEN 0 AND 4294967295));
 `;
 /** 🔤️ Schema scanning reports UTF-16 code units before inserting entity rows. */

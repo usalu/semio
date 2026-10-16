@@ -4,7 +4,8 @@ import {readFileSync} from "node:fs";
 import {resolve, join} from "node:path";
 import {applyPatch} from "fast-json-patch";
 import {createHash} from "node:crypto";
-import {semioSchemaAjvV1} from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 test("Drawing initializer closes the original catalog one exactly admitted page at a time",()=>{
   const owner=resolve(import.meta.dir,"../..");
@@ -89,7 +90,7 @@ test("Drawing native retirement retains typed variants under independent physica
 
 test("Drawing decoded field close admits payload work separately from physical backing",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const contract=resolve(import.meta.dir,"../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand");
+  const contract=frameworkSourcePath("🔨️modules/🌱️value/♻️retirement/🧪️tests/🧫️fixtures/📏️copy-demand");
   const law=JSON.parse(readFileSync(join(contract,"🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
@@ -457,7 +458,7 @@ test("Drawing initial snapshot copying retains native paged assets and separate 
 
 test("Drawing closure moves inline owners under copy and frees pages under release",()=>{
   const owner=resolve(import.meta.dir,"../..");
-  const law=JSON.parse(readFileSync(resolve(owner,"../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
+  const law=JSON.parse(readFileSync(frameworkSourcePath("🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json"),"utf8"));
   const original={active:{byte:law.inputByte},closing:null,page:{bytes:law.physicalCursorBytes}};
   const moved=applyPatch(original,[{op:"move",from:"/active",path:"/closing"}],true,false).newDocument;
   const database=new Database(":memory:");

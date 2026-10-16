@@ -7,7 +7,7 @@
  *  `shared://🧩️mount-contract/🔣️.json` the Rust and Python halves read and checks its canonical forms, so a drift in any
  *  surface id, window roster or example row fails in every language at once. SUBJECT role: a second reading of the
  *  statement, never a reference for the Rust half, which measures the real surfaces. */
-import { defineTestAdapter } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 
 //#region 🧬️Statement
 type MountContract = {

@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🧊️ wfc3d snapshot — the persisted WFC problem over an arbitrary 3d slot graph. Mirrors the Rust
  * `🦀️.rs` sibling; `TileMedia3d` is INTERNALLY tagged on `kind` (`#[value(tag = "kind")]`), so a
  * medium rides as `{ kind, ...its own fields }`. */

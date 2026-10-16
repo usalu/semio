@@ -1,6 +1,6 @@
 import { parseRasterLayerNode, parseRasterLayerMask, parseRasterTransform, rasterTransformNumbers, rasterRasterArtifactGuardRefusal, type RasterLayerNode, type RasterLayerMask, type RasterTransform } from "./../../../🧬️schema/🟦️.ts";
-import { parseDslValue, type DslValue, type IntrinsicValue } from "./../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import { binary64, binary32, binary64Value, binary32Value, type Binary32 } from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseDslValue, type DslValue, type IntrinsicValue } from "@semio-tech/framework/value/schema";
+import { binary64, binary32, binary64Value, binary32Value, type Binary32 } from "@semio-tech/framework/value/ieee754";
 /** 📝️ Text representation for `raster.raster.snapshot`. */
 export type RasterSnapshotText = Readonly<Record<string, unknown>>;
 

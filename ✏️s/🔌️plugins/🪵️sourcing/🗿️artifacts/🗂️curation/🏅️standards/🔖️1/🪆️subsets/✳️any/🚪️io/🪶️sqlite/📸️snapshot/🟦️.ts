@@ -2,10 +2,10 @@
 import sql from "./🗄️.sql" with {type:"text"};
 import type {CurationSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseCurationArtifact} from "../../../🧬️schema/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,readBinary32,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {encodeIeee754Cells,readBinary64,readBinary32,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "@semio-tech/framework/value/ieee754";
+import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 /** 🧱️ Exact native geometry identities at their authored scalar widths. */
 export type CurationSqliteGeometry={kind:"box";width:Binary64;height:Binary64;depth:Binary64}|{kind:"frame";width:Binary64;height:Binary64;depth:Binary64;profile:Binary64}|{kind:"slab";width:Binary64;depth:Binary64;thickness:Binary64}|{kind:"mesh";positions:Binary32[];normals:Binary32[];indices:number[]}|{kind:"glb";url:string;extent:Binary64};
 /** 🗂️ Complete persisted catalog, sourcing metadata and selection fields. */

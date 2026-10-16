@@ -1,6 +1,6 @@
 /** 🎨️ Explicit canonical indices or exact authored Unicode literals. */
-import {artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions,type ArtifactSqliteProjection} from "../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {SqliteRow} from "../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions,type ArtifactSqliteProjection} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 const alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 /** 🔤️ Recognizes the exact canonical padded standard alphabet without normalizing native text. */
 export async function canonicalIndexCount(text:string,options:ArtifactSqliteOptions={}):Promise<number|undefined>{

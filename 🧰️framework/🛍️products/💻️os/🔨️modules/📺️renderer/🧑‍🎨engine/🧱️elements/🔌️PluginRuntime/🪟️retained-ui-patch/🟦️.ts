@@ -102,7 +102,7 @@ export function ownedUiComponentToBuilt(component: RetainedUiNodeRecord["compone
 //#endregion 🔖️RetainedUiPatch
 
 /** 🚧️ Best-effort conversion of a raw WIT `effect` variant (`{tag, val}`, see `WireVariant`'s doc for
- * the unverified-boundary caveat) into the friendly `Effect` union `🎠️kernel/🟦️.ts` already
+ * the unverified-boundary caveat) into the friendly `Effect` union `🎠️kernel` already
  * declares — Rust `kernel::Effect`'s externally-tagged serde shape (`{effectName: {...fields}}` /
  * `"requestSync"`), which is what every downstream consumer (`applyHostEffects` and friends) already
  * expects. Covers the effect kinds this renderer actually branches on; an effect kind with no case

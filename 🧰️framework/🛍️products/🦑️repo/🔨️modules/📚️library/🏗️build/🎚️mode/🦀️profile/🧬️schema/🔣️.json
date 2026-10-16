@@ -800,6 +800,18 @@
           }
         }
       ]
+    },
+    "NativeArtifactProducer": {
+      "enum": [
+        "artifact",
+        "descriptor-emitter"
+      ]
+    },
+    "WasmPackageProducer": {
+      "enum": [
+        "browser-canvas",
+        "browser-module"
+      ]
     }
   }
 }

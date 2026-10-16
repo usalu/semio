@@ -6,7 +6,7 @@ import contract from "./🧫️fixtures/🔣️.json";
 import schema from "./🧫️fixtures/🔣️schema.json";
 import {lasSnapshotFixture} from "../../🧪️tests/🧰️support/🟦️.ts";
 import {lasSnapshotToSqliteDatabase,lasSnapshotFromSqliteDatabase,lasSnapshotValidateSqliteSubset} from "../../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 const read=(name:string)=>readFileSync(new URL(name,import.meta.url),"utf8");
 const dialect={artifactKind:"s.stdio.las",standard:"1.0",subset:"*"};
 test("LAS original receiving neutral policies and complete independent signed relations",async()=>{

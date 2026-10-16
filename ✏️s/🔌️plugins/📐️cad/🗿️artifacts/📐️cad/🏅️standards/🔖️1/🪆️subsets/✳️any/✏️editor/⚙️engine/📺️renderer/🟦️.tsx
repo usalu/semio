@@ -5,7 +5,7 @@
 /** 🎬️ `@semio-tech/cad-js/renderer` — CAD renderer (R3F) with {@link InteractionRepl} host props/`on*` callbacks, {@link InteractionCanvas}, and {@link InteractionSpatialView}. See `cad/asset/modelDefinition/spatial.shape/interaction/📦️box.json`. */
 // #endregion 🧲️Header
 
-import { reactHostPort, uiDataLabel, WINDOW_SEARCH_USER } from "@semio-tech/ui-react";
+import { reactHostPort, uiDataLabel, WINDOW_SEARCH_USER } from "@semio-tech/framework/ui/targets/react";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
 import {
   defaultModelDefinitionId,

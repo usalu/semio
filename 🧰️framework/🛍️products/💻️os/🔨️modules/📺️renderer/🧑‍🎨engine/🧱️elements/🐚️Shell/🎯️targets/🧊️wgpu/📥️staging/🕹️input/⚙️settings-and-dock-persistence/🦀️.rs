@@ -7,7 +7,7 @@ use super::*;
 //#region ShellLifecycle
 impl ShellInputState {
     /// 🎨️ React-equivalent canonical theme tree with independently expandable virtualized groups.
-    pub(crate) fn build_settings_theme_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
+    pub fn build_settings_theme_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
         self.build_settings_theme_editor_tree(&prefs.theme_document(chrome), prefs.locale_id == "de", chrome, prefs)
     }
 
@@ -19,7 +19,7 @@ impl ShellInputState {
     /// ⌨️ React captures the next chord from a live `keydown` on the capture button. The wgpu chord
     /// capture lives in {@link ShellState::keybinding_capture_control_id}: arming a row makes the next
     /// key event a chord write instead of a shell verb, which is the same one-gesture remap.
-    pub(crate) fn build_settings_keybindings_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
+    pub fn build_settings_keybindings_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let overrides = &chrome.chrome_build.preferences.keybinding_overrides;
         let mut rows = Vec::new();
@@ -33,7 +33,7 @@ impl ShellInputState {
                     id: Some(format!("framework.settings.keybindings.capture.{}", row.control_id)),
                     icon_id: IconName::CircleDot,
                     label: Label::data(shell_chrome_string(if capturing { "settings.keybindings.pressKeys" } else { "settings.keybindings.capture" }, is_de)),
-                    action: ActionDescriptor { controller_id: "framework".into(), action: "captureKeybinding".into(), args: crate::action_args_json!({ "value": row.control_id.clone() }) },
+                    action: ActionDescriptor { controller_id: "framework".into(), action: "captureKeybinding".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": row.control_id.clone() }) },
                     style: None,
                     presence: UiPresence { selected: capturing, ..UiPresence::default() },
                     menu: None,
@@ -44,7 +44,7 @@ impl ShellInputState {
                     id: Some(format!("framework.settings.keybindings.reset.{}", row.control_id)),
                     icon_id: IconName::RotateCcw,
                     label: Label::data(shell_chrome_string("settings.keybindings.reset", is_de)),
-                    action: ActionDescriptor { controller_id: "framework".into(), action: "resetKeybinding".into(), args: crate::action_args_json!({ "value": row.control_id.clone() }) },
+                    action: ActionDescriptor { controller_id: "framework".into(), action: "resetKeybinding".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": row.control_id.clone() }) },
                     style: None,
                     presence: UiPresence::default(),
                     menu: None,

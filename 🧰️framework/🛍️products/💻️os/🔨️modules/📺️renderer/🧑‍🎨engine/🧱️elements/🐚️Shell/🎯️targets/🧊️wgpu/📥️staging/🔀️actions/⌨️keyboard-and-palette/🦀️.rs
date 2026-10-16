@@ -18,7 +18,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 🎨️ The theme IMPORT picker is the second gesture-bound door (packet W15d) and obeys the same
     /// rule: opened from the gesture that armed it, never from a later settle step.
     #[cfg(target_arch = "wasm32")]
-    pub(crate) async fn drain_gesture_bound_work(&mut self) {
+    pub async fn drain_gesture_bound_work(&mut self) {
         if std::mem::take(&mut self.prefs.pending_theme_import) {
             self.run_theme_import_request().await;
         }
@@ -34,7 +34,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) async fn drain_gesture_bound_work(&mut self) {}
+    pub async fn drain_gesture_bound_work(&mut self) {}
 
     /// 📑️ Journals what React journals for the same gesture: `shell.panelTab` when the anchor's path
     /// moves, `shell.panelToggle` when its visibility flips (`🏛️ShellHost/🟦️.tsx:10014`, `:10042`).
@@ -42,7 +42,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 🩸️ This renderer used to journal NOTHING for a panel press — the surface appeared and
     /// disappeared in `dumpStructure` with no action crossing `dispatch_action` at all, so the parity
     /// probe read every panel step as a difference (`📓️w5b-interaction-parity-probe.md` §4.4).
-    pub(crate) async fn journal_panel_selection(&mut self, anchor: PanelAnchor, tab_id: &str, was_visible: bool, was_path: Option<String>) -> Result<(), String> {
+    pub async fn journal_panel_selection(&mut self, anchor: PanelAnchor, tab_id: &str, was_visible: bool, was_path: Option<String>) -> Result<(), String> {
         let Some(controller_id) = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()) else { return Ok(()) };
         let is_de = self.prefs.locale_id == "de";
         let visible = self.dock.anchor_open(anchor);
@@ -62,7 +62,7 @@ impl<'ctx> ActionsCtx<'ctx> {
 
     /// 🌳️ A branch already showing its children row folds that row; otherwise the press opens
     /// the anchor at that branch — React's `PanelTabRow` drill-down, one press per level.
-    pub(super) async fn select_panel_tab_step(&mut self, anchor: PanelAnchor, tab_id: &str) -> Result<(), String> {
+    pub async fn select_panel_tab_step(&mut self, anchor: PanelAnchor, tab_id: &str) -> Result<(), String> {
         if self.dock.dock_tabs.locate(tab_id).and_then(|(found, path)| self.dock.dock_tabs.node_at(found, &path)).is_some_and(DockTabNode::is_branch) {
             if self.dock.anchor_open(anchor) && self.dock.anchor_state(anchor).path.first().is_some_and(|id| id == tab_id) && !self.dock.dock_branch_collapsed(anchor, tab_id) {
                 self.dock.toggle_dock_branch(anchor, tab_id);
@@ -75,7 +75,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         let claimed = self.docs.session.as_ref().filter(|_| self.plugins.host_config().is_some()).map(|session| session.app.controller_id.clone());
         let is_app_leaf = self.docs.session.as_ref().is_some_and(|session| flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().any(|leaf| leaf.id() == tab_id));
         if let Some(controller_id) = claimed.filter(|_| is_app_leaf) {
-            self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": tab_id }) }).await?;
+            self.dispatch_action(ActionDescriptor { controller_id, action: "setActivePanelTab".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "tabId": tab_id }) }).await?;
             return Ok(());
         }
         self.dock.toggle_anchor_tab(anchor, tab_id);

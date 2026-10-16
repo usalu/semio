@@ -9,8 +9,8 @@ import controls from"./🧫️fixtures/🎛️control.json";
 import words from"./🧫️fixtures/🔢️binary64.json";
 import choices from"./🧫️fixtures/🛂️choices.json";
 import { EN1995_SQLITE_SCHEMA, en1995SnapshotToSqliteDatabase, en1995SnapshotFromSqliteDatabase, type En1995SqliteSnapshot, type En1995SqliteMember } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
+import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 test("EN1995 complete neutral state agrees with independent JSON schema",()=>{expect(new Ajv({strict:false}).validate(schema,fixture)).toBe(true)});
 test("EN1995 owning facade exposes complete relational snapshot directions",()=>{expect(Object.hasOwn(sqliteOwner,"en1995SnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"en1995SnapshotFromSqliteDatabase")).toBe(true)});
 test("EN1995 root arrays enforce complete closed owned member and connection shapes",()=>{const ajv=new Ajv({strict:false});expect(ajv.validate(schema,{...fixture,members:[{}]})).toBe(false);expect(ajv.validate(schema,{...fixture,connections:[{}]})).toBe(false);expect(ajv.validate(schema,{...fixture,members:[{...fixture.members[0],unknown:true}]})).toBe(false);expect(ajv.validate(schema,{...fixture,connections:[{...fixture.connections[0],unknown:true}]})).toBe(false)});
@@ -53,8 +53,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {en1995SnapshotToSqliteDatabase as normSemanticProject,en1995SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("EN1995 complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(normSemanticContract["schemaBytes"]).toEqual(5814);expect(normSemanticContract["tableWidths"]).toEqual({"en1995_connection":37,"en1995_connection_action":9,"en1995_document":2,"en1995_member":73,"en1995_member_action":28});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":9,"valueBytes":2293},{"id":"emptyCollections","rows":1,"valueBytes":10}]);
  for(const item of normSemanticContract.cases){const source=ownedFixture();if(item.id==="emptyCollections"){source.members=[];source.connections=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:5,maxColumns:73};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);

@@ -26,9 +26,9 @@ impl ShardResourceBudget {
 
 #[derive(Default)]
 pub struct OriginalShardDispatch {
-    decision: Option<Decision>,
-    cursor: usize,
-    refusal: Option<PackError>,
+    pub decision: Option<Decision>,
+    pub cursor: usize,
+    pub refusal: Option<PackError>,
 }
 
 impl OriginalShardDispatch {

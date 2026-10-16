@@ -10,7 +10,6 @@ import cargoCommandLimits from "../../../../../🧰️framework/🛍️products/
 import {cargoPreparationStorageFromEnvironmentV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { produceFreshComponentV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
-import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧰️schema/🟦️.ts";
 
 const GIS_SCHEMA_MODULE = "🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json";
 
@@ -157,7 +156,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
                     "genuine_gis_component_rejects_stale_cold_authority_before_loading",
                   ],
                 },
-              ], artifactDir: join(artifactRoot, "exact"), env: {
+              ], env: {
                 ...process.env,
                 SEMIO_GIS_COMPONENT_WASM: join(stage, "component.wasm"),
                 SEMIO_GIS_COMPONENT_SHA256: componentSha256,

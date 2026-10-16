@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { ephemeralMap } from "@semio-tech/framework";
+import { ephemeralMap } from "../../../🫧️transient/🟦️.ts";
 import { formatKeybindingShortcut, keybindingPlatformUsesMetaV1 } from "../🔤️keybinding-text-interpretation/🟦️.ts";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
 import { resolveControlLabelId } from "../../🧱️elements/🚗️UiDriver/🟦️.tsx";

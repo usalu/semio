@@ -17,7 +17,7 @@ function declaration(source: string, name: string): string {
   const file = ts.createSourceFile("reference.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const matches = file.statements.filter(node => ts.isFunctionDeclaration(node) && node.name?.text === name || ts.isVariableStatement(node) && node.declarationList.declarations.some(entry => ts.isIdentifier(entry.name) && entry.name.text === name));
   if (matches.length !== 1) throw Error("Expected one actual reference declaration " + name);
-  return matches[0]!.getText(file);
+  return matches[0]!.getText(file).replace(/^export\s+/u, "");
 }
 
 function compile(source: string): string {
@@ -41,7 +41,7 @@ test("the retained TypeScript reference independently agrees for all fifteen con
 for (const row of lifecycle.cases) test("actual React RingView and owned lane: " + row.id, async () => {
   const observations: (number | string)[][] = [], listeners = new Map<string, () => void>(), cleanup: (() => void)[] = [];
   const lane = createContinuousGestureLane<number>({ send: (value, phase) => { observations.push([value, phase]); }, abort: reason => { observations.push([reason, "abort"]); } });
-  const source = read(join(renderer, "🧱️elements/🗣️Interpreter/🟦️.tsx"));
+  const source = read(join(renderer, "🧱️elements/🗣️Interpreter/✍️input-views/🟦️.tsx"));
   const factory = new Function("React", "Ring", "useContinuousTriggerLane", "useEffect", "window", "nodeDomId", "toUiValue", compile(declaration(source, "RingView")) + "\nreturn RingView;");
   const view = factory(React, "owned-ring", () => lane, (effect: () => () => void) => { cleanup.push(effect()); }, { addEventListener: (name: string, listener: () => void) => listeners.set(name, listener), removeEventListener: (name: string) => listeners.delete(name) }, () => "fixture-ring", (value: number) => value) as (props: unknown) => React.ReactElement<{ onOrbChange: (id: string, before: number, after: number) => void }>;
   const element = view({ record: { component: { orbId: "sun", t: 0 }, disabled: false }, context: {} });

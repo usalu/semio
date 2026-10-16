@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import * as api from "../../../🟦️.ts";
 import * as transport from "../🚪️io/🔣️json/🟦️.ts";
-import {binary64Value} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "@semio-tech/framework/value/ieee754";
 import fixture from "../../../🧪️tests/🧫️fixtures/🧱️shared/🔣️.json";
 
 import schema from "../🔣️.json";

@@ -3,7 +3,17 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ActivationRegistry, PACKAGE_ASSET_DIRECTORIES, descriptorPackageAssets, fetchDescriptorManifest, PACKAGE_ASSET_ROUTE, fetchPackageAssets, packageAssetMounts, packageAssetUrl, readPackageAssetDeclarations, type PackageAssetDeclaration } from "../../🟦️.ts";
+import { ActivationRegistry } from "../../🎛️activation-registry/🟦️.ts";
+import {
+  PACKAGE_ASSET_DIRECTORIES,
+  PACKAGE_ASSET_ROUTE,
+  fetchPackageAssets,
+  packageAssetMounts,
+  packageAssetUrl,
+  readPackageAssetDeclarations,
+  type PackageAssetDeclaration
+} from "../../📦️package-assets/🟦️.ts";
+import { descriptorPackageAssets, fetchDescriptorManifest } from "../../🛂️descriptor-admission/🟦️.ts";
 import { OwnedResidentLedger } from "../../../🌱️value/💾️resident/🟦️.ts";
 import { ShardClient, type ShardBudget } from "../../../🎭️actor/📮️shard-client/🟦️.ts";
 import { fixtureOriginalWorkStock } from "../../../🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";

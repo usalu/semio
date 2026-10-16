@@ -15,9 +15,10 @@ test("media domain admission retains complete original fields until paid publica
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
+import { familyText } from "../../../🧷️companions/🧯️test-support/🧵️instance-family/🟦️.ts";
 test("media output birth requires caller-funded ownership before any allocation",()=>{
  for(const row of fixture.birth.cases){const db=new Database(":memory:");db.exec("CREATE TABLE owners (id TEXT)");db.exec("BEGIN");db.query("INSERT INTO owners VALUES (?)").run(row.id);db.exec(row.items>0&&row.capacityBytes>0&&row.copyBytes>0&&row.depth>0?"COMMIT":"ROLLBACK");expect(db.query("SELECT COUNT(*) AS count FROM owners").get()).toEqual({count:Number(row.expected)});db.close();}
- const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🎞️media/🦀️.rs"),"utf8");expect(declaration.includes("original_birth_admit")).toBe(true);const receiver=["🦀️.rs","🚪️ingress/🦀️.rs","📨️dispatch/🦀️.rs","🖼️render/🦀️.rs","🧷️command-routes/🦀️.rs","🧾️typed-operations/🦀️.rs","🔌️plugin-app-impl/🦀️.rs"].map(s=>readFileSync(resolve(import.meta.dir,"../../../🧵️instance/"+s),"utf8")).join("\n");expect(receiver.includes("ArtifactMediaExportCredit::original_birth_admit")).toBe(true);
+ const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🎞️media/🦀️.rs"),"utf8");expect(declaration.includes("original_birth_admit")).toBe(true);const receiver=[["🖼️render/🦀️.rs","🧷️command-routes/🦀️.rs","🧾️typed-operations/🦀️.rs","🔌️plugin-app-impl/🦀️.rs"].map.map(s=>readFileSync(resolve(import.meta.dir,"../../../🧵️instance/"+s),"utf8")).join("\n"),familyText()].join("\n");expect(receiver.includes("ArtifactMediaExportCredit::original_birth_admit")).toBe(true);
  console.log("[DEBUG] media output cold birth rollback preserves denial; SQLite independent admission transaction");
 });
 

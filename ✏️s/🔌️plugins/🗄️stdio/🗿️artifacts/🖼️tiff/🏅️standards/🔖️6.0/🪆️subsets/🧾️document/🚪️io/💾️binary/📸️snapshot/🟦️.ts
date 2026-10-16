@@ -1,6 +1,6 @@
 import type {TiffNativeObservations} from "./👁️observations/🟦️.ts";
 /** 💾️ Native TIFF admission and emission of exact owned sample words. */
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import {validateTiffSnapshot,tiffIntegers,type TiffSnapshot,type TiffTag,type TiffValues,type TiffWord64,type TiffFieldType,type TiffIfd} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseCompression,adler} from "../../../../../../../../🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts";
 import {decodeFax,encodeFax} from "./📠️fax/🟦️.ts";

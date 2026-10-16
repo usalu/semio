@@ -11,14 +11,14 @@ impl OpeningState {
     /// history patch are folded in exactly as a user-pressed action's are, and a person can cancel it between chunks.
     /// A cancelled picker dispatches nothing and is not an error.
     #[cfg(target_arch = "wasm32")]
-    pub(super) async fn run_file_open_request(&mut self, request: PendingFileOpen, docs: &DocumentState) {
+    pub async fn run_file_open_request(&mut self, request: PendingFileOpen, docs: &DocumentState) {
         let PendingFileOpen { controller_id, accept, read_as, import_action, args, multiple } = request;
         let opened = request_file_open(&accept, read_as.as_deref(), multiple).await;
         debug_log(&format!("[TRACE] wgpu-shell file open accept={accept} action={import_action} files={} bytes={}", opened.len(), opened.iter().map(|file| file.contents.len()).sum::<usize>()));
         self.begin_import_transfer(PickedImport { controller_id, import_action, opened, args, multiple }, docs);
     }
 
-    pub(crate) fn push_uri(&mut self, uri: String) {
+    pub fn push_uri(&mut self, uri: String) {
         self.uri_history.truncate(self.uri_index + 1);
         self.uri_history.push(uri);
         self.uri_index = self.uri_history.len().saturating_sub(1);

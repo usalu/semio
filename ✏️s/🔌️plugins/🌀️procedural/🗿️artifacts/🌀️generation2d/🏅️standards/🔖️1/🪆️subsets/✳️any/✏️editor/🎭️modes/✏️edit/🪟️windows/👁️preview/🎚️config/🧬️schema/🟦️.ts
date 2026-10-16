@@ -1,4 +1,4 @@
-import { parseViewport2d, type Viewport2d } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+import { parseViewport2d, type Viewport2d } from "@semio-tech/framework/ui/viewport/2d/schema";
 
 /** 🎚️ Persisted navigation for one exact Generation2d edit preview window. */
 export interface Generation2dEditPreviewWindowConfig { viewport: Viewport2d }

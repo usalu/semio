@@ -114,7 +114,7 @@ export async function publishNxCollectionBoundary(root:string,invocation:ScriptI
 }
 
 async function publishNxCollectionBoundaryV1(root: string,directory:string, signal?: AbortSignal, progress?: (directories: number) => void): Promise<void> {
-  const profileStarted=performance.now(),profile=process.env.SEMIO_NX_PROFILE_INPUTS==="1";
+  const profileStarted=performance.now(),profile=process.env.SEMIO_BUILD_PROFILE_INPUTS==="1";
   signal?.throwIfAborted();
   if (!isAbsolute(root) || root.split(/[\\/]/u).some(part => part === "." || part === "..")) throw new Error("Nx collection publication requires raw absolute real ancestry");
   const real = async (path: string): Promise<void> => {
@@ -392,7 +392,7 @@ export class NxScript extends Script {
     const check=()=>checkResourceLeaseControl(phaseControl);check();
     const outputLog = process.env[NX_OUTPUT_LOG_ENV];
     delete process.env[NX_OUTPUT_LOG_ENV];
-    const bootstrapStart=performance.now(),profileBootstrap=process.env.SEMIO_NX_PROFILE_INPUTS==="1";
+    const bootstrapStart=performance.now(),profileBootstrap=process.env.SEMIO_BUILD_PROFILE_INPUTS==="1";
     let admissionFinished=bootstrapStart,provisionFinished=bootstrapStart;
     let tooling: { cli: string; modulePath: string; bun: string; authorizer:string };
     {

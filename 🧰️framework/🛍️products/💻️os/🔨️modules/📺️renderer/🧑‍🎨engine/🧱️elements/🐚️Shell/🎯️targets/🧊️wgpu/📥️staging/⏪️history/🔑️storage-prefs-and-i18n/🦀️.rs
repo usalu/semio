@@ -6,9 +6,9 @@ use super::*;
 
 //#region ShellChrome
 //#region 🗄️PrefsStore
-pub(crate) const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
+pub const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
 
-pub(crate) const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
+pub const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
 
 #[cfg(not(target_arch = "wasm32"))]
 static NATIVE_PREF_DOCUMENTS: std::sync::LazyLock<std::sync::Mutex<semio_framework_os_services::RetainedFixedFileDocuments>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(semio_framework_os_services::RetainedFixedFileDocuments::default()));
@@ -20,7 +20,7 @@ static NATIVE_PREF_DOCUMENT_GENERATION: std::sync::atomic::AtomicU64 = std::sync
 /// per-OS config-home fallback (XDG on linux/devcontainer, `%APPDATA%` on windows, `~/.config` on
 /// macOS) — no new dependency (no `dirs` crate), just `std::env`.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn native_prefs_file_path() -> std::path::PathBuf {
+pub fn native_prefs_file_path() -> std::path::PathBuf {
     if let Ok(dir) = std::env::var("SEMIO_PREFS_DIR") {
         return std::path::PathBuf::from(dir).join("ui-prefs.json");
     }
@@ -28,7 +28,7 @@ pub(super) fn native_prefs_file_path() -> std::path::PathBuf {
     std::path::PathBuf::from(base).join("semio").join("ui-prefs.json")
 }
 
-pub(crate) fn empty_os_shell_config() -> Value {
+pub fn empty_os_shell_config() -> Value {
     serde_json::json!({
         "version": 1,
         "preferences": {},
@@ -95,7 +95,7 @@ fn native_pref_write_page(key: &str, value: &str) -> bool {
 
 /// 🗝️ One TOP-LEVEL storage key — React's `StoragePort.get` (`🖥️platform/🟦️.ts`), the flat
 /// `localStorage` entry, NOT a field of the `semio.os.config` document.
-pub(crate) fn raw_prefs_get(key: &str) -> Option<String> {
+pub fn raw_prefs_get(key: &str) -> Option<String> {
     #[cfg(target_arch = "wasm32")]
     {
         host_storage_get(key)
@@ -109,7 +109,7 @@ pub(crate) fn raw_prefs_get(key: &str) -> Option<String> {
 /// 🗝️ React's `StoragePort.set`. On the browser build the write lands in this isolate's cache FIRST
 /// and crosses the door afterwards, so a read that follows a write in the same frame answers the
 /// written value — the door is asynchronous and a frame is not.
-pub(crate) fn raw_prefs_set(key: &str, value: &str) {
+pub fn raw_prefs_set(key: &str, value: &str) {
     #[cfg(target_arch = "wasm32")]
     host_storage_set(key, value);
     #[cfg(not(target_arch = "wasm32"))]
@@ -122,7 +122,7 @@ pub(crate) fn raw_prefs_set(key: &str, value: &str) {
 /// `OsShellConfig.getPreference` (`🖥️platform/🟦️.ts`). Its ONE key is `os.config.ui-preferences`, the
 /// UI-preferences event log; every other durable key React keeps is a flat entry reached through
 /// [`stored_field_get`].
-pub(crate) fn prefs_get(key: &str) -> Option<String> {
+pub fn prefs_get(key: &str) -> Option<String> {
     let raw = raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)?;
     if raw.len() > OS_SHELL_CONFIG_MAX_BYTES {
         return None;
@@ -133,7 +133,7 @@ pub(crate) fn prefs_get(key: &str) -> Option<String> {
 /// 🎚️ React's `OsShellConfig.setPreference`: re-read the complete document, apply one field, write it
 /// back — so a sibling projection (`dockLayouts`, `dockUi`, `windowPanes`) is never
 /// clobbered by a preference write.
-pub(crate) fn prefs_set(key: &str, value: &str) {
+pub fn prefs_set(key: &str, value: &str) {
     let mut config = raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)
         .filter(|raw| raw.len() <= OS_SHELL_CONFIG_MAX_BYTES)
         .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
@@ -309,7 +309,7 @@ pub fn host_storage_set(key: &str, value: &str) {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub(super) fn host_storage_write_through(verb: StorageDoorVerb, key: &str, value: Option<&str>) {
+pub fn host_storage_write_through(verb: StorageDoorVerb, key: &str, value: Option<&str>) {
     let request = match encode_storage_door_request(verb, StorageDoorScope::Local, key, value) {
         Ok(request) => request,
         Err(error) => {
@@ -318,7 +318,7 @@ pub(super) fn host_storage_write_through(verb: StorageDoorVerb, key: &str, value
         }
     };
     let key = key.to_string();
-    crate::spawn_app_task(async move {
+    semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
         match host_io_call(&request, None).await.map_err(|error| error).and_then(|answer| decode_storage_door_answer(&answer)) {
             Ok(_) => {}
             Err(error) => debug_log(&format!("[TRACE] wgpu-shell storage {key} not persisted: {error}")),
@@ -327,8 +327,221 @@ pub(super) fn host_storage_write_through(verb: StorageDoorVerb, key: &str, value
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn host_storage_write_through(_verb: StorageDoorVerb, _key: &str, _value: Option<&str>) {}
+pub fn host_storage_write_through(_verb: StorageDoorVerb, _key: &str, _value: Option<&str>) {}
 
 //#endregion 🚪️StorageDoor
 //#endregion ShellChrome
 
+//#region ShellChrome
+//#region 🎨️ThemeRegistry
+//#endregion 🎨️ThemeRegistry
+//#endregion ShellChrome
+
+//#region ShellChrome
+//#region 🌉️AgentBridgeConfigDoor
+//#endregion 🌉️AgentBridgeConfigDoor
+//#endregion ShellChrome
+
+//#region ShellChrome
+//#region 🛰️AgentBridgeOfferScope
+//#endregion 🛰️AgentBridgeOfferScope
+//#endregion ShellChrome
+
+//#region ShellChrome
+//#region 🚪️StorageDoor
+thread_local! {
+    pub static HOST_STORAGE: std::cell::RefCell<BTreeMap<String, String>> = const { std::cell::RefCell::new(BTreeMap::new()) };
+}
+//#endregion 🚪️StorageDoor
+//#endregion ShellChrome
+
+//#region ShellChrome
+//#region 🗄️PrefsStore
+#[cfg(any(test, feature = "testkit"))]
+pub fn prefs_set_in(store: &mut impl PrefsStore, key: &str, value: &str) {
+    let mut config = store
+        .get(OS_SHELL_CONFIG_STORAGE_KEY)
+        .filter(|raw| raw.len() <= OS_SHELL_CONFIG_MAX_BYTES)
+        .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
+        .filter(|config| config.get("version").and_then(Value::as_u64) == Some(1))
+        .unwrap_or_else(empty_os_shell_config);
+    if !config.get("preferences").is_some_and(Value::is_object) {
+        config["preferences"] = serde_json::json!({});
+    }
+    config["preferences"][key] = Value::String(value.to_string());
+    if let Ok(raw) = serde_json::to_string(&config) {
+        if raw.len() <= OS_SHELL_CONFIG_MAX_BYTES {
+            store.set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
+        }
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub fn prefs_get_from(store: &impl PrefsStore, key: &str) -> Option<String> {
+    let raw = store.get(OS_SHELL_CONFIG_STORAGE_KEY)?;
+    if raw.len() > OS_SHELL_CONFIG_MAX_BYTES {
+        return None;
+    }
+    serde_json::from_str::<Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub const OS_SHELL_PREFS_FILE_MAX_BYTES: usize = OS_SHELL_CONFIG_MAX_BYTES + 4 * 1024;
+
+#[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+impl PrefsStore for FilePrefsStore {
+    fn get(&self, key: &str) -> Option<String> {
+        self.poll_load();
+        self.cache.borrow().get(key).cloned()
+    }
+
+    fn set(&mut self, key: &str, value: &str) {
+        self.poll_load();
+        self.cache.borrow_mut().insert(key.to_string(), value.to_string());
+        self.dirty.set(true);
+        self.flush();
+    }
+}
+
+#[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+impl FilePrefsStore {
+    pub fn new() -> Self {
+        Self::with_path(native_prefs_file_path())
+    }
+
+    pub fn with_path(path: std::path::PathBuf) -> Self {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let load_path = path.clone();
+        semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().submit(
+            Lane::Io,
+            Box::new(move || {
+                use std::fs as system_fs;
+                use std::io::Read;
+                let cache = system_fs::File::open(load_path)
+                    .ok()
+                    .filter(|file| file.metadata().ok().is_some_and(|metadata| metadata.len() <= OS_SHELL_PREFS_FILE_MAX_BYTES as u64))
+                    .and_then(|file| {
+                        let mut raw = String::new();
+                        file.take((OS_SHELL_PREFS_FILE_MAX_BYTES + 1) as u64).read_to_string(&mut raw).ok()?;
+                        (raw.len() <= OS_SHELL_PREFS_FILE_MAX_BYTES).then_some(raw)
+                    })
+                    .and_then(|raw| serde_json::from_str::<HashMap<String, String>>(&raw).ok())
+                    .unwrap_or_default();
+                let _ = sender.send(cache);
+            }),
+        );
+        Self { path, cache: std::cell::RefCell::new(HashMap::new()), pending_load: std::cell::RefCell::new(Some(receiver)), dirty: std::cell::Cell::new(false), flush_state: std::sync::Arc::new(std::sync::Mutex::new(FilePrefsFlushState::default())) }
+    }
+
+    pub fn poll_load(&self) {
+        let result = self.pending_load.borrow().as_ref().map(std::sync::mpsc::Receiver::try_recv);
+        match result {
+            Some(Ok(loaded)) => {
+                self.pending_load.borrow_mut().take();
+                if !self.dirty.get() {
+                    *self.cache.borrow_mut() = loaded;
+                }
+            }
+            Some(Err(std::sync::mpsc::TryRecvError::Disconnected)) => {
+                self.pending_load.borrow_mut().take();
+            }
+            Some(Err(std::sync::mpsc::TryRecvError::Empty)) | None => {}
+        }
+    }
+
+    pub fn flush(&self) {
+        let mut state = self.flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.latest = Some(self.cache.borrow().clone());
+        if state.running {
+            return;
+        }
+        state.running = true;
+        drop(state);
+        let path = self.path.clone();
+        let flush_state = std::sync::Arc::clone(&self.flush_state);
+        semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool().submit(
+            Lane::Io,
+            Box::new(move || loop {
+                let snapshot = {
+                    let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    match state.latest.take() {
+                        Some(snapshot) => snapshot,
+                        None => {
+                            state.running = false;
+                            break;
+                        }
+                    }
+                };
+                use std::fs as system_fs;
+                if let Some(parent) = path.parent() {
+                    let _ = system_fs::create_dir_all(parent);
+                }
+                if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
+                    let _ = system_fs::write(&path, json);
+                }
+            }),
+        );
+    }
+}
+
+#[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+pub struct FilePrefsStore {
+    pub path: std::path::PathBuf,
+    pub cache: std::cell::RefCell<HashMap<String, String>>,
+    pub pending_load: std::cell::RefCell<Option<std::sync::mpsc::Receiver<HashMap<String, String>>>>,
+    pub dirty: std::cell::Cell<bool>,
+    pub flush_state: std::sync::Arc<std::sync::Mutex<FilePrefsFlushState>>,
+}
+//#endregion 🗄️PrefsStore
+//#endregion ShellChrome
+
+//#region ShellChrome
+//#region 🚪️StorageDoor
+/// 🗄️ Installs the page's read of the carried census as this isolate's synchronous store, replacing
+/// whatever it held: the page's store IS the authority, and the only re-seed after boot is a `storage`
+/// event, which fires for OTHER documents on the origin only — this isolate's own writes went out
+/// through the door and are already in both halves. Answers how many entries it accepted.
+pub fn seed_host_storage(snapshot_json: &str) -> usize {
+    let entries = decode_host_storage_snapshot(snapshot_json);
+    let accepted = entries.len();
+    HOST_STORAGE.with(|store| *store.borrow_mut() = entries);
+    accepted
+}
+
+/// 🗄️ The remover of React's `StoragePort` trio, mirrored whole so the door is the port rather than a
+/// subset of it. No shell lane deletes a preference today — React's own `OsShellConfig.reset()` has no
+/// wgpu twin, because the ephemeral brand does not (`📓️w1d` gap) — so this is the door's surface, not
+/// a live path.
+pub fn host_storage_remove(key: &str) {
+    if !host_storage_carries_key(key) {
+        return;
+    }
+    HOST_STORAGE.with(|store| store.borrow_mut().remove(key));
+    host_storage_write_through(StorageDoorVerb::Remove, key, None);
+}
+
+/// 🗄️ Reads one boot snapshot — the page's `{key: value}` read of the carried census. Uncarried keys
+/// and oversized values are DROPPED rather than failing the whole snapshot: one unreadable preference
+/// must not cost a boot every other preference it could have served.
+pub fn decode_host_storage_snapshot(snapshot_json: &str) -> BTreeMap<String, String> {
+    let mut entries = BTreeMap::new();
+    if snapshot_json.len() > HOST_STORAGE_SNAPSHOT_MAX_BYTES {
+        return entries;
+    }
+    let Ok(Value::Object(object)) = serde_json::from_str::<Value>(snapshot_json) else { return entries };
+    let mut bytes = 0usize;
+    for (key, value) in object {
+        let Some(text) = value.as_str() else { continue };
+        if !host_storage_carries_key(&key) || text.len() > HOST_STORAGE_VALUE_MAX_BYTES {
+            continue;
+        }
+        bytes += key.len() + text.len();
+        if bytes > HOST_STORAGE_SNAPSHOT_MAX_BYTES {
+            break;
+        }
+        entries.insert(key, text.to_string());
+    }
+    entries
+}
+//#endregion 🚪️StorageDoor
+//#endregion ShellChrome

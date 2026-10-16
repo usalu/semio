@@ -5,6 +5,7 @@ import { transformSync } from "esbuild";
 import glob from "fast-glob";
 import ts from "typescript";
 import { policySnakeToCamel } from "../../🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts";
+import { rootScriptSources } from "../📎️root-script-sources/🟦️.ts";
 import { policyExtractRustSchemaFields } from "../../🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
 import { policyExtractProtobufSchemaFields } from "../../🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";
 
@@ -13,12 +14,11 @@ const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/�
 const defaultArtifactRoot = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-schema-field-extraction/root-script-compiler");
 const artifactRoot = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR ?? defaultArtifactRoot);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/⚙️root-script-compiler/🔣️.json"), "utf8"));
-const text = readFileSync(join(root, "📜️script.ts"), "utf8");
-const source = ts.createSourceFile("📜️script.ts", text, ts.ScriptTarget.Latest, true);
-const functions = source.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && !!node.body);
+const rootSources = rootScriptSources(root).map(({ path, text }) => ({ path, text, syntax: ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true) }));
+const functions = rootSources.flatMap(({ syntax }) => syntax.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && !!node.body));
 
 /** 🧬️ Executes the final effective declaration with independent Bun and esbuild compilers. */
-function implementations(name: string, implementationText = text): Function[] {
+function implementations(name: string, implementationText = rootSources.find(({ syntax }) => syntax.statements.some((node) => ts.isFunctionDeclaration(node) && node.name?.text === name))!.text): Function[] {
   const implementationSource = ts.createSourceFile(`${name}.ts`, implementationText, ts.ScriptTarget.Latest, true);
   const declaration = implementationSource.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && !!node.body && node.name?.text === name).at(-1)!;
   const code = declaration.getText(implementationSource).replace(/^export /u, "");
@@ -42,8 +42,13 @@ test("the root task router has one implementation per top-level function", () =>
 });
 
 test("Bun and esbuild accept the complete actual root task router", () => {
-  expect(new Bun.Transpiler({ loader: "ts" }).transformSync(text).length).toBeGreaterThan(0);
-  expect(transformSync(text, { loader: "ts", format: "esm", target: "es2022" }).code.length).toBeGreaterThan(0);
+  let emitted = 0;
+  for (const { path, text } of rootSources) {
+    const bun = new Bun.Transpiler({ loader: "ts" }).transformSync(text), esbuild = transformSync(text, { loader: "ts", format: "esm", target: "es2022" }).code;
+    expect(bun.length > 0, path).toBe(esbuild.trim().length > 0);
+    emitted += bun.length;
+  }
+  expect(emitted).toBeGreaterThan(0);
 });
 
 test("eager policy vocabulary avoids workspace output reads while default lookup stays strict", () => {
@@ -51,14 +56,14 @@ test("eager policy vocabulary avoids workspace output reads while default lookup
   const vocabularyText = readFileSync(join(root, expected.sourceOwner.path), "utf8");
   const vocabularySource = ts.createSourceFile(expected.sourceOwner.path, vocabularyText, ts.ScriptTarget.Latest, true);
   const variableDeclarations = (syntax: ts.SourceFile) => syntax.statements.filter(ts.isVariableStatement).flatMap((statement) => statement.declarationList.declarations).filter((node) => ts.isIdentifier(node.name));
-  const rootDeclarations = variableDeclarations(source), ownerDeclarations = variableDeclarations(vocabularySource);
+  const rootDeclarations = rootSources.flatMap(({ syntax }) => variableDeclarations(syntax).map((node) => ({ node, syntax }))), ownerDeclarations = variableDeclarations(vocabularySource);
   expect(ownerDeclarations.filter((node) => expected.sourceOwner.declarations.includes(node.name.getText(vocabularySource))).map((node) => node.name.getText(vocabularySource))).toEqual(expected.sourceOwner.declarations);
   const declarations = names.map((name: string) => {
     const owner = ownerDeclarations.find((node) => node.name.getText(vocabularySource) === name);
     if (owner) return { node: owner, syntax: vocabularySource };
-    const local = rootDeclarations.find((node) => node.name.getText(source) === name);
+    const local = rootDeclarations.find(({ node, syntax }) => node.name.getText(syntax) === name);
     if (!local) throw new Error(`Missing eager policy declaration ${name}`);
-    return { node: local, syntax: source };
+    return local;
   });
   const discovery = ts.createSourceFile("discovery.ts", readFileSync(join(root, library, "🔍️discovery/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const helpers = discovery.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && ["canonicalFilenamesForKind", "canonicalPrimaryFilenameForKind"].includes(node.name?.text ?? ""));

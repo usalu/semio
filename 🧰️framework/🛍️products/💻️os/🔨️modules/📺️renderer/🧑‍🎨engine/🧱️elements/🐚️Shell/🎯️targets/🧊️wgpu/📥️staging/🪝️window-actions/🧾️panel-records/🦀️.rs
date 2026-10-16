@@ -9,7 +9,7 @@ use super::*;
 /// ⏯️ Whether the freshly rendered framework ToolRun panel `document` holds a run `seen` has not — the moment the shell
 /// reveals the panel, exactly as the React `ShellHost` does through `toolRunPanelReveal`. The group-key law is
 /// [`semio_framework_tool_run::tool_run_panel_new_runs`], pinned by the `⏯️tool-run` lifecycle fixture.
-pub(crate) fn tool_run_panel_reveals(seen: &mut std::collections::BTreeSet<u64>, document: &UiDocumentLease) -> Result<bool, String> {
+pub fn tool_run_panel_reveals(seen: &mut std::collections::BTreeSet<u64>, document: &UiDocumentLease) -> Result<bool, String> {
     let header = document.header().map_err(|error| format!("the ToolRun panel header is unreadable: {error:?}"))?;
     let mut keys = Vec::with_capacity(header.node_count);
     for index in 0..header.node_count {
@@ -30,7 +30,7 @@ pub(crate) fn tool_run_panel_reveals(seen: &mut std::collections::BTreeSet<u64>,
 /// 🎨️ A colour row's staged value: the hex its swatch or hex field committed (`ui_contract::parse_ui_color_hex`, keeping
 /// the alpha when the text carries none) or the alpha its slider committed, over the colour already staged, else the
 /// one the row painted; an unreadable hex keeps the colour.
-pub(crate) fn staged_color_value(color: &Value, value: Option<&Value>, current: Option<&Value>) -> Value {
+pub fn staged_color_value(color: &Value, value: Option<&Value>, current: Option<&Value>) -> Value {
     let alpha = color.get("alpha").and_then(Value::as_bool).unwrap_or(false);
     let mut rgba = [0.0, 0.0, 0.0, 1.0];
     for (slot, component) in rgba.iter_mut().zip(current.or_else(|| color.get("rgba")).and_then(Value::as_array).into_iter().flatten()) {

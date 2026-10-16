@@ -1,4 +1,4 @@
-import { interactivityMcpHttpTransportFailures } from "../../../../../../../../📜️script.ts";
+import { interactivityMcpHttpTransportFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity mcp http transport policy assertions. */
 export function interactivityMcpHttpTransportSelfTests(): void {

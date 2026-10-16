@@ -161,7 +161,7 @@ mod laws {
         const FIDELITY: IoFidelity = IoFidelity::Exact;
         const CONFORMANCE: Option<fn(&semio_framework_value::DslValue) -> Vec<Diagnostic>> = Some(flag_non_object);
 
-        async fn deserialize(payload: &IoPayload, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<semio_framework_value::DslValue> {
+        async fn deserialize(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<semio_framework_value::DslValue> {
             let IoPayload::Text(text) = payload else {
                 return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"expected text payload")));
             };
@@ -183,7 +183,7 @@ mod laws {
         const INTO: Dialect = C;
         const FIDELITY: IoFidelity = IoFidelity::Exact;
 
-        async fn serialize(from: &semio_framework_value::DslValue, children: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        async fn serialize(from: &semio_framework_value::DslValue, children: &ArchiveChildren, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let slots: Vec<String> = children.slots().into_iter().map(|(slot, child_id)| format!("{slot}/{child_id}")).collect();
             Ok(IoOutcome::clean(IoPayload::Text(format!("{from:?}|{}", slots.join(",")))))
         }
@@ -191,10 +191,10 @@ mod laws {
 
     /// 🗃️ A carrier of `parent` owning one child at `content`/`child-1`, with `parent_spr` as its parent history.
     fn composed_carrier(parent: &semio_framework_value::DslValue, parent_spr: Vec<u8>) -> Vec<u8> {
-        let artifact = |id: &str, dialect: Dialect| store::channel::DocumentArchiveArtifactRef { artifact_id: id.into(), artifact_kind: dialect.artifact_kind.into(), standard: dialect.standard.0.into(), subset: dialect.subset.0.into() };
-        let owner = store::channel::DocumentArchiveOwnerRef { parent: artifact("parent", A), slot: "content".into(), child_id: "child-1".into() };
-        let member = store::channel::OwnedDocumentMemberPackEntry { ordinal: 0, reference: artifact("child-1", B), owner, envelope_pack: vec![7] };
-        store::channel::encode_document_archive_bytes(&store::channel::DocumentArchivePack { parent_pack: pack::snapshot::ArtifactPack::encode_pack(parent), parent_spr, members: vec![member] }).expect("the carrier encodes")
+        let artifact = |id: &str, dialect: Dialect| semio_framework_os_channel::DocumentArchiveArtifactRef { artifact_id: id.into(), artifact_kind: dialect.artifact_kind.into(), standard: dialect.standard.0.into(), subset: dialect.subset.0.into() };
+        let owner = semio_framework_os_channel::DocumentArchiveOwnerRef { parent: artifact("parent", A), slot: "content".into(), child_id: "child-1".into() };
+        let member = semio_framework_os_channel::OwnedDocumentMemberPackEntry { ordinal: 0, reference: artifact("child-1", B), owner, envelope_pack: vec![7] };
+        semio_framework_os_channel::encode_document_archive_bytes(&semio_framework_os_channel::DocumentArchivePack { parent_pack: pack::snapshot::ArtifactPack::encode_pack(parent), parent_spr, members: vec![member] }).expect("the carrier encodes")
     }
 
     /// 🪆️ LAW (design §20.15, readers compose on read): a serializer entry run over a composed head carrier receives the parent and
@@ -210,7 +210,7 @@ mod laws {
         assert_eq!(text(with_control(|control|(entry.run)(&IoPayload::Binary(composed_carrier(&parent, Vec::new())),control))), format!("{parent:?}|content/child-1"));
         assert_eq!(text(with_control(|control|(entry.run)(&IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&parent)),control))), format!("{parent:?}|"));
         assert!(with_control(|control|(entry.run)(&IoPayload::Binary(composed_carrier(&parent, vec![1])),control)).is_err(), "a carrier with parent history is not a head carrier");
-        assert!(with_control(|control|(entry.run)(&IoPayload::Binary(vec![store::channel::DOCUMENT_ARCHIVE_VERSION, 0xff]),control)).is_err(), "a malformed carrier is refused");
+        assert!(with_control(|control|(entry.run)(&IoPayload::Binary(vec![semio_framework_os_channel::DOCUMENT_ARCHIVE_VERSION, 0xff]),control)).is_err(), "a malformed carrier is refused");
     }
 
     /// 🧲️ LAW: the constructors declare the native side — a serializer entry exports out of its own dialect, a deserializer entry

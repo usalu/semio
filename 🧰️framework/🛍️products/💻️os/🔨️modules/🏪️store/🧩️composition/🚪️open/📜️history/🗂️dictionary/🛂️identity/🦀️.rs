@@ -23,21 +23,21 @@ enum Stage {
 }
 
 pub(super) struct SemanticRecord {
-    kind: u8,
-    stage: Stage,
-    presence: u8,
+    pub kind: u8,
+    pub stage: Stage,
+    pub presence: u8,
     matched: bool,
 }
 
 impl SemanticRecord {
-    pub(super) fn new(kind: u8) -> Self {
+    pub fn new(kind: u8) -> Self {
         Self { kind, stage: Stage::Format, presence: 0, matched: true }
     }
     pub(super) fn needs_id(&self) -> bool {
         matches!(self.stage, Stage::Id(_))
     }
 
-    pub(super) fn push(&mut self, byte: u8, request: &MemberOpenRequest) -> Result<(), MemberOpenDiagnostic> {
+    pub fn push(&mut self, byte: u8, request: &MemberOpenRequest) -> Result<(), MemberOpenDiagnostic> {
         match self.stage {
             Stage::Format => {
                 if byte != 1 {
@@ -106,7 +106,7 @@ impl SemanticRecord {
         Ok(())
     }
 
-    pub(super) fn finish(&self) -> Result<bool, MemberOpenDiagnostic> {
+    pub fn finish(&self) -> Result<bool, MemberOpenDiagnostic> {
         if self.stage != Stage::Done {
             return Err(MemberOpenDiagnostic::Malformed);
         }

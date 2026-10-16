@@ -1,7 +1,7 @@
 //! 📖️ Original paged record bytes feed one paid native cursor without source materialization.
 use super::{RetainedRecordBodyCursor,RetainedRecordBodyToken,RetainedValueToken};
 use semio_framework_replication_codec::PackLimits; use semio_framework_pack_format_retained::RetainedPackCloseStep;
-use semio_framework_replication_codec::{RetainedWireByteSource,OriginalWireSourceIdentity};
+use semio_framework_replication_wire_core::{RetainedWireByteSource,OriginalWireSourceIdentity};
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueRefusalKind};
 use std::mem::ManuallyDrop;

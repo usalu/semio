@@ -1,4 +1,4 @@
-import { parseArtifactRef } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { parseArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 /** 📇️ Explicit native metadata admission into canonical PDF ownership. */
 import type { PdfInfo,PdfEmbeddedFile,PdfOutputIntent,PdfEncryption,PdfViewerPreferences,PdfMarkInfo,PdfPageMode,PdfPageLayout } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { record,array,text,integer,integers,boolean,pdfDictionaryFromNativeJson } from "../🟦️.ts";

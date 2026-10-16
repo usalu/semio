@@ -83,9 +83,9 @@ fn a_painted_navbar_hands_the_platform_a_named_tree() {
     assert!(walked < 16_384 && shell.chrome.error.is_none(), "the navbar walk completes: {:?}", shell.chrome.error);
     let painted = input.staged_hits().iter().filter(|hit| hit.control_id.is_some()).count();
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
-    let publication = crate::native_accessibility::published_native_accessibility();
-    let chrome = publication.windows.iter().find(|window| window.window_id == crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID).expect("the chrome is announced to the platform");
-    let census = crate::native_accessibility::native_accessibility_census(&publication);
+    let publication = semio_framework_os_renderer_wgpu_native_platform::native_accessibility::published_native_accessibility();
+    let chrome = publication.windows.iter().find(|window| window.window_id == semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID).expect("the chrome is announced to the platform");
+    let census = semio_framework_os_renderer_wgpu_native_platform::native_accessibility::native_accessibility_census(&publication);
     eprintln!("native accessibility census: painted controls {painted}, chrome nodes {}, {census:?}", chrome.nodes.len());
     let announced: Vec<&str> = chrome.nodes.iter().map(|node| node.key.as_str()).collect();
     for tab in ["fixture.leading.first", "fixture.leading.second", "fixture.leading.third"] {

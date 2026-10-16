@@ -214,8 +214,9 @@ export async function testBrowserWasiActivation(repoRoot: string, invocation: Sc
   assert.deepEqual(hostCalls, fixture.lineBuffer.hostCalls);
   assert.equal(hostCalls.length, 2);
   assert.equal(sink.pendingBytes("stderr"), 0);
-  assert.equal(classifyGuestLogLine("stderr", hostCalls[0].text), "debug");
-  assert.equal(classifyGuestLogLine("stderr", hostCalls[1].text), "error");
+  const [debugLine,errorLine]=hostCalls;assert(debugLine&&errorLine,"two actual guest lines required");
+  assert.equal(classifyGuestLogLine("stderr", debugLine.text), "debug");
+  assert.equal(classifyGuestLogLine("stderr", errorLine.text), "error");
   const preview2Writes = [];
   const io = await import(pathToFileURL(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser/io.js")).href);
   const preview2 = io.outputStreamCreate({ write(bytes: Uint8Array) { preview2Writes.push(new TextDecoder().decode(bytes)); } });

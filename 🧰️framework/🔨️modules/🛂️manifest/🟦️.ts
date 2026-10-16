@@ -22,7 +22,7 @@ export type { ShellLocale, ShellTerminology, LocalizedLabel };
 import type { ContextMenuItemSpec } from "../🖱️ui/🎬️scene/🟦️.ts";
 import inputLabelGlossaryDocument from "./🔣️input-labels.json" with { type: "json" };
 import numericTransportSchemaDocument from "../🌱️value/🧬️schema/🔣️.json" with { type: "json" };
-import type { Effect } from "../🎠️kernel/🟦️.ts";
+import type { Effect } from "../🎠️kernel/⚡️effect/🟦️.ts";
 import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } from "../🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 
 // #region 🧬️GeneratedMirror

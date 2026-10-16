@@ -21,8 +21,8 @@
 //! future revision drop this file's hand-rolled `ApplicationHandler` entirely.
 
 use crate::os_host::OsHost;
-use crate::AppInteractionState;
-use crate::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
+use semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState;
+use semio_framework_os_renderer_wgpu_host_plumbing::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
 use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PointerButton, PointerInfo, TextEditTarget};
 
@@ -151,7 +151,7 @@ impl WindowDelegate for OsHost {
     fn handle_event(&mut self, event: DispatchEvent) {
         let hold = self.frame_generation_hold();
         if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, event) == ui_host::EnqueueOutcome::Overflow {
-            crate::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
+            semio_framework_os_renderer_wgpu_host_base::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
         }
     }
 
@@ -167,7 +167,7 @@ impl WindowDelegate for OsHost {
         let (width, height) = metrics.logical_size();
         let _ = self.surface_resize.enqueue(metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let dpr = metrics.scale_factor;
-        let _ = self.runtime.enqueue_apply(Some("window-metrics"), true, crate::RuntimeApply::Resize { width, height, dpr });
+        let _ = self.runtime.enqueue_apply(Some("window-metrics"), true, semio_framework_os_renderer_wgpu_runtime_mailbox::RuntimeApply::Resize { width, height, dpr });
     }
 
     /// 🖼️ P3/P5 mounted split: `build_and_publish_snapshot` drains bounded input and non-blockingly
@@ -202,7 +202,7 @@ impl OsHost {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn redraw_offscreen_worker(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<crate::os_host::BrowserRedrawOutcome>,semio_framework_job::OriginalTurnFailure>{
+    pub fn redraw_offscreen_worker(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<crate::os_host::BrowserRedrawOutcome>,semio_framework_job::OriginalTurnFailure>{
         let _=self.scheduler.should_render(self.clock.now_seconds());
         self.prepare_redraw();
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
@@ -225,7 +225,7 @@ impl OsHost {
     /// tick superseded it, and the shell produced no further frame for the rest of the session
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
     fn prepare_redraw(&mut self) {
-        let _ = crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step();
+        let _ = semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::MountedSurfaceResizeLane::close_abandoned_step();
         if self.frame_ready {
             self.frame_ready = false;
         } else if !self.frame_build.has_live_session() {
@@ -297,7 +297,7 @@ impl OsHost {
         if cx.should_yield(){return Ok(())}
         self.pump_frame_inputs(cx)?;
         if !crate::os_host::component_surface_close_pending(){
-            let inputs=self.runtime.frame_inputs(crate::app_now_ms());
+            let inputs=self.runtime.frame_inputs(semio_framework_os_renderer_wgpu_host_base::app_now_ms());
             let generation=semio_framework_trace::Generation(self.frame_generation);
             self.runtime.observe_presentation_input_generation(generation.0);
             let runtime=self.runtime.clone();
@@ -317,15 +317,15 @@ impl OsHost {
         if !self.snapshot_sink.publish_on_original_caller(cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);return Ok(())}
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
         match self.presenter.present_step(cx){
-            Ok(crate::AppPresentStep::Complete{generation,cursor,theme_dark,fullscreen,cursor_wake,retained_control_deadline,shell_clock_deadline,has_animated_primitives,media_slots})=>{
-                self.original_snapshot=Some(crate::render_snapshot::RenderSnapshot::new(0,semio_cursor_to_request(cursor),cursor,theme_dark,None).with_media_slots(media_slots));
+            Ok(semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::Complete{generation,cursor,theme_dark,fullscreen,cursor_wake,retained_control_deadline,shell_clock_deadline,has_animated_primitives,media_slots})=>{
+                self.original_snapshot=Some(semio_framework_os_renderer_wgpu_host_plumbing::render_snapshot::RenderSnapshot::new(0,semio_cursor_to_request(cursor),cursor,theme_dark,None).with_media_slots(media_slots));
                 cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
                 self.animation_clock.accept(has_animated_primitives);self.animation_clock.sync(&mut self.scheduler,self.clock.now_seconds());self.runtime.publish_retained_control_deadline(retained_control_deadline);self.runtime.publish_shell_clock_deadline(shell_clock_deadline);self.platform_fullscreen=fullscreen;
                 if let Some(token)=cursor_wake{if self.runtime.acknowledge_world_cursor_wake(&token){self.retain_cursor_wake_directive(token);self.scheduler.invalidate(InvalidationReason::RESOURCE_READY)}}
                 if generation.0!=self.frame_generation{self.scheduler.invalidate(InvalidationReason::INPUT_STATE)}
             },
-            Ok(crate::AppPresentStep::Pending|crate::AppPresentStep::RetryRuntime)=>self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
-            Ok(crate::AppPresentStep::AwaitingRuntime|crate::AppPresentStep::Idle)=>{},
+            Ok(semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::Pending|semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::RetryRuntime)=>self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
+            Ok(semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::AwaitingRuntime|semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::Idle)=>{},
             Err(original)=>return Err(original),
         }Ok(())
     }
@@ -338,11 +338,11 @@ impl OsHost {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
         let snapshot = self.snapshot_sink.acquire();
-        crate::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
+        semio_framework_os_renderer_wgpu_host_plumbing::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
 
         #[cfg(not(target_arch = "wasm32"))]
         if self.hot_swap.is_due(now) {
-            self.scheduler.request_deadline(now + crate::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
+            self.scheduler.request_deadline(now + semio_framework_os_renderer_wgpu_host_plumbing::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
         }
 
         RedrawOutcome { cursor: snapshot.cursor, ime: snapshot.ime }
@@ -363,9 +363,6 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
     }
 }
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-winit-app-p3c/🦀️.rs"]
-mod p3c_tests;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn ime_event_from_winit(ime: &winit::event::Ime) -> ImeEvent {
@@ -382,8 +379,8 @@ fn ime_event_from_winit(ime: &winit::event::Ime) -> ImeEvent {
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
     use super::{advance_frame_generation, collect_scheduler_redraw, ime_event_from_winit, invalidate_scheduler_redraw, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
-    use crate::os_host::OsHostRetirement;
-    use crate::AppMailbox;
+                                                                                                                                                                                                                                                                use crate::os_host::OsHostRetirement;
+        use semio_framework_os_renderer_wgpu_app_runtime::AppMailbox;
     use std::sync::Arc;
     use ui_render::{PhysicalSize, PointerInfo};
     #[cfg(target_arch = "wasm32")]
@@ -401,10 +398,10 @@ mod native {
     /// No `callbacks` payload (the old variant carried `ui_wgpu::wgpu::PointerCallbacks`) — this file
     /// normalizes input itself via `ui_host::event` and drives `AppRuntime` through the enqueue-only
     /// `dispatch_normalized_event` path above, so `boot_runtime` returns only the runtime.
-    pub(crate) enum HostUserEvent {
+    pub enum HostUserEvent {
         RuntimeReady {
             runtime: AppMailbox,
-            presenter: crate::AppPresenter,
+            presenter: semio_framework_os_renderer_wgpu_frame_presentation::AppPresenter,
         },
         FrameReady,
         /// 🔔️ Payload-free worker-completion signal. Receiving it invalidates the retained snapshot;
@@ -436,10 +433,10 @@ mod native {
         window: Option<Arc<Window>>,
         /// ♿️ The window's platform accessibility adapter, attached before the window was first shown.
         #[cfg(not(target_arch = "wasm32"))]
-        accessibility: Option<crate::native_accessibility::NativeAccessibilityBridge>,
+        accessibility: Option<semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityBridge>,
         host: Option<OsHost>,
         retirement: Option<OsHostRetirement>,
-        frame_caller:crate::native_caller::NativeFrameEventIssuer,
+        frame_caller:semio_framework_os_renderer_wgpu_host_plumbing::native_caller::NativeFrameEventIssuer,
         close_pending:bool,
         #[cfg(not(target_arch = "wasm32"))]
         pointers: ui_host::PointerRegistry,
@@ -458,7 +455,7 @@ mod native {
             #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
             #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
             #[cfg(not(target_arch = "wasm32"))] services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
-            frame_caller:crate::native_caller::NativeFrameEventIssuer,
+            frame_caller:semio_framework_os_renderer_wgpu_host_plumbing::native_caller::NativeFrameEventIssuer,
         ) -> Self {
             Self {
                 proxy,
@@ -688,7 +685,7 @@ mod native {
     // 🚫️async: U1 — called from winit's own sync `ApplicationHandler` callbacks.
     fn publish_system_appearance(theme: Option<winit::window::Theme>) {
         let Some(theme) = theme else { return };
-        crate::set_host_appearance(crate::HostAppearance { system_dark: matches!(theme, winit::window::Theme::Dark), ..crate::host_appearance() });
+        semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance { system_dark: matches!(theme, winit::window::Theme::Dark), ..semio_framework_os_renderer_wgpu_host_base::host_appearance() });
     }
 
     impl ApplicationHandler<HostUserEvent> for WinitApp {
@@ -717,7 +714,7 @@ mod native {
                 return;
             }
             semio_framework_trace::register_ui_thread();
-            let mut attributes = WindowAttributes::default().with_title(crate::boot_window_title());
+            let mut attributes = WindowAttributes::default().with_title(semio_framework_os_renderer_wgpu_host_base::boot_window_title());
             #[cfg(target_arch = "wasm32")]
             {
                 use winit::platform::web::WindowAttributesExtWebSys;
@@ -737,7 +734,7 @@ mod native {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let proxy = self.proxy.clone();
-                self.accessibility = Some(crate::native_accessibility::NativeAccessibilityBridge::new(
+                self.accessibility = Some(semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityBridge::new(
                     event_loop,
                     &window,
                     Arc::new(move || {
@@ -757,8 +754,8 @@ mod native {
             #[cfg(not(target_arch = "wasm32"))]
             let services=self.services.clone();
             let gpu = ui_gpu::platform::NativeSurfaceCapture::capture(window.clone()).expect("native GPU surface capture").prepare();
-            crate::spawn_app_task(async move {
-                let result = crate::boot_runtime(
+            semio_framework_os_renderer_wgpu_host_base::spawn_app_task(async move {
+                let result = semio_framework_os_renderer_wgpu_frame_transaction::boot_runtime(
                     window,
                     gpu,
                     plugin_filter,
@@ -774,7 +771,7 @@ mod native {
                     Ok((runtime, presenter)) => {
                         let _ = proxy.send_event(HostUserEvent::RuntimeReady { runtime, presenter });
                     }
-                    Err(error) => crate::log_debug(&format!("boot_runtime failed: {error}")),
+                    Err(error) => semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("boot_runtime failed: {error}")),
                 }
             });
         }
@@ -785,8 +782,8 @@ mod native {
         fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
             match event {
                 HostUserEvent::RuntimeReady { runtime, presenter } => {
-                    crate::log_debug_diagnostic("[TRACE] native renderer boot ready");
-                    let mut host = OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
+                    semio_framework_os_renderer_wgpu_host_base::log_debug_diagnostic("[TRACE] native renderer boot ready");
+                    let mut host = OsHost::new(runtime, presenter, semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
                     let proxy = self.proxy.clone();
                     #[cfg(not(target_arch = "wasm32"))]
                     host.runtime.set_waker(Arc::new(move || {
@@ -878,7 +875,7 @@ mod native {
                 }
                 WindowEvent::Focused(false) => {
                     let _=self.frame_caller.observe_event();
-                    crate::shell::note_host_window_blur();
+                    semio_framework_os_renderer_wgpu_shell_window_actions::note_host_window_blur();
                     window.request_redraw();
                 }
                 WindowEvent::RedrawRequested => {
@@ -886,7 +883,7 @@ mod native {
                         if !self.frame_caller.ready()||self.frame_caller.finishing(){self.pending_reason=Some(reason);self.recompute_control_flow(event_loop);return;}
                         if let Some(host) = self.host.as_mut() {
                             let call=self.frame_caller.dispatch_step(|cx|host.redraw_on_original_caller(cx));
-                            match call{Ok(original)=>{crate::log_debug(&format!("[DEBUG] Native frame original epoch={} copiedItems={} copiedBytes={} bornBytes={} releasedBytes={} fuel={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.copied_bytes,original.receipt_spent.retained_capacity_bytes,original.receipt_spent.released_bytes,original.work_units_spent));if original.result.is_err(){self.close_pending=true;}},Err(_)=>{self.pending_reason=Some(reason);window.request_redraw();}}
+                            match call{Ok(original)=>{semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("[DEBUG] Native frame original epoch={} copiedItems={} copiedBytes={} bornBytes={} releasedBytes={} fuel={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.copied_bytes,original.receipt_spent.retained_capacity_bytes,original.receipt_spent.released_bytes,original.work_units_spent));if original.result.is_err(){self.close_pending=true;}},Err(_)=>{self.pending_reason=Some(reason);window.request_redraw();}}
                         }
                     }
                     self.recompute_control_flow(event_loop);
@@ -913,14 +910,14 @@ mod native {
         fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
             if self.frame_caller.finishing(){let _=self.frame_caller.finish_event_step();self.recompute_control_flow(event_loop);return;}
             if !self.frame_caller.terminal_is_empty()&&!self.frame_caller.ready(){
-                match self.frame_caller.admit_step(){Ok(original)=>crate::log_debug(&format!("[DEBUG] Native root admission epoch={} copiedItems={} bornBytes={} ready={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes,original.result.as_ref().is_ok_and(|step|step.ready))),Err(_)=>{}}
+                match self.frame_caller.admit_step(){Ok(original)=>semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("[DEBUG] Native root admission epoch={} copiedItems={} bornBytes={} ready={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes,original.result.as_ref().is_ok_and(|step|step.ready))),Err(_)=>{}}
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 return;
             }
             if self.close_pending&&self.host.is_some(){
                 let returned=self.frame_caller.dispatch_cleanup_step(|cx|OsHost::try_into_retirement(&mut self.host,cx));
                 if let Ok(original)=returned{
-                    crate::log_debug(&format!("[DEBUG] Native host retirement admission epoch={} copiedItems={} bornBytes={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes));
+                    semio_framework_os_renderer_wgpu_host_base::log_debug(&format!("[DEBUG] Native host retirement admission epoch={} copiedItems={} bornBytes={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes));
                     if let Ok(Some(retirement))=original.result{self.retirement=Some(retirement);}
                 }
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
@@ -991,12 +988,6 @@ mod native {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) use native::{HostUserEvent, WinitApp};
+pub use native::{HostUserEvent, WinitApp};
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-winit-app-callback-latency/🦀️.rs"]
-mod callback_latency_tests;
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔢️frame-generation-hold/🦀️.rs"]
-mod frame_generation_hold_tests;

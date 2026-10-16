@@ -10,7 +10,7 @@ impl ChromeState {
     /// ⌨️ This session's REMAPPED shortcut table — [`SHELL_SHORTCUT_ROWS`] with the persisted
     /// `keybindingOverrides` applied. Every key-event reader goes through this, so a remap takes effect
     /// for dispatch, for reservation and for the shortcut rows W1c paints, from one source.
-    pub(crate) fn shortcut_table(&self) -> Vec<(String, String)> {
+    pub fn shortcut_table(&self) -> Vec<(String, String)> {
         shell_shortcut_table(&self.chrome_build.preferences.keybinding_overrides)
     }
     //#endregion ⌨️ShellShortcutDispatch

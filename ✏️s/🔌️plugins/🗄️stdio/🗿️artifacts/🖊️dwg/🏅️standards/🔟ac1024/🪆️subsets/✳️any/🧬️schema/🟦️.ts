@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 export interface DwgLogicalLayer { name: string; color: number; }
 export type DwgLogicalGeometryKind = 'point' | 'line' | 'circle' | 'arc' | 'ellipse' | 'lwPolyline' | 'spline' | 'text' | 'face3d' | 'polyline3d' | 'polyfaceMesh';
 export interface DwgLogicalGeometry { kind: DwgLogicalGeometryKind; values: Binary64[]; indices: number[]; text: string; closed: boolean; }

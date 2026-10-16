@@ -7,6 +7,7 @@ import { applyPatch } from "fast-json-patch";
 import { applyRemodelingModelWindowConfigMutation, parseRemodelingModelWindowConfig, type RemodelingModelWindowConfig, type RemodelingModelWindowConfigMutation } from "../../🧬️schema/🟦️.ts";
 import { applyRemodelingFramesWindowConfigMutation, type RemodelingFramesWindowConfig, type RemodelingFramesWindowConfigMutation } from "../../../../../../📷️capture/🪟️windows/🖼️frames/🎚️config/🧬️schema/🟦️.ts";
 import { applyRemodelingReportWindowConfigMutation, type RemodelingReportWindowConfig, type RemodelingReportWindowConfigMutation } from "../../../../../../🔍️analyze/🪟️windows/📊️report/🎚️config/🧬️schema/🟦️.ts";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 type Owner = "model" | "frames" | "report";
 type WindowInstance = { id: string; windowKindId: string };
@@ -30,7 +31,7 @@ const schemas: Record<Owner, AnySchema> = {
   frames: readJson(`${schemaRoot}/📷️capture/🪟️windows/🖼️frames/🎚️config/🧬️schema/🔣️.json`),
   report: readJson(`${schemaRoot}/🔍️analyze/🪟️windows/📊️report/🎚️config/🧬️schema/🔣️.json`),
 };
-const viewportSchema = readJson(`${here}/../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔣️.json`);
+const viewportSchema = readJson(frameworkSourcePath("🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔣️.json"));
 const kinds: Record<Owner, string> = { model: "remodeling-main", frames: "remodeling-frames", report: "remodeling-report" };
 
 const target = (instances: WindowInstance[], id: string, kind: string): void => {

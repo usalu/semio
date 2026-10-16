@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ Grid2dMutation — one discriminated-union member per `🧬️mutations/<slug>/` triad's payload.
  * Mirrors the Rust `🦀️.rs` sibling's `Grid2dMutation` enum, which carries `#[derive(dsl::Mutations)]`
  * with no enum-level tag attribute, so it serializes EXTERNALLY TAGGED:

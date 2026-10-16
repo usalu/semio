@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox } from "../../../../../../🔨️modules/🎠️kernel/🫧️transient/🟦️.ts";
+import { ephemeralBox } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
 import {
   createOwnedDatabasePool,
   createOwnedJsonResponse,

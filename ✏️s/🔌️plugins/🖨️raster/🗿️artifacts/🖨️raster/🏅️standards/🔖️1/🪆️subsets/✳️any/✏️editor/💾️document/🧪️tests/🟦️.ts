@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import sharp from "sharp";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../🧬️schema/🔣️.json";
-import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
+import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 
 import {rasterLayerNodeFromJson as parseRasterLayerNode} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";
 import {printRasterLayerNode} from "./../../../🚪️io/📝️text/📸️snapshot/🟦️.ts";

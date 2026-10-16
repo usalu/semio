@@ -3,23 +3,23 @@ use super::*;
 
 //#region 📮️RuntimeMailbox
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameMaintenanceOwner {
-    pub(crate) interaction: Option<AppInteractionState>,
-    pub(crate) cursor: Option<FrameDeferredCursor>,
-    pub(crate) deadline_ms: Option<u64>,
+pub struct FrameMaintenanceOwner {
+    pub interaction: Option<AppInteractionState>,
+    pub cursor: Option<FrameDeferredCursor>,
+    pub deadline_ms: Option<u64>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameMaintenanceOwner {
-    pub(crate) fn new(interaction: AppInteractionState, cursor: FrameDeferredCursor) -> Self {
+    pub fn new(interaction: AppInteractionState, cursor: FrameDeferredCursor) -> Self {
         Self { interaction: Some(interaction), cursor: Some(cursor), deadline_ms: renderer_worker_pool().now_ms().checked_add(8) }
     }
 
-    pub(crate) fn generation(&self) -> Option<u64> {
+    pub fn generation(&self) -> Option<u64> {
         self.cursor.as_ref().map(|cursor| cursor.generation)
     }
 
-    pub(crate) fn take_pair(&mut self) -> Option<(AppInteractionState, FrameDeferredCursor)> {
+    pub fn take_pair(&mut self) -> Option<(AppInteractionState, FrameDeferredCursor)> {
         if self.interaction.is_none() || self.cursor.is_none() {
             return None;
         }
@@ -28,23 +28,23 @@ impl FrameMaintenanceOwner {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameDeferredExecutionOwner {
-    pub(crate) interaction: Option<AppInteractionState>,
-    pub(crate) cursor: Option<FrameDeferredCursor>,
-    pub(crate) work: Option<FrameDeferredWork>,
+pub struct FrameDeferredExecutionOwner {
+    pub interaction: Option<AppInteractionState>,
+    pub cursor: Option<FrameDeferredCursor>,
+    pub work: Option<FrameDeferredWork>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameDeferredExecutionOwner {
-    pub(crate) fn new(interaction: AppInteractionState, cursor: FrameDeferredCursor, work: FrameDeferredWork) -> Self {
+    pub fn new(interaction: AppInteractionState, cursor: FrameDeferredCursor, work: FrameDeferredWork) -> Self {
         Self { interaction: Some(interaction), cursor: Some(cursor), work: Some(work) }
     }
 
-    pub(crate) fn generation(&self) -> Option<u64> {
+    pub fn generation(&self) -> Option<u64> {
         self.cursor.as_ref().map(|cursor| cursor.generation)
     }
 
-    pub(crate) fn cancel_current(&mut self) {
+    pub fn cancel_current(&mut self) {
         if let Some(FrameDeferredWork::Action(action)) = self.work.take() {
             action.cancel();
         } else {
@@ -52,7 +52,7 @@ impl FrameDeferredExecutionOwner {
         }
     }
 
-    pub(crate) fn take_pair(&mut self) -> Option<(AppInteractionState, FrameDeferredCursor)> {
+    pub fn take_pair(&mut self) -> Option<(AppInteractionState, FrameDeferredCursor)> {
         if self.work.is_some() || self.interaction.is_none() || self.cursor.is_none() {
             return None;
         }
@@ -61,19 +61,19 @@ impl FrameDeferredExecutionOwner {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameMaintenanceRefusal {
-    pub(crate) owner: Arc<FrameExecutionOwnerCell<FrameMaintenanceOwner>>,
-    pub(crate) reservation_live: bool,
+pub struct FrameMaintenanceRefusal {
+    pub owner: Arc<FrameExecutionOwnerCell<FrameMaintenanceOwner>>,
+    pub reservation_live: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl FrameMaintenanceRefusal {
-    pub(crate) fn try_take(&self) -> Option<FrameMaintenanceOwner> {
+    pub fn try_take(&self) -> Option<FrameMaintenanceOwner> {
         self.owner.try_take()
     }
 }
 
-pub(crate) enum RuntimeApply {
+pub enum RuntimeApply {
     Resize {
         width: f32,
         height: f32,
@@ -95,11 +95,11 @@ pub(crate) enum RuntimeApply {
 }
 
 impl RuntimeApply {
-    pub(crate) fn close_returned_interaction_step<R: MailboxRuntime>(&mut self,runtime: &mut R,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_returned_interaction_step<R: MailboxRuntime>(&mut self,runtime: &mut R,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         match self{
             Self::ResumeFrameDeferred{interaction,cursor}=>{if let Some(returned)=interaction.take(){runtime.return_interaction(returned);return Ok(false)}if let Some(owner)=cursor.as_mut(){owner.begin_close();if !owner.close_step(){return Ok(false)}}cursor.take();Ok(true)},
             Self::DispatchEvents(cursor)=>{if let Some(owner)=cursor.as_mut(){if !owner.close_step(cx)?{return Ok(false)}}cursor.take();Ok(true)},
-            Self::ResumeDispatch{interaction,cursor}=>{if let Some(returned)=interaction.as_mut(){if let Some(original)=cursor.as_ref(){original.validate_original(cx)?}if !interpreter::close_clipboard_io_step(&mut returned.input,cx)?{return Ok(false)}}if let Some(returned)=interaction.take(){runtime.return_interaction(returned);return Ok(false)}if let Some(owner)=cursor.as_mut(){if !owner.close_step(cx)?{return Ok(false)}}cursor.take();Ok(true)},
+            Self::ResumeDispatch{interaction,cursor}=>{if let Some(returned)=interaction.as_mut(){if let Some(original)=cursor.as_ref(){original.validate_original(cx)?}if !semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_clipboard_io_step(&mut returned.input,cx)?{return Ok(false)}}if let Some(returned)=interaction.take(){runtime.return_interaction(returned);return Ok(false)}if let Some(owner)=cursor.as_mut(){if !owner.close_step(cx)?{return Ok(false)}}cursor.take();Ok(true)},
             #[cfg(not(target_arch="wasm32"))]Self::RestoreInteraction(interaction)=>{if let Some(returned)=interaction.take(){runtime.return_interaction(returned)}Ok(true)},
             _=>Ok(false),
         }
@@ -110,7 +110,7 @@ impl RuntimeApply {
     /// in flight) the state has an owner, and however long that owner takes it is not a leak. An arm
     /// that carries no state carries no ownership either — the native abandoned-maintenance resume is
     /// `ResumeFrameDeferred { interaction: None, .. }` for that reason.
-    pub(crate) fn restores_interaction(&self) -> bool {
+    pub fn restores_interaction(&self) -> bool {
         match self {
             Self::ResumeDispatch { interaction, .. } | Self::ResumeFrameDeferred { interaction, .. } => interaction.is_some(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -177,7 +177,7 @@ impl RuntimeApply {
         Ok(true)
     }
 
-    pub(crate) fn start_frame_deferred<R: MailboxRuntime>(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut R, handle: &RuntimeHandle<R>) -> bool {
+    pub fn start_frame_deferred<R: MailboxRuntime>(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut R, handle: &RuntimeHandle<R>) -> bool {
         #[cfg(not(target_arch = "wasm32"))]
         if cursor.is_none() && !runtime.interaction_available() {
             if let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) {
@@ -310,10 +310,10 @@ impl RuntimeApply {
                         let mut receipt_owner = FrameActionReceiptOwner { receipt };
                         match interaction.shell.dispatch_gesture_action(action.descriptor).await {
                             Ok(()) => {
-                                receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Accepted);
+                                receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Accepted);
                             }
                             Err(error) => {
-                                receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Refused(&error));
+                                receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Refused(&error));
                                 if let Some(receipt) = receipt {
                                     if receipt.abort_correlation_on_error {
                                         cursor_value.actions.cancel_correlation(receipt.token);
@@ -342,7 +342,7 @@ impl RuntimeApply {
         if let Self::DispatchEvents(cursor) = self {
             log_debug(&format!("[TRACE] apply_step DispatchEvents present={} terminal-empty={:?}", cursor.is_some(), cursor.as_ref().map(RuntimeDispatchCursor::terminal_is_empty)));
         }
-        match self{Self::DispatchEvents(cursor)=>return Self::start_dispatch(cursor,runtime,handle,cx),Self::ResumeDispatch{interaction,cursor}=>{if let Some(returned)=interaction.as_mut(){if let Some(original)=cursor.as_ref(){original.validate_original(cx)?;}if interpreter::drive_clipboard_io_step(&mut returned.input,cx)?{return Ok(false)}}if let Some(returned)=interaction.take(){runtime.return_interaction(returned)}return Self::start_dispatch(cursor,runtime,handle,cx)},_=>{}}
+        match self{Self::DispatchEvents(cursor)=>return Self::start_dispatch(cursor,runtime,handle,cx),Self::ResumeDispatch{interaction,cursor}=>{if let Some(returned)=interaction.as_mut(){if let Some(original)=cursor.as_ref(){original.validate_original(cx)?;}if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::drive_clipboard_io_step(&mut returned.input,cx)?{return Ok(false)}}if let Some(returned)=interaction.take(){runtime.return_interaction(returned)}return Self::start_dispatch(cursor,runtime,handle,cx)},_=>{}}
         Ok((||{match self {
             Self::DispatchEvents(_)|Self::ResumeDispatch{..}=>unreachable!(),
             Self::Resize { width, height, dpr } => runtime.resize(*width, *height, *dpr),

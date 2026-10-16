@@ -1,6 +1,6 @@
 //#region 🌉️PuzzleBoardSession
 import { createWasmModuleLoader, type AppSurfaceSessionFactory, type Board2dWasmSession } from "@semio-tech/framework-renderer-react";
-import { installPageRuntimeAssets } from "../../../../../../../../../../../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
+import { installPageRuntimeAssets } from "@semio-tech/framework/canvas/runtime-assets";
 
 type PuzzleSessionModule = typeof import("@semio-tech/puzzle-wasm");
 const loadModule = createWasmModuleLoader<PuzzleSessionModule>(async () => {

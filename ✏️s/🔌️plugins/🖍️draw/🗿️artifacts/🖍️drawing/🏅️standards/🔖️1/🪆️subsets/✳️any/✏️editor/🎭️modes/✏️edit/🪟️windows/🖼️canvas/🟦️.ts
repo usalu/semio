@@ -1,4 +1,4 @@
-import type { Viewport2d } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
+import type { Viewport2d } from "@semio-tech/framework/ui/viewport/2d/schema";
 
 /** 🖼️ Drawing editor — Canvas window: typed twin of `🦀️.rs`'s view-model. Mirrors the pane's
  * `render(document: &DrawingSnapshot, config: &DrawingCanvasWindowConfig, gesture: &drawing_gesture::Snapshot,

@@ -1,9 +1,9 @@
 /** 📍️ Borrowed scenes yield painted bounds and actual area or length moments. */
 import {DocumentVectorPreparationJob,type DrawingSceneSource,type DocumentSceneLimits,type DocumentAlgorithmLimits} from "../📋️prepare/🟦️.ts";
 import {ScenePaintJob,type PreparedScene,type PaintedSceneLimits} from "../🎨️paint/📋️prepare/🟦️.ts";
-import {BooleanJob,type BooleanOperand} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔀️booleans/🟦️.ts";
-import {PathFlattenJob} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {BooleanJob,type BooleanOperand} from "@semio-tech/framework/2d/booleans";
+import {PathFlattenJob} from "@semio-tech/framework/2d/path/flatten";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
 type Point=[number,number];type Bounds=[number,number,number,number];
 export type DrawingScenePlacement={bounds:Bounds|null;centroid:Point;area:number;basis:"area"|"length"|"bounds"|"empty"};
 export type DrawingScenePlacementProgress={phase:"vector"|"paint"|"contours"|"union"|"moments"|"length"|"complete";work:number;done:boolean};

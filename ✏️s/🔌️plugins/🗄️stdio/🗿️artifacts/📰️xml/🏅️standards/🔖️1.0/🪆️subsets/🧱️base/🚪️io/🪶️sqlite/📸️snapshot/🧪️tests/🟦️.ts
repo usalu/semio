@@ -1,5 +1,5 @@
 import {parseXmlSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
-import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalCorpus } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
 /** 🧫️ Shared XML semantic corpus with independent typed SQL queries and edits. */
 import { Database } from "bun:sqlite";

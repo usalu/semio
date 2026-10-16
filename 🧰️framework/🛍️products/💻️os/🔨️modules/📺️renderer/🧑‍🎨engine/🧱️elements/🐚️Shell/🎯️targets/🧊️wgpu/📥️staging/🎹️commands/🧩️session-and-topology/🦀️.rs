@@ -7,7 +7,7 @@ use super::*;
 //#region ShellLifecycle
 impl CommandState {
     //#region 🏷️LabelResolution
-    pub(crate) fn set_search_open(&mut self, open: bool, input: &mut ShellInputState) {
+    pub fn set_search_open(&mut self, open: bool, input: &mut ShellInputState) {
         self.search_open = open;
         if open {
             self.find_open = false;

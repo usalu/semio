@@ -9,12 +9,12 @@ impl ChromeState {
     /// ✅️ Applies one click on an approvals-modal control: a decision button resolves that request
     /// over the bridge, the close control dismisses the dialog without deciding (the request stays
     /// parked, exactly as React's `onOpenChange` leaves it).
-    pub(crate) fn resolve_agent_approval_control(&mut self, control_id: &str) {
-        if control_id == crate::agent_approvals::APPROVALS_CLOSE_CONTROL_ID {
+    pub fn resolve_agent_approval_control(&mut self, control_id: &str) {
+        if control_id == semio_framework_os_renderer_wgpu_agent_elements::agent_approvals::APPROVALS_CLOSE_CONTROL_ID {
             self.chrome_build.agent_approvals.dismiss();
             return;
         }
-        if let Some((approval_id, decision)) = crate::agent_approvals::parse_approval_decision_control_id(control_id) {
+        if let Some((approval_id, decision)) = semio_framework_os_renderer_wgpu_agent_elements::agent_approvals::parse_approval_decision_control_id(control_id) {
             self.chrome_build.agent.resolve_approval(&approval_id, decision, None);
         }
     }

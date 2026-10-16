@@ -3,13 +3,12 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::time_travel::*;
 use semio_framework::kernel::{HistoryReprojection, HistoryReprojectionStatus, HistoryTimeTravel, HistoryTimeTravelReview, HistoryTimeTravelStage};
 use semio_framework_time_travel::TimeTravelLabel;
 
 //#region ⏪️TimeTravelControls
 /// 📶️ The band's replay progress node — a child of its status node, React's `<progress>` inside the band.
-pub(super) const TIME_TRAVEL_BAND_PROGRESS_ID: &str = "shell.time-travel.progress";
+pub const TIME_TRAVEL_BAND_PROGRESS_ID: &str = "shell.time-travel.progress";
 
 /// 🧱️ A band's fill as an opaque surface: a translucent tone tint composited over the menu-level surface, so the content
 /// the band floats over never shows through its text.
@@ -21,12 +20,12 @@ fn chrome_band_surface(fill: Rgba, theme: &Theme) -> Rgba {
 
 //#endregion ⏪️TimeTravelControls
 //#region 🗣️TimeTravelCopy
-pub(super) const BAND_LABEL_INDICATOR_TARGET: &str = "ui.timeTravel.indicatorTarget";
+pub const BAND_LABEL_INDICATOR_TARGET: &str = "ui.timeTravel.indicatorTarget";
 
-pub(super) const BAND_LABEL_INDICATOR: &str = "ui.timeTravel.indicator";
+pub const BAND_LABEL_INDICATOR: &str = "ui.timeTravel.indicator";
 
 /// 🌐️ One `TimeTravelLabel` in `locale`.
-pub(crate) fn time_travel_label(label: TimeTravelLabel, locale: Locale) -> &'static str {
+pub fn time_travel_label(label: TimeTravelLabel, locale: Locale) -> &'static str {
     label.localized(|en, de| match locale {
         Locale::En => en,
         Locale::De => de,
@@ -35,7 +34,7 @@ pub(crate) fn time_travel_label(label: TimeTravelLabel, locale: Locale) -> &'sta
 
 /// 🏷️ What a window of the editing program says about itself — React's `timeTravelIndicatorTextV1`: the document
 /// before the edited mutation while a draft is edited, else the session's stage.
-pub(crate) fn time_travel_indicator_text(status: &HistoryTimeTravel, terminology: Terminology, tongue: impl Into<BandTongue>) -> String {
+pub fn time_travel_indicator_text(status: &HistoryTimeTravel, terminology: Terminology, tongue: impl Into<BandTongue>) -> String {
     let tongue: BandTongue = tongue.into();
     match (status.stage, time_travel_target_text(status, terminology, tongue.locale)) {
         (HistoryTimeTravelStage::Editing, Some(target)) => band_label(BAND_LABEL_INDICATOR_TARGET, tongue).replace("{target}", &target),
@@ -45,13 +44,13 @@ pub(crate) fn time_travel_indicator_text(status: &HistoryTimeTravel, terminology
 
 /// 🏷️ The indicator chip's visible word — React's `ui.timeTravel.indicator`; its accessible name is
 /// [`time_travel_indicator_text`].
-pub(crate) fn time_travel_indicator_caption(tongue: impl Into<BandTongue>) -> &'static str {
+pub fn time_travel_indicator_caption(tongue: impl Into<BandTongue>) -> &'static str {
     band_label(BAND_LABEL_INDICATOR, tongue)
 }
 
 /// 🎨️ `(border, fill, text)` of the band — the shell banner severity map: a blocking report is an error; a fault, a
 /// review that needs a replay or a worst outcome of warning a warning; everything else the neutral popover chrome.
-pub(crate) fn time_travel_band_tone(status: &HistoryTimeTravel, theme: &Theme) -> (Rgba, Rgba, Rgba) {
+pub fn time_travel_band_tone(status: &HistoryTimeTravel, theme: &Theme) -> (Rgba, Rgba, Rgba) {
     use semio_framework::Severity;
     let severity = if status.blocking || status.review == Some(HistoryTimeTravelReview::Blocked) {
         Severity::Error
@@ -90,19 +89,19 @@ fn paint_chrome_band_frame(scalar: usize, overlay: &mut DrawList, band: Rect, pr
 }
 
 /// 🧮️ The opportunities [`paint_chrome_band_frame`] takes before a band's text.
-pub(super) const CHROME_BAND_FRAME_STEPS: usize = 7;
+pub const CHROME_BAND_FRAME_STEPS: usize = 7;
 
 //#endregion 📐️TimeTravelBand
 //#region 📡️HistoryReprojectionBand
 /// 🗝️ The mirror key of the polite status that announces a history change replaying before this replica adopts it, outside the
 /// History panel — React's `[data-semio-history-reprojection]` (audit W1E-3).
-pub(crate) const HISTORY_REPROJECTION_STATUS_ID: &str = "shell.history.reprojection";
+pub const HISTORY_REPROJECTION_STATUS_ID: &str = "shell.history.reprojection";
 
 /// 🧮️ The mirror key of that change's progress bar — React's `[data-semio-history-reprojection-progress]`.
-pub(crate) const HISTORY_REPROJECTION_PROGRESS_ID: &str = "shell.history.reprojection.progress";
+pub const HISTORY_REPROJECTION_PROGRESS_ID: &str = "shell.history.reprojection.progress";
 
 /// 🆔️ The reprojection band control's id: `shell.history.reprojection.<cancel-replay|rerun>`.
-pub(crate) fn history_reprojection_control_id(verb: TimeTravelVerb) -> &'static str {
+pub fn history_reprojection_control_id(verb: TimeTravelVerb) -> &'static str {
     match verb {
         TimeTravelVerb::Rerun => "shell.history.reprojection.rerun",
         _ => "shell.history.reprojection.cancel-replay",
@@ -118,7 +117,7 @@ fn history_reprojection_band_tone(status: &HistoryReprojectionStatus, theme: &Th
 //#endregion 📡️HistoryReprojectionBand
 //#region 🪟️TimeTravelIndicator
 /// 🆔️ One pane's time-travel indicator — under React's `framework.window.<id>` parent like every pane chip.
-pub(crate) fn time_travel_indicator_control_id(window_id: &str) -> String {
+pub fn time_travel_indicator_control_id(window_id: &str) -> String {
     semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "timeTravel", "indicator"])
 }
 
@@ -129,7 +128,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// carries its verb, so a click, the keyboard ring and an assistive technology all dispatch it the same way; a
     /// disabled one paints muted, dispatches nothing and names the refusal that disables it. No button registers while a
     /// modal dialog (the finalize prompt) owns the pointer.
-    pub(super) fn render_time_travel_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
+    pub fn render_time_travel_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
         let Some(status) = self.history.history_time_travel.clone() else { return true };
         let plan = self.prefs.time_travel_band_plan_for(&status, theme, &self.chrome);
         let (border, fill, text_color) = time_travel_band_tone(&status, theme);
@@ -185,7 +184,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// so a reader hears exactly what is painted, busy while the runtime replays or finalizes. It takes focus programmatically
     /// (never by Tab) — React's band region — so a replay or a review moves the reader onto the band. A running replay's
     /// numbers are [`Self::time_travel_progress_accessibility_node`].
-    pub(crate) fn time_travel_status_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+    pub fn time_travel_status_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let status = self.history.history_time_travel.as_ref()?;
         let mut node = chrome_status_accessibility_node(node_id, TIME_TRAVEL_BAND_STATUS_ID, time_travel_band_lines(status, self.prefs.active_terminology(), self.prefs.band_tongue(&self.chrome)).message());
         node.focusable = true;
@@ -196,7 +195,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
 
     /// 📶️ Preparation or replay progress as its own node under the band's status — React's `<progress>` inside the band: a progress
     /// bar named and valued by the progress line while known-total work runs, `None` otherwise.
-    pub(crate) fn time_travel_progress_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+    pub fn time_travel_progress_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let status = self.history.history_time_travel.as_ref()?;
         let total = status.total.filter(|_| time_travel_progress_key(status.stage).is_some())?;
         let line = time_travel_band_lines(status, self.prefs.active_terminology(), self.prefs.band_tongue(&self.chrome)).progress?;
@@ -215,7 +214,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// band frame with its replay track, each line of its message, then its control's fill, caption and hit (Cancel replay or Replay
     /// again on the session controller, no generation) — stacked above the session band while one is open, which then owns the
     /// controls. No control registers while a modal dialog owns the pointer.
-    pub(super) fn render_history_reprojection_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
+    pub fn render_history_reprojection_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
         let Some((status, plan)) = self.prefs.history_reprojection_band_plan_for(theme, &self.chrome, &self.history) else { return true };
         let (border, fill, text_color) = history_reprojection_band_tone(&status, theme);
         let baseline = |rect: Rect| rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0;
@@ -264,7 +263,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// refused — its role never changes — named by exactly the painted, localized message `<title>: <text>` (a refusal's code is
     /// never announced) and busy while it replays, so a reader hears an interior Undo, a peer's history change or a document load
     /// replaying without opening the History panel. Its numbers are [`Self::history_reprojection_progress_accessibility_node`].
-    pub(crate) fn history_reprojection_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+    pub fn history_reprojection_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let status = self.prefs.history_reprojection_status(&self.history)?;
         let mut node = chrome_status_accessibility_node(node_id, HISTORY_REPROJECTION_STATUS_ID, history_reprojection_message(&status));
         node.busy = history_reprojection_running(&status);
@@ -273,7 +272,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
 
     /// 🧭️ A replaying history change's progress as its own node beside the status — React's `<progress>` of the reprojection
     /// status: named by the title, valued by done of total, its value text the status line; `None` while nothing replays.
-    pub(crate) fn history_reprojection_progress_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+    pub fn history_reprojection_progress_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let status = self.prefs.history_reprojection_status(&self.history).filter(history_reprojection_running)?;
         let mut node = chrome_status_accessibility_node(node_id, HISTORY_REPROJECTION_PROGRESS_ID, status.title.clone());
         node.role = "progressbar".into();
@@ -286,7 +285,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     }
 
     /// 📣️ Both bands' live nodes in reading order — each status followed by its progress — numbered from `first_id`.
-    pub(crate) fn band_accessibility_nodes(&self, first_id: u64) -> Vec<ui_contract::AccessibilityProjectionNode> {
+    pub fn band_accessibility_nodes(&self, first_id: u64) -> Vec<ui_contract::AccessibilityProjectionNode> {
         let mut nodes = Vec::new();
         nodes.extend(self.time_travel_status_accessibility_node(first_id));
         nodes.extend(self.time_travel_progress_accessibility_node(first_id + nodes.len() as u64));
@@ -299,7 +298,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// their count) at the bottom-middle anchor none of them uses — React's `TimeTravelWindowIndicator`: a clock and the
     /// word "Time travel", announced as a note named by what the window shows. It dispatches nothing.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    pub(super) fn paint_window_time_travel_indicator_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect, index: usize) -> bool {
+    pub fn paint_window_time_travel_indicator_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect, index: usize) -> bool {
         if cursor.scalar != index {
             return true;
         }
@@ -337,3 +336,8 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     }
 }
 
+//#region 🗣️TimeTravelCopy
+/// 🧾️ Every fixed corpus label key the band copy reads besides its controls, stages, reviews, severities and refusals — the
+/// keys a law requires the corpus to carry.
+pub const BAND_FIXED_LABEL_KEYS: [&str; 12] = [BAND_LABEL_TARGET, BAND_LABEL_PROGRESS, BAND_LABEL_PREPARATION_PROGRESS, BAND_LABEL_PROCESSED, BAND_LABEL_WORST, BAND_LABEL_REPLAY_FAULTED, BAND_LABEL_ACCEPTED, BAND_LABEL_INDICATOR_TARGET, BAND_LABEL_INDICATOR, BAND_LABEL_PEER_EDITING_TARGET, BAND_LABEL_PEER_EDITING_HISTORY, BAND_LABEL_PEER_EDITING_ROW];
+//#endregion 🗣️TimeTravelCopy

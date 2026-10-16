@@ -42,3 +42,28 @@ Wave 5 starts 2026-10-16 05:00. It follows the wave-4 carves and the WP0–WP6 s
 | RENDERER-INTEGRATION-2 (Shell tier-1 flips, frame-core, WP5 flip) | `ri2` | `🐚️Shell/**`, `🏛️ShellHost/**`, the frame-core trees of plan §10.1 WP3, the renderer hubs |
 | PLUGIN-HOST-CARVE | `phc` | `semio-framework-plugin-host` (`🔌️plugin/🖥️host/**`) and its test component |
 | COMPILE-PASS-2 (after INFRA-UNBLOCK-2) | `cp2` | the compile-and-fix loop over compilable crates outside the slices above |
+
+## TS and source-file splits (wave 5b, from `MONOLITH-CENSUS-2.md`)
+
+Worked examples: `RESULT-SHELLHOST-SPLIT.md`, `RESULT-PLUGIN-RUNTIME-TSX.md`, `RESULT-NODEGRAPH-TSX.md` and `RESULT-OS-TS-R3F.md`.
+
+1. **Baseline first.** Record the exact test command, the pass/fail set and the type-check result for the target and for every file that imports it. After the split, the failure set must be identical or smaller, and every change must be explained.
+2. **Children follow the taxonomy.** Children are `<emoji>️<kebab>/🟦️.ts` (or `🟦️.tsx`) next to the parent, with an emoji that is unique among its siblings. Tests live under `🧪️tests/<emoji>️<kebab>/🟦️.ts`, so the repo's test discovery finds them. Register any new test entry points in `.vscode/launch.json` and `.vscode/🧩️launch.seed.jsonc` in the existing order and naming. Register new folders in the taxonomy (`RESULT-TAXONOMY-SWEEP.md` explains how).
+3. **No re-export barrels for compatibility.** Update every importer at once. The parent keeps only what is genuinely its own, or disappears.
+4. **Preserve every `//#region` marker.** Every new file starts with a docstring whose first character is a unique emoji. Write no comments inside definitions.
+5. **Keep source-text readers working.** Re-point `?raw` imports and fs reads that read the moved text, using `readModuleTreeSource` (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree`) or a child-specific read.
+6. **Fix wrong-direction imports where they are inside your files.** Move the item to its rightful owner, or invert it through a registry or port supplied by the composition root. Add no shims.
+7. **Prove losslessness.** Show the line multiset or item set of old versus new, and run `tsc --noEmit` (the project's own type-check route) on the touched closure.
+
+## Compile admission is single-slot (07:00)
+
+The Rust image `⚡️cache/rust/fixed/m` (16 GiB) needs 4 GiB of free initial headroom per compile. It holds 5.9 GB of cargo state and 5.4 GB of peer Nx material (`nx/graphs` 2.1 GB, `nx/tmp` 1.5 GB), so it hovers right at the gate. The peer's sanctioned historical retirement currently fails with `Live Original resource control issuance required`. Never delete or move anything inside the image.
+
+Fleet compile mutex:
+- **Acquire.** `mkdir "🗑️generated/cargo-mutex.lock"` is atomic, so only one `mkdir` succeeds. If it succeeds, write `<prefix> <pid> <date>` into `cargo-mutex.lock/owner`. If it fails, `sleep 60` and retry.
+- **Use.** Hold the mutex only for one launcher call that batches every crate you need (many `-p`, `--keep-going`).
+- **Release.** `rm -f cargo-mutex.lock/owner && rmdir cargo-mutex.lock` immediately after the call, including on failure.
+- **Stale lock.** If the `owner` file is more than 75 minutes old, the lock is stale: remove it and say so in your RESULT file.
+- **Headroom refusal.** On `Insufficient physical compiler initial headroom`, release the mutex, continue with static evidence, and retry after 10 minutes.
+
+Priority while the image is tight: OS-KERNEL-ENGINE and OS-KERNEL-SQLITE-HOST first, because every plugin crate depends on the kernel, then COMPILE-PASS-2, then the flips.

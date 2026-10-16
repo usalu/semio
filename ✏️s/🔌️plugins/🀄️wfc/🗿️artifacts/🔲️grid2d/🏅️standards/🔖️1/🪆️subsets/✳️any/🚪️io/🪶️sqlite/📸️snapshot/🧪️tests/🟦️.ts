@@ -3,7 +3,7 @@ import{Database}from"bun:sqlite";
 import fixture from"./🧫️fixtures/🔣️.json";
 import{grid2dSnapshotToSqliteDatabase,grid2dSnapshotFromSqliteDatabase,WFC_GRID2D_SQLITE_SCHEMA}from"../🟦️.ts";
 import type{Grid2dSnapshot,WfcTileMedia2d,WfcPathSegment,WfcPoint2}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 const bits=(v:string)=>({bits:BigInt('0x'+v)}),point=(v:readonly string[]):WfcPoint2=>({x:bits(v[0]!),y:bits(v[1]!)});
 test('grid2d authored duplicate and unresolved identifiers remain literal owned state',async()=>{
  for(const literal of fixture.literalIdentityStates){

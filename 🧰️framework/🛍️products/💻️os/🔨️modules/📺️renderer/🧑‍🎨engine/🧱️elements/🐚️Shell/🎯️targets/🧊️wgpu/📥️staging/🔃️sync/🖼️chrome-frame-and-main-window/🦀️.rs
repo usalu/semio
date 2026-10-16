@@ -8,7 +8,7 @@ use super::*;
 impl SyncState {
     /// 💓️ Coalesces one bounded presence preview page for the shared I/O lane. A shell with no sync
     /// channel has no peer to heartbeat to, so the step there would only clear its own flag.
-    pub(crate) fn request_presence_preview(&mut self, chrome: &mut ChromeState) {
+    pub fn request_presence_preview(&mut self, chrome: &mut ChromeState) {
         if self.sync_channel.is_some() {
             chrome.chrome_present.maintenance.presence_requested = true;
         }

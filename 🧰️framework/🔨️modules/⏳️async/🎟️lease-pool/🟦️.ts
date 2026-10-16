@@ -1,6 +1,6 @@
 //#region 🪶️LeasePool
 // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): relocated unchanged from
-// `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts` — 11 total consumers, of which only 4 were plugin-
+// `🧰️framework/🔨️modules/🎠️kernel` — 11 total consumers, of which only 4 were plugin-
 // specific (`📓️luna-consumers-audit.md`'s recon); the plugin-specific ones (`PluginModuleLease`/
 // `acquirePluginModule`) are deleted along with `PluginWorkerClient`, replaced by `ActivationRegistry`,
 // but this generic pool has real non-plugin callers (the renderer's engine-session cache and others)

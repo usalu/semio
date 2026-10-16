@@ -80,7 +80,7 @@ class Outcome:
         return self
 
 
-#: 🧫️ The platform's one fixture-URI grammar — the Python twin of `TEST_INPUT_URI_RE` in `🧪️test/🟦️.ts`.
+#: 🧫️ The platform's one fixture-URI grammar — the Python twin of `TEST_INPUT_URI_RE` in `🧪️test/📥️fixture-inputs/🟦️.ts`.
 FIXTURE_URI = re.compile(r"\b(shared|local|asset|schema)://([^\s\"'`,;)\]]+)")
 
 

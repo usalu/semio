@@ -6,19 +6,19 @@ use super::*;
 
 //#region ShellTypes
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct WindowIconOverride {
-    pub(super) plugin_id: String,
-    pub(super) app_id: String,
-    pub(super) app_instance_id: u32,
-    pub(super) icon_id: String,
+pub struct WindowIconOverride {
+    pub plugin_id: String,
+    pub app_id: String,
+    pub app_instance_id: u32,
+    pub icon_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct WindowTitleOverride {
-    pub(super) plugin_id: String,
-    pub(super) app_id: String,
-    pub(super) app_instance_id: u32,
-    pub(super) title: String,
+pub struct WindowTitleOverride {
+    pub plugin_id: String,
+    pub app_id: String,
+    pub app_instance_id: u32,
+    pub title: String,
 }
 
 //#endregion ShellTypes

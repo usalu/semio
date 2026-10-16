@@ -1,6 +1,6 @@
 /** 📖️ Handwritten persisted Playbook identity and exact composed child relations. */
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteDatabase}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteCheckpoint,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 import{parsePlaybookArtifact,type PlaybookArtifact}from"../../../🧬️schema/🟦️.ts";
 import type{PlaybookSnapshot}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 /** 🏛️ Individual semantic contract: parent identity and flow handle. */

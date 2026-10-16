@@ -24,7 +24,36 @@
 //! provisional leaves; every committed transaction is published stamped with its `TransactionRef`. Domain-neutral machines:
 //! `semio_framework_tool_machine` (`ScrubMachine`, `TypingMachine`, `ChartGesture`).
 
-use super::*;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework::kernel::ActorId;
+use semio_framework_plugin_decl_app::ArtifactApp;
+#[cfg(test)]
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use pack::snapshot::ArtifactPack;
+use semio_framework_plugin_decl_emission::{ChildEmit, Emit, HostEvent};
+use semio_framework_value::{DslValue, ValueError};
+use semio_framework::{Fault, FaultFrom};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework::kernel::{HybridLogicalTimestamp, InvocationResult};
+use store::{Mutation, MutationDiff};
+use semio_framework_plugin_decl_views::{NoConfig, NoConfigMutation};
+use protocol::{OpBinary, OpText};
+#[cfg(test)]
+use crate::plugin_app::PluginApp;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use serde_json::Value;
+use semio_framework_plugin_window_config::{WindowConfigMutation, WindowConfigSnapshot};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_plugin_window_config::WindowConfigOwner;
+#[cfg(test)]
+use crate::app_testing::artifact_app_laws;
+use semio_framework_ui_contract::*;
 use semio_framework_value::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_tool_machine::{
     GestureHostEvent, GestureLedger, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingLedger,

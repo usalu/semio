@@ -1,5 +1,5 @@
 import { parseResolvedPluginViewState, type BuiltNode, type PluginUiRefreshRequest, type PluginUiRefreshResponse, type PluginViewState } from "../../🛂️manifest/🟦️.ts";
-import type { Effect } from "../🟦️.ts";
+import type { Effect } from "../⚡️effect/🟦️.ts";
 
 /** 🧩️ The actor operations an embedded surface owns. */
 export type ExternalSlotContributor = {

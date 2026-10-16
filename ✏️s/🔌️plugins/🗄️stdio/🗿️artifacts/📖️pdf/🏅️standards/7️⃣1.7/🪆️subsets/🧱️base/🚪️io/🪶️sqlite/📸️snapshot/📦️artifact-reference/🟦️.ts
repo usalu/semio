@@ -1,6 +1,6 @@
 /** 📦️ Explicit artifact identity and declared dialect columns. */
-import type { ArtifactRef } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import { parseArtifactRef } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import type { ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
+import { parseArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 import { PdfProjection,PdfReader } from "../🧩️entity/🟦️.ts";
 export const PDF_ARTIFACT_REFERENCE_SQLITE_SCHEMA = "CREATE TABLE pdf_artifact_reference (id INTEGER PRIMARY KEY, artifact_id TEXT NOT NULL, artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL);";
 /** 📤️ Persists exactly one independently owned artifact reference. */

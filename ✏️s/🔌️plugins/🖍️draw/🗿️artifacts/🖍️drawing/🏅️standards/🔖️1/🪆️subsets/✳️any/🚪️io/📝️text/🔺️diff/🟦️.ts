@@ -1,7 +1,7 @@
 /** 📝️ Text representation for `drawing.drawing.diff`. */
 export type DrawingDiffText = string;
 import { parseDrawingDiff, type DrawingDiff } from "../../../🧬️schema/🔺️diff/🟦️.ts";
-import { binary64 } from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary64 } from "@semio-tech/framework/value/ieee754";
 
 function decodedDrawingValue(value:unknown):unknown {
   if(typeof value==="number")return binary64(value);

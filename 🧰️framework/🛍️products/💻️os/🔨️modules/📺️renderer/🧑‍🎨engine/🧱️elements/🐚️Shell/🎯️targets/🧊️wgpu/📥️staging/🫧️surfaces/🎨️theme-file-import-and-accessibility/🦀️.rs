@@ -14,7 +14,7 @@ pub struct OpenedFile {
 }
 
 /// 📥️ The files one picker answered, with the verb their chunks go to.
-pub(crate) struct PickedImport {
+pub struct PickedImport {
     pub controller_id: String,
     pub import_action: String,
     pub args: Option<semio_framework::DslValue>,

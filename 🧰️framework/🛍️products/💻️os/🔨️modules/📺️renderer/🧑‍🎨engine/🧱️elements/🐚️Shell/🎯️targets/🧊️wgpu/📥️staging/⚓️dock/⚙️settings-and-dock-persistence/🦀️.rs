@@ -9,7 +9,7 @@ impl ShellDockState {
     /// 🪟️ Every declared window instance, including siblings hidden by a focused/maximized view.
     /// The committed dock is the retention authority; the paint plan deliberately omits hidden
     /// siblings and therefore cannot decide that their engine owners have closed.
-    pub(crate) fn live_window_ids(&self, docs: &DocumentState) -> Vec<String> {
+    pub fn live_window_ids(&self, docs: &DocumentState) -> Vec<String> {
         self.dock.collect_window_ids().into_iter().chain(docs.panel_documents.keys().cloned()).collect()
     }
 
@@ -21,7 +21,7 @@ impl ShellDockState {
     /// them. This is the ONE declaration of which verbs a surface may emit: the world module offers
     /// no gumball handle whose verb is absent from it
     /// (`infinite_world::world::world3d_offers_transform_gumball`), rather than guessing per role.
-    pub(super) fn sync_world3d_declared_actions(&mut self, surfaces: &mut SurfaceState, docs: &DocumentState) {
+    pub fn sync_world3d_declared_actions(&mut self, surfaces: &mut SurfaceState, docs: &DocumentState) {
         let Some(session) = docs.session.clone() else { return };
         let declarations: Vec<(String, Vec<String>)> = surfaces
             .world3d_states
@@ -46,7 +46,7 @@ impl ShellDockState {
     /// then a `framework.display.layout.list` section carrying the app's builtin layouts folded by
     /// their `groupPath` and, when this session saved any, a `Saved` folder whose rows each offer
     /// React's `framework.display.delete.<id>` action.
-    pub(crate) fn build_display_layout_ui(&self, prefs: &PrefsState, docs: &DocumentState) -> UiNode {
+    pub fn build_display_layout_ui(&self, prefs: &PrefsState, docs: &DocumentState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let builtin: Vec<ui_wgpu::wgpu::NamedLayout> = docs.session.as_ref().map(|session| session.app.named_layouts.iter().filter(|entry| entry.origin == "builtin").cloned().collect()).unwrap_or_default();
         let save_section = UiTreeSectionNode {
@@ -280,7 +280,7 @@ impl ShellDockState {
     /// (`📌️ChromePanels/🟦️.tsx`'s `saveCurrentLayout`), with the same `user-<millis>` id grammar so a
     /// layout saved on either renderer reads as a user layout on the other. `None` with no session,
     /// which is React's own `if (!options.currentLayout) return` gate.
-    pub(crate) fn current_named_layout(&self, label: &str, docs: &DocumentState) -> Option<ui_wgpu::wgpu::NamedLayout> {
+    pub fn current_named_layout(&self, label: &str, docs: &DocumentState) -> Option<ui_wgpu::wgpu::NamedLayout> {
         docs.session.as_ref()?;
         let stamp = instant_now_ms().max(0.0) as u64;
         Some(ui_wgpu::wgpu::NamedLayout { id: format!("user-{stamp}"), label: label.to_string(), icon_id: None, layout: self.dock.to_window_layout(), origin: "user".into(), group_path: None })
@@ -290,7 +290,7 @@ impl ShellDockState {
     /// placement [`ShellState::open_active_window_in_new_window`] uses for `mod+shift+n`, which is
     /// React's `onWindowOpenInNewWindow`. A `template_id` seeds that instance's projection exactly as
     /// React's dropped `{windowKindId, templateId}` payload does.
-    pub(crate) fn open_display_window(&mut self, window_kind_id: &str, template_id: Option<&str>, settle: &mut SettleState, docs: &DocumentState, windows: &mut WindowState) -> bool {
+    pub fn open_display_window(&mut self, window_kind_id: &str, template_id: Option<&str>, settle: &mut SettleState, docs: &DocumentState, windows: &mut WindowState) -> bool {
         let Some(session) = docs.session.as_ref() else { return false };
         let Some(body_key) = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).map(|kind| kind.body_key.clone()) else {
             return false;
@@ -303,8 +303,8 @@ impl ShellDockState {
         let zone = anchor
             .as_deref()
             .and_then(|window_id| self.dock_stack_path_for(window_id))
-            .map(|stack_path| DockDropZone::Split { stack_path, side: crate::dock::DockSide::Right })
-            .unwrap_or(DockDropZone::RootSplit { side: crate::dock::DockSide::Right });
+            .map(|stack_path| DockDropZone::Split { stack_path, side: semio_framework_os_renderer_wgpu_dock::DockSide::Right })
+            .unwrap_or(DockDropZone::RootSplit { side: semio_framework_os_renderer_wgpu_dock::DockSide::Right });
         let payload = DockDragPayload {
             kind: DockDragKind::NewWindow,
             window_id: instance_id.clone(),
@@ -325,7 +325,7 @@ impl ShellDockState {
     }
 
     /// 🏷️ Seeds a newly transferred window's projection chrome, as React's ShellHost drop handler does.
-    pub(crate) fn seed_new_window_projection(&mut self, window_id: &str, template_id: Option<&str>, docs: &DocumentState, windows: &mut WindowState) {
+    pub fn seed_new_window_projection(&mut self, window_id: &str, template_id: Option<&str>, docs: &DocumentState, windows: &mut WindowState) {
         let Some(template_id) = template_id else { return };
         windows.world_projection_template.insert(window_id.to_string(), template_id.to_string());
         let Some(selected) = world_projection_template_selection_id(template_id) else { return };
@@ -337,7 +337,7 @@ impl ShellDockState {
 
     /// 🖥️ The layout `layout_id` names, searching the app's declared layouts and then this app's saved
     /// ones — React's `[...builtinLayouts, ...userLayouts].find(…)`.
-    pub(crate) fn named_layout_by_id(&self, layout_id: &str, docs: &DocumentState) -> Option<ui_wgpu::wgpu::WindowLayout> {
+    pub fn named_layout_by_id(&self, layout_id: &str, docs: &DocumentState) -> Option<ui_wgpu::wgpu::WindowLayout> {
         if let Some(named) = docs.session.as_ref().and_then(|session| session.app.named_layouts.iter().find(|entry| entry.id == layout_id)) {
             return Some(named.layout.clone());
         }
@@ -350,7 +350,7 @@ impl ShellDockState {
 
 /// 🧭️ `⌘️B`'s left column and `⌘️⇧️B`'s right column — the two corner anchors that column carries,
 /// top first, the only place the former hardcoded left/right pair survives.
-pub(crate) fn column_anchors(left: bool) -> [PanelAnchor; 2] {
+pub fn column_anchors(left: bool) -> [PanelAnchor; 2] {
     if left {
         [PanelAnchor::TopLeft, PanelAnchor::BottomLeft]
     } else {

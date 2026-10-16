@@ -1,6 +1,6 @@
 /** 🎨️ Prepared local-space paint with stable stops and logarithmic lookup. */
 import type {Color,Fill,Stop} from "../🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
 
 type PaintStop={readonly offset:number;readonly color:Readonly<Color>};
 type PaintFill={readonly kind:"solid";readonly color:Readonly<Color>}|(Omit<Extract<Fill,{kind:"linearGradient"}>,"stops">&{readonly stops:readonly PaintStop[]})|(Omit<Extract<Fill,{kind:"radialGradient"}>,"stops">&{readonly stops:readonly PaintStop[]});

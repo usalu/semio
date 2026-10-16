@@ -5,10 +5,10 @@ import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 import {DRAW_SQLITE_SCHEMA,drawSnapshotToSqliteDatabase,drawSnapshotFromSqliteDatabase} from "../🟦️.ts";
-import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 import {parseDrawingSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {DrawingSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 function snapshot(scalarWord?:Binary64):DrawingSnapshot{
  const lift=(value:number)=>scalarWord??binary64(value);
  const fields=(v:Record<string,any>,keys:readonly string[])=>Object.fromEntries(keys.map(key=>[key,lift(v[key])]));

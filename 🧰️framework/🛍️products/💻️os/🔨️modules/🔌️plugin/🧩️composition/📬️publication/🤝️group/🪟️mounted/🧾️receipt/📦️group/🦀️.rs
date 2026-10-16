@@ -1,4 +1,42 @@
-use semio_framework_value::{SharedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework::ActionKind;
+use semio_framework::kernel::ActorId;
+use semio_framework::kernel::ArtifactHandle;
+use semio_framework::kernel::ArtifactVersion;
+use semio_framework_plugin_child::ChildMemberRegistry;
+use semio_framework_plugin_decl_views::history_view::CommandLogEntry;
+use semio_framework_value::DslValue;
+use semio_framework::kernel::EditRef;
+use semio_framework::kernel::HybridLogicalTimestamp;
+#[cfg(test)]
+use semio_framework_plugin_decl_views::history_view::InverseAction;
+use semio_framework::kernel::InverseMutation;
+use semio_framework::kernel::InvocationId;
+use semio_framework::kernel::KernelMutation;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::mounted_child_group_receipt::MOUNTED_RECEIPT_MAXIMUM_BYTES;
+use store::MemberFactory;
+use crate::mounted_child_group_receipt::MountedArtifactHandleIssuer;
+use crate::mounted_child_group_receipt::MountedKernelMutationReceipt;
+use crate::mounted_child_group_receipt::MountedKernelMutationReceiptSource;
+use crate::mounted_child_group_receipt::MountedPreparedOperationBytes;
+use crate::mounted_child_group_receipt::MountedPreparedOperationsBytes;
+use crate::mounted_child_group_receipt::MountedReceiptBytes;
+use semio_framework::kernel::MutationId;
+use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
+use semio_framework_value::RetirementDemand;
+use store::SpaceMember;
+use semio_framework_ui_locale::Terminology;
+use semio_framework::kernel::UndoGroup;
+use semio_framework::kernel::UndoPolicy;
+use crate::mounted_child_group_receipt::mounted_nested_retirement_demand;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
 
 trait MountedGroupPreparedChildEdits {
@@ -12,74 +50,74 @@ enum MountedGroupChildEditSource<'a> {
     Ready(&'a dyn MountedGroupPreparedChildEdits),
 }
 impl MountedGroupChildEditSource<'_> {
-    fn len(&self)->usize{match self{Self::OriginalStrings(ids)=>ids.len(),Self::Ready(rows)=>rows.len()}}
-    fn get(&self,index:usize)->Option<&str>{match self{Self::OriginalStrings(ids)=>ids.get(index).map(String::as_str),Self::Ready(rows)=>rows.get(index)}}
-    fn identity(&self)->[(usize,usize);2]{match self{Self::OriginalStrings(ids)=>[(ids.as_ptr()as usize,ids.len()),(0,0)],Self::Ready(rows)=>[(*rows as *const dyn MountedGroupPreparedChildEdits as *const () as usize,rows.len()),(1,0)]}}
+    pub fn len(&self)->usize{match self{Self::OriginalStrings(ids)=>ids.len(),Self::Ready(rows)=>rows.len()}}
+    pub fn get(&self,index:usize)->Option<&str>{match self{Self::OriginalStrings(ids)=>ids.get(index).map(String::as_str),Self::Ready(rows)=>rows.get(index)}}
+    pub fn identity(&self)->[(usize,usize);2]{match self{Self::OriginalStrings(ids)=>[(ids.as_ptr()as usize,ids.len()),(0,0)],Self::Ready(rows)=>[(*rows as *const dyn MountedGroupPreparedChildEdits as *const () as usize,rows.len()),(1,0)]}}
 }
 
 struct MountedGroupReceiptSource<'a> {
-    invocation_id: &'a str,
-    parent_edit_id: Option<&'a str>,
-    child_edit_ids: MountedGroupChildEditSource<'a>,
+    pub invocation_id: &'a str,
+    pub parent_edit_id: Option<&'a str>,
+    pub child_edit_ids: MountedGroupChildEditSource<'a>,
 }
 impl MountedGroupReceiptSource<'_> {
-    fn identity(&self)->[(usize,usize);4] { let children=self.child_edit_ids.identity();[(self.invocation_id.as_ptr()as usize,self.invocation_id.len()),self.parent_edit_id.map_or((0,0),|id|(id.as_ptr()as usize,id.len())),children[0],children[1]] }
+    pub fn identity(&self)->[(usize,usize);4] { let children=self.child_edit_ids.identity();[(self.invocation_id.as_ptr()as usize,self.invocation_id.len()),self.parent_edit_id.map_or((0,0),|id|(id.as_ptr()as usize,id.len())),children[0],children[1]] }
 }
 
 pub(crate) struct MountedGroupReceiptOutput {
-    pub(crate) mutations: Vec<KernelMutation>,
-    pub(crate) inverse_group: UndoGroup,
-    pub(crate) command_edit_id: Option<String>,
-    pub(crate) command_child_edit_ids: Vec<String>,
+    pub mutations: Vec<KernelMutation>,
+    pub inverse_group: UndoGroup,
+    pub command_edit_id: Option<String>,
+    pub command_child_edit_ids: Vec<String>,
 }
 
 pub(crate) struct MountedGroupReceipt {
-    mutations: ManuallyDrop<Vec<KernelMutation>>,
+    pub mutations: ManuallyDrop<Vec<KernelMutation>>,
     undo_ids: ManuallyDrop<Vec<MutationId>>,
-    inverses: ManuallyDrop<Vec<InverseMutation>>,
-    member_edits: ManuallyDrop<Vec<EditRef>>,
+    pub inverses: ManuallyDrop<Vec<InverseMutation>>,
+    pub member_edits: ManuallyDrop<Vec<EditRef>>,
     command_children: ManuallyDrop<Vec<String>>,
-    invocation: MountedReceiptBytes,
-    parent: MountedReceiptBytes,
-    child: MountedReceiptBytes,
-    edit: MountedReceiptBytes,
-    identity: [(usize,usize);4],
+    pub invocation: MountedReceiptBytes,
+    pub parent: MountedReceiptBytes,
+    pub child: MountedReceiptBytes,
+    pub edit: MountedReceiptBytes,
+    pub identity: [(usize,usize);4],
     active_identity: Option<(usize,usize)>,
     edit_identity: Option<(usize,usize)>,
     triple_identity: Option<[(usize,usize);3]>,
     triple_offset: usize,
-    operation_count: usize,
-    member_count: usize,
+    pub operation_count: usize,
+    pub member_count: usize,
     member_document: Option<ArtifactHandle>,
-    child_count: usize,
+    pub child_count: usize,
     has_parent: bool,
-    phase: usize,
-    pub(crate) offset: usize,
+    pub phase: usize,
+    pub offset: usize,
     close_phase: usize,
-    close_field: usize,
-    pub(crate) closing: bool,
-    transferred: bool,
+    pub close_field: usize,
+    pub closing: bool,
+    pub transferred: bool,
 }
 
 impl MountedGroupReceipt {
-    fn new(operation_count:usize,source:&MountedGroupReceiptSource<'_>)->Result<Self,ValueError> {
+    pub fn new(operation_count:usize,source:&MountedGroupReceiptSource<'_>)->Result<Self,ValueError> {
         let count=source.child_edit_ids.len()+usize::from(source.parent_edit_id.is_some());
         let bytes=operation_count.checked_mul(size_of::<KernelMutation>()+size_of::<MutationId>()+size_of::<InverseMutation>()).and_then(|n|count.checked_mul(size_of::<EditRef>()).and_then(|members|n.checked_add(members))).and_then(|n|source.child_edit_ids.len().checked_mul(size_of::<String>()).and_then(|children|n.checked_add(children)));
         if bytes.is_none_or(|bytes|bytes>MOUNTED_RECEIPT_MAXIMUM_BYTES) { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"mounted group receipt requires its exact admitted operation and member sets")); }
         Ok(Self{mutations:ManuallyDrop::new(Vec::new()),undo_ids:ManuallyDrop::new(Vec::new()),inverses:ManuallyDrop::new(Vec::new()),member_edits:ManuallyDrop::new(Vec::new()),command_children:ManuallyDrop::new(Vec::new()),invocation:MountedReceiptBytes::new(),parent:MountedReceiptBytes::new(),child:MountedReceiptBytes::new(),edit:MountedReceiptBytes::new(),identity:source.identity(),active_identity:None,edit_identity:None,triple_identity:None,triple_offset:0,operation_count,member_count:count,member_document:None,child_count:source.child_edit_ids.len(),has_parent:source.parent_edit_id.is_some(),phase:0,offset:0,close_phase:0,close_field:0,closing:false,transferred:false})
     }
-    fn validate(&self,source:&MountedGroupReceiptSource<'_>)->Result<(),ValueError> { if self.closing||self.transferred||self.identity!=source.identity(){Err(ValueError::new(ValueRefusalKind::InvariantViolated,"mounted group receipt lost its original borrowed metadata"))}else{Ok(())} }
-    fn text<'a>(&self,source:&'a MountedGroupReceiptSource<'a>)->Result<Option<&'a str>,ValueError> { Ok(match self.phase {5=>Some(source.invocation_id),6=>source.parent_edit_id,7=>{let index=self.command_children.len();if index==self.child_count{None}else{Some(source.child_edit_ids.get(index).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"mounted child receipt requires its original completed member row"))?)}},_=>None}) }
-    fn bytes(&self)->&MountedReceiptBytes {match self.phase {5=>&self.invocation,6=>&self.parent,_=>&self.child}}
-    fn bytes_mut(&mut self)->&mut MountedReceiptBytes {match self.phase {5=>&mut self.invocation,6=>&mut self.parent,_=>&mut self.child}}
+    pub fn validate(&self,source:&MountedGroupReceiptSource<'_>)->Result<(),ValueError> { if self.closing||self.transferred||self.identity!=source.identity(){Err(ValueError::new(ValueRefusalKind::InvariantViolated,"mounted group receipt lost its original borrowed metadata"))}else{Ok(())} }
+    pub fn text<'a>(&self,source:&'a MountedGroupReceiptSource<'a>)->Result<Option<&'a str>,ValueError> { Ok(match self.phase {5=>Some(source.invocation_id),6=>source.parent_edit_id,7=>{let index=self.command_children.len();if index==self.child_count{None}else{Some(source.child_edit_ids.get(index).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"mounted child receipt requires its original completed member row"))?)}},_=>None}) }
+    pub fn bytes(&self)->&MountedReceiptBytes {match self.phase {5=>&self.invocation,6=>&self.parent,_=>&self.child}}
+    pub fn bytes_mut(&mut self)->&mut MountedReceiptBytes {match self.phase {5=>&mut self.invocation,6=>&mut self.parent,_=>&mut self.child}}
     /// 🌱️ Queries one complete typed backing or one bounded metadata candidate before ownership moves.
-    fn next_capacity_byte_demand(&self,source:&MountedGroupReceiptSource<'_>)->Result<usize,ValueError> {
+    pub fn next_capacity_byte_demand(&self,source:&MountedGroupReceiptSource<'_>)->Result<usize,ValueError> {
         self.validate(source)?;
         Ok(match self.phase {0=>self.operation_count*size_of::<KernelMutation>(),1=>self.operation_count*size_of::<MutationId>(),2=>self.operation_count*size_of::<InverseMutation>(),3=>self.member_count*size_of::<EditRef>(),4=>self.child_count*size_of::<String>(),5..=7=>match self.text(source)?{Some(text)=>self.bytes().next_capacity_byte_demand((text.len()-self.offset).min(64))?,None=>0},_=>0})
     }
     fn next_metadata_release_byte_demand(&self)->usize {if (5..=7).contains(&self.phase){self.bytes().next_growth_release_byte_demand()}else{0}}
     /// 🪪️ Copies only the current original UTF8 prefix into separately admitted receipt storage.
-    fn advance_metadata(&mut self,source:&MountedGroupReceiptSource<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    pub fn advance_metadata(&mut self,source:&MountedGroupReceiptSource<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         self.validate(source)?;
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.phase<5{
@@ -129,9 +167,9 @@ impl MountedGroupReceipt {
         if additional>0{if !self.edit.ready_for(additional){return self.edit.reserve_step(additional,grant);}let step=self.edit.append_step(&edit_id.as_bytes()[self.offset..self.offset+additional],grant)?;self.offset+=step.progress().copied_bytes;return Ok(step);}
         let bytes=self.edit.take(grant).unwrap();self.member_edits.push(EditRef{document,edit_id:unsafe{String::from_utf8_unchecked(bytes)}});self.edit=MountedReceiptBytes::new();self.offset=0;self.edit_identity=None;self.member_document=None;Ok(Self::progress(0,0))
     }
-    fn is_complete(&self)->bool {self.phase==8&&!self.closing&&!self.transferred&&self.mutations.len()==self.operation_count&&self.member_edits.len()==self.member_count&&self.edit_identity.is_none()}
+    pub fn is_complete(&self)->bool {self.phase==8&&!self.closing&&!self.transferred&&self.mutations.len()==self.operation_count&&self.member_edits.len()==self.member_count&&self.edit_identity.is_none()}
     /// 🧳️ Transfers all final original vectors and UTF8 backing without postdecision allocation.
-    fn take(&mut self,grant:RetainedCloneGrant)->Option<MountedGroupReceiptOutput>{
+    pub fn take(&mut self,grant:RetainedCloneGrant)->Option<MountedGroupReceiptOutput>{
         if !self.is_complete()||grant.maximum_items==0{return None;}
         let invocation=self.invocation.take(grant)?;let parent=if self.has_parent{Some(unsafe{String::from_utf8_unchecked(self.parent.take(grant)? )})}else{self.parent.close_step(grant);None};
         self.child.close_step(grant);self.edit.close_step(grant);self.transferred=true;
@@ -143,7 +181,7 @@ impl MountedGroupReceipt {
         let MountedGroupReceiptOutput{mutations,inverse_group,command_edit_id,command_child_edit_ids}=output.take().unwrap();let UndoGroup{invocation_id,mutations:undo_ids,inverse_mutations,member_edits}=inverse_group;
         *self.mutations=mutations;*self.undo_ids=undo_ids;*self.inverses=inverse_mutations;*self.member_edits=member_edits;*self.command_children=command_child_edit_ids;self.invocation=MountedReceiptBytes::from_original(invocation_id.0.into_bytes());self.parent=MountedReceiptBytes::from_original(command_edit_id.unwrap_or_default().into_bytes());self.transferred=false;self.closing=true;self.close_phase=0;self.close_field=0;self.triple_identity=None;self.triple_offset=0;Self::progress(0,0)
     }
-    fn progress(birth:usize,release:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth,released_bytes:release,..Default::default()})}
+    pub fn progress(birth:usize,release:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth,released_bytes:release,..Default::default()})}
     fn text_demand(text:&String)->usize{text.capacity()}
     fn clear_text(text:&mut String){drop(std::mem::take(text));}
     fn shared_demand(text:&SharedUtf8)->usize{text.original_allocation_bytes()}
@@ -155,9 +193,9 @@ impl MountedGroupReceipt {
     fn mutation_demand(mutation:&KernelMutation,field:usize)->usize{match field{0=>mutation.id.0.capacity(),1=>mutation.invocation_id.0.capacity(),2=>mutation.diff.schema.0.capacity(),3=>mutation.diff.payload.capacity(),4..=7=>Self::inverse_demand(&mutation.inverse,field-4),8=>Self::dependencies_demand(&mutation.dependencies),9=>Self::shared_demand(&mutation.author.0),_=>0}}
     fn clear_mutation(mutation:&mut KernelMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut mutation.id.0),1=>Self::clear_text(&mut mutation.invocation_id.0),2=>Self::clear_text(&mut mutation.diff.schema.0),3=>drop(std::mem::take(&mut mutation.diff.payload)),4..=7=>return Self::clear_inverse(&mut mutation.inverse,field-4),8=>return Self::clear_dependencies(&mut mutation.dependencies),9=>Self::clear_shared(&mut mutation.author.0),_=>{}}true}
     /// 🍂️ Borrows the next exact original field or empty-vector backing retirement demand.
-    fn next_close_byte_demand(&self)->usize{if self.transferred{return 0;}match self.close_phase{0=>self.mutations.last().map_or(self.mutations.capacity()*size_of::<KernelMutation>(),|mutation|Self::mutation_demand(mutation,self.close_field)),1=>self.undo_ids.last().map_or(self.undo_ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity()),2=>self.inverses.last().map_or(self.inverses.capacity()*size_of::<InverseMutation>(),|inverse|Self::inverse_demand(inverse,self.close_field)),3=>self.member_edits.last().map_or(self.member_edits.capacity()*size_of::<EditRef>(),|edit|edit.edit_id.capacity()),4=>self.command_children.last().map_or(self.command_children.capacity()*size_of::<String>(),Self::text_demand),5=>self.invocation.next_close_byte_demand(),6=>self.parent.next_close_byte_demand(),7=>self.child.next_close_byte_demand(),8=>self.edit.next_close_byte_demand(),_=>0}}
+    pub fn next_close_byte_demand(&self)->usize{if self.transferred{return 0;}match self.close_phase{0=>self.mutations.last().map_or(self.mutations.capacity()*size_of::<KernelMutation>(),|mutation|Self::mutation_demand(mutation,self.close_field)),1=>self.undo_ids.last().map_or(self.undo_ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity()),2=>self.inverses.last().map_or(self.inverses.capacity()*size_of::<InverseMutation>(),|inverse|Self::inverse_demand(inverse,self.close_field)),3=>self.member_edits.last().map_or(self.member_edits.capacity()*size_of::<EditRef>(),|edit|edit.edit_id.capacity()),4=>self.command_children.last().map_or(self.command_children.capacity()*size_of::<String>(),Self::text_demand),5=>self.invocation.next_close_byte_demand(),6=>self.parent.next_close_byte_demand(),7=>self.child.next_close_byte_demand(),8=>self.edit.next_close_byte_demand(),_=>0}}
     /// 📏️ Quotes the fixed causal field path or the selected original byte cursor.
-    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if (5..=8).contains(&self.close_phase) {
             let owner = match self.close_phase { 5 => &self.invocation, 6 => &self.parent, 7 => &self.child, _ => &self.edit };
@@ -172,7 +210,7 @@ impl MountedGroupReceipt {
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth, ..Default::default() })
     }
     /// ♻️ Closes one retained causal field per turn and funds every indivisible allocation before taking it.
-    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
         if self.terminal_is_empty(){return RetainedCloneStep::Complete(Default::default());}
         let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}if !plugin_grant_funds(self.retirement_demands().expect("fixed receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }self.closing=true;
         match self.close_phase{
@@ -186,7 +224,7 @@ impl MountedGroupReceipt {
         }
         Self::progress(0,bytes)
     }
-    fn terminal_is_empty(&self)->bool{self.transferred||(self.close_phase==9&&self.mutations.is_empty()&&self.mutations.capacity()==0&&self.undo_ids.is_empty()&&self.undo_ids.capacity()==0&&self.inverses.is_empty()&&self.inverses.capacity()==0&&self.member_edits.is_empty()&&self.member_edits.capacity()==0&&self.command_children.is_empty()&&self.command_children.capacity()==0&&self.invocation.terminal_is_empty()&&self.parent.terminal_is_empty()&&self.child.terminal_is_empty()&&self.edit.terminal_is_empty())}
+    pub fn terminal_is_empty(&self)->bool{self.transferred||(self.close_phase==9&&self.mutations.is_empty()&&self.mutations.capacity()==0&&self.undo_ids.is_empty()&&self.undo_ids.capacity()==0&&self.inverses.is_empty()&&self.inverses.capacity()==0&&self.member_edits.is_empty()&&self.member_edits.capacity()==0&&self.command_children.is_empty()&&self.command_children.capacity()==0&&self.invocation.terminal_is_empty()&&self.parent.terminal_is_empty()&&self.child.terminal_is_empty()&&self.edit.terminal_is_empty())}
 
 }
 impl Drop for MountedGroupReceipt{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"mounted group receipt requires exact transfer or funded terminal causal close");}}
@@ -194,15 +232,21 @@ impl Drop for MountedGroupReceipt{fn drop(&mut self){assert!(std::thread::panick
 #[cfg(test)]
 include!("🧪️tests/🦀️.rs");
 
-pub(crate) mod command {use super::*;include!("📚️command/🦀️.rs");}
-pub(crate) use command::{PagedCommandLog, CommandAppend, CommandAppendRefusal, CommandPrune, MountedCommandEntry, MountedCommandEntrySource};
-#[cfg(test)] pub(crate) use command::{MountedCommandEntryRefusal};
-mod member { use super::*; include!("👤️member/🦀️.rs"); }
-use member::{MountedMemberReceipt, MountedMemberReceiptSource};
-#[cfg(test)] pub(crate) use member::{MountedMemberReceiptOutput};
+#[doc(hidden)]
+pub mod command {use super::*;include!("📚️command/🦀️.rs");}
+pub use crate::mounted_child_group_receipt_group::command::{PagedCommandLog, CommandAppend, CommandAppendRefusal, CommandPrune};
+pub use crate::mounted_child_group_receipt_group::command::entry::{MountedCommandEntry, MountedCommandEntrySource};
+#[cfg(test)]
+pub(crate) use crate::mounted_child_group_receipt_group::command::entry::MountedCommandEntryRefusal;
+#[doc(hidden)]
+pub mod member { use super::*; include!("👤️member/🦀️.rs"); }
+use crate::mounted_child_group_receipt_group::member::{MountedMemberReceipt, MountedMemberReceiptSource};
+#[cfg(test)]
+pub(crate) use crate::mounted_child_group_receipt_group::member::MountedMemberReceiptOutput;
 
 #[cfg(test)]
-pub(crate) use member::{MemberReceiptOperation,MemberReceiptPublication,member_receipt_fixture,member_receipt_source};
+pub(crate) use crate::mounted_child_group_receipt_group::member::{MemberReceiptOperation, MemberReceiptPublication, member_receipt_fixture, member_receipt_source};
 
-pub(crate) mod receipt_members { use super::*; include!("../../📚️members/🦀️.rs"); }
-pub(crate) use receipt_members::MountedGroupMemberReceipts;
+#[doc(hidden)]
+pub mod receipt_members { use super::*; include!("../../📚️members/🦀️.rs"); }
+pub use crate::mounted_child_group_receipt_group::receipt_members::MountedGroupMemberReceipts;

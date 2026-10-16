@@ -1,5 +1,10 @@
-use super::*;
-use crate::os_store::{owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, owned_schema_decode::OwnedSchemaDecodeCredits};
+use semio_framework_artifact_reference::ArtifactRef;
+use semio_framework_job::{Generation, OperationId, StepContext};
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenProgress, MemberOpenRequest};
+use semio_framework_os_store_owned_schema_decode::{OwnedSchemaDecodePage, OwnedSchemaDecodePages};
+use semio_framework_os_store_envelope::owner::OwnerRef;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits};
 
 pub(super) fn request_for(bytes: &[u8]) -> MemberOpenRequest {
     let _ = request_close_policy();
@@ -9,7 +14,7 @@ pub(super) fn request_for(bytes: &[u8]) -> MemberOpenRequest {
     }
     pages.seal().unwrap();
     let expected = ArtifactRef { artifact_id: "member".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
-    MemberOpenRequest::new(OperationId(1), Generation(1), 1000, expected, None, pages, crate::os_spr::ActorId("actor:member-opening-fixture".into())).admit(1).unwrap_or_else(|_| panic!("admissible test input"))
+    MemberOpenRequest::new(OperationId(1), Generation(1), 1000, expected, None, pages, semio_framework_os_spr::ActorId("actor:member-opening-fixture".into())).admit(1).unwrap_or_else(|_| panic!("admissible test input"))
 }
 
 
@@ -153,7 +158,7 @@ fn member_open_request_rejection_retains_exact_pages_and_identity() {
         }
         let expected = ArtifactRef { artifact_id: row["artifactId"].as_str().unwrap().into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() } };
         let owner = row["ownerChildId"].as_str().map(|child_id| OwnerRef { parent: ArtifactRef { artifact_id: "parent".into(), dialect: expected.dialect.clone() }, slot: "content".into(), child_id: child_id.into() });
-        let request = MemberOpenRequest::new(OperationId(1), Generation(1), row["expiresAtUs"].as_u64().unwrap(), expected.clone(), owner.clone(), pages, crate::os_spr::ActorId(row["openedActor"].as_str().unwrap().into()));
+        let request = MemberOpenRequest::new(OperationId(1), Generation(1), row["expiresAtUs"].as_u64().unwrap(), expected.clone(), owner.clone(), pages, semio_framework_os_spr::ActorId(row["openedActor"].as_str().unwrap().into()));
         let result = request.admit(row["nowUs"].as_u64().unwrap());
         assert_eq!(result.is_ok(), row["admitted"].as_bool().unwrap(), "{}", row["id"]);
         let mut request = match result {
@@ -266,7 +271,7 @@ fn member_open_request_every_report_is_same_turn_physical_release_without_new_cl
 fn member_open_request_original_identity_capacity_is_indivisible_even_when_empty() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=request_close_policy();
-    let setup=crate::os_store::component::tests::physical_test_close_grant();
+    let setup=semio_framework_value::testing::physical_test_close_grant();
     for row in fixture["cases"].as_array().unwrap() {
         let capacity=row["capacityBytes"].as_u64().unwrap() as usize;
         let mut request=request_for(&[1,97,83]);
@@ -366,18 +371,18 @@ fn member_input_buffer_birth_and_retirement_preserve_actual_system_and_original_
         RetainedCloneGrant{maximum_depth:0,..policy},
     ]{
         let mut original=None;
-        let (step,heap)=observe_heap_allocations_on_this_thread(||super::operation::admit_member_input_buffer(&mut original,capacity,blocked).unwrap());
+        let (step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_os_store_member_open_store::admit_member_input_buffer(&mut original,capacity,blocked).unwrap());
         assert!(step.is_none());assert!(original.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
     let mut original=None;
-    let (birth,heap)=observe_heap_allocations_on_this_thread(||super::operation::admit_member_input_buffer(&mut original,capacity,policy).unwrap().unwrap());
+    let (birth,heap)=observe_heap_allocations_on_this_thread(||semio_framework_os_store_member_open_store::admit_member_input_buffer(&mut original,capacity,policy).unwrap().unwrap());
     assert!(birth.fits(policy));assert_eq!(birth.retained_capacity_bytes,capacity);assert_eq!((heap.requested_bytes,heap.released_bytes),(capacity,0));
     let pointer=original.as_ref().unwrap().as_ptr();
-    let (refused,heap)=observe_heap_allocations_on_this_thread(||super::operation::admit_member_input_buffer(&mut original,capacity,policy).unwrap_err());
+    let (refused,heap)=observe_heap_allocations_on_this_thread(||semio_framework_os_store_member_open_store::admit_member_input_buffer(&mut original,capacity,policy).unwrap_err());
     assert_eq!(refused.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(original.as_ref().unwrap().as_ptr(),pointer);
     let mut active=None;let mut allocated=capacity;let mut released=0;
     for turn in 0..32{
-        let (step,heap)=observe_heap_allocations_on_this_thread(||if active.is_some(){crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active,policy)}else{crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut original,&mut active,policy)});
+        let (step,heap)=observe_heap_allocations_on_this_thread(||if active.is_some(){semio_framework_os_store_read::artifact_retirement_box_close_step(&mut active,policy)}else{semio_framework_os_store_read::artifact_retirement_admit_owned(&mut original,&mut active,policy)});
         let progress=step.unwrap().progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);
         allocated+=heap.requested_bytes;released+=heap.released_bytes;
         if original.is_none()&&active.is_none(){break;}

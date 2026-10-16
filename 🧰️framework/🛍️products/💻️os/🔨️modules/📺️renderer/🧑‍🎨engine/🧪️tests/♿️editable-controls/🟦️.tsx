@@ -9,7 +9,8 @@ import { createInputLedgerV1, inputActionWindowV1, inputActionWithWindowV1 } fro
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import ownership from "../🧫️fixtures/🪟️input-window/🔣️.json";
 import ownershipSchema from "../../🧬️schema/🪟️input-window/🔣️.json";
-import { InterpretedUiNode, UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { InterpretedUiNode } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 
 afterEach(cleanup);
 

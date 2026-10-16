@@ -4,7 +4,7 @@
 import {expect,test} from "bun:test";
 import {readdirSync,readFileSync} from "node:fs";
 import {join} from "node:path";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import schema from "../🧬️schema/🔣️.json";
 import {parseTransformImage} from "../../🟦️.ts";
 

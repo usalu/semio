@@ -2583,7 +2583,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
 /// was absent while the console showed every `evaluate` faulting
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Driven by the language-agnostic
 /// `🧫️fixtures/💥️extension-evaluate-fault.json` the TypeScript twin reads in
-/// `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
+/// `💥️extension-evaluate-fault/🟦️.ts` of the generation3d editor tests.
 #[semio_framework_async_macros::async_test]
 async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_install_clears_it() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");

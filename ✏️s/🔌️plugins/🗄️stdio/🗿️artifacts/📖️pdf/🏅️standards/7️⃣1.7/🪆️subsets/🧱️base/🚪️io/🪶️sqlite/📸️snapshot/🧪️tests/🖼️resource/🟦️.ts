@@ -9,7 +9,7 @@ import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { writePdfImage,readPdfImage,pdfResourceNumberColumns } from "../../🖼️resource/🟦️.ts";
 import { writePdfState,readPdfState,writePdfForm,readPdfForm } from "../../🖼️resource/🎚️state/🟦️.ts";
 import { writePdfShading,readPdfShading,writePdfPattern,readPdfPattern } from "../../🖼️resource/🌈️shading/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("Native JSON resource admission uses the canonical owned Binary64 domain",async()=>{
   const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/🖼️resource/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text());

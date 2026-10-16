@@ -1,4 +1,4 @@
-import { interactivityDatabaseCompactionFailures } from "../../../../../../../📜️script.ts";
+import { interactivityDatabaseCompactionFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity database compaction policy assertions. */
 export function interactivityDatabaseCompactionSelfTests(compact: string, engine: string, snapshot: string, index: string, contract: string): void {

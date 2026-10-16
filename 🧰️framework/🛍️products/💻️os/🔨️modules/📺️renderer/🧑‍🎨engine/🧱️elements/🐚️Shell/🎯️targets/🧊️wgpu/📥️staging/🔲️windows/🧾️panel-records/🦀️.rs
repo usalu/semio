@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellLifecycle
 //#region 🧾️PanelRecordsAssembler
-pub(crate) fn panel_ui_scroll_records(surface_id: &str, root: &UiNode) -> Result<Vec<ui_contract::UiNodeRecord>, String> {
+pub fn panel_ui_scroll_records(surface_id: &str, root: &UiNode) -> Result<Vec<ui_contract::UiNodeRecord>, String> {
     let mut projection = PanelProjection { surface_id, records: Vec::new(), key_seq: 0 };
     let root_id = projection.node(root)?;
     let Some(record) = projection.records.get_mut((root_id.0 - 1) as usize).and_then(Option::as_mut) else {
@@ -18,19 +18,19 @@ pub(crate) fn panel_ui_scroll_records(surface_id: &str, root: &UiNode) -> Result
 
 /// 🌳️ One shell-owned panel document under construction — same reserve-then-place idiom as
 /// {@link WindowMeasuresProjection}, so the published record order is parent-first.
-pub(crate) struct PanelProjection<'a> {
-    pub(crate) surface_id: &'a str,
-    pub(crate) records: Vec<Option<ui_contract::UiNodeRecord>>,
-    pub(super) key_seq: u32,
+pub struct PanelProjection<'a> {
+    pub surface_id: &'a str,
+    pub records: Vec<Option<ui_contract::UiNodeRecord>>,
+    pub key_seq: u32,
 }
 
 impl PanelProjection<'_> {
-    pub(crate) fn reserve(&mut self) -> ui_contract::UiNodeId {
+    pub fn reserve(&mut self) -> ui_contract::UiNodeId {
         self.records.push(None);
         ui_contract::UiNodeId(self.records.len() as u64)
     }
 
-    pub(crate) fn key(&mut self, id: Option<&str>) -> String {
+    pub fn key(&mut self, id: Option<&str>) -> String {
         self.key_seq += 1;
         match id.filter(|id| !id.is_empty()) {
             Some(id) => format!("{}/{id}", self.surface_id),
@@ -39,7 +39,7 @@ impl PanelProjection<'_> {
     }
 
     /// 🧳️ Preserves a Tree row's native transfer map across the bounded retained-document seam.
-    pub(crate) fn drag_data(&self, item_id: &str, source: Option<&HashMap<String, String>>) -> Result<Option<ui_contract::UiFixedMap<UiText>>, String> {
+    pub fn drag_data(&self, item_id: &str, source: Option<&HashMap<String, String>>) -> Result<Option<ui_contract::UiFixedMap<UiText>>, String> {
         source
             .map(|source| {
                 let mut projected = ui_contract::UiFixedMap::default();
@@ -53,7 +53,7 @@ impl PanelProjection<'_> {
             .transpose()
     }
 
-    pub(crate) fn place(&mut self, id: ui_contract::UiNodeId, key: String, component: ui_contract::Component, layout: ui_contract::LayoutSpec, record: PanelRecord) -> Result<ui_contract::UiNodeId, String> {
+    pub fn place(&mut self, id: ui_contract::UiNodeId, key: String, component: ui_contract::Component, layout: ui_contract::LayoutSpec, record: PanelRecord) -> Result<ui_contract::UiNodeId, String> {
         if self.records.len() > ui_contract::UI_DOCUMENT_NODES {
             return Err(format!("panel '{}' exceeds {} document nodes", self.surface_id, ui_contract::UI_DOCUMENT_NODES));
         }
@@ -76,7 +76,7 @@ impl PanelProjection<'_> {
         Ok(id)
     }
 
-    pub(crate) fn stack_layout(axis: ui_contract::Axis, gap: ui_contract::SpaceToken) -> ui_contract::LayoutSpec {
+    pub fn stack_layout(axis: ui_contract::Axis, gap: ui_contract::SpaceToken) -> ui_contract::LayoutSpec {
         ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis, gap, ..Default::default() })
     }
 
@@ -126,7 +126,7 @@ impl PanelProjection<'_> {
     /// toggle group and select (`EngagementControlView`, `🖥️ui/🎯️targets/⚛️react/🟦️.tsx:10648`),
     /// and both already have a retained `Component` and a `retained_hit_registration` arm — only
     /// this assembler refused them, so an engagement carrying one published a hole.
-    pub(crate) fn node(&mut self, node: &UiNode) -> Result<ui_contract::UiNodeId, String> {
+    pub fn node(&mut self, node: &UiNode) -> Result<ui_contract::UiNodeId, String> {
         let presence = node.presence();
         let activity = match presence.status {
             ui_wgpu::wgpu::component::ui::UiStatus::Loading => ui_contract::Activity::Loading,
@@ -420,7 +420,7 @@ impl PanelProjection<'_> {
     /// 🎛️ React's `TreeDataItem.control` is an inline property row rendered INSIDE the item
     /// (`🌳️Tree/🟦️.tsx`), which is how the staged-argument form's fields live under their own
     /// `action.<id>.arg.<argId>` row. Dropping it published a labelled row with no editor at all.
-    pub(crate) fn tree_item(&mut self, item: &UiTreeItemNode) -> Result<ui_contract::UiNodeId, String> {
+    pub fn tree_item(&mut self, item: &UiTreeItemNode) -> Result<ui_contract::UiNodeId, String> {
         let key = self.key(Some(item.id.as_str()));
         let id = self.reserve();
         let mut children = ui_contract::UiNodeChildren::default();
@@ -538,7 +538,7 @@ impl PanelProjection<'_> {
 /// the row's id the measure's OWN id and the row's control the measure's own editor. Declaration
 /// order is written straight through — React reverses only to cancel its bottom-anchored `Tree`'s
 /// own per-level reversal (`reverseForUpPanel`), which this renderer's panel tree does not do.
-pub(crate) fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
+pub fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
     use ui_wgpu::wgpu::component::ui::{UiControlNode, UiState, UiStatus};
     let activity = |loading: Option<bool>, waiting: Option<bool>| {
         if loading.unwrap_or(false) {
@@ -652,3 +652,107 @@ fn format_measure_number(value: f64) -> String {
 //#endregion 🧾️PanelRecordsAssembler
 //#endregion ShellLifecycle
 
+//#region ShellLifecycle
+//#region 🧾️PanelRecordsAssembler
+/// 🧾️ The variant name a refused `UiNode` reports under — the assembler's own error vocabulary.
+pub fn panel_ui_node_tag(node: &UiNode) -> &'static str {
+    match node {
+        UiNode::Stack(_) => "stack",
+        UiNode::Text(_) => "text",
+        UiNode::Button(_) => "button",
+        UiNode::Separator(_) => "separator",
+        UiNode::Input(_) => "input",
+        UiNode::Select(_) => "select",
+        UiNode::Toggle(_) => "toggle",
+        UiNode::KeyValue(_) => "keyValue",
+        UiNode::Slider(_) => "slider",
+        UiNode::NumberStepper(_) => "numberStepper",
+        UiNode::Ring(_) => "ring",
+        UiNode::IconSelect(_) => "iconSelect",
+        UiNode::Progress(_) => "progress",
+        UiNode::Field(_) => "field",
+        UiNode::Section(_) => "section",
+        UiNode::Group(_) => "group",
+        UiNode::Tree(_) => "tree",
+        UiNode::Image(_) => "image",
+        UiNode::ComponentScene(_) => "componentScene",
+        UiNode::ExternalSlot(_) => "externalSlot",
+    }
+}
+
+/// 🎛️ One [`UiControlNode`] as the [`UiNode`] it IS — the enum is a narrowed projection of the
+/// same variants, so a tree row's inline control projects through the one assembler every other node
+/// takes rather than a second, parallel arm table.
+pub fn control_ui_node(control: &ui_wgpu::wgpu::component::ui::UiControlNode) -> UiNode {
+    use ui_wgpu::wgpu::component::ui::UiControlNode;
+    match control.clone() {
+        UiControlNode::Input(node) => UiNode::Input(node),
+        UiControlNode::Select(node) => UiNode::Select(node),
+        UiControlNode::Toggle(node) => UiNode::Toggle(node),
+        UiControlNode::Button(node) => UiNode::Button(node),
+        UiControlNode::KeyValue(node) => UiNode::KeyValue(node),
+        UiControlNode::Slider(node) => UiNode::Slider(node),
+        UiControlNode::NumberStepper(node) => UiNode::NumberStepper(node),
+        UiControlNode::Ring(node) => UiNode::Ring(node),
+        UiControlNode::IconSelect(node) => UiNode::IconSelect(node),
+    }
+}
+
+/// 🎛️ A nested tree leaf that carries only an Activate verb (no control, no further children) is
+/// React's inline resolution/control slot, not another expandable row.
+pub fn tree_item_is_inline_action_leaf(item: &UiTreeItemNode) -> bool {
+    item.action.is_some() && item.control.is_none() && item.default_open.is_none() && item.items.as_ref().map_or(true, |items| items.is_empty())
+}
+
+/// 🧾️ Everything a panel record carries beside its key, component and layout.
+#[derive(Default)]
+pub struct PanelRecord {
+    pub children: ui_contract::UiNodeChildren,
+    pub bindings: ui_contract::UiNodeBindings,
+    pub activity: ui_contract::Activity,
+    pub disabled: bool,
+    pub label: Option<ui_contract::Label>,
+    pub description: Option<ui_contract::Label>,
+}
+
+pub fn panel_component_scene_props(scene: &ui_wgpu::wgpu::UiComponentSceneNode) -> Result<ui_contract::SurfaceProps, String> {
+    let kind = match scene.component_kind {
+        ui_wgpu::wgpu::SurfaceKind::Canvas2d => ui_contract::SurfaceKind::Canvas2d,
+        ui_wgpu::wgpu::SurfaceKind::World3d => ui_contract::SurfaceKind::World3d,
+        ui_wgpu::wgpu::SurfaceKind::NodeGraph => ui_contract::SurfaceKind::NodeGraph,
+        ui_wgpu::wgpu::SurfaceKind::TextEditor => ui_contract::SurfaceKind::TextEditor,
+        ui_wgpu::wgpu::SurfaceKind::Table => ui_contract::SurfaceKind::Table,
+        ui_wgpu::wgpu::SurfaceKind::Paint2d => ui_contract::SurfaceKind::Paint2d,
+        ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem => ui_contract::SurfaceKind::VirtualFileSystem,
+        ui_wgpu::wgpu::SurfaceKind::TiledMap => ui_contract::SurfaceKind::TiledMap,
+        ui_wgpu::wgpu::SurfaceKind::Board2d => ui_contract::SurfaceKind::Board2d,
+        ui_wgpu::wgpu::SurfaceKind::IconRender => ui_contract::SurfaceKind::IconRender,
+        ui_wgpu::wgpu::SurfaceKind::InkCanvas => ui_contract::SurfaceKind::InkCanvas,
+        ui_wgpu::wgpu::SurfaceKind::GraphTimeline => ui_contract::SurfaceKind::GraphTimeline,
+        ui_wgpu::wgpu::SurfaceKind::BlockList => ui_contract::SurfaceKind::BlockList,
+        ui_wgpu::wgpu::SurfaceKind::DiffView => ui_contract::SurfaceKind::DiffView,
+        ui_wgpu::wgpu::SurfaceKind::EventFeed => ui_contract::SurfaceKind::EventFeed,
+    };
+    let encoded = match scene.component_kind {
+        ui_wgpu::wgpu::SurfaceKind::Canvas2d => scene.canvas_2d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::World3d => scene.world_3d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::NodeGraph => scene.node_graph.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::TextEditor => scene.text_editor.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::Table => scene.table.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::Paint2d => scene.paint_2d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem => scene.virtual_file_system.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::TiledMap => scene.tiled_map.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::Board2d => scene.board2d.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::IconRender => scene.icon_render.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::InkCanvas => scene.ink_canvas.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::GraphTimeline => scene.graph_timeline.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::BlockList => scene.block_list.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::DiffView => scene.diff_view.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+        ui_wgpu::wgpu::SurfaceKind::EventFeed => scene.event_feed.as_ref().map(|value| ui_wgpu::wgpu::encode_surface_doc(kind, value)),
+    };
+    encoded
+        .ok_or_else(|| format!("panel ComponentScene '{}' has no {:?} payload", scene.surface_id, scene.component_kind))?
+        .map_err(|error| format!("panel ComponentScene '{}' payload exceeds the retained surface contract: {error:?}", scene.surface_id))
+}
+//#endregion 🧾️PanelRecordsAssembler
+//#endregion ShellLifecycle

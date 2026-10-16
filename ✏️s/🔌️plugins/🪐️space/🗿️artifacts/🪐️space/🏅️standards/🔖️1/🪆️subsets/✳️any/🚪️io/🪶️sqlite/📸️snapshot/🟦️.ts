@@ -1,8 +1,8 @@
 /** 🪐️ Three literal entities preserve ordered Space metadata and full unsigned64 clocks. */
 import{parseSpaceArtifactRow,parseSpaceTimestamp,type SSpaceSnapshot,type SpaceArtifactRow}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type{ ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueBudget,artifactSqliteInteger as integer,artifactSqliteText as text,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type{ ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueBudget,artifactSqliteInteger as integer,artifactSqliteText as text,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
 export const SPACE_SQLITE_SCHEMA=String.raw`CREATE TABLE space_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, space_id TEXT NOT NULL);
 CREATE TABLE space_artifact (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES space_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), artifact_id TEXT NOT NULL, name TEXT NOT NULL, kind_id TEXT NOT NULL, schema TEXT NOT NULL, created_at_ms_high INTEGER NOT NULL CHECK(created_at_ms_high BETWEEN 0 AND 4294967295), created_at_ms_low INTEGER NOT NULL CHECK(created_at_ms_low BETWEEN 0 AND 4294967295), created_by TEXT NOT NULL, updated_at_ms_high INTEGER NOT NULL CHECK(updated_at_ms_high BETWEEN 0 AND 4294967295), updated_at_ms_low INTEGER NOT NULL CHECK(updated_at_ms_low BETWEEN 0 AND 4294967295), updated_by TEXT NOT NULL);
 CREATE TABLE space_artifact_dialect (id INTEGER PRIMARY KEY REFERENCES space_artifact(id), artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL);

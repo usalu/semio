@@ -7,7 +7,7 @@ use super::*;
 //#region ⚖️MergePolicyAndThemeCommits
 /// ⚖️ `protocol::MergePolicy::default()` — "the least-surprising choice for a fresh authority that
 /// has never been configured", and React's `DEFAULT_MERGE_POLICY`.
-pub(crate) const SHELL_DEFAULT_MERGE_POLICY: &str = "Normal";
+pub const SHELL_DEFAULT_MERGE_POLICY: &str = "Normal";
 
 //#endregion ⚖️MergePolicyAndThemeCommits
 

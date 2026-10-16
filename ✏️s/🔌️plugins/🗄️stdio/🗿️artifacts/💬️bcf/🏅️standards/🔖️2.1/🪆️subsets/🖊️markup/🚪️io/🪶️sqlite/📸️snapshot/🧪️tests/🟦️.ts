@@ -1,4 +1,4 @@
-import refusalFixture from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
+import { sqliteSnapshotRefusalFixture as refusalFixture } from "@semio-tech/framework/io/sqlite-snapshot/refusal/testing";
 const canceledKind=refusalFixture.cases.find(item=>item.id==="canceled-projection")!.expectedKind;
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
@@ -12,8 +12,8 @@ import controls from "./🧫️fixtures/🎛️control.json";
 import {parseBcfSnapshot,type BcfSnapshot,type BcfPoint3} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseBcfSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {BCF_SQLITE_SCHEMA,bcfSnapshotToSqliteDatabase,bcfSnapshotFromSqliteDatabase} from "../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 
 const point=(value:{x:number;y:number;z:number}):BcfPoint3=>({x:binary64(value.x),y:binary64(value.y),z:binary64(value.z)});
 function ownedFixture():BcfSnapshot{return{...fixture,topics:fixture.topics.map(topic=>({...topic,viewpoints:topic.viewpoints.map(view=>{const c=view.camera;return{...view,camera:c===null?null:c.kind==="perspective"?{kind:"perspective",viewPoint:point(c.viewPoint),direction:point(c.direction),upVector:point(c.upVector),fieldOfView:binary64(c.fieldOfView!)}:{kind:"orthogonal",viewPoint:point(c.viewPoint),direction:point(c.direction),upVector:point(c.upVector),viewToWorldScale:binary64(c.viewToWorldScale!)}}})}))}}
@@ -35,7 +35,7 @@ test("BCF rejects invalid owners ordinals choices and bounded cancellation",asyn
 
 import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
-import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import{independentSqliteExtent as completeIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("BCF complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(completeSemanticContract["schemaBytes"]).toEqual(3920);expect(completeSemanticContract["tableWidths"]).toEqual({"bcf_camera":29,"bcf_coloring":4,"bcf_coloring_component":4,"bcf_comment":8,"bcf_components":2,"bcf_document":3,"bcf_orthogonal_camera":4,"bcf_perspective_camera":4,"bcf_raw_part":5,"bcf_selection":4,"bcf_snapshot_image":2,"bcf_topic":10,"bcf_topic_label":4,"bcf_viewpoint":4,"bcf_visibility_exception":4});expect(completeSemanticContract["cases"]).toEqual([{"id":"full","rows":29,"valueBytes":1259},{"id":"metadataRetainingEmpty","rows":3,"valueBytes":110}]);
  for(const item of completeSemanticContract.cases){const source=item.id==="metadataRetainingEmpty"?{...ownedFixture(),topics:[]}:ownedFixture();const database=await bcfSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:15,maxColumns:29};expect(await bcfSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await bcfSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

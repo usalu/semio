@@ -7,7 +7,7 @@ import {inverse} from "../../../../🧬️schema/🧬️mutations/🔢️change-
 import {diff} from "../../../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🔺️diff/🟦️.ts";
 import {Database} from "bun:sqlite";
 import {homeSnapshotToSqliteDatabase,homeSnapshotFromSqliteDatabase,validateHomeSnapshotSqliteDialect,HOME_SQLITE_SCHEMA} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 test("Home snapshot accepts every native unsigned64 generation exactly",()=>{
  for(const row of fixture.cases){const snapshot={schema:row.schema,catalogGeneration:BigInt(row.catalogGeneration)};expect(parseSHomeSnapshot(snapshot)).toEqual(snapshot);}
  for(const value of fixture.invalidGenerations)expect(()=>parseSHomeSnapshot({schema:"owned",catalogGeneration:BigInt(value)})).toThrow();

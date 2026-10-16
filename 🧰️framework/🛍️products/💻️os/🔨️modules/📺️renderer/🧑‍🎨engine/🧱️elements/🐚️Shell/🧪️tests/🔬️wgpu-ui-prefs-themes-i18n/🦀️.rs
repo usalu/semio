@@ -78,9 +78,9 @@ fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript(
 /// `std::env::set_var` after that point can never reach `env_lock` — which is why these two laws
 /// failed for a whole wave while the code they test was correct
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration; W4a's own hand-off).
-fn with_boot_locks(locks: crate::WgpuBootLocks) -> crate::WgpuBootDescriptor {
-    let previous = crate::boot_descriptor();
-    crate::apply_boot_descriptor(crate::WgpuBootDescriptor { locks, ..previous.clone() }).expect("bounded test lock axes");
+fn with_boot_locks(locks: semio_framework_os_renderer_wgpu_host_base::WgpuBootLocks) -> semio_framework_os_renderer_wgpu_host_base::WgpuBootDescriptor {
+    let previous = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(semio_framework_os_renderer_wgpu_host_base::WgpuBootDescriptor { locks, ..previous.clone() }).expect("bounded test lock axes");
     previous
 }
 
@@ -89,15 +89,15 @@ fn with_boot_locks(locks: crate::WgpuBootLocks) -> crate::WgpuBootDescriptor {
 /// of the five lockable axes never locks either.
 #[test]
 fn env_lock_ignores_unset_and_empty() {
-    let previous = with_boot_locks(crate::WgpuBootLocks::default());
+    let previous = with_boot_locks(semio_framework_os_renderer_wgpu_host_base::WgpuBootLocks::default());
     assert_eq!(env_lock("SEMIO_WP14_TEST_UNSET_VAR"), None);
     assert_eq!(env_lock("SEMIO_LOCKED_LOCALE"), None);
-    let _ = with_boot_locks(crate::WgpuBootLocks { locale: String::new(), ..Default::default() });
+    let _ = with_boot_locks(semio_framework_os_renderer_wgpu_host_base::WgpuBootLocks { locale: String::new(), ..Default::default() });
     assert_eq!(env_lock("SEMIO_LOCKED_LOCALE"), None);
-    let _ = with_boot_locks(crate::WgpuBootLocks { locale: "en".to_string(), ..Default::default() });
+    let _ = with_boot_locks(semio_framework_os_renderer_wgpu_host_base::WgpuBootLocks { locale: "en".to_string(), ..Default::default() });
     assert_eq!(env_lock("SEMIO_LOCKED_LOCALE"), Some("en".to_string()));
     assert_eq!(env_lock("SEMIO_WP14_TEST_UNSET_VAR"), None);
-    crate::apply_boot_descriptor(previous).expect("restored boot descriptor");
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(previous).expect("restored boot descriptor");
 }
 
 /// 🧪️ `shell_pref_locks` wires the four lockable axes onto the four lockable fields — byte-identical
@@ -105,17 +105,17 @@ fn env_lock_ignores_unset_and_empty() {
 /// `🧭️boot-descriptor/🟦️.ts` resolves into `locks` before the mount.
 #[test]
 fn shell_pref_locks_reads_the_four_lockable_envs() {
-    let previous = with_boot_locks(crate::WgpuBootLocks { appearance: "dark".to_string(), locale: "de".to_string(), terminology: "reuse".to_string(), theme_id: "mono".to_string(), ..Default::default() });
+    let previous = with_boot_locks(semio_framework_os_renderer_wgpu_host_base::WgpuBootLocks { appearance: "dark".to_string(), locale: "de".to_string(), terminology: "reuse".to_string(), theme_id: "mono".to_string(), ..Default::default() });
     let locks = shell_pref_locks();
     assert_eq!(locks.appearance.as_deref(), Some("dark"));
     assert_eq!(locks.locale.as_deref(), Some("de"));
     assert_eq!(locks.terminology.as_deref(), Some("reuse"));
     assert_eq!(locks.theme_id.as_deref(), Some("mono"));
-    let _ = with_boot_locks(crate::WgpuBootLocks::default());
+    let _ = with_boot_locks(semio_framework_os_renderer_wgpu_host_base::WgpuBootLocks::default());
     let unlocked = shell_pref_locks();
     assert_eq!(unlocked.appearance, None);
     assert_eq!(unlocked.locale, None);
-    crate::apply_boot_descriptor(previous).expect("restored boot descriptor");
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(previous).expect("restored boot descriptor");
 }
 
 /// 🧪️ A locked appearance wins over storage at load time — mirrors `os-shell.tsx:862`'s
@@ -124,14 +124,14 @@ fn shell_pref_locks_reads_the_four_lockable_envs() {
 /// earlier test reusing this worker thread) — only that a lock always overrides whatever loads.
 #[test]
 fn load_ui_prefs_once_prefers_a_lock_over_storage() {
-    let previous = with_boot_locks(crate::WgpuBootLocks { appearance: "dark".to_string(), ..Default::default() });
+    let previous = with_boot_locks(semio_framework_os_renderer_wgpu_host_base::WgpuBootLocks { appearance: "dark".to_string(), ..Default::default() });
     let mut state = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     state.prefs.load_ui_prefs_once(&mut state.chrome);
     assert_eq!(state.prefs.appearance_id, "dark");
     state.prefs.appearance_id = "light".to_string();
     state.prefs.load_ui_prefs_once(&mut state.chrome);
     assert_eq!(state.prefs.appearance_id, "light");
-    crate::apply_boot_descriptor(previous).expect("restored boot descriptor");
+    semio_framework_os_renderer_wgpu_host_base::apply_boot_descriptor(previous).expect("restored boot descriptor");
 }
 
 /// 🧪️ `persist_ui_prefs_if_changed`'s dirty-check: a second call with no field changes since the
@@ -178,7 +178,7 @@ fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
 #[test]
 fn resolve_theme_for_ids_semio_and_mono_differ() {
     let semio_dark = resolve_theme_for_ids("semio", "dark");
-    let plain_dark = crate::resolve_theme("dark");
+    let plain_dark = semio_framework_os_renderer_wgpu_host_base::resolve_theme("dark");
     assert_eq!(semio_dark.background, plain_dark.background);
     let mono_dark = resolve_theme_for_ids("mono", "dark");
     assert_ne!(mono_dark.background, semio_dark.background);
@@ -251,18 +251,18 @@ fn introduction_seen_key_format_matches_react() {
 /// the door existed (ticket 26/09/23 session 12, run s12e).
 #[test]
 fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
-    let before = crate::host_locale();
+    let before = semio_framework_os_renderer_wgpu_host_base::host_locale();
     for (tag, expected) in [("de-DE", Some("de")), ("de", Some("de")), ("DE-at", Some("de")), ("en-US", Some("en")), ("fr-CH", None), ("", None)] {
-        crate::set_host_locale(tag);
-        assert_eq!(crate::host_locale(), expected, "🗣️ `normalizeUiLocale` folds {tag:?}");
+        semio_framework_os_renderer_wgpu_host_base::set_host_locale(tag);
+        assert_eq!(semio_framework_os_renderer_wgpu_host_base::host_locale(), expected, "🗣️ `normalizeUiLocale` folds {tag:?}");
     }
-    crate::set_host_locale("de-DE");
+    semio_framework_os_renderer_wgpu_host_base::set_host_locale("de-DE");
     assert_eq!(resolve_locale_id(None, &stored(None), semio_framework_ui_locale::Locale::En), "de", "the host speaks when nothing else does");
     assert_eq!(resolve_locale_id(None, &stored(Some(OsUiLocale::En)), semio_framework_ui_locale::Locale::En), "en", "a stored preference outranks the host");
     assert_eq!(resolve_locale_id(Some("en".to_string()), &stored(Some(OsUiLocale::De)), semio_framework_ui_locale::Locale::En), "en", "a lock outranks both");
-    crate::set_host_locale("");
+    semio_framework_os_renderer_wgpu_host_base::set_host_locale("");
     assert_eq!(resolve_locale_id(None, &stored(None), semio_framework_ui_locale::Locale::En), "en", "`detectShellLocale(undefined)` answers en");
-    crate::set_host_locale(before.unwrap_or(""));
+    semio_framework_os_renderer_wgpu_host_base::set_host_locale(before.unwrap_or(""));
 
     let engine = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../..").canonicalize().expect("engine root");
     let read = |relative: &str| std::fs::read_to_string(engine.join(relative)).unwrap_or_else(|error| panic!("read {relative}: {error}"));

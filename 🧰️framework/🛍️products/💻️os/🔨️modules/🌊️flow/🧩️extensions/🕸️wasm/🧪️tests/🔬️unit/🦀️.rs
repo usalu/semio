@@ -93,7 +93,7 @@ fn evaluate_round_trips_dictionary() {
 // #region 🔁️ExtensionInvocationWire
 /// 🔁️ The `extension::invoke` "evaluate" wire, driven by the language-agnostic
 /// `🧫️fixtures/🔁️extension-invocation-wire/🔣️.json` the host twin reads in
-/// `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`. `outcome` is what the SHELL submits through
+/// `🧑‍🎨engine/🧪️tests/🪝️extension-invocation/🟦️.ts`. `outcome` is what the SHELL submits through
 /// `PluginExtensionCompletion::complete`: an extension that answered — even with an `{"error": …}`
 /// body — is an `ok` completion, and only a request this SDK could not decode is a `fault` one.
 #[derive(serde::Deserialize)]

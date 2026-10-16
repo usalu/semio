@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "kind": "actual",
+      "effects": 1,
+      "reason": null
+    },
+    {
+      "kind": "copied",
+      "effects": 0,
+      "reason": "Live Original resource control issuance required"
+    },
+    {
+      "kind": "cancelled",
+      "effects": 0,
+      "reason": "Actual fixture phase stopped"
+    }
+  ]
+}

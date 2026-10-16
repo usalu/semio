@@ -9,7 +9,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     //#region 🔖️DirectoryAndIdentity
     //#region 💡️InferencePort
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn open_service_port(&mut self, owner:&str,service_id:&str,action:&str,payload:DslValue) {
+    pub fn open_service_port(&mut self, owner:&str,service_id:&str,action:&str,payload:DslValue) {
         if self.docs.session.as_ref().map(|session|session.plugin_id.as_str())!=Some(owner) {return;}
         if let Some(runner)=self.directory.inference_port.as_ref().filter(|runner|runner.owner==owner && runner.service_id==service_id) {
             runner.intend(action,payload);
@@ -30,7 +30,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         let mut driver=(contribution.create)(scope.clone(),true);
         if driver.intend(action,payload).is_err() {return;}
         self.directory.inference_port_status=Some(InstalledServiceStatusV1 {owner:owner.into(),service_id:service_id.into(),payload:driver.status()});
-        self.directory.inference_port=Some(ShellInferenceRunner::start(crate::renderer_worker_pool(),client,std::sync::Arc::new(port),self.directory.directory_ctx(),contribution,scope,driver));
+        self.directory.inference_port=Some(ShellInferenceRunner::start(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(),client,std::sync::Arc::new(port),self.directory.directory_ctx(),contribution,scope,driver));
     }
 
     //#endregion 💡️InferencePort
@@ -38,7 +38,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// 🔁️ Steps the active mode one place along the app's declared order, wrapping — what the
     /// `mod+alt+→`/`mod+alt+←` chords fire. Reuses the very same body as clicking a
     /// `playground.navbar.modes.<id>` button, so keyboard and pointer cannot diverge.
-    pub(crate) async fn apply_mode_step(&mut self, step: i32) -> Result<(), String> {
+    pub async fn apply_mode_step(&mut self, step: i32) -> Result<(), String> {
         let Some(session) = self.docs.session.as_ref() else {
             return Ok(());
         };
@@ -50,7 +50,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     }
 
     /// 🎛️ The ONE body behind a mode change, whether a navbar button or a chord asked for it.
-    pub(crate) async fn apply_navbar_mode(&mut self, mode_id: &str) -> Result<(), String> {
+    pub async fn apply_navbar_mode(&mut self, mode_id: &str) -> Result<(), String> {
         if let Some(session) = self.docs.session.as_mut() {
             session.view_state.active_mode_id = Some(mode_id.to_string());
             if let Some(layout) = semio_framework::resolve_layout_for_mode(&session.app, mode_id) {
@@ -68,7 +68,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
     /// shared abstraction that would blur the two call shapes (this one has no workflow-panel state).
     /// Both targets — the lazy install it opens with is [`Self::install_plugin`]; only the retained
     /// Home hand-back below is native, because `directory_home` is a native-only projection.
-    pub(super) async fn switch_to_app(&mut self, plugin_id: &str, app: AppDefinition) -> Result<(), String> {
+    pub async fn switch_to_app(&mut self, plugin_id: &str, app: AppDefinition) -> Result<(), String> {
         self.plugins.install_plugin(plugin_id).await?;
         let program = self.plugins.plugins.iter().find(|entry| entry.plugin_id == plugin_id).cloned().ok_or("program missing")?;
         if let Some(session) = &self.docs.session {

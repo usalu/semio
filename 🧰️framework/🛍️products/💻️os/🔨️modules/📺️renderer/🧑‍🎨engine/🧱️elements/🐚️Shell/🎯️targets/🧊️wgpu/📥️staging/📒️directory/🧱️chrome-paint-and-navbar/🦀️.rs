@@ -9,13 +9,13 @@ use super::*;
 /// 👥️🖼️ One painted piece of board peer presence: a peer's cursor (with its viewport and name chip) or a
 /// peer mark chip, each with the board it is clipped to.
 #[derive(Clone, Debug)]
-pub(crate) enum ShellBoardPresencePaint {
-    Cursor { bounds: Rect, peer: crate::canvas_presence::BoardPeerCursor },
-    Mark { bounds: Rect, rect: Rect, mark: crate::canvas_presence::BoardPeerMark },
+pub enum ShellBoardPresencePaint {
+    Cursor { bounds: Rect, peer: semio_framework_os_renderer_wgpu_hub_workspace::canvas_presence::BoardPeerCursor },
+    Mark { bounds: Rect, rect: Rect, mark: semio_framework_os_renderer_wgpu_hub_workspace::canvas_presence::BoardPeerMark },
 }
 
 /// 👥️🖼️ A presence chip's width for its text — the same estimate the status pills use.
-pub(crate) fn board_presence_chip_width(theme: &Theme, text: &str) -> f32 {
+pub fn board_presence_chip_width(theme: &Theme, text: &str) -> f32 {
     8.0 + text.chars().count() as f32 * theme.font_size_small * 0.6
 }
 

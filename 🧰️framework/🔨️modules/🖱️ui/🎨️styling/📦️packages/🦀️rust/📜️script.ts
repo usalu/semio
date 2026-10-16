@@ -6,12 +6,13 @@ import { runVitestV1, readVitestPolicyV1 } from "../../../../🏃️process/📦
 
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { writeGeneratedFileIfChanged } from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 import { checkStylingArtifacts, generateStylingArtifacts, previewStylingArtifacts } from "../../📽️projection/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {
-    generateStylingArtifacts();
+    generateStylingArtifacts(writeGeneratedFileIfChanged);
     console.log("framework/ui/styling: wrote generated CSS/TS/C#/Rust/Python styling artifacts");
   }
 }

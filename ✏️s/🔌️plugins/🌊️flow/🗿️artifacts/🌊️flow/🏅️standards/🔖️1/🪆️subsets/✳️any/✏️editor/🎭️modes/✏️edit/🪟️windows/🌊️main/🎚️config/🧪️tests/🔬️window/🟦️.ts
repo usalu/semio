@@ -1,4 +1,4 @@
-import artifactReferenceSchema from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -9,6 +9,7 @@ import { parseFlowSnapshot } from "../../../../../../../../🧬️schema/📸️
 import { parseFlowDiff } from "../../../../../../../../🧬️schema/🔺️diff/🟦️.ts";
 import { applyFlowMainWindowConfigMutation, type FlowMainWindowConfig, type FlowMainWindowConfigMutation } from "../../🧬️schema/🟦️.ts";
 import { applyFlowWindowTransientMutation, type FlowWindowTransient, type FlowWindowTransientMutation } from "../../../🫧️transient/🧬️schema/🟦️.ts";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 type WindowInstance = { id: string; windowKindId: string };
 type Fixture = {
@@ -34,8 +35,8 @@ const artifactSchema = readJson(`${schemaRoot}/🔣️.json`);
 const snapshotSchema = readJson(`${schemaRoot}/📸️snapshot/🔣️.json`);
 const diffSchema = readJson(`${schemaRoot}/🔺️diff/🔣️.json`);
 const workspace = fileURLToPath(new URL("../../../../../../../../../../../../../../../../..", import.meta.url));
-const childSchema = readJson(`${workspace}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json`);
-const ioSchema = readJson(`${workspace}/🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json`);
+const childSchema = readJson(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"));
+const ioSchema = readJson(frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"));
 
 const target = (instances: WindowInstance[], id: string, expectedKind: string): void => {
   const instance = instances.find((candidate) => candidate.id === id);

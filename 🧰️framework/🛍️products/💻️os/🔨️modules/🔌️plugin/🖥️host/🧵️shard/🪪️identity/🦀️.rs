@@ -1,5 +1,5 @@
 //! 🪪️ A shard retains the original caller's receiving ledger, allocation port and return slot.
-use crate::{GuestInstance,GuestRuntime,GuestRuntimes};
+use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_plugin_guest_contract::{PluginHostError,TurnFault};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},native_encoding::{NativeEncodeControl,NativeEncodeAllocation,NativeEncodeAllocationPort,NativeEncodeProgress,NativeEncodeRetirementRecipient,NativeForwardedEncodeReceipt}};
 use semio_framework_os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,Observer};
@@ -18,7 +18,7 @@ pub struct ShardIdentityIssueRefused{pub error:ValueError,pub observer:Box<Obser
 impl std::fmt::Debug for ShardIdentityIssueRefused{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("ShardIdentityIssueRefused").field("error",&self.error).finish_non_exhaustive()}}
 
 /// 🧾️ Consuming custody survives actor yields and failures without creating another authority.
-pub struct OriginalShardIdentity{birth:RetainedCloneProgress,policy:ShardIdentityPolicy,receipt:Option<NativeForwardedEncodeReceipt>,recipient:Pin<Box<NativeEncodeRetirementRecipient>>,observer:Box<Observer<'static>>,allocate:Box<NativeEncodeAllocationPort<'static>>}
+pub struct OriginalShardIdentity{birth:RetainedCloneProgress,policy:ShardIdentityPolicy,receipt:Option<NativeForwardedEncodeReceipt>,pub recipient:Pin<Box<NativeEncodeRetirementRecipient>>,pub observer:Box<Observer<'static>>,allocate:Box<NativeEncodeAllocationPort<'static>>}
 struct OriginalShardIdentityLoan<'a>{original:&'a mut Option<NativeForwardedEncodeReceipt>,identity:Option<EntityIdentityAuthority<'a>>}
 /// 📬️ The actual guest outcome and its original receiving decision remain available together.
 pub struct OriginalShardActorAdmission{pub call:Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>,pub receiving:Result<semio_framework_actor::RetainedTurnReceipt,ValueError>}
@@ -45,7 +45,7 @@ impl OriginalShardIdentity{
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().expect("original shard identity exists between loans").owned_bytes()}
  /// 🎟️ Returns the independently authored policy without inferring it from work or owned bytes.
  pub fn policy(&self)->ShardIdentityPolicy{self.policy}
- fn loan(&mut self)->Result<OriginalShardIdentityLoan<'_>,ValueError>{
+ pub fn loan(&mut self)->Result<OriginalShardIdentityLoan<'_>,ValueError>{
   let receipt=self.receipt.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original shard identity is already loaned"))?;
   match receipt.bind(&mut *self.allocate,self.recipient.as_mut().get_mut()){
    Ok(continuation)=>Ok(OriginalShardIdentityLoan{original:&mut self.receipt,identity:Some(EntityIdentityAuthority::resume_forwarded(continuation,&mut *self.observer))}),
@@ -79,7 +79,7 @@ impl OriginalShardIdentity{
  }
  /// 🏃️ Retains the same caller admission after successful, yielded and refused actor turns.
  pub async fn execute_turn(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,events:&[semio_framework::kernel::Event],budget:semio_framework::kernel::Budget)->Result<semio_framework::kernel::TurnResult,TurnFault>{
-  let mut identity=self.loan().map_err(super::super::identity_turn_fault)?;
+  let mut identity=self.loan().map_err(semio_framework_plugin_guest_contract::identity_turn_fault)?;
   runtime.execute_turn(instance,events,budget,&mut *identity).await
  }
 }
@@ -98,6 +98,3 @@ pub fn native_identity_issuer(policy:ShardIdentityPolicy,mut observer_issuer:imp
  })
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

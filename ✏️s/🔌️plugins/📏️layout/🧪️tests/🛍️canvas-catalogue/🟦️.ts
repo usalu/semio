@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup } from "@semio-tech/ui-react/test";
+import { cleanup } from "@semio-tech/framework/ui/targets/react/testing";
 import layoutCatalogue from "../🧫️fixtures/🛍️canvas-catalogue/🔣️.json" with { type: "json" };
 import { mountedHost, canvasInputSessions, settle } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🔮️oracles/🖱️mounted-input/🟦️.tsx";
 import fixture from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧫️fixtures/🖱️input-contract/🔣️.json" with { type: "json" };

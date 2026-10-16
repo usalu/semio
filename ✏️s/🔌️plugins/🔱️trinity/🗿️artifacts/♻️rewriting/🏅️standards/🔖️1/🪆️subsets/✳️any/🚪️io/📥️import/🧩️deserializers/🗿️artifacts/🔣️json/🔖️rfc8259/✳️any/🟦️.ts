@@ -1,8 +1,8 @@
 /** 📥️ Rewriting's declared closed-word JSON constructs the actual canonical parent. */
 import {parseRewritingArtifact,parseRhs,type RewritingArtifact} from "../../../../../../../🧬️schema/🟦️.ts";
 import {parseRewritingDiff,type RewritingDiff} from "../../../../../../../🧬️schema/🔺️diff/🟦️.ts";
-import {parseMapDelta} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts";
-import {binary64FromJson,parsePropertyValueJson} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🟦️.ts";
+import {parseMapDelta} from "@semio-tech/framework/replication/mutation/map/schema";
+import {binary64FromJson,parsePropertyValueJson} from "@semio-tech/framework/graph/manifest/value";
 import {parseJackJsonValue} from "./../../../../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
 function record(value:unknown):Record<string,unknown>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Rewriting JSON object required");return value as Record<string,unknown>;}
 /** 🔺️ The declared JSON map envelope delegates each set payload to its exact word owner. */

@@ -9,8 +9,8 @@
 use super::*;
 
 //#region ShellLifecycle
-
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs"]
 mod display_conflicts_marketplace_tests;
+
 //#endregion ShellLifecycle

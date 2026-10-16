@@ -1,0 +1,16 @@
+[
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔗️wit-bindings/🔀️conversion/🦀️.rs",
+  "kind": "fn",
+  "name": "kernel_lifetime_to_wit",
+  "owner": "",
+  "vis": "pub(crate)"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔗️wit-bindings/🔀️conversion/🦀️.rs",
+  "kind": "fn",
+  "name": "wit_lifetime_to_kernel",
+  "owner": "",
+  "vis": "pub(crate)"
+ }
+]

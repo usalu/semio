@@ -3,7 +3,7 @@ import resultsAnimationSchema from "../../../../../../../../../../../../../../..
 import assert from "node:assert/strict";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
-import viewportSchema from "../../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json" with { type: "json" };
+import { viewport2dSchema as viewportSchema } from "@semio-tech/framework/ui/viewport/2d/schema";
 import { applyPatch, type Operation } from "fast-json-patch";
 import schema from "../../🔣️.json" with { type: "json" };
 import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document-contract/🔣️.json" with { type: "json" };

@@ -1,4 +1,4 @@
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ ObjSnapshot schema facet — mirrors 🦀️.rs field-for-field. Complete per the
  * Wavefront OBJ 3.0 spec's real, commonly-implemented grammar. */
 

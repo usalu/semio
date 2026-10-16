@@ -1,8 +1,12 @@
 //! 🧪️ Genuine Wasmtime component coverage for emitted and returned patch ownership.
 
-use super::*;
 use semio_framework::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, ActorUiPatchReceipt, AppInstanceId, QuotaSchema};
 use semio_framework_ui_contract::{UiNodeId, UiPatchOp};
+use semio_framework::kernel::{Budget, Event, TurnResult};
+use semio_framework_plugin_host_guest_runtime::{GuestInstance, PackageRef, WasmtimeRuntime};
+use semio_framework_actor::{PackageHash, PackageId, ActorId as RuntimeActorId};
+use semio_framework_plugin_host_engine::SharedEngineConfig;
+use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
 
 const ACTIVATION_GENERATION: u64 = 41;
 const OPEN_SEQUENCE: u64 = 7;
@@ -10,7 +14,7 @@ const SESSION: u64 = 810_041;
 
 /// ⚖️ The scale fixture's registered component, materialized by
 /// `@semio-tech/framework-os-scale-fixture:build-wasm` (`⚖️scale/📦️packages/🦀️rust/📜️script.ts`).
-const SCALE_COMPONENT: &str = "../../../../../🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
+const SCALE_COMPONENT: &str = "../../../../../../../🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 
 fn fixture_bytes() -> Vec<u8> {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(SCALE_COMPONENT);
@@ -71,7 +75,7 @@ fn assert_patch(result: &TurnResult, lifetime: ActorInstanceLifetime, root: u64,
 
 async fn assert_single_claim_transport(result: TurnResult, lifetime: ActorInstanceLifetime, root: u64, sequence: u64, session: u64) {
     assert_patch(&result, lifetime, root, sequence);
-    let bridged = shard::to_actor_turn_result(result, session, 0, 0).await.expect("component patch enters exact shard owner");
+    let bridged = semio_framework_plugin_host_shard::to_actor_turn_result(result, session, 0, 0).await.expect("component patch enters exact shard owner");
     let lease = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, session).expect("one exact token claim");
     assert!(semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, session).is_err());
     let mut owner = lease.take_owner().unwrap_or_else(|_| panic!("one exact patch owner"));
@@ -84,40 +88,40 @@ async fn assert_single_claim_transport(result: TurnResult, lifetime: ActorInstan
 async fn genuine_component_returned_and_imported_patches_keep_channel_order_and_exact_authority() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     for (config, root, session) in [(serde_json::json!({ "profile": "ui" }), 201, SESSION), (serde_json::json!({ "profile": "ui", "uiImportSink": true }), 101, SESSION + 1)] {
         let (runtime, mut instance, lifetime) = open_live(config, &mut identity).await;
         let turn = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect("genuine component patch");
         assert_single_claim_transport(turn, lifetime, root, 1, session).await;
     }
-    crate::test_native_authority::close(&mut identity);
+    semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn imported_then_returned_channels_refuse_atomically_without_a_transport_token() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     let (runtime, mut instance, _) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiReturnWithImport": true }), &mut identity).await;
     for _ in 0..2 {
         let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect_err("one turn never mixes the imported and returned channels");
         assert!(error.to_string().contains("mixes the imported and returned channels"), "{error}");
     }
-    crate::test_native_authority::close(&mut identity);
+    semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn malformed_import_is_drained_before_the_next_exact_patch_owner_is_published() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut identity=crate::test_native_authority::original(&mut original_observer,&mut original_recipient);
+    let mut identity=semio_framework_plugin_host_operation::test_native_authority::original(&mut original_observer,&mut original_recipient);
 
     let (runtime, mut instance, lifetime) = open_live(serde_json::json!({ "profile": "ui", "uiImportSink": true, "uiMalformedFirst": true }), &mut identity).await;
     let error = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect_err("non-canonical imported payload");
     assert!(error.to_string().contains("ui patch upsert node"));
     let recovered = runtime.execute_turn(&mut instance, &[Event::Wake], budget(), &mut identity).await.expect("next imported patch is isolated from malformed sink");
     assert_single_claim_transport(recovered, lifetime, 302, 2, SESSION + 2).await;
-    crate::test_native_authority::close(&mut identity);
+    semio_framework_plugin_host_operation::test_native_authority::close(&mut identity);
 }

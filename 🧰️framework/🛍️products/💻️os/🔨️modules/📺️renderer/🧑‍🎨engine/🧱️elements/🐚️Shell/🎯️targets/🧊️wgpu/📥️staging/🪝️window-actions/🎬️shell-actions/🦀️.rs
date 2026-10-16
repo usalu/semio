@@ -14,7 +14,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
 /// document actor opens. `folder://` → the multi-document append-only event log; `file://x.json` → its
 /// parent folder's store (single-blob export demoted per the plan). A `remote://` uri names a hub
 /// document of its own and is read by [`parse_remote_backbone_uri`]; one missing a part is refused.
-pub(crate) fn parse_persistence_binding(uri: &str) -> Result<Vec<PersistenceBinding>, String> {
+pub fn parse_persistence_binding(uri: &str) -> Result<Vec<PersistenceBinding>, String> {
     if uri.starts_with("remote://") {
         return Err(format!("a remote backbone names host, space and document: {uri}"));
     }

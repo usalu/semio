@@ -1,26 +1,29 @@
-use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
 
+#[doc(hidden)]
 #[derive(Clone, Copy)]
-pub(crate) struct MountedChildGroupIdentitySource<'a> { pub(crate) parent: &'a str, pub(crate) actor: &'a str, pub(crate) revision: [u8; 32], pub(crate) instance: u32, pub(crate) operation: u64 }
+pub struct MountedChildGroupIdentitySource<'a> { pub parent: &'a str, pub actor: &'a str, pub revision: [u8; 32], pub instance: u32, pub operation: u64 }
 
-pub(crate) struct MountedChildGroupIdentityIssuer {
+#[doc(hidden)]
+pub struct MountedChildGroupIdentityIssuer {
     hash: Option<semio_framework_hash::Sha256>,
-    seal: Option<(usize, usize, usize, usize, [u8; 32], u32, u64)>,
-    pub(crate) field: usize,
-    pub(crate) offset: usize,
-    encoded: [u8; 70],
-    output: ManuallyDrop<Option<Vec<u8>>>,
-    pub(crate) finished: bool,
-    pub(crate) closing: bool,
+    pub seal: Option<(usize, usize, usize, usize, [u8; 32], u32, u64)>,
+    pub field: usize,
+    pub offset: usize,
+    pub encoded: [u8; 70],
+    pub output: ManuallyDrop<Option<Vec<u8>>>,
+    pub finished: bool,
+    pub closing: bool,
 }
 
 impl MountedChildGroupIdentityIssuer {
-    pub(crate) fn new() -> Self { Self { hash: Some(semio_framework_hash::Sha256::new()), seal: None, field: 0, offset: 0, encoded: [0; 70], output: ManuallyDrop::new(None), finished: false, closing: false } }
-    fn next_capacity_byte_demand(&self) -> usize { if !self.finished && !self.closing && self.field == 8 && self.output.is_none() { 70 } else { 0 } }
-    pub(crate) fn ready(&self) -> bool { !self.finished && !self.closing && self.output.as_ref().is_some_and(|output| output.len() == 70) }
+    pub fn new() -> Self { Self { hash: Some(semio_framework_hash::Sha256::new()), seal: None, field: 0, offset: 0, encoded: [0; 70], output: ManuallyDrop::new(None), finished: false, closing: false } }
+    pub fn next_capacity_byte_demand(&self) -> usize { if !self.finished && !self.closing && self.field == 8 && self.output.is_none() { 70 } else { 0 } }
+    pub fn ready(&self) -> bool { !self.finished && !self.closing && self.output.as_ref().is_some_and(|output| output.len() == 70) }
     /// 🔏️ Hashes one original source prefix and admits the full fixed output before copying its bytes.
-    pub(crate) fn advance(&mut self, source: MountedChildGroupIdentitySource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: MountedChildGroupIdentitySource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted group identity is closing")); }
         if self.finished || self.ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -59,10 +62,10 @@ impl MountedChildGroupIdentityIssuer {
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copied, ..Default::default() }))
     }
     /// 🧳️ Moves one completed ASCII identity without a second allocation or implicit source clone.
-    pub(crate) fn take_ready(&mut self, grant: RetainedCloneGrant) -> Option<String> { if grant.maximum_items == 0 || !self.ready() { return None; } self.finished = true; Some(unsafe { String::from_utf8_unchecked(self.output.take().unwrap()) }) }
-    pub(crate) fn next_close_byte_demand(&self) -> usize { self.output.as_ref().map_or(0, Vec::capacity) }
+    pub fn take_ready(&mut self, grant: RetainedCloneGrant) -> Option<String> { if grant.maximum_items == 0 || !self.ready() { return None; } self.finished = true; Some(unsafe { String::from_utf8_unchecked(self.output.take().unwrap()) }) }
+    pub fn next_close_byte_demand(&self) -> usize { self.output.as_ref().map_or(0, Vec::capacity) }
     /// 🪵️ Retires the original full output allocation or its inline unfinished hash state.
-    pub(crate) fn close_granted(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
+    pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
         if self.terminal_is_empty() { return RetainedCloneStep::Complete(Default::default()); }
         if grant.maximum_items == 0 || grant.maximum_release_bytes < self.next_close_byte_demand() { return RetainedCloneStep::Progress(Default::default()); }
         self.closing = true;
@@ -70,7 +73,7 @@ impl MountedChildGroupIdentityIssuer {
         self.hash = None; self.finished = true;
         RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() })
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.output.is_none() && (self.finished || self.closing) }
+    pub fn terminal_is_empty(&self) -> bool { self.output.is_none() && (self.finished || self.closing) }
 }
 
 impl Drop for MountedChildGroupIdentityIssuer { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted group identity requires exact source transfer or funded output retirement"); } }

@@ -34,7 +34,7 @@ import Ajv from "ajv";
 import { geometryId, pointId, parsePointId, pointSlots } from "../../🎯️points/🟦️.ts";
 import pointFixture from "../../🎯️points/🧪️tests/🧫️fixtures/🔣️.json";
 import pointSchema from "../../🎯️points/🧬️schema/🔣️.json";
-import { blake3Hex } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
 import type { PathGeometrySegment } from "../../../../🧬️schema/🟦️.ts";
 
 test("point references match neutral topology and their exact geometry revision",()=>{

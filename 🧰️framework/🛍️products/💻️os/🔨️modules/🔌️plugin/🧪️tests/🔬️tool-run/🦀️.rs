@@ -754,7 +754,7 @@ async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_unt
     let mut app = toy_app(number(&expected["target"]), &mut caller).await;
     let mut probe = attach_probe(&mut app, "tool-run-abort").await;
     drain(&mut probe).await;
-    app.refresh_cache().await.expect("backfill the command log before the invariant capture");
+    app.render_ctx().refresh_cache().await.expect("backfill the command log before the invariant capture");
     let (generation, edits, commands) = (app.stores.store.generation(), app.stores.store.envelope().vcs.edits.len(), app.history.command_log.len());
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "first provisional unit", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeAbort"]) * number(&fixture["opsPerUnit"]), &mut caller).await;
@@ -872,7 +872,7 @@ async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_loca
     assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&transaction)), "every op of the run carries the one ref");
     assert_eq!(transaction.tool, format!("{}#{}", ToyRunApp::APP_ID, text(&fixture["toolId"])));
     assert!(transaction.id.starts_with("tx-") && transaction.id.len() == "tx-".len() + 16, "a minted transaction id: {}", transaction.id);
-    let history = app.build_history_view(None).await;
+    let history = app.render_ref().build_history_view(None).await;
     let row = history.commands.iter().find(|row| row.edit_id.as_deref() == Some(edit_id.as_str())).expect("the run's history row");
     assert_eq!(row.transaction.as_ref(), Some(&transaction));
     assert_eq!((row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string()), ("Toy fill".to_string(), "Spielfüllung".to_string()));
@@ -1278,7 +1278,7 @@ async fn tool_run_trace_backlog_keeps_the_scene_dirty_until_the_echoed_cursor_st
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "trace run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     while app.take_typed_operation_ui_scope().is_some() {}
-    app.flush_tool_run_ui_dirty();
+    app.tool_run_ctx().flush_tool_run_ui_dirty();
     while app.take_typed_operation_ui_scope().is_some() {}
     let (window, body) = (text(&expected["windowId"]), text(&expected["bodyKey"]));
     let budget = number(&expected["pageByteBudget"]) as usize;
@@ -1289,7 +1289,7 @@ async fn tool_run_trace_backlog_keeps_the_scene_dirty_until_the_echoed_cursor_st
         let delta = ToolRunTraceDelta::decode(&base64_codec::base64_url_decode(&lane).expect("base64url")).expect("delta");
         assert_eq!((delta.pages.len(), delta.next), (1, delivered), "the byte budget still delivers one page per refresh");
         assert_eq!(app.tool_runs.is_ui_dirty(), delivered < pages, "a backlog keeps the window dirty; the last page does not");
-        app.flush_tool_run_ui_dirty();
+        app.tool_run_ctx().flush_tool_run_ui_dirty();
         while app.take_typed_operation_ui_scope().is_some() {}
         cursor = Some(cursor_after(&delta));
     }
@@ -1298,7 +1298,7 @@ async fn tool_run_trace_backlog_keeps_the_scene_dirty_until_the_echoed_cursor_st
     for _ in 0..number(&expected["stallRefreshes"]) * 2 {
         app.tool_runs.trace_lane(window, body, lagging, budget).expect("the backlog is resent");
         dirty_refreshes += u64::from(app.tool_runs.is_ui_dirty());
-        app.flush_tool_run_ui_dirty();
+        app.tool_run_ctx().flush_tool_run_ui_dirty();
         while app.take_typed_operation_ui_scope().is_some() {}
     }
     assert_eq!(dirty_refreshes, number(&expected["stallRefreshes"]), "a renderer that never echoes costs a bounded number of refreshes");
@@ -1325,7 +1325,7 @@ async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_exclu
     let other = text(&fixture["traceLane"]["otherWindowId"]);
     let tree = app.render(text(&expected["excludedWindowBody"]), None, &window_view(other, None)).await.expect("render the unrelated window");
     artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project the unrelated window");
-    app.flush_tool_run_ui_dirty();
+    app.tool_run_ctx().flush_tool_run_ui_dirty();
     while app.take_typed_operation_ui_scope().is_some() {}
     let before = app.tool_runs.provisional().len();
     pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before, &mut caller).await;
@@ -1435,9 +1435,9 @@ async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_not
         assert!(matches!(effects.as_slice(), [Effect::DispatchAction { req: RequestId(req), action, .. }] if *req == hop && action == text(&expected["hopAction"])), "hop {hop}: exactly the job's effect reaches the host outbox: {effects:?}");
         for _ in 0..2 {
             while app.take_typed_operation_ui_scope().is_some() {}
-            app.flush_tool_run_ui_dirty();
+            app.tool_run_ctx().flush_tool_run_ui_dirty();
         }
-        assert!(!app.tool_runs.has_pending_work() && !app.tool_run_has_pending_work(), "hop {hop}: a waiting job keeps its instance idle");
+        assert!(!app.tool_runs.has_pending_work() && !app.tool_run_ref().tool_run_has_pending_work(), "hop {hop}: a waiting job keeps its instance idle");
         advance_toy(&mut app, &mut caller).await.expect("an idle turn");
         assert!(app.take_typed_operation_effect().is_none(), "hop {hop}: an unwoken job is never stepped again");
         app.tool_runs.port().expect("the run's port").wake();
@@ -1952,7 +1952,7 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     let mut yielded_with_retained_receipt = 0;
     let mut page = None;
     for _ in 0..4096 {
-        app.publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
+        app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
         mounted.publication_ownership_progress.take();
         if mounted.pending_window_config_receipt.is_some() {
             yielded_with_retained_receipt += 1;
@@ -1970,7 +1970,7 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     assert!(mounted.acknowledge_result_page(page.token).expect("exact ACK"));
     let mut terminal = false;
     for _ in 0..4096 {
-        app.publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
+        app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
         mounted.publication_ownership_progress.take();
         if mounted.granted_retirement_ready() && mounted.granted_retirement_pending() {
             let _demand = mounted.granted_retirement_demands(grant.maximum_copy_bytes).expect("quoted granted retirement");
@@ -2024,7 +2024,7 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     start(&mut app, text(&expected["toolId"]), &mut caller).await;
     pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
     render_world(&mut app, None, &mut caller).await;
-    app.flush_tool_run_ui_dirty();
+    app.tool_run_ctx().flush_tool_run_ui_dirty();
     while app.take_typed_operation_ui_scope().is_some() {}
     let before = app.tool_runs.provisional().len();
     pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before, &mut caller).await;

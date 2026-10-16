@@ -6,7 +6,7 @@ use super::*;
 
 //#region 🔖️IdentityPure
 /// 👥️ Projects only Hub-normalized peers for the shell's currently attached surface.
-pub(crate) fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
+pub fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
     if attached_surface != Some(target_surface) {
         return Vec::new();
     }

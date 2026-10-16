@@ -107,11 +107,12 @@ test("Binary native control corpus retains complete literal owned fields indepen
  expect(await binarySnapshotFromSqliteDatabase(await importSqliteDatabase(file))).toEqual(owned);
 });
 
-import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {NativeDecodeControl as BudgetDecodeControl} from "@semio-tech/framework/value/decode";
+import {SqliteAllocationControl as BudgetAllocationControl} from "@semio-tech/framework/io/sqlite-snapshot";
 
 import SemanticAjv2020 from "ajv/dist/2020";
 import completeSemantic from "./🧫️fixtures/🛂️semantic/🔣️.json";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 test("binary closed complete semantic cells agree with independent third-party SQL",async()=>{
  expect(completeSemantic["tableWidths"]["binary_document"]).toEqual(2);expect(completeSemantic["tableWidths"]["binary_byte"]).toEqual(4);
@@ -132,8 +133,8 @@ test("Original Binary required paid receiver keeps the raw carrier and canonical
  const { resolve } = await import("node:path");
  const repo=resolve(import.meta.dir,"../../../../../../../../../../../../..");
  const original=JSON.parse(readFileSync(new URL("../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
- const { semioSchemaAjvV1 } = await import(resolve(repo,"🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts"));
- const grant=JSON.parse(readFileSync(resolve(repo,"🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"),"utf8"));
+ const { semioSchemaAjvV1 } = await import("@semio-tech/framework/schema/oracles/validator");
+ const grant=JSON.parse(readFileSync(frameworkSourcePath("🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json"),"utf8"));
  expect(semioSchemaAjvV1({strict:true}).compile(grant)(original.original.grant)).toBe(true);
  for(const row of original.shapeCases.filter((row:any)=>row.carrier==="binary")){
   const raw=Uint8Array.from(row.raw),expected=Buffer.from(row.expected);

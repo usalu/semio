@@ -16,7 +16,7 @@ use super::*;
 /// square with no label — and the app's utilities sat on a FOOTER rail that React has no counterpart
 /// for at all (`Transform · Brush · Volume Brush · Relocate` in the first real boot).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum WindowPaneChip {
+pub enum WindowPaneChip {
     Actions,
     Search,
     WindowOptions,
@@ -26,10 +26,10 @@ pub(crate) enum WindowPaneChip {
 
 impl WindowPaneChip {
     /// 🪟️ Every chip, in React's own mount order inside `window-body`.
-    pub(crate) const ALL: [Self; 5] = [Self::Actions, Self::Search, Self::WindowOptions, Self::Utilities, Self::Projection];
+    pub const ALL: [Self; 5] = [Self::Actions, Self::Search, Self::WindowOptions, Self::Utilities, Self::Projection];
 
     /// 🧭️ The `Pane` anchor React mounts this chip at.
-    pub(crate) fn anchor(self) -> PanelAnchor {
+    pub fn anchor(self) -> PanelAnchor {
         match self {
             Self::Actions => PanelAnchor::TopLeft,
             Self::Search => PanelAnchor::TopMiddle,
@@ -46,7 +46,7 @@ impl WindowPaneChip {
     /// (`🌐️World3dHost/🟦️.tsx:5202`), so the chip wears the SELECTED template's icon. This answers the
     /// icon of [`WORLD_PROJECTION_DEFAULT_TEMPLATE_ID`] — the spec React synthesises for a pane whose
     /// camera declares none — and [`ShellState::window_pane_chip_icon_id`] resolves the live one.
-    pub(crate) fn icon_id(self) -> &'static str {
+    pub fn icon_id(self) -> &'static str {
         match self {
             Self::Actions => "play",
             Self::Search => "search",
@@ -56,7 +56,7 @@ impl WindowPaneChip {
         }
     }
 
-    pub(crate) fn label_key(self) -> &'static str {
+    pub fn label_key(self) -> &'static str {
         match self {
             Self::Actions => "common.actions",
             Self::Search => "window.search.title",
@@ -76,7 +76,7 @@ impl WindowPaneChip {
     /// pane chip as absent on one side (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
     /// `📓️w9c-behaviour-parity-run-2.md` steps 9–12). The id is the integration key across i18n,
     /// tooltips, hotkeys, tutorials and introduction anchors — one spelling, or none of them meet.
-    pub(crate) fn control_id(self, window_id: &str, folded: bool) -> String {
+    pub fn control_id(self, window_id: &str, folded: bool) -> String {
         match self {
             Self::Actions => semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "engagement", "toggle"]),
             Self::Search => semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "search", "toggle"]),
@@ -90,7 +90,7 @@ impl WindowPaneChip {
 
     /// 🎯️ The chip a control id names, and the `(pane, verb)` pair it is spelled with — the exact
     /// inverse of [`Self::control_id`], so one table states both directions.
-    pub(super) fn from_pane_and_verb(pane: &str, verb: &str) -> Option<Self> {
+    pub fn from_pane_and_verb(pane: &str, verb: &str) -> Option<Self> {
         match (pane, verb) {
             ("engagement", "toggle") => Some(Self::Actions),
             ("search", "toggle") => Some(Self::Search),
@@ -107,7 +107,7 @@ impl WindowPaneChip {
 /// camera (`🌐️World3dHost/🟦️.tsx`'s `worldProjectionSpec`), and this renderer's orbit is
 /// perspective-only (`♾️infinite/🌍️world/🦀️.rs`'s `WORLD3D_PERSPECTIVE_CAMERA_ZOOM`), so both
 /// shells open on 3-Point.
-pub(crate) const WORLD_PROJECTION_DEFAULT_TEMPLATE_ID: &str = "three-point";
+pub const WORLD_PROJECTION_DEFAULT_TEMPLATE_ID: &str = "three-point";
 
 const WORLD_PROJECTION_TEMPLATE_PREFIX: &str = "world-projection:";
 
@@ -115,7 +115,7 @@ fn decoded_world_projection_template(template_id: &str) -> Option<Viewport3dProj
     serde_json::from_str(template_id.strip_prefix(WORLD_PROJECTION_TEMPLATE_PREFIX)?).ok()
 }
 
-pub(crate) fn world_projection_template_selection_id(template_id: &str) -> Option<&'static str> {
+pub fn world_projection_template_selection_id(template_id: &str) -> Option<&'static str> {
     if let Some(template) = WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == template_id) {
         return Some(template.id);
     }
@@ -134,12 +134,12 @@ pub(crate) fn world_projection_template_selection_id(template_id: &str) -> Optio
     })
 }
 
-pub(crate) fn world_projection_initial_seed(template_id: &str) -> Option<Viewport3dProjectionSpec> {
+pub fn world_projection_initial_seed(template_id: &str) -> Option<Viewport3dProjectionSpec> {
     WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == template_id).copied().map(WorldProjectionTemplate::spec).or_else(|| decoded_world_projection_template(template_id))
 }
 
 /// 🔀️ The template row `id` names, or the default one for an id no template declares.
-pub(crate) fn world_projection_template(id: &str) -> &'static WorldProjectionTemplate {
+pub fn world_projection_template(id: &str) -> &'static WorldProjectionTemplate {
     let id = world_projection_template_selection_id(id).unwrap_or(WORLD_PROJECTION_DEFAULT_TEMPLATE_ID);
     WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == id).or_else(|| WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == WORLD_PROJECTION_DEFAULT_TEMPLATE_ID)).expect("the default projection template is declared")
 }
@@ -169,7 +169,7 @@ fn world_projection_pane_rows(prefix: &str, window_id: &str, selected_id: &str, 
             action: Some(ActionDescriptor {
                 controller_id: "framework".into(),
                 action: "setWorldProjectionTemplate".into(),
-                args: crate::action_args_json!({ "windowId": window_id.to_string(), "templateId": template.id }),
+                args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowId": window_id.to_string(), "templateId": template.id }),
             }),
             items: (!children.is_empty()).then_some(children),
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -182,7 +182,7 @@ impl WindowState {
     /// 📐️ Hands a dock template to its World surface once the producer's delivered camera is
     /// resident. The map records template identity before scene paint creates the surface owner, so
     /// this boundary retries harmlessly until both halves exist.
-    pub(crate) fn apply_initial_world_projection_template(&mut self, window_id: &str, surfaces: &mut SurfaceState) {
+    pub fn apply_initial_world_projection_template(&mut self, window_id: &str, surfaces: &mut SurfaceState) {
         let Some(template_id) = self.world_projection_template.get(window_id) else { return };
         let Some(seed) = world_projection_initial_seed(template_id) else { return };
         let Some(world) = surfaces.world3d_state_for_window_mut(window_id) else { return };
@@ -191,13 +191,13 @@ impl WindowState {
 
     /// 🎛️ React's `Window` `utilityBarFolded` — `useState(true)`, so a pane's Utilities rail starts
     /// FOLDED and is opened by its own chip (`🪟️Window/🟦️.tsx:176-177`).
-    pub(crate) fn utility_bar_folded(&self, window_id: &str) -> bool {
+    pub fn utility_bar_folded(&self, window_id: &str) -> bool {
         self.utility_bar_folded.get(window_id).copied().unwrap_or(true)
     }
 
     /// 🔀️ React's `WorldOrbitProjectionSwitchPane` `folded` — `useState(true)`
     /// (`🌐️World3dHost/🟦️.tsx:5190`), so absent means folded.
-    pub(crate) fn projection_pane_folded(&self, window_id: &str) -> bool {
+    pub fn projection_pane_folded(&self, window_id: &str) -> bool {
         self.projection_pane_folded.get(window_id).copied().unwrap_or(true)
     }
 
@@ -207,7 +207,7 @@ impl WindowState {
     /// `🌐️World3dHost/🟦️.tsx`), collapsed onto this renderer's flat template ids: an explicit press
     /// wins, otherwise the pane's LIVE camera family answers, which is what makes a `Top` pane open
     /// on Orthographic instead of the static default.
-    pub(crate) fn world_projection_template_id(&self, window_id: &str, surfaces: &SurfaceState) -> &str {
+    pub fn world_projection_template_id(&self, window_id: &str, surfaces: &SurfaceState) -> &str {
         if let Some(selected) = self.world_projection_template.get(window_id) {
             return world_projection_template(selected).id;
         }
@@ -218,19 +218,19 @@ impl WindowState {
     }
 
     /// 🎛️ React's `Window` Actions fold; absent means folded.
-    pub(crate) fn window_actions_folded(&self, window_id: &str) -> bool {
+    pub fn window_actions_folded(&self, window_id: &str) -> bool {
         self.action_panel_folded.get(window_id).copied().unwrap_or(true)
     }
 
     /// 🔎️ React's `Window` Search fold; absent means folded.
-    pub(crate) fn window_search_folded(&self, window_id: &str) -> bool {
+    pub fn window_search_folded(&self, window_id: &str) -> bool {
         self.search_panel_folded.get(window_id).copied().unwrap_or(true)
     }
 
     /// 🖼️ The icon ONE pane chip wears this frame — [`WindowPaneChip::icon_id`] for every fixed one,
     /// and the SELECTED projection template's icon for `Projection`, which is the one React resolves
     /// per pane (`icon={worldProjectionSpecIconId(spec)}`, `🌐️World3dHost/🟦️.tsx:5202`).
-    pub(crate) fn window_pane_chip_icon_id(&self, chip: WindowPaneChip, window_id: &str, surfaces: &SurfaceState) -> &'static str {
+    pub fn window_pane_chip_icon_id(&self, chip: WindowPaneChip, window_id: &str, surfaces: &SurfaceState) -> &'static str {
         match chip {
             WindowPaneChip::Projection => world_projection_template(self.world_projection_template_id(window_id, surfaces)).icon_id,
             _ => chip.icon_id(),
@@ -240,7 +240,7 @@ impl WindowState {
     /// 🔀️ React's `WorldProjectionKindSwitch` as one retained Tree document. The generic Tree owns
     /// the full-width rows, icons, disclosure chevrons and AX hierarchy; Projection adds only the
     /// canonical taxonomy and exact per-window action payload.
-    pub(super) fn build_window_projection_ui(&self, window_id: &str, surfaces: &SurfaceState) -> UiNode {
+    pub fn build_window_projection_ui(&self, window_id: &str, surfaces: &SurfaceState) -> UiNode {
         let pane_id = format!("{WORLD_PROJECTION_PANE_PARENT}.{}", semio_framework::element_id_segment(window_id));
         let selected = self.world_projection_template_id(window_id, surfaces);
         let mut cursor = 0;
@@ -276,7 +276,7 @@ impl WindowState {
 
     /// 🔀️ Rebuilds one Projection document through the same revision-keyed shell ingress as Actions,
     /// Search and Measures. The prior lease retires before the replacement is admitted.
-    pub(super) fn refresh_window_projection_document(&mut self, window_id: &str, surfaces: &SurfaceState, docs: &mut DocumentState) -> Result<(), String> {
+    pub fn refresh_window_projection_document(&mut self, window_id: &str, surfaces: &SurfaceState, docs: &mut DocumentState) -> Result<(), String> {
         let surface = window_projection_surface_id(window_id);
         let records = panel_ui_scroll_records(&surface, &self.build_window_projection_ui(window_id, surfaces))?;
         let previous = docs.window_projection_documents.remove(window_id);
@@ -290,3 +290,15 @@ impl WindowState {
 //#endregion 🪟️WindowPaneChrome
 //#endregion ActionPanelAndUtilities
 
+//#region ActionPanelAndUtilities
+//#region 🪟️WindowPaneChrome
+/// 🆔️ React's parent id for the world's projection pane — `world3dProjectionPaneElementId`
+/// (`🌐️World3dHost/🟦️.tsx:5218`), which is NOT under `framework.window`, and whose `Pane` declares no
+/// `toggleId` and therefore wears the default `childElementId(id, "pane", "fold")`.
+pub const WORLD_PROJECTION_PANE_PARENT: &str = "framework.worldOrbit.projection";
+
+/// 🆔️ React's parent id for every window-scoped pane chip — `childElementId("framework.window", id, …)`
+/// in `🪟️Window/🟦️.tsx`, where `id` is the window INSTANCE id.
+pub const WINDOW_PANE_CHIP_PARENT: &str = "framework.window";
+//#endregion 🪟️WindowPaneChrome
+//#endregion ActionPanelAndUtilities

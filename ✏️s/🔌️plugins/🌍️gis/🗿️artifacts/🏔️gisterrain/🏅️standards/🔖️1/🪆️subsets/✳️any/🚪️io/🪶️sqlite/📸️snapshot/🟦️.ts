@@ -1,10 +1,10 @@
 /** 🏔️ Complete imported intrinsic trees and independent mesh identities. */
 import type {GisTerrainArtifact,ImportedMap} from "../../../🧬️schema/🟦️.ts";
-import type {IntrinsicValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import {sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {IntrinsicValue} from "@semio-tech/framework/value/schema";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import {sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 import sql from "./🗄️.sql" with {type:"text"};
 export const GIS_TERRAIN_SQLITE_SCHEMA:string=sql;
 const SCALAR=[{index:1,width:64}]as const;

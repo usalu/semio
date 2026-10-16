@@ -1,39 +1,42 @@
-#[cfg(test)] use crate::window_transient::WindowTransientSnapshot;
-#[cfg(test)] use crate::tool_contract::artifact_owned_tool_job_context_identity_digest;
-#[cfg(test)] use crate::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
-#[cfg(test)] use crate::tool_contract::ToolOwnerWitness;
-#[cfg(test)] use crate::tool_contract::ArtifactBoundedFirstStepProof;
-#[cfg(test)] use crate::tool_contract::ArtifactToolFactoryRegistry;
-#[cfg(test)] use crate::tool_contract::ArtifactOwnedToolJobFactory;
-#[cfg(test)] use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-#[cfg(test)] use crate::tool_contract::ArtifactToolPublicationLane;
-#[cfg(test)] use crate::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
-#[cfg(test)] use crate::app_emission::ArtifactMutationOutcome;
-#[cfg(test)] use semio_framework::ViewModel;
-#[cfg(test)] use crate::tool_contract::EmptyArtifactInstanceOperationOwner;
-#[cfg(test)] use crate::tool_run_contract::ToolRunJob;
-#[cfg(test)] use crate::tool_run_contract::ToolRunJobRequest;
-#[cfg(test)] use crate::tool_run_contract::OriginalToolRunJobPortRetirement;
-#[cfg(test)] use crate::tool_run_contract::ToolRunJobPort;
-#[cfg(test)] use crate::tool_run_contract::ToolRunRetargetableJob;
-#[cfg(test)] use crate::tool_run_contract::ToolRunJobPurpose;
-use crate::tool_contract::decode_typed_operation_fault_page;
-use crate::tool_contract::ArtifactBoundedToolFault;
-use crate::tool_contract::ArtifactToolCompletionValue;
-use crate::tool_contract::TypedOperationResultLane;
-use crate::tool_contract::ArtifactToolCompletion;
-use crate::tool_contract::ArtifactToolCompletionRejection;
-use super::child_emit_preparation::ChildEmitPreparationStep;
-use super::window_config::{WindowConfigMutation, WindowConfigSnapshot};
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_os_kernel as pack;
+#[cfg(test)]
+use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::artifact_owned_tool_job_context_identity_digest;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::BOUNDED_FIRST_STEP_FACTORY;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+#[cfg(test)]
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+#[cfg(test)]
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
+#[cfg(test)]
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
+use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletion;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection;
+use semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep;
+use semio_framework_plugin_window_config::WindowConfigSnapshot;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use super::window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
+use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_value::DslValue;
 use protocol::{OpBinary, OpText};
 use semio_framework::kernel::UiDirtyScope;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework::{kernel::ActorId, ToolDefinition, ToolRef};
-use semio_framework::{kernel::{Effect, HistoryPatch, HybridLogicalTimestamp, InvocationResult, MutationId}, ActionArgDef, Fault, FaultCode, FaultFrom, FaultOrigin, IconName, TreeWindowRequest};
-use semio_framework_ui_contract::BuiltNode;
+use semio_framework::kernel::{Effect, HistoryPatch, InvocationResult};
+use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
 /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
@@ -46,163 +49,58 @@ use semio_framework_ui_contract::BuiltNode;
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
 use semio_framework_ui_contract::*;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-/// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
-/// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
-/// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
-/// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
+use std::collections::{BTreeMap, BTreeSet};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_artifact_reference::ArtifactRef;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use store::{os_store::store_schema::ArtifactCommand, ConfigStore};
+use store::os_store::store_schema::ArtifactCommand;
 use pack::snapshot::ArtifactPack;
-use store::{ArtifactStore, Mutation, MutationDiff};
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
-use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-/// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
-/// 2). Defined in `semio_framework` so plugins and the OS product
-/// share one definition without an inverted dependency; re-exported here verbatim.
-use semio_framework_artifact_reference::ArtifactDialect;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-/// 🧾️ The body-wide node budget and its fixed-node reserve live ONCE, in the UI contract, because
-/// the React host spends the same number from the other side of the wire
-/// (`🌳️Tree/🟦️.tsx`'s `capTreeWindowRequests`). See
-/// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
-/// implement; [`TreeWindows`] is this side of it.
-use semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use super::completion_fault::ArtifactCompletionFault;
-use semio_framework::AppRole;
+use store::{Mutation, MutationDiff};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_plugin_decl_app::ArtifactCompletionFault;
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[cfg(test)]
-use crate::app_builder::App;
-#[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-#[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
-#[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_owners;
-#[cfg(test)]
-use crate::app_views::InteractionView;
-#[cfg(test)]
-use crate::app_views::ConfigView;
-#[cfg(test)]
-use crate::app_views::ArtifactView;
-#[cfg(test)]
-use crate::app_views::NoTransientMutation;
-#[cfg(test)]
-use crate::app_views::NoPresence;
-#[cfg(test)]
-use crate::app_views::NoDraftMutation;
+use semio_framework_plugin_app_builder::App;
 #[cfg(test)]
 use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
 #[cfg(test)]
-use crate::typed_operation::test_blank_mounted_operation;
-#[cfg(test)]
-use crate::tool_cancellation::ArtifactDocumentAuthority;
-#[cfg(test)]
-use crate::tool_cancellation::ToolOperationKey;
-#[cfg(test)]
-use crate::plugin_app::PluginApp;
-#[cfg(test)]
-use crate::app_testing::mutation_fixture;
-#[cfg(test)]
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_owners;
-#[cfg(test)]
-use crate::window_surface::built_text_to_component_tree;
-#[cfg(test)]
-use crate::window_surface::built_to_component_tree;
-#[cfg(test)]
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-#[cfg(test)]
-use crate::window_surface::scene_surface;
-#[cfg(test)]
-use crate::app_views::DraftView;
-#[cfg(test)]
-use crate::app_views::NoTransient;
-#[cfg(test)]
-use crate::app_views::NoPresenceMutation;
-#[cfg(test)]
-use crate::app_views::NoDraft;
+use semio_framework_plugin_operation::ToolOperationKey;
 #[cfg(test)]
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use crate::tree_kit::tree_window_indexed_item;
-use crate::tree_kit::tree_window_indexed_section;
-use crate::tree_kit::TreeWindows;
-use crate::window_surface::ui_text;
-use crate::window_surface::ui_label;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::interaction_topology::INTERACTION_ACTION_IDS;
-use crate::command_history::history_leaf_row_label;
-use crate::command_history::HISTORY_ROW_OPERATION_PREVIEW;
-use crate::command_history::history_intent_label_of;
-use crate::history_view::CommandView;
-use crate::history_view::MutationView;
-use crate::child_content::MemberPath;
-use crate::child_view::MemberKey;
-use crate::command_history::HISTORY_UNIT_SPANS_DOCUMENTS_CODE;
-use crate::app_views::NoConfigMutation;
-use crate::app_views::NoConfig;
-use crate::app_emission::HostEvent;
-use crate::child_content::ChildContentRetirement;
-use crate::window_surface::paged_text_carrier;
-use crate::window_surface::ui_assembly_error_because;
+use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
+use semio_framework_plugin_decl_views::child_view::MemberKey;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::app_emission::ActionMeta;
+use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::artifact_instance::VcsArtifactApp;
-use crate::window_surface::ui_assembly_error;
-use crate::window_surface::UiAssemblyResult;
-use crate::app_contract::ArtifactApp;
-use crate::app_emission::ChildEmit;
-use crate::app_emission::Emit;
-use crate::app_emission::EphemeralEmit;
-use crate::app_views::InteractionHoverState;
-use crate::child_view::ChildContentView;
-use crate::history_view::HistoryView;
-use crate::interaction_topology::is_inline_interaction_verb;
-use crate::app_views::PeerPresenceRoot;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_emission::ChildEmit;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
+use semio_framework_plugin_decl_views::InteractionHoverState;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_decl_views::history_view::HistoryView;
+use semio_framework_plugin_interaction::interaction_topology::is_inline_interaction_verb;
+use semio_framework_plugin_decl_views::PeerPresenceRoot;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(test)]
-use crate::window_kits::AppActionRegistry;
-#[cfg(test)]
-use crate::app_testing::artifact_app_laws;
+use semio_framework_plugin_window_kits::AppActionRegistry;
 #[cfg(test)]
 use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
 #[cfg(test)]
-use crate::typed_operation::TypedCommandFullOperationJobFactory;
+use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
 
-#[path = "../⏳️operation-progress/🦀️.rs"]
-pub mod operation_progress;
 
-#[path = "../⏯️tool-run/🦀️.rs"]
-pub mod tool_run;
 
-pub use tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunLedger, ToolRunTickReceipt};
+pub use crate::lifted_job::is_tool_run_action_id;
 
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️tool-run/🦀️.rs"]
-mod tool_run_tests;
 
-#[path = "../🛠️tool-machine/🦀️.rs"]
-pub mod tool_machine;
 
-pub use tool_machine::{gesture_emit, ScrubTag, ToolMachineRuntime, ToolTag, TypingTag};
 
-#[path = "../⏪️time-travel/🦀️.rs"]
-pub mod time_travel;
 
-pub use time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutationPages, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 
 /// 🧬️ Generic wrapper turning any typed {@link ArtifactApp} into the object-safe runtime
 /// {@link PluginApp}. Owns a persistent `ArtifactStore<Snapshot, Mutation>` — the single source of
@@ -221,12 +119,13 @@ pub use time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutati
 /// undo depends on. `base_generation` is the store generation `transaction_prepare` observed;
 /// `transaction_commit` rejects (`transaction.generation-mismatch`) if the live generation has
 /// since moved.
-pub(crate) struct PendingTransaction<Op> {
-    pub(crate) txn_id: String,
-    pub(crate) ops: Vec<Op>,
-    pub(crate) children: Vec<ChildEmit>,
-    pub(crate) origin: protocol::MutationOrigin,
-    pub(crate) base_generation: u64,
+#[doc(hidden)]
+pub struct PendingTransaction<Op> {
+    pub txn_id: String,
+    pub ops: Vec<Op>,
+    pub children: Vec<ChildEmit>,
+    pub origin: protocol::MutationOrigin,
+    pub base_generation: u64,
 }
 
 /// 🧾️ The op packs one dispatch produced, per lane, as the channel's `AppFrame::Emit` carries them:
@@ -245,18 +144,20 @@ pub struct EmitWire {
 /// §5.1) — stashed instead of applied, drained by `plugin_exchange` via
 /// `PluginApp::take_pending_transaction_proposal` and framed as `AppFrame::TransactionProposal`.
 pub struct TransactionProposalDraft {
-    pub(crate) local_ops: Vec<Vec<u8>>,
-    pub(crate) foreign: Vec<protocol::ForeignStep>,
+    pub local_ops: Vec<Vec<u8>>,
+    pub foreign: Vec<protocol::ForeignStep>,
 }
 
+#[doc(hidden)]
 #[cfg(test)]
-pub(crate) fn test_unregistered_tool_job_admission_rejected<A: ArtifactApp>(catalog: &AppActionRegistry, generated: &[&str]) -> bool {
+pub fn test_unregistered_tool_job_admission_rejected<A: ArtifactApp>(catalog: &AppActionRegistry, generated: &[&str]) -> bool {
     crate::reserved_jobs::tool_job_registration::<A>(catalog, A::APP_ID, A::DOCUMENT_SCHEMA, generated, &semio_framework::ActionBus::new(), &BTreeMap::new()).is_err()
 }
 
 /// 🧪 Executes hostile proof substitutions inside the private authority module in test builds only.
+#[doc(hidden)]
 #[cfg(test)]
-pub(crate) fn test_retained_factory_proof_join<A, F, G, W>(mut catalog: AppActionRegistry, controller: &'static str, tool: &'static str, factory: F)
+pub fn test_retained_factory_proof_join<A, F, G, W>(mut catalog: AppActionRegistry, controller: &'static str, tool: &'static str, factory: F)
 where
     A: ArtifactApp,
     F: ArtifactOwnedToolJobFactory<Owner = A>,
@@ -436,22 +337,27 @@ pub const TYPED_OPERATION_PUBLICATION_PUMPS: usize = 256;
 /// 🩺️ Consecutive unchanged publication units before one stalled typed operation is named on the
 /// diagnostic channel — far above any legitimate multi-unit ladder step, so a healthy operation
 /// never prints.
-pub(crate) const TYPED_OPERATION_STALL_WITNESS_FLOOR: u64 = 64;
+#[doc(hidden)]
+pub const TYPED_OPERATION_STALL_WITNESS_FLOOR: u64 = 64;
 
 /// 🛑️ Unchanged `Publishing`-stage units before the operation is terminated with
 /// `interactive-job.publication-stalled` rather than left spinning. A power of two so the stall
 /// trace's own streak rule names it on the way past.
-pub(crate) const TYPED_OPERATION_STALL_FAULT_CEILING: u64 = 4_096;
+#[doc(hidden)]
+pub const TYPED_OPERATION_STALL_FAULT_CEILING: u64 = 4_096;
 
 /// 🧮️ Folds the publication ladder's monotone progress term into the one-`u64` witness key the
 /// streak counter remembers between turns, so two witnesses that differ ONLY in how far the
 /// publication has advanced are never mistaken for the same one.
-pub(crate) const TYPED_OPERATION_STALL_PROGRESS_MIX: u64 = 0x9E37_79B9_7F4A_7C15;
+#[doc(hidden)]
+pub const TYPED_OPERATION_STALL_PROGRESS_MIX: u64 = 0x9E37_79B9_7F4A_7C15;
 
 /// 🩺️ The stage code [`ArtifactApp::typed_operation_stall_witness`] gives a `Publishing` operation.
-pub(crate) const TYPED_OPERATION_STALL_PUBLISHING_STAGE: u8 = 1;
+#[doc(hidden)]
+pub const TYPED_OPERATION_STALL_PUBLISHING_STAGE: u8 = 1;
 
-pub(crate) const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
+#[doc(hidden)]
+pub const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -506,17 +412,18 @@ pub struct TypedOperationLeftover {
 
 /// 🏁️ The terminal witness before its command-log delta and revision are resolved — the queue
 /// entry itself, minted inside the publication step that has no `&mut self` history authority.
-pub(crate) struct TypedOperationCompletionWitness {
-    pub(crate) operation: u64,
-    pub(crate) ui_scope: UiDirtyScope,
+#[doc(hidden)]
+pub struct TypedOperationCompletionWitness {
+    pub operation: u64,
+    pub ui_scope: UiDirtyScope,
 }
 
 #[derive(Clone)]
 pub struct TypedOperationResultPage {
     pub token: TypedOperationResultToken,
     pub lane: TypedOperationResultLane,
-    pub(crate) bytes: [u8; TYPED_OPERATION_RESULT_PAGE_BYTES],
-    pub(crate) len: usize,
+    pub bytes: [u8; TYPED_OPERATION_RESULT_PAGE_BYTES],
+    pub len: usize,
 }
 
 /// 📦️ The Download lane's wire shape is a flat 4-element JSON array — matching what
@@ -524,11 +431,12 @@ pub struct TypedOperationResultPage {
 /// replaces. `ToValue`'s tuple impls (`🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs`) stop at
 /// 3 elements, and a `#[derive(ToValue)]` struct encodes as an object, not an array, so this
 /// hand-written impl is the local (no shared-file edit) way to keep the array shape exact.
-pub(crate) struct DownloadResultPayload<'a> {
-    pub(crate) filename: &'a str,
-    pub(crate) mime_type: &'a str,
-    pub(crate) encoding: Option<&'a str>,
-    pub(crate) bytes: usize,
+#[doc(hidden)]
+pub struct DownloadResultPayload<'a> {
+    pub filename: &'a str,
+    pub mime_type: &'a str,
+    pub encoding: Option<&'a str>,
+    pub bytes: usize,
 }
 
 impl semio_framework_value::ToValue for DownloadResultPayload<'_> {
@@ -541,7 +449,7 @@ impl TypedOperationResultPage {
     pub const RENDERER_PAGE_MAGIC: &'static [u8] = b"semio.typed-operation-page.v1\0";
     pub const RENDERER_ACK_MAGIC: &'static [u8] = b"semio.typed-operation-ack.v1\0";
 
-    pub(crate) fn try_new(token: TypedOperationResultToken, lane: TypedOperationResultLane, bytes: &[u8]) -> Result<Self, Fault> {
+    pub fn try_new(token: TypedOperationResultToken, lane: TypedOperationResultLane, bytes: &[u8]) -> Result<Self, Fault> {
         if bytes.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-capacity"), "one typed-operation result exceeds its fixed page authority"));
         }
@@ -550,7 +458,7 @@ impl TypedOperationResultPage {
         Ok(page)
     }
 
-    pub(crate) fn try_serialize<T: semio_framework_value::ToValue>(token: TypedOperationResultToken, lane: TypedOperationResultLane, value: &T) -> Result<Self, Fault> {
+    pub fn try_serialize<T: semio_framework_value::ToValue>(token: TypedOperationResultToken, lane: TypedOperationResultLane, value: &T) -> Result<Self, Fault> {
         let text = semio_framework_pack_json::to_json_string(value);
         let encoded = text.as_bytes();
         if encoded.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
@@ -611,50 +519,56 @@ impl TypedOperationResultPage {
 }
 
 /// 📸️ Every root one typed command is reduced against — see `VcsArtifactApp::capture_typed_command_roots`.
-pub(crate) struct TypedCommandRoots<A: ArtifactApp> {
-    pub(crate) snapshot: std::sync::Arc<A::Snapshot>,
-    pub(crate) config: std::sync::Arc<A::Config>,
-    pub(crate) history: std::sync::Arc<HistoryView>,
-    pub(crate) children: std::sync::Arc<ChildContentView>,
-    pub(crate) draft_snapshot: std::sync::Arc<A::Draft>,
-    pub(crate) interaction_state: std::sync::Arc<protocol::InteractionState>,
-    pub(crate) interaction_hover: InteractionHoverState,
-    pub(crate) presence_peers: std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>,
-    pub(crate) transient: std::sync::Arc<A::Transient>,
-    pub(crate) peer_presence: std::sync::Arc<PeerPresenceRoot>,
-    pub(crate) canonical_base_revision: [u8; 32],
-    pub(crate) base_revision: semio_framework_job::RevisionId,
-    pub(crate) generation: semio_framework_job::Generation,
-    pub(crate) config_generation: u64,
-    pub(crate) draft_generation: u64,
-    pub(crate) presence_generation: u64,
-    pub(crate) transient_generation: u64,
-    pub(crate) window_config_authority: Option<super::window_config::WindowConfigAuthority>,
-    pub(crate) window_transient_authority: Option<super::window_transient::WindowTransientAuthority>,
+#[doc(hidden)]
+pub struct TypedCommandRoots<A: ArtifactApp> {
+    pub snapshot: std::sync::Arc<A::Snapshot>,
+    pub config: std::sync::Arc<A::Config>,
+    pub history: std::sync::Arc<HistoryView>,
+    pub children: std::sync::Arc<ChildContentView>,
+    pub draft_snapshot: std::sync::Arc<A::Draft>,
+    pub interaction_state: std::sync::Arc<protocol::InteractionState>,
+    pub interaction_hover: InteractionHoverState,
+    pub presence_peers: std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>,
+    pub transient: std::sync::Arc<A::Transient>,
+    pub peer_presence: std::sync::Arc<PeerPresenceRoot>,
+    pub canonical_base_revision: [u8; 32],
+    pub base_revision: semio_framework_job::RevisionId,
+    pub generation: semio_framework_job::Generation,
+    pub config_generation: u64,
+    pub draft_generation: u64,
+    pub presence_generation: u64,
+    pub transient_generation: u64,
+    pub window_config_authority: Option<semio_framework_plugin_window_config::WindowConfigAuthority>,
+    pub window_transient_authority: Option<semio_framework_plugin_window_transient::window_transient::WindowTransientAuthority>,
 }
 
+#[doc(hidden)]
 #[cfg(test)]
-pub(crate) fn test_artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
+pub fn test_artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
     artifact_owned_tool_job_context_identity_digest(app_instance_id, None, canonical_base_revision, draft_generation, transient_generation, children_digest, (None, None))
 }
 
+#[doc(hidden)]
 #[cfg(test)]
-pub(crate) fn test_window_transient_context_identity(snapshot: Option<&WindowTransientSnapshot>) -> u64 {
+pub fn test_window_transient_context_identity(snapshot: Option<&WindowTransientSnapshot>) -> u64 {
     artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (None, snapshot))
 }
 
+#[doc(hidden)]
 #[cfg(test)]
-pub(crate) fn test_window_config_context_identity(snapshot: Option<&WindowConfigSnapshot>) -> u64 {
+pub fn test_window_config_context_identity(snapshot: Option<&WindowConfigSnapshot>) -> u64 {
     artifact_owned_tool_job_context_identity_digest(7, None, [17; 32], 0, 0, 0, (snapshot, None))
 }
 
 /// 🪙️ Admits one child frame under fixed host limits independent of a producer demand.
-pub(crate) fn artifact_owned_tool_birth_grant() -> RetainedCloneGrant {
+#[doc(hidden)]
+pub fn artifact_owned_tool_birth_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES, maximum_depth: 1, ..Default::default() }
 }
 
 /// 📨️ Funds one zero-heap terminal ownership transfer independently of frame birth: one item, one level and the copy of one sealed shared alias handle.
-pub(crate) fn artifact_owned_tool_handoff_grant() -> RetainedCloneGrant {
+#[doc(hidden)]
+pub fn artifact_owned_tool_handoff_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: ARTIFACT_OWNED_TOOL_HANDOFF_COPY_BYTES, maximum_depth: 1, ..Default::default() }
 }
 
@@ -664,14 +578,17 @@ const ARTIFACT_OWNED_TOOL_HANDOFF_COPY_BYTES: usize = 64;
 /// ⏱️ The whole-run wall budget of one agent-lane preview. A preview answers an agent's `action_prepare` inside one
 /// guest call, so a job still running past it is refused by name (`interactive-job.preview-budget`) instead of
 /// holding the gateway; its human runs it from the shell, where the job keeps its progress and cancellation.
-const AGENT_LANE_PREVIEW_WALL_US: u64 = 2_000_000;
+#[doc(hidden)]
+pub const AGENT_LANE_PREVIEW_WALL_US: u64 = 2_000_000;
 
 /// 🔢️ The turn budget of one agent-lane preview — the same refusal on a host whose clock cannot be read, and the
 /// bound of every close loop the preview runs.
-const AGENT_LANE_PREVIEW_TURNS: u64 = 65_536;
+#[doc(hidden)]
+pub const AGENT_LANE_PREVIEW_TURNS: u64 = 65_536;
 
 /// 🧭️ The refusal for a verb whose previewed result publishes `lanes` an agent transaction cannot carry.
-pub(crate) fn agent_lane_uncarried_fault(verb: &str, lanes: &str) -> Fault {
+#[doc(hidden)]
+pub fn agent_lane_uncarried_fault(verb: &str, lanes: &str) -> Fault {
     Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.agent-lane-uncarried"), format!("action '{verb}' publishes {lanes} that an agent transaction cannot carry; it runs only from the shell"))
 }
 
@@ -679,15 +596,17 @@ pub(crate) fn agent_lane_uncarried_fault(verb: &str, lanes: &str) -> Fault {
 /// ran it (a notice, a selection): in this state the command changes nothing. Each notice the app would have shown
 /// rides the fault as its own structured cause (`app.notice`), never concatenated into the message, so a host renders
 /// the app's own words beside its localized text for `app.command.no-effect`.
-pub(crate) fn agent_lane_no_effect_fault(verb: &str, effects: &[Effect]) -> Fault {
+#[doc(hidden)]
+pub fn agent_lane_no_effect_fault(verb: &str, effects: &[Effect]) -> Fault {
     let mut fault = Fault::new(FaultOrigin::App, FaultCode::new("app.command.no-effect"), format!("action '{verb}' changes nothing here"));
     fault.causes = effects.iter().filter_map(|effect| if let Effect::Notify { message } = effect { Some(semio_framework::FaultCause { retained_progress:None, message: message.clone(), code: Some(FaultCode::new("app.notice")) }) } else { None }).collect();
     fault
 }
 
 /// ⚖️ What the agent lane answers for one previewed publication ([`agent_lane_carriage`]).
+#[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum AgentLaneCarriage {
+pub enum AgentLaneCarriage {
     /// ✅️ Everything it publishes rides the transaction; presentation beside carried operations is omitted.
     Carried,
     /// 🫥️ It carries no operation and only presents something to the human who ran it — refused `app.command.no-effect`.
@@ -698,7 +617,8 @@ pub(crate) enum AgentLaneCarriage {
 
 /// ⚖️ The agent lane's verdict on one previewed publication: carried when [`agent_lane_uncarried_lanes`] names nothing,
 /// no effect when it names only [`AGENT_LANE_PRESENTATION_LANES`] and nothing is carried, uncarried otherwise.
-pub(crate) fn agent_lane_carriage(publication: &AgentLanePublication<'_>) -> AgentLaneCarriage {
+#[doc(hidden)]
+pub fn agent_lane_carriage(publication: &AgentLanePublication<'_>) -> AgentLaneCarriage {
     let lanes = agent_lane_uncarried_lanes(publication);
     if lanes.is_empty() {
         AgentLaneCarriage::Carried
@@ -712,7 +632,8 @@ pub(crate) fn agent_lane_carriage(publication: &AgentLanePublication<'_>) -> Age
 /// 📦️ What one previewed command publishes: how many operations an agent transaction carries (its document, config
 /// and draft ops and owned-child groups), its host effects and the size of every other lane — the shape
 /// [`agent_lane_uncarried_lanes`] judges.
-pub(crate) struct AgentLanePublication<'a> {
+#[doc(hidden)]
+pub struct AgentLanePublication<'a> {
     pub carried_ops: usize,
     pub effects: &'a [Effect],
     pub window_config_ops: usize,
@@ -728,10 +649,12 @@ pub(crate) struct AgentLanePublication<'a> {
 /// 🪞️ The lanes that only present a command's result to the human who ran it — a notice, a selection of what it made.
 /// Beside operations the transaction carries they are omitted (an agent reads its result from the prepared report);
 /// on their own they are the command's whole effect, and the agent lane refuses them like any other uncarried lane.
-const AGENT_LANE_PRESENTATION_LANES: [&str; 2] = ["a notice", "selection changes"];
+#[doc(hidden)]
+pub const AGENT_LANE_PRESENTATION_LANES: [&str; 2] = ["a notice", "selection changes"];
 
 /// 🏷️ Every lane an agent transaction cannot carry, in the order a refusal names them.
-const AGENT_LANE_UNCARRIED_LANES: [&str; 17] = [
+#[doc(hidden)]
+pub const AGENT_LANE_UNCARRIED_LANES: [&str; 17] = [
     "a whole-document replacement",
     "a file download",
     "a file request",
@@ -759,7 +682,8 @@ const AGENT_LANE_UNCARRIED_LANES: [&str; 17] = [
 /// [`AGENT_LANE_PRESENTATION_LANES`] beside carried operations. The preview settles only on an empty answer; anything
 /// else is refused `interactive-job.agent-lane-uncarried`, so an agent is never told "done" for a verb whose shell run
 /// acts where its transaction would do nothing. Language-agnostic fixture: `🧫️fixtures/🤖️agent-lane-carriage.json`.
-fn agent_lane_uncarried_lanes(publication: &AgentLanePublication<'_>) -> Vec<&'static str> {
+#[doc(hidden)]
+pub fn agent_lane_uncarried_lanes(publication: &AgentLanePublication<'_>) -> Vec<&'static str> {
     let effect_lanes = publication.effects.iter().map(|effect| match effect {
         _ if is_inline_interaction_verb(effect) => "selection changes",
         Effect::LoadDocument { .. } => "a whole-document replacement",
@@ -832,19 +756,20 @@ fn agent_lane_uncarried_lanes(publication: &AgentLanePublication<'_>) -> Vec<&'s
 /// answers the reducer's own code ([`crate::retained_command::reducer_fault_of_detail`]); a cancellation, an
 /// exhausted budget or a lost step is refused by name. The session is closed on every path: to terminal-empty, or
 /// handed to the worker-session retirement pump when its close stalls.
-pub(crate) struct ChildEmissionPreviewJob<A:ArtifactApp>{
-    pub(crate) emit:Option<Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>>,
-    pub(crate) ephemeral:Option<EphemeralEmit<A>>,
-    pub(crate) completion:Option<ArtifactToolCompletion<A>>,
-    pub(crate) retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    pub(crate) retirement_payload:Option<ArtifactToolCompletionValue<A>>,
-    pub(crate) retirement_fault:Option<Fault>,
-    pub(crate) rejection:Option<ArtifactToolCompletionRejection<A>>,
-    pub(crate) completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
-    pub(crate) maximum_bytes:usize,
-    pub(crate) wire_mode:bool,
-    pub(crate) fault_publication:semio_framework_job_fault_publication::RetainedFaultPublication,
-    pub(crate) closing:bool,
+#[doc(hidden)]
+pub struct ChildEmissionPreviewJob<A:ArtifactApp>{
+    pub emit:Option<Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>>,
+    pub ephemeral:Option<EphemeralEmit<A>>,
+    pub completion:Option<ArtifactToolCompletion<A>>,
+    pub retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pub retirement_payload:Option<ArtifactToolCompletionValue<A>>,
+    pub retirement_fault:Option<Fault>,
+    pub rejection:Option<ArtifactToolCompletionRejection<A>>,
+    pub completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
+    pub maximum_bytes:usize,
+    pub wire_mode:bool,
+    pub fault_publication:semio_framework_job_fault_publication::RetainedFaultPublication,
+    pub closing:bool,
 }
 
 impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreviewJob<A>{
@@ -908,7 +833,7 @@ impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreview
 }
 
 impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
-    fn close_owned_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+    pub fn close_owned_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
         if let Some(ticket)=self.retirement.as_ref(){return semio_framework_value::factory_ticket_demands(ticket,copy);}
         if let Some(original)=self.retirement_payload.as_ref(){return Ok(RetirementDemand{capacity_bytes:A::completion_retirement_birth_bytes(original).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preview completion has no original app retirement issuer"))?,depth:1,..Default::default()});}
@@ -918,7 +843,7 @@ impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
         if let Some(owner)=self.completion_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
         Ok(RetirementDemand{depth:usize::from(self.completion.is_some()),..Default::default()})
     }
-    fn close_owned_turn(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+    pub fn close_owned_turn(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
         let demand=self.close_owned_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.close_step(grant).map(|step|step.progress());}
@@ -933,76 +858,78 @@ impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
     }
 }
 
-pub(crate) struct AgentLanePreview<A:ArtifactApp>{
-    pub(crate) key:Option<crate::tool_cancellation::ToolOperationKey>,
-    pub(crate) caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
-    pub(crate) starting:bool,
-    pub(crate) producer:Option<OriginalPreviewDrive<semio_framework::ErasedToolJob>>,
-    pub(crate) children:Option<OriginalPreviewDrive<ChildEmissionPreviewJob<A>>>,
-    pub(crate) completion:Option<ArtifactToolCompletion<A>>,
-    pub(crate) completion_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletion<A>>>,
-    pub(crate) lease:Option<crate::tool_cancellation::ToolCancellationLease>,
-    pub(crate) lease_close:Option<Box<crate::tool_cancellation::ToolCancellationLeaseRetirement>>,
-    pub(crate) config:semio_framework_job_worker_authority::BatchDriveConfig,
-    pub(crate) maximum_bytes:usize,
-    pub(crate) steps:u64,
-    pub(crate) publication:Option<ArtifactToolCompletionValue<A>>,
-    pub(crate) complete:bool,
-    pub(crate) closing:bool,
-    pub(crate) publication_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletionValue<A>>>,
+#[doc(hidden)]
+pub struct AgentLanePreview<A:ArtifactApp>{
+    pub key:Option<semio_framework_plugin_operation::ToolOperationKey>,
+    pub caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
+    pub starting:bool,
+    pub producer:Option<OriginalPreviewDrive<semio_framework::ErasedToolJob>>,
+    pub children:Option<OriginalPreviewDrive<ChildEmissionPreviewJob<A>>>,
+    pub completion:Option<ArtifactToolCompletion<A>>,
+    pub completion_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletion<A>>>,
+    pub lease:Option<semio_framework_plugin_operation::ToolCancellationLease>,
+    pub lease_close:Option<Box<semio_framework_plugin_operation::ToolCancellationLeaseRetirement>>,
+    pub config:semio_framework_job_worker_authority::BatchDriveConfig,
+    pub maximum_bytes:usize,
+    pub steps:u64,
+    pub publication:Option<ArtifactToolCompletionValue<A>>,
+    pub complete:bool,
+    pub closing:bool,
+    pub publication_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletionValue<A>>>,
 }
 impl<A:ArtifactApp> AgentLanePreview<A>{
-    pub(crate) fn retirement_demands(&self,body:usize,canonical:Option<&crate::tool_cancellation::ToolCancellationHandle>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+    pub fn retirement_demands(&self,body:usize,canonical:Option<&semio_framework_plugin_operation::ToolCancellationHandle>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Some(owner)=self.producer.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
         if let Some(owner)=self.children.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
         if self.completion.is_some()||self.completion_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)}
         if self.publication.is_some()||self.publication_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.publication,&self.publication_close,body)}
         if let Some(owner)=self.lease_close.as_ref(){return if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{release_bytes:std::mem::size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{owner.retirement_demands(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,body)}}
-        if self.lease.is_some(){return Ok(semio_framework_value::RetirementDemand{capacity_bytes:std::mem::size_of::<crate::tool_cancellation::ToolCancellationLeaseRetirement>(),copy_bytes:std::mem::size_of::<crate::tool_cancellation::ToolCancellationLease>(),depth:1,..Default::default()})}
+        if self.lease.is_some(){return Ok(semio_framework_value::RetirementDemand{capacity_bytes:std::mem::size_of::<semio_framework_plugin_operation::ToolCancellationLeaseRetirement>(),copy_bytes:std::mem::size_of::<semio_framework_plugin_operation::ToolCancellationLease>(),depth:1,..Default::default()})}
         Ok(self.caller.as_ref().map_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()},|caller|caller.retirement_demands()))
     }
-    pub(crate) fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
-    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,canonical:Option<&crate::tool_cancellation::ToolCancellationHandle>)->Result<crate::PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    pub fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,canonical:Option<&semio_framework_plugin_operation::ToolCancellationHandle>)->Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Close;
-        self.closing=true;if cx.should_yield(){return Ok(crate::PluginLifecycleStep::Progress(Default::default()))}
-        if let Some(owner)=self.producer.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.producer.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>crate::PluginLifecycleStep::Progress(progress),Close::Blocked=>crate::PluginLifecycleStep::Blocked{reason:"original preview producer awaits paid closure"}})}
-        if let Some(owner)=self.children.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.children.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>crate::PluginLifecycleStep::Progress(progress),Close::Blocked=>crate::PluginLifecycleStep::Blocked{reason:"original preview child producer awaits paid closure"}})}
+        self.closing=true;if cx.should_yield(){return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()))}
+        if let Some(owner)=self.producer.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.producer.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),Close::Blocked=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original preview producer awaits paid closure"}})}
+        if let Some(owner)=self.children.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.children.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),Close::Blocked=>semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original preview child producer awaits paid closure"}})}
         let grant=cx.retained_grant();
         let step=if self.completion.is_some()||self.completion_close.is_some(){semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.completion,&mut self.completion_close,grant)?}
         else if self.publication.is_some()||self.publication_close.is_some(){semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.publication,&mut self.publication_close,grant)?}
-        else if let Some(owner)=self.lease_close.as_mut(){if owner.terminal_is_empty(){crate::tool_cancellation::original_lease_cursor_release(&mut self.lease_close,grant).map(RetainedCloneStep::Progress)?}else{owner.close_step(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,grant)?}}
-        else if self.lease.is_some(){let(owner,progress)=crate::tool_cancellation::original_lease_cursor_admit(&mut self.lease,grant)?;self.lease_close=owner;RetainedCloneStep::Progress(progress)}else if self.key.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(crate::PluginLifecycleStep::Progress(Default::default()))}self.key.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else if let Some(caller)=self.caller.as_mut(){let step=caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(crate::PluginLifecycleStep::Progress(step.progress()))}else{return Ok(crate::PluginLifecycleStep::Complete(Default::default()))};
-        cx.consume_retained(step.progress())?;Ok(crate::PluginLifecycleStep::Progress(step.progress()))
+        else if let Some(owner)=self.lease_close.as_mut(){if owner.terminal_is_empty(){semio_framework_plugin_operation::original_lease_cursor_release(&mut self.lease_close,grant).map(RetainedCloneStep::Progress)?}else{owner.close_step(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,grant)?}}
+        else if self.lease.is_some(){let(owner,progress)=semio_framework_plugin_operation::original_lease_cursor_admit(&mut self.lease,grant)?;self.lease_close=owner;RetainedCloneStep::Progress(progress)}else if self.key.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()))}self.key.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else if let Some(caller)=self.caller.as_mut(){let step=caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))}else{return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))};
+        cx.consume_retained(step.progress())?;Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))
     }
 }
-pub(crate) struct OriginalPreviewDrive<J:semio_framework_job::InteractiveJob+'static>{
-    pending:Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<J>>,
-    session:Option<semio_framework_job_worker::BatchJobSession<J>>,
-    config:semio_framework_job_worker_authority::BatchDriveConfig,
-    source:(semio_framework_job::OperationId,semio_framework_job::Generation),
-    steps:u64,
+#[doc(hidden)]
+pub struct OriginalPreviewDrive<J:semio_framework_job::InteractiveJob+'static>{
+    pub pending:Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<J>>,
+    pub session:Option<semio_framework_job_worker::BatchJobSession<J>>,
+    pub config:semio_framework_job_worker_authority::BatchDriveConfig,
+    pub source:(semio_framework_job::OperationId,semio_framework_job::Generation),
+    pub steps:u64,
     acknowledgement_pending:bool,
-    resume_pending:bool,
-    pub(crate) closing:bool,
-    verdict:Option<Result<u64,semio_framework_job::OriginalTurnFailure>>,
+    pub resume_pending:bool,
+    pub closing:bool,
+    pub verdict:Option<Result<u64,semio_framework_job::OriginalTurnFailure>>,
     verdict_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Result<u64,semio_framework_job::OriginalTurnFailure>>>,
 }
 impl<J:semio_framework_job::InteractiveJob+'static> OriginalPreviewDrive<J>{
-    pub(crate) fn new(job:J,config:semio_framework_job_worker_authority::BatchDriveConfig,cx:&semio_framework_job::StepContext<'_>)->Self{Self{pending:Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()))),session:None,config,source:(cx.operation(),cx.generation()),steps:0,acknowledgement_pending:false,resume_pending:false,closing:false,verdict:None,verdict_close:None}}
-    pub(crate) fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+    pub fn new(job:J,config:semio_framework_job_worker_authority::BatchDriveConfig,cx:&semio_framework_job::StepContext<'_>)->Self{Self{pending:Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()))),session:None,config,source:(cx.operation(),cx.generation()),steps:0,acknowledgement_pending:false,resume_pending:false,closing:false,verdict:None,verdict_close:None}}
+    pub fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Some(owner)=self.pending.as_ref(){return owner.retirement_demands(body)}
         if let Some(owner)=self.session.as_ref(){return owner.retirement_demands(body).map_err(|source|match source{semio_framework_job_worker::WorkerJobDemandError::Refused(source)=>source,semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original preview producer remains checked out")})}
         semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.verdict,&self.verdict_close,body)
     }
-    pub(crate) fn begin_close(&mut self){self.closing=true;if let Some(session)=self.session.as_mut(){session.begin_close()}}
-    pub(crate) fn terminal_is_empty(&self)->bool{self.pending.is_none()&&self.session.is_none()}
+    pub fn begin_close(&mut self){self.closing=true;if let Some(session)=self.session.as_mut(){session.begin_close()}}
+    pub fn terminal_is_empty(&self)->bool{self.pending.is_none()&&self.session.is_none()}
     pub(crate) fn cancellation_terminal_is_empty(&self)->bool{self.terminal_is_empty()&&self.verdict.is_none()&&self.verdict_close.is_none()}
     pub(crate) fn cancel_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         if !self.terminal_is_empty(){return self.close_step(cx)}
         let step=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.verdict,&mut self.verdict_close,cx.retained_grant())?;cx.consume_retained(step.progress())?;
         Ok(if self.cancellation_terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}})
     }
-    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::{InteractiveJobCloseStep as Close};
 use semio_framework_job_worker_authority::{WorkerJobCloseStep as Worker};
         if self.source!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview close requires its original initiating source").into())}
@@ -1013,7 +940,8 @@ use semio_framework_job_worker_authority::{WorkerJobCloseStep as Worker};
         Ok(Close::Complete{progress:Default::default()})
     }
 }
-pub(crate) fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'static>(owner:&mut OriginalPreviewDrive<J>,verb:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<u64>,semio_framework_job::OriginalTurnFailure>{
+#[doc(hidden)]
+pub fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'static>(owner:&mut OriginalPreviewDrive<J>,verb:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<u64>,semio_framework_job::OriginalTurnFailure>{
     use semio_framework_job_worker::{WorkerJobPoll as Poll};
     if owner.source!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation requires its initiating source").into())}
     if cx.should_yield(){return Ok(None)}
@@ -1033,7 +961,7 @@ pub(crate) fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'st
     let verdict=match session.checked_out_outcome()?{
         Some(semio_framework_job::JobOutcomeView::Complete{..})=>Some(Ok(owner.steps)),
         Some(semio_framework_job::JobOutcomeView::Cancelled{..})=>Some(Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),format!("the preview of action '{verb}' was cancelled")).into())),
-        Some(semio_framework_job::JobOutcomeView::Fault{detail,..})=>{let original=ArtifactBoundedToolFault::from_payload(detail);Some(Err(crate::tool_contract::reducer_fault_of_detail(original.as_bytes()).unwrap_or_else(||decode_typed_operation_fault_page(original.as_bytes())).into()))},
+        Some(semio_framework_job::JobOutcomeView::Fault{detail,..})=>{let original=ArtifactBoundedToolFault::from_payload(detail);Some(Err(semio_framework_plugin_decl_app::tool_contract::reducer_fault_of_detail(original.as_bytes()).unwrap_or_else(||decode_typed_operation_fault_page(original.as_bytes())).into()))},
         Some(_)=>None,
         None=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview outcome is absent").into()),
     };
@@ -1041,5 +969,13 @@ pub(crate) fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'st
     Ok(None)
 }
 
-#[cfg(test)]
-include!("../🧪️tests/🤖️agent-lane-preview/🦀️.rs");
+#[path = "🧾️bytes/🦀️.rs"]
+pub mod reserved_job_bytes;
+#[path = "📤️outcomes/🦀️.rs"]
+pub mod reserved_job_outcomes;
+#[path = "🏛️reserved/🦀️.rs"]
+pub mod reserved_jobs;
+#[path = "🛬️lifted/⏯️tool-run/🦀️.rs"]
+pub mod lifted_job;
+#[path = "🛬️lifted/🔄️full-operation/🦀️.rs"]
+pub mod lifted_full_operation_job;

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
 semio-framework-os-store-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
 semio-framework-os-store-durable-group-wire = { path = "../../../../🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
@@ -30,9 +31,11 @@ semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️i
 semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
-semio-framework-os-store-owned-schema-fields = { path = "../../../../📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust" }
+semio-framework-os-store-operation-wire = { path = "../../../../🧵️operation-wire/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-decode = { path = "../../../../📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
 semio-framework-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
@@ -40,8 +43,16 @@ semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/�
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-io-base64 = { path = "../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-os-store-command = { path = "../../../../📬️command/📦️packages/🦀️rust" }
+semio-framework-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }
+semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-one-item = { path = "../../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

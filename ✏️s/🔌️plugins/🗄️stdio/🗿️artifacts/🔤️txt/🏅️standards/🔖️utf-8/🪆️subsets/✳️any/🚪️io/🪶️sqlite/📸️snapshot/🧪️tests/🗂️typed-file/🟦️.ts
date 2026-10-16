@@ -8,9 +8,10 @@ import {SqliteOperation,exportSqliteDatabase,importSqliteDatabase,type SqliteDat
 import {txtSnapshotToSqliteDatabase,txtSnapshotFromSqliteDatabase} from "../../🟦️.ts";
 import type {TxtSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import fixture from "../🧫️fixtures/🗂️typed-file.json";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
-const metadataSql=readFileSync(resolve(import.meta.dir,"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql"),"utf8").trim().replace(/;$/,"");
+const metadataSql=readFileSync(frameworkSourcePath("🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql"),"utf8").trim().replace(/;$/,"");
 const snapshots=fixture.cases.map(row=>row.snapshot as TxtSnapshot);
 
 test("complete typed TXT snapshots preserve all legal fields in independently readable SQLite files",async()=>{

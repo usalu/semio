@@ -1,10 +1,10 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from"./🗄️.sql"with{type:"text"};
 import type{CadSnapshot,CadReference,ArtifactChild,CadChild}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import{ValueError,sqliteOperation,type SqliteDatabase,type SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
+import{ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import{ValueError,sqliteOperation,type SqliteDatabase,type SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
 /** 📎️ Exact persisted reference geometry at the semantic SQLite boundary. */
 export type CadSqliteReference=Omit<CadReference,"origin"|"orientation"|"scale"|"widthWorld"|"opacity">&{origin:[Binary64,Binary64,Binary64];orientation:[Binary64,Binary64,Binary64,Binary64]|null;scale:Binary64|null;widthWorld:Binary64;opacity:Binary64|null};
 /** 📐️ All owned CAD fields with binary64 identity independent of JavaScript arithmetic. */

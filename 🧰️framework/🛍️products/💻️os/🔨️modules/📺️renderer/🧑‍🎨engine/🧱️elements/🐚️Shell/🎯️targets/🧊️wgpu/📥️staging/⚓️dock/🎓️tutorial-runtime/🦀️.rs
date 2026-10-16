@@ -9,7 +9,7 @@ use super::*;
 //#region 👻️GestureOverlay
 /// 👻️ Resolves an `IntroductionPoint` to a viewport pixel through chrome geometry or the attached
 /// surface owner's live camera and semantic geometry registry.
-pub(super) fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &SurfaceState, dock: &ShellDockState, point: &semio_framework::onboarding::IntroductionPoint) -> Option<(f32, f32)> {
+pub fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &SurfaceState, dock: &ShellDockState, point: &semio_framework::onboarding::IntroductionPoint) -> Option<(f32, f32)> {
     use semio_framework::onboarding::IntroductionPoint as P;
     match point {
         P::Screen { x, y } => Some((*x as f32, *y as f32)),
@@ -38,7 +38,7 @@ pub(super) fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &Su
             let local = surfaces
                 .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_scene_point(&world.session, &world.camera, [*x, *y, 0.0]).map(|point| (point[0], point[1])))
-                .or_else(|| surfaces.engine_host_id_for_window(id).and_then(|host_id| crate::engine_canvas::resolve_tutorial_surface_point(host_id, point)))?;
+                .or_else(|| surfaces.engine_host_id_for_window(id).and_then(|host_id| semio_framework_os_renderer_wgpu_engine_registry::tutorial_surface_geometry::resolve_tutorial_surface_point(host_id, point)))?;
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Entity { id, domain, entity, .. } => {
@@ -46,7 +46,7 @@ pub(super) fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &Su
             let local = surfaces
                 .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_entity_geometry(&world.session, &world.camera, &world.scene, domain, entity).map(|geometry| (geometry.point[0], geometry.point[1])))
-                .or_else(|| surfaces.engine_host_id_for_window(id).and_then(|host_id| crate::engine_canvas::resolve_tutorial_surface_point(host_id, point)))?;
+                .or_else(|| surfaces.engine_host_id_for_window(id).and_then(|host_id| semio_framework_os_renderer_wgpu_engine_registry::tutorial_surface_geometry::resolve_tutorial_surface_point(host_id, point)))?;
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Curve { id, domain, entity, t } => {
@@ -54,13 +54,13 @@ pub(super) fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &Su
             let local = surfaces
                 .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_entity_geometry(&world.session, &world.camera, &world.scene, domain, entity))
-                .and_then(|geometry| geometry.polyline.and_then(|polyline| crate::engine_canvas::tutorial_polyline_point(&polyline, *t)).map(|point| (point[0], point[1])))
-                .or_else(|| surfaces.engine_host_id_for_window(id).and_then(|host_id| crate::engine_canvas::resolve_tutorial_surface_point(host_id, point)))?;
+                .and_then(|geometry| geometry.polyline.and_then(|polyline| semio_framework_os_renderer_wgpu_engine_registry::tutorial_surface_geometry::tutorial_polyline_point(&polyline, *t)).map(|point| (point[0], point[1])))
+                .or_else(|| surfaces.engine_host_id_for_window(id).and_then(|host_id| semio_framework_os_renderer_wgpu_engine_registry::tutorial_surface_geometry::resolve_tutorial_surface_point(host_id, point)))?;
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Domain { id, .. } => {
             let rect = *dock.window_content_rects.get(id)?;
-            let local = crate::engine_canvas::resolve_tutorial_surface_point(surfaces.engine_host_id_for_window(id)?, point)?;
+            let local = semio_framework_os_renderer_wgpu_engine_registry::tutorial_surface_geometry::resolve_tutorial_surface_point(surfaces.engine_host_id_for_window(id)?, point)?;
             Some((rect.x + local.0, rect.y + local.1))
         }
     }

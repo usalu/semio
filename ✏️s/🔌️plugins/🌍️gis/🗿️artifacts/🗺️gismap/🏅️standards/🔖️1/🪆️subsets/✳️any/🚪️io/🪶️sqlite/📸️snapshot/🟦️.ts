@@ -1,9 +1,9 @@
 /** 🗺️ Twenty handwritten entities preserve features, exact intrinsic variants and ordered ownership. */
 import type{GisMapArtifact}from"../../../🧬️schema/🟦️.ts";import type{GisMapValue,GisMapFeature}from"../../../🧬️schema/📍️feature/🟦️.ts";
-import type{ ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteTextBytes,artifactSqliteValueBudget,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type{ ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";import type{SqliteDatabase,SqliteRow}from"@semio-tech/framework/io/sqlite-snapshot";
+import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteTextBytes,artifactSqliteValueBudget,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64} from "@semio-tech/framework/value/ieee754";
 export const GIS_MAP_SQLITE_SCHEMA=String.raw`CREATE TABLE gis_map_document (id INTEGER PRIMARY KEY);
 CREATE TABLE gis_map_value (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('null','boolean','unsigned','signed','float','text','bytes','array','object')));
 CREATE TABLE gis_map_position (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES gis_map_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), feature_id TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_map_value(id));

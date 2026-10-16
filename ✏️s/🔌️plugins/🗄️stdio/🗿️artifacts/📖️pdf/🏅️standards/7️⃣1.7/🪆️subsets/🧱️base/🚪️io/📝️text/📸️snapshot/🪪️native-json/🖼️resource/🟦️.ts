@@ -1,4 +1,4 @@
-import { parseArtifactRef } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { parseArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 /** 🖼️ Explicit native JSON admission into the single owned PDF resource domain. */
 import type { PdfImage,PdfImageBody,PdfImageMask,PdfCcittParameters,PdfExtGState,PdfSoftMask,PdfFormXObject,PdfTransparencyGroup,PdfShading,PdfShadingKind,PdfPattern,PdfPatternKind,PdfLineCap,PdfLineJoin,Binary64 } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { record,array,text,boolean,integer,integers,real,reals,four,pdfDictionaryFromNativeJson,pdfFunctionFromNativeJson,pdfColorFromNativeJson } from "../🟦️.ts";

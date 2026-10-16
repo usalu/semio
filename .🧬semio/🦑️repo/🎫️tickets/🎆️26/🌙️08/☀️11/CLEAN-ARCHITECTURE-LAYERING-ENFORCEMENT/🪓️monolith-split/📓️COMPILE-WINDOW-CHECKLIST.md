@@ -20,3 +20,12 @@ Run this once the wave-4 carves finish and registry edits are frozen.
 
 - [ ] `check -p semio-framework-ui-contract-conformance --tests`: the taxonomy sweep renamed 9 conformance folders and their `#[path]` lines (RESULT-TAXONOMY-SWEEP.md).
 - [ ] Re-run `verify taxonomy` inventory after all carves land (new folders keep appearing; slug-pattern rule in RESULT-TAXONOMY-SLUG-PATTERN.md).
+- [ ] React boot: the Interpreter element-host registry (`🪢️ElementHosts`) registers all 14 scene hosts at runtime (RESULT-INTERPRETER-KERNEL-TS.md); no `Cannot access … before initialization`.
+- [ ] Live time-travel e2e: `bun repo run @semio-tech/puzzle-js:time-travel` against a puzzle2d dev serve (RESULT-MISPLACED-E2E-TESTS.md).
+- [ ] `generate-wgpu` frame-worker bundles re-embed the split kernel (RESULT-INTERPRETER-KERNEL-TS.md hand-off).
+
+## Wave-5 compile queue, in this order once headroom is admitted (each command is in the named RESULT file)
+1. Kernel: `python3 okeng-tools/waitcc.py lib1 okeng-tools/b2.crates` (OS-KERNEL-ENGINE), then the oksql crates (OS-KERNEL-SQLITE-HOST §6).
+2. COMPILE-PASS-2 remaining sequence (framework batches 1–3 recheck, root lib, tests, wasm, test).
+3. Plugin-host 15 packages (PLUGIN-HOST-CARVE), the plugin flips (PLUGIN-INTEGRATION-1), WP7 flips (PLUGIN-WP7 §8).
+4. Renderer flips (RENDERER-INTEGRATION-2), the stdio contract and space core (CARGO-PLUGIN-DIRECTION), the hub shipped-fleet test (RUST-CROSS-COUPLINGS §6).

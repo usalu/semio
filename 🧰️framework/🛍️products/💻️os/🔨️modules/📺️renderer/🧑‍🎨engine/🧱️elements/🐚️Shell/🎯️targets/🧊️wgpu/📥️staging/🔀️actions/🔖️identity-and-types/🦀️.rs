@@ -7,15 +7,15 @@ use super::*;
 //#region 🔖️IdentityPure
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) const SHELL_DOCUMENT_TRANSPORTS: ShellDocumentTransports = ShellDocumentTransports { folder: true, hub: true };
+pub const SHELL_DOCUMENT_TRANSPORTS: ShellDocumentTransports = ShellDocumentTransports { folder: true, hub: true };
 
 #[cfg(target_arch = "wasm32")]
-pub(crate) const SHELL_DOCUMENT_TRANSPORTS: ShellDocumentTransports = ShellDocumentTransports { folder: false, hub: true };
+pub const SHELL_DOCUMENT_TRANSPORTS: ShellDocumentTransports = ShellDocumentTransports { folder: false, hub: true };
 
 /// 🛂️ Refuses, before any actor exists, a binding the host would accept and then never serve: an
 /// unserved folder or hub binding would hand the plugin a document that silently persists nowhere.
 /// An empty binding set is the declared `EphemeralLocalOnly` class and every host serves it.
-pub(crate) fn document_bindings_admitted(transports: ShellDocumentTransports, bindings: &[PersistenceBinding]) -> Result<(), &'static str> {
+pub fn document_bindings_admitted(transports: ShellDocumentTransports, bindings: &[PersistenceBinding]) -> Result<(), &'static str> {
     for binding in bindings {
         match binding {
             PersistenceBinding::Hub { .. } if !transports.hub => return Err("document-binding.hub-transport-unavailable"),
@@ -29,7 +29,7 @@ pub(crate) fn document_bindings_admitted(transports: ShellDocumentTransports, bi
 /// 🌐️ The wgpu twin of the React shell's `parseRemoteBackboneUri` (`💻️os/🟦️.ts`): everything up to
 /// the first slash is the host, up to the second the space, the rest the document; a uri missing a
 /// part names no hub document.
-pub(crate) fn parse_remote_backbone_uri(uri: &str) -> Option<RemoteBackboneUri> {
+pub fn parse_remote_backbone_uri(uri: &str) -> Option<RemoteBackboneUri> {
     let rest = uri.strip_prefix("remote://")?;
     let first = rest.find('/').filter(|index| *index > 0)?;
     let second = rest[first + 1..].find('/').map(|index| index + first + 1).filter(|index| *index > 0)?;
@@ -43,7 +43,7 @@ pub(crate) fn parse_remote_backbone_uri(uri: &str) -> Option<RemoteBackboneUri> 
 /// React shell's `uncommittedEditCount` (`ShellHost/🟦️.tsx`) uses — every applied
 /// mutation-kind entry counts, reset to 0 the moment a `commitCheckpoint` history-kind entry is seen,
 /// walked oldest-first.
-pub(crate) fn uncommitted_edit_count(entries: &BTreeMap<String, semio_framework::kernel::HistoryEntry>) -> u32 {
+pub fn uncommitted_edit_count(entries: &BTreeMap<String, semio_framework::kernel::HistoryEntry>) -> u32 {
     let mut pending = 0u32;
     for entry in history_rows_oldest_first(entries) {
         if entry.kind == "history" && entry.action_id == "commitCheckpoint" {
@@ -60,7 +60,7 @@ pub(crate) fn uncommitted_edit_count(entries: &BTreeMap<String, semio_framework:
 /// 📌️ ticket §C5 item 4 — the pure gate `checkpoint_before_detach` evaluates: checkpoint-on-close
 /// only when the session can check in at all (item 5's viewer guard), a document is actually attached
 /// (nothing to check in otherwise), and there really is something uncommitted.
-pub(crate) fn should_checkpoint_before_detach(role: semio_framework::manifest::AppRole, has_attached_document: bool, uncommitted_count: u32) -> bool {
+pub fn should_checkpoint_before_detach(role: semio_framework::manifest::AppRole, has_attached_document: bool, uncommitted_count: u32) -> bool {
     can_check_in(role) && has_attached_document && uncommitted_count > 0
 }
 

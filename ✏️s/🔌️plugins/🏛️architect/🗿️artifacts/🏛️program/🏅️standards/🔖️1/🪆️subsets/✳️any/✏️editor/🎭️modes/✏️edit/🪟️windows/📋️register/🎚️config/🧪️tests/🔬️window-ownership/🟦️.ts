@@ -6,6 +6,7 @@ import { applyArchitectRegisterWindowConfigMutation, type ArchitectRegisterWindo
 import { applyArchitectAdjacencyWindowConfigMutation, type ArchitectAdjacencyWindowConfig, type ArchitectAdjacencyWindowConfigMutation } from "../../../../↔️adjacency/🎚️config/🧬️schema/🟦️.ts";
 import { applyArchitectGraphWindowConfigMutation, type ArchitectGraphWindowConfig, type ArchitectGraphWindowConfigMutation } from "../../../../🕸️graph/🎚️config/🧬️schema/🟦️.ts";
 import { applyArchitectReportWindowConfigMutation, type ArchitectReportWindowConfig, type ArchitectReportWindowConfigMutation } from "../../../../📓️report/🎚️config/🧬️schema/🟦️.ts";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 type Window<C> = { id: string; kind: string; config: C };
 type Pair<C> = { left: Window<C>; right: Window<C> };
@@ -40,7 +41,7 @@ const schemas = {
   graph: json(new URL("../../../../🕸️graph/🎚️config/🧬️schema/🔣️.json", import.meta.url)),
   report: json(new URL("../../../../📓️report/🎚️config/🧬️schema/🔣️.json", import.meta.url)),
 };
-const viewportSchema = json(new URL("../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json", import.meta.url));
+const viewportSchema = json(frameworkSourceUrl("🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json"));
 const appConfigSchema = json(new URL("../../../../../../../🎚️config/🧬️schema/🔣️.json", import.meta.url)) as { properties: Record<string, unknown> };
 
 /** 🧪️ Proves four exact owner kinds isolate same-kind instances and authored report identities. */

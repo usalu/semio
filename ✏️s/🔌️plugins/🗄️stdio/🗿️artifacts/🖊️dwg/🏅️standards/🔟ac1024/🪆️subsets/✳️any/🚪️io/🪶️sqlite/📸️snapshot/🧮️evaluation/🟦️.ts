@@ -1,6 +1,6 @@
 /** 🗄️ Exact handwritten DWG domain DDL, embedded for filesystem-free runtimes. */
 import type { DwgEvaluationExpression,DwgBlockGripLocationComponent,DwgDynamicBlockProxyNode } from "../../../../🧬️schema/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
 import { DwgProjection,dwgInteger,dwgUnsignedWords as H,type DwgCell } from "../🔢️number/🟦️.ts";
 import { DwgReader,dwgSignedInteger,dwgSignedWord,dwgUnsigned,dwgFullUnsigned } from "../🫳️reader/🟦️.ts";
 import { dwgRequireNull } from "../🏷️xrecord/🟦️.ts";

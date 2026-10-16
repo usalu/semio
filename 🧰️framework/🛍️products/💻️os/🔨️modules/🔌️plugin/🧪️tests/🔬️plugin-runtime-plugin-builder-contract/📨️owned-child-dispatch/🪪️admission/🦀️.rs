@@ -12,7 +12,7 @@ async fn framework_reserved_emit_admission_preserves_saturated_foreign_slots_and
  for row in law["cases"].as_array().unwrap(){
   let occupied=row["occupied"].as_u64().unwrap()as usize;
   let mut app=contract_composed_app_raw(crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-  let admitted=app.test_reserved_emit_admission_case(occupied,&meta());
+  let admitted=app.dispatch_ctx().test_reserved_emit_admission_case(occupied,&meta());
   drain_and_close_composed_fixture(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
   assert_eq!(admitted,row["admitted"].as_bool().unwrap());
   println!("[DEBUG] reserved producer occupied={occupied} exact original reservation+keyed lease, no producer handoff at saturation, foreign identity unchanged");
@@ -22,7 +22,7 @@ async fn framework_reserved_emit_admission_preserves_saturated_foreign_slots_and
 #[semio_framework_async_macros::async_test]
 async fn framework_reserved_emit_cancelled_worker_keeps_original_permit_until_completion_handoff(){
  let mut app=contract_composed_app_raw(crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
- let retained=app.test_reserved_emit_cancelled_worker_handoff(&meta()).await;
+ let retained=app.dispatch_ctx().test_reserved_emit_cancelled_worker_handoff(&meta()).await;
  drain_and_close_composed_fixture(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
  assert!(retained,"cancelled producer must return its original permit so completed original output can enter bounded mounted cancellation");
  println!("[DEBUG] cancelled reserved worker retains original operation+keyed lease through completion handoff, then exact finish");

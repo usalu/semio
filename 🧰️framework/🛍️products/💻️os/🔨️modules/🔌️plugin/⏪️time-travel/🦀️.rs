@@ -7,7 +7,7 @@
 //! Domain-neutral session: `semio_framework_time_travel`; store read API: `ArtifactStore::{state_before,
 //! begin_report_replay, replay_report, commit_finished_replay}`.
 
-use super::*;
+use semio_framework_ui_contract::*;
 #[cfg(test)] use semio_framework_os_kernel::HistoryPageStack;
 use semio_framework::kernel::{HistoryMutationEntry, HistoryMutationMessage, HistoryReprojection, HistoryReprojectionKind, HistoryTimeTravel, HistoryTimeTravelProblem, HistoryTimeTravelReview, HistoryTimeTravelStage, RequestId};
 use semio_framework::{input_label_glossary, mutation_input_defs, reference_id_text, registered_input_schema_document, ActionArgControl, ActionArgOption, ArgPresentation, ArgSchema, InputSchemaError, OptionSource, SnapSource};

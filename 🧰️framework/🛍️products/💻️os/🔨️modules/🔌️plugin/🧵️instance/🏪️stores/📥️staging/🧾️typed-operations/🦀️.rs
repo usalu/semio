@@ -93,9 +93,9 @@ impl<A: ArtifactApp> InstanceStores<A> {
         result
     }
 
-    /// 🪟️ Continues the window-config authority refresh a published receipt retains until the displaced snapshot has admitted custody, then queues the retained receipt's result page; every unit reports its actual progress to the host turn.
-    pub(crate) fn advance_mounted_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant) -> Result<(), Fault> {
-        let receipt = mounted.pending_window_config_receipt.ok_or_else(|| plugin_sdk_fault("window config refresh lost its retained publication receipt"))?;
+    /// 🪟️ Continues the window-config authority refresh a published receipt retains until the displaced snapshot has admitted custody; `true` once it is complete, when the use case tells the extensions and queues the receipt's result page; every unit reports its actual progress to the host turn.
+    pub(crate) fn advance_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant) -> Result<bool, Fault> {
+        mounted.pending_window_config_receipt.ok_or_else(|| plugin_sdk_fault("window config refresh lost its retained publication receipt"))?;
         let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
         self.window_config_store.refresh_demands(authority, retained.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
         let step = self.window_config_store.refresh(authority, retained)?;
@@ -105,9 +105,13 @@ impl<A: ArtifactApp> InstanceStores<A> {
             mounted.publication_ownership_progress = Some((retained, progress));
             mounted.publication_progress = mounted.publication_progress.saturating_add(1);
         }
-        if matches!(step, super::super::window_mutation::WindowAuthorityRefreshStep::Pending(_)) { return Ok(()); }
-        mounted.pending_window_config_receipt = None;
-        InstanceExtensions::window_config_published(self);
+        if matches!(step, super::super::window_mutation::WindowAuthorityRefreshStep::Pending(_)) { return Ok(false); }
+        Ok(true)
+    }
+
+    /// 🪟️ Queues the retained window-config receipt's result page once the refresh is complete and the extensions have been told.
+    pub(crate) fn queue_window_config_receipt(mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+        let receipt = mounted.pending_window_config_receipt.take().ok_or_else(|| plugin_sdk_fault("window config refresh lost its retained publication receipt"))?;
         let token = mounted.next_token();
         mounted.queue_page(TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::WindowConfig, &receipt)?)
     }

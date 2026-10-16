@@ -4,7 +4,7 @@
 
 use super::*;
 
-pub(crate) fn decode_window_template_drag(data: &HashMap<String, String>) -> Option<WindowTemplateDragPayload> {
+pub fn decode_window_template_drag(data: &HashMap<String, String>) -> Option<WindowTemplateDragPayload> {
     serde_json::from_str(data.get(COMPOSE_WINDOW_TEMPLATE_MIME)?).ok()
 }
 
@@ -41,7 +41,7 @@ pub struct ContextMenuItem {
 
 impl ContextMenuItem {
     /// 🏷️ The row's painted text: its label, and beside it the reason a disabled row cannot run.
-    pub(crate) fn painted_label(&self) -> String {
+    pub fn painted_label(&self) -> String {
         match self.reason.as_deref().filter(|_| self.disabled) {
             Some(reason) => format!("{} \u{b7} {reason}", self.label),
             None => self.label.clone(),
@@ -50,7 +50,7 @@ impl ContextMenuItem {
 
     /// ♿️ Registers the row's hit and its accessible presentation: an enabled row fires its action; a disabled row is still
     /// a focusable `menuitem` (`aria-disabled`, described by its reason) that fires nothing — the `RowAction` contract.
-    pub(crate) fn register_hit(&self, row: Rect, input: &mut InputState<ActionDescriptor>) {
+    pub fn register_hit(&self, row: Rect, input: &mut InputState<ActionDescriptor>) {
         input.register_hit(HitTarget { rect: row, event: self.action.clone().filter(|_| !self.disabled), control_id: Some(self.id.clone()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None });
         note_chrome_control_name(&self.id, Some(self.label.as_str()));
         note_chrome_control_disabled(&self.id, self.disabled);
@@ -97,7 +97,7 @@ fn context_menu_items_at_level<'a>(root: &'a [ContextMenuItem], path_prefix: &[u
     level
 }
 
-pub(crate) fn context_menu_item_at_path<'a>(root: &'a [ContextMenuItem], path: &[usize]) -> Option<&'a ContextMenuItem> {
+pub fn context_menu_item_at_path<'a>(root: &'a [ContextMenuItem], path: &[usize]) -> Option<&'a ContextMenuItem> {
     if path.is_empty() {
         return None;
     }
@@ -113,7 +113,7 @@ pub(crate) fn context_menu_item_at_path<'a>(root: &'a [ContextMenuItem], path: &
     item
 }
 
-pub(crate) fn context_menu_path_for_item_id(root: &[ContextMenuItem], item_id: &str, prefix: &mut Vec<usize>) -> Option<Vec<usize>> {
+pub fn context_menu_path_for_item_id(root: &[ContextMenuItem], item_id: &str, prefix: &mut Vec<usize>) -> Option<Vec<usize>> {
     for (index, item) in root.iter().enumerate() {
         if item.separator {
             continue;
@@ -132,7 +132,7 @@ pub(crate) fn context_menu_path_for_item_id(root: &[ContextMenuItem], item_id: &
     None
 }
 
-pub(crate) fn context_menu_move_active(root: &[ContextMenuItem], path: &[usize], down: bool) -> Vec<usize> {
+pub fn context_menu_move_active(root: &[ContextMenuItem], path: &[usize], down: bool) -> Vec<usize> {
     let level_prefix = if path.is_empty() { &[][..] } else { &path[..path.len() - 1] };
     let level = context_menu_items_at_level(root, level_prefix);
     let enabled = context_menu_focusable_indices(level);
@@ -162,7 +162,7 @@ pub(crate) fn context_menu_move_active(root: &[ContextMenuItem], path: &[usize],
     next
 }
 
-pub(crate) fn context_menu_path_for_ordinal(root: &[ContextMenuItem], path: &[usize], ordinal: usize) -> Option<Vec<usize>> {
+pub fn context_menu_path_for_ordinal(root: &[ContextMenuItem], path: &[usize], ordinal: usize) -> Option<Vec<usize>> {
     let level_prefix = if path.is_empty() { &[][..] } else { &path[..path.len() - 1] };
     let level = context_menu_items_at_level(root, level_prefix);
     let mut seen = 0usize;
@@ -180,7 +180,7 @@ pub(crate) fn context_menu_path_for_ordinal(root: &[ContextMenuItem], path: &[us
     None
 }
 
-pub(crate) fn context_menu_open_submenu_path(root: &[ContextMenuItem], path: &[usize]) -> Option<Vec<usize>> {
+pub fn context_menu_open_submenu_path(root: &[ContextMenuItem], path: &[usize]) -> Option<Vec<usize>> {
     let item = context_menu_item_at_path(root, path)?;
     if item.children.is_empty() {
         return None;
@@ -204,48 +204,48 @@ pub enum OverlayState {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ShellPaletteKind {
+pub enum ShellPaletteKind {
     Search,
     Find,
 }
 
 impl ShellPaletteKind {
-    pub(crate) fn input_id(self) -> &'static str {
+    pub fn input_id(self) -> &'static str {
         match self {
             Self::Search => "ui.search.input",
             Self::Find => "ui.find.input",
         }
     }
 
-    pub(crate) fn dialog_id(self) -> &'static str {
+    pub fn dialog_id(self) -> &'static str {
         match self {
             Self::Search => "ui.search.dialog",
             Self::Find => "ui.find.dialog",
         }
     }
 
-    pub(crate) fn list_id(self) -> &'static str {
+    pub fn list_id(self) -> &'static str {
         match self {
             Self::Search => "ui.search.list",
             Self::Find => "ui.find.list",
         }
     }
 
-    pub(crate) fn close_id(self) -> &'static str {
+    pub fn close_id(self) -> &'static str {
         match self {
             Self::Search => "ui.search.close",
             Self::Find => "ui.find.close",
         }
     }
 
-    pub(crate) fn control_id(self, index: usize) -> String {
+    pub fn control_id(self, index: usize) -> String {
         match self {
             Self::Search => format!("ui.search.item.{index}"),
             Self::Find => format!("ui.find.item.{index}"),
         }
     }
 
-    pub(crate) fn from_input_id(id: &str) -> Option<Self> {
+    pub fn from_input_id(id: &str) -> Option<Self> {
         match id {
             "ui.search.input" => Some(Self::Search),
             "ui.find.input" => Some(Self::Find),
@@ -261,7 +261,7 @@ impl ShellPaletteKind {
         }
     }
 
-    pub(crate) fn from_close_id(id: &str) -> Option<Self> {
+    pub fn from_close_id(id: &str) -> Option<Self> {
         match id {
             "ui.search.close" => Some(Self::Search),
             "ui.find.close" => Some(Self::Find),
@@ -269,11 +269,11 @@ impl ShellPaletteKind {
         }
     }
 
-    pub(crate) fn owns_control_id(self, id: &str) -> bool {
+    pub fn owns_control_id(self, id: &str) -> bool {
         id == self.dialog_id() || id == self.input_id() || id == self.list_id() || id == self.close_id() || Self::row_index(id).is_some_and(|(kind, _)| kind == self)
     }
 
-    pub(crate) fn row_index(id: &str) -> Option<(Self, usize)> {
+    pub fn row_index(id: &str) -> Option<(Self, usize)> {
         [(Self::Search, "ui.search.item."), (Self::Find, "ui.find.item.")].into_iter().find_map(|(kind, prefix)| id.strip_prefix(prefix).and_then(|index| index.parse().ok()).map(|index| (kind, index)))
     }
 }

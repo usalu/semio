@@ -32,7 +32,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// ⌨️🖼️ The keyboard focus ring around the chrome control the keyboard ring (or an assistive
     /// technology) focused — the wgpu twin of the browser's `:focus-visible` outline. Painted last,
     /// above every chrome layer; registers no hit.
-    pub(crate) fn render_overlay_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+    pub fn render_overlay_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         match cursor.phase {
             0 => {
                 if let Some(plan) = self.as_session().command_palette_plan(theme, width, height) {

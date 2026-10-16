@@ -1,0 +1,15 @@
+{
+  "methods": [
+    "brep_invoke",
+    "begin_close",
+    "close_step",
+    "next_close_copy_byte_demand",
+    "next_close_capacity_byte_demand",
+    "next_close_release_byte_demand",
+    "next_close_depth_demand",
+    "cancel_close",
+    "resume_close",
+    "terminal_is_empty",
+    "free"
+  ]
+}

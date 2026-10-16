@@ -21,15 +21,22 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit", "semio-framework-os-renderer-wgpu-shell-async/testkit", "semio-framework-os-renderer-wgpu-shell-chrome-state/testkit", "semio-framework-os-renderer-wgpu-shell-docs/testkit", "semio-framework-os-renderer-wgpu-shell-prefs/testkit", "semio-framework-os-renderer-wgpu-shell-surfaces/testkit", "semio-framework-os-renderer-wgpu-ui-engine/testkit", "dep:replication", "dep:semio-framework-plugin"]
+
 [dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-async = { path = "../../../⏳️shell-async/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-chrome-state = { path = "../../../🎚️shell-chrome-state/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-directory = { path = "../../../📒️shell-directory/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-docs = { path = "../../../📄️shell-docs/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-plugins = { path = "../../../🧲️shell-plugins/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-surfaces = { path = "../../../🫧️shell-surfaces/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-vocab = { path = "../../../📖️shell-vocab/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine/📦️packages/🦀️rust" }
 base64 = "0.22.1"
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
@@ -69,6 +76,10 @@ semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/�
 tokio = { version = "1", default-features = false, features = ["sync"] }
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasElement", "OffscreenCanvas", "CanvasRenderingContext2d", "Element", "Event", "MouseEvent", "WheelEvent", "KeyboardEvent", "InputEvent", "ResizeObserver", "ResizeObserverEntry", "DomRect", "Performance", "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response", "Headers", "Blob", "Url", "HtmlAnchorElement", "console", "MediaQueryList"] }
+
+[target.'cfg(not(target_os = "wasi"))'.dependencies]
+replication = { path = "../../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication", optional = true }
+semio-framework-plugin = { path = "../../../../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin", optional = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

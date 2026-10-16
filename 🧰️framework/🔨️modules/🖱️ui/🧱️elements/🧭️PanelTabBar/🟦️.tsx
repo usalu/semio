@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
-import { type DockSkeleton, type DockTabSkeleton } from "@semio-tech/framework";
+import { type DockSkeleton, type DockTabSkeleton } from "../../🔨️modules/🐳️dock-skeleton/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";

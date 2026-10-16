@@ -2,12 +2,12 @@
   "version": 1,
   "stories": [
     {
-      "path": "✏️s/🔌️plugins/🎞️animate/📖️stories/🎭️presentation-deck/🧪️.story.tsx",
-      "title": "🎬️animate",
+      "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/📖️stories/🎭️presentation-deck/🧪️.story.tsx",
+      "title": "🎬️presentation",
       "stories": [
         {
           "exportName": "ThreeSlideDeck",
-          "id": "🎬️animate--three-slide-deck",
+          "id": "🎬️presentation--three-slide-deck",
           "name": "Three Slide Deck"
         }
       ]

@@ -19,7 +19,7 @@ use super::*;
 ///
 /// ⏪️ The three `ui.timeTravel.*` rows are React's too: they dispatch the reserved `historyEdit*` verbs, only
 /// while the open session offers them, and none of them is Escape — Escape never discards a history edit.
-pub(crate) const SHELL_SHORTCUT_ROWS: &[(&str, &str)] = &[
+pub const SHELL_SHORTCUT_ROWS: &[(&str, &str)] = &[
     ("ui.search.toggle", "mod+p"),
     ("ui.find.toggle", "mod+f"),
     ("ui.nav.back", "mod+["),
@@ -55,7 +55,7 @@ pub(crate) const SHELL_SHORTCUT_ROWS: &[(&str, &str)] = &[
 ///
 /// An override whose value carries no parsable chord is dropped rather than blanking the row, exactly
 /// like React's `parseUiKeybindingOverrides` gate.
-pub(crate) fn shell_shortcut_table(overrides: &HashMap<String, String>) -> Vec<(String, String)> {
+pub fn shell_shortcut_table(overrides: &HashMap<String, String>) -> Vec<(String, String)> {
     SHELL_SHORTCUT_ROWS
         .iter()
         .map(|(control_id, keys)| {
@@ -68,3 +68,32 @@ pub(crate) fn shell_shortcut_table(overrides: &HashMap<String, String>) -> Vec<(
 //#endregion ⌨️ShellShortcutTable
 //#endregion ActionPanelAndUtilities
 
+//#region ActionPanelAndUtilities
+//#region 🎬️WindowActionsAndSearchPanes
+/// 🔎️ The retained engine surface one window instance's SEARCH pane body paints into.
+pub fn window_search_surface_id(window_id: &str) -> String {
+    format!("{window_id}/{WINDOW_SEARCH_BODY_KEY}")
+}
+
+/// 🎬️ The retained engine surface one window instance's ACTIONS pane body paints into — React's
+/// top-left `Pane` (`🪟️Window/🟦️.tsx:379`), whose body is `<Engagement/>` followed by the
+/// `WindowActionPane` tree. Keyed like the Measures overlay: the window instance, then the reserved
+/// section body key, so it can never collide with an app-authored surface.
+pub fn window_actions_surface_id(window_id: &str) -> String {
+    format!("{window_id}/{}", semio_framework::UiRefreshSection::Engagements.body_key())
+}
+
+/// 🔀️ Reserved retained surface suffix for the World Projection pane's Tree body.
+pub const WINDOW_PROJECTION_BODY_KEY: &str = "framework.worldOrbit.projection.body";
+
+/// 🔎️ The reserved body key of the per-window SEARCH pane. React mounts it as a second `Pane` fed by
+/// the SAME `WindowEngagement` (`windowEngagementToSearchSpec`, `🛠️ShellHelpers/🟦️.tsx:1826`), so it
+/// has no `UiRefreshSection` of its own and takes the engagements key with its own suffix.
+pub const WINDOW_SEARCH_BODY_KEY: &str = "framework.section.engagements.search";
+
+/// 🔀️ The retained Tree surface owned by one World window instance's Projection pane.
+pub fn window_projection_surface_id(window_id: &str) -> String {
+    format!("{window_id}/{WINDOW_PROJECTION_BODY_KEY}")
+}
+//#endregion 🎬️WindowActionsAndSearchPanes
+//#endregion ActionPanelAndUtilities

@@ -10,15 +10,16 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type Ajv from "ajv";
-import { semioSchemaAjvV1 } from "../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { NormWireRefusal, type NormWireReader } from "../../📇️registry/🧬️contract/🟦️.ts";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 type Schema = Record<string, any>;
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 const REPO = join(import.meta.dir, "../../../../..");
 const ARTIFACTS = join(import.meta.dir, "../../🗿️artifacts");
-const CATALOG = join(REPO, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json");
+const CATALOG = frameworkSourcePath("🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json");
 const read = (path: string): Schema => JSON.parse(readFileSync(path, "utf8"));
 
 //#region 🔤️Spelling

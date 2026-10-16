@@ -23,6 +23,20 @@
         "cwd": "{projectRoot}"
       }
     },
+    "test-io-ports": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔌️ports/**/*"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-io-ports",
+        "cwd": "{projectRoot}"
+      }
+    },
     "test-script-boundary": {
       "executor": "repo:script",
       "cache": false,
@@ -70,6 +84,29 @@
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts test-polygon-mesh",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-sdk-surface": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-sdk-surface",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-source-text": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/📖️source-text/**/*"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-source-text",
         "cwd": "{projectRoot}"
       }
     }

@@ -93,7 +93,7 @@ class TutorialInteractionCheckScript extends BundleScript {
     await runVitest(
       this.root,
       [
-        "../../../../🧪️tests/🔬️engine-contract/🟦️.ts",
+        "../../../../🧪️tests/🗃️shell-store-reducer/🟦️.ts",
         "--silent=false",
         "--reporter=verbose",
         "--testNamePattern=interaction recording|decodes the bounded actor interaction capture|captures the observed typed interaction|plays full and sparse typed selections|projects tutorial selection playback|records comma-bearing selection|APPLY_TUTORIAL_UI_SNAPSHOT restores",
@@ -111,7 +111,7 @@ class FlowBrowserRuntimeCheckScript extends BundleScript {
     await runVitest(
       this.root,
       [
-        "../../../../🧪️tests/🔬️engine-contract/🟦️.ts",
+        "../../../../🧪️tests/🧶️node-graph-hosts/🟦️.ts",
         "--silent=false",
         "--reporter=verbose",
         "--testNamePattern=retains one shared Flow browser runtime|retires a graph host unmounted before its open reply",
@@ -886,7 +886,7 @@ export function surfaceHostRetentionOracle(repoRoot: string): number {
   check(renumbered.mounts > fixture.expected.surfaceHostMounts, `keyed on the minted id the surface must remount (it did ${renumbered.mounts}× here) — a twin that cannot witness the defect cannot prove the fix`);
 
   // 📌️ Source anchors: the rule must live in the interpreter, and the container must not have kept the id.
-  const interpreter = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"), "utf8");
+  const interpreter = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"));
   check(interpreter.includes("export function uiSiblingReactKeys("), "`uiSiblingReactKeys` must be the interpreter's one reconciliation-key rule");
   check(interpreter.includes("export function uiChildReactKeys("), "`uiChildReactKeys` must resolve a child-id run against the live document state");
   check(!interpreter.includes("<UiNodeView key={childId}"), "a child run keyed on the DFS-minted id is the defect this fixture exists for");
@@ -902,7 +902,7 @@ class SurfaceRetentionCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("surface-retention-check accepts no arguments");
     console.log(`surface-host-retention-oracle: checks=${surfaceHostRetentionOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    await runVitest(this.root, ["../../../../🧱️elements/🗣️Interpreter/🟦️.tsx", "../../../../🧪️tests/🔬️engine-contract/🟦️.ts", "--silent=false", "--reporter=verbose", "-t", "retained surface host|sibling reconciliation keys"], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["../../../../🧱️elements/🗣️Interpreter/🟦️.tsx", "../../../../🧪️tests/🚧️hidden-tab-surfaces/🟦️.ts", "--silent=false", "--reporter=verbose", "-t", "retained surface host|sibling reconciliation keys"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

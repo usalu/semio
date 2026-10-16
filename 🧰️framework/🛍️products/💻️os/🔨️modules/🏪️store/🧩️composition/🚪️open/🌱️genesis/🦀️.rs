@@ -1,6 +1,6 @@
 //! 🌱️ Retained canonical genesis framing over borrowed initial bytes and exact member identities.
 
-use crate::os_store::OwnerRef;
+use semio_framework_os_store_envelope::owner::OwnerRef;
 use semio_framework_artifact_reference::ArtifactRef;
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
@@ -25,24 +25,24 @@ pub struct MemberGenesisEnvelopeProgress {
 struct IdPlan { dictionary: usize, prefix_len: usize, uuid: Option<[u8; 16]>, ready: bool }
 
 pub struct MemberGenesisEnvelopeEncoder {
-    uri: ManuallyDrop<Option<Vec<u8>>>,
+    pub uri: ManuallyDrop<Option<Vec<u8>>>,
     source_seal: Option<[(usize, usize); 13]>,
-    ids: [IdPlan; 8],
-    dictionary: [usize; 8],
+    pub ids: [IdPlan; 8],
+    pub dictionary: [usize; 8],
     dictionary_len: usize,
     initial_dictionary_len: usize,
-    field: usize,
-    comparison: usize,
+    pub field: usize,
+    pub comparison: usize,
     comparison_byte: usize,
     output_position: usize,
-    record: usize,
+    pub record: usize,
     frame_position: usize,
     records_len: u64,
     record_count: u32,
     crc: protocol::codec::Crc32cCursor,
     frame_hash: semio_framework_hash::Hasher,
-    chain_hash: semio_framework_hash::Hasher,
-    closed: bool,
+    pub chain_hash: semio_framework_hash::Hasher,
+    pub closed: bool,
 }
 
 fn fault(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
@@ -52,7 +52,7 @@ fn varint(value: usize, index: usize) -> u8 { let rest = value >> (index * 7); (
 impl MemberGenesisEnvelopeSource<'_> {
     fn parent_parts(&self) -> [&[u8]; 7] { [self.owner.parent.artifact_id.as_bytes(), b"!", self.owner.parent.dialect.artifact_kind.as_bytes(), b"@", self.owner.parent.dialect.standard.as_bytes(), b"/", self.owner.parent.dialect.subset.as_bytes()] }
     fn uri_len(&self) -> Option<usize> { self.parent_parts().iter().try_fold(0usize, |length, part| length.checked_add(part.len())) }
-    fn seal(&self) -> [(usize, usize); 13] {
+    pub fn seal(&self) -> [(usize, usize); 13] {
         let fields = [self.schema.as_bytes(), self.expected.artifact_id.as_bytes(), self.expected.dialect.artifact_kind.as_bytes(), self.expected.dialect.standard.as_bytes(), self.expected.dialect.subset.as_bytes(), self.owner.slot.as_bytes(), self.owner.child_id.as_bytes(), self.owner.parent.artifact_id.as_bytes(), self.owner.parent.dialect.artifact_kind.as_bytes(), self.owner.parent.dialect.standard.as_bytes(), self.owner.parent.dialect.subset.as_bytes(), self.initial_pack, &[]];
         fields.map(|field| (field.as_ptr() as usize, field.len()))
     }
@@ -69,7 +69,7 @@ impl MemberGenesisEnvelopeEncoder {
     pub fn next_capacity_byte_demand(&self, source: MemberGenesisEnvelopeSource<'_>) -> Option<usize> { if self.closed || self.uri.is_some() { Some(0) } else { source.uri_len() } }
 
     /// 🧬️ Borrows the complete URI assembled only from valid UTF-8 source strings and ASCII delimiters.
-    fn fields<'a>(&'a self, source: MemberGenesisEnvelopeSource<'a>) -> Result<[&'a str; 8], ValueError> {
+    pub fn fields<'a>(&'a self, source: MemberGenesisEnvelopeSource<'a>) -> Result<[&'a str; 8], ValueError> {
         let bytes = self.uri.as_ref().ok_or_else(|| fault("genesis URI capacity remains unadmitted"))?;
         if Some(bytes.len()) != source.uri_len() { return Err(fault("genesis URI bytes are not complete")); }
         let parent = unsafe { std::str::from_utf8_unchecked(bytes) };
@@ -97,7 +97,7 @@ impl MemberGenesisEnvelopeEncoder {
             1 => 1 + (0..2).map(|field| 1 + width(self.ids[field].dictionary) + usize::from(self.ids[field].uuid.is_some()) * 16).sum::<usize>(),
             2 => self.dictionary_payload_len(source, self.initial_dictionary_len, self.dictionary_len)?,
             3 => 2 + (2..8).map(|field| 1 + width(self.ids[field].dictionary) + usize::from(self.ids[field].uuid.is_some()) * 16).sum::<usize>(),
-            4 => crate::os_spr::format::COMMIT_PAYLOAD_LEN,
+            4 => semio_framework_os_spr::format::COMMIT_PAYLOAD_LEN,
             _ => return Err(fault("genesis record cursor exceeded its canonical plan")),
         })
     }
@@ -107,14 +107,14 @@ impl MemberGenesisEnvelopeEncoder {
     /// 📏️ Exposes exact output capacity after the borrowed dictionary comparisons finish.
     pub fn encoded_length(&self, source: MemberGenesisEnvelopeSource<'_>) -> Result<Option<usize>, ValueError> {
         if self.field != 8 { return Ok(None); }
-        let mut length = width(source.initial_pack.len()).checked_add(source.initial_pack.len()).and_then(|length| length.checked_add(crate::os_spr::format::HEADER_SIZE)).ok_or_else(|| fault("genesis output length overflow"))?;
+        let mut length = width(source.initial_pack.len()).checked_add(source.initial_pack.len()).and_then(|length| length.checked_add(semio_framework_os_spr::format::HEADER_SIZE)).ok_or_else(|| fault("genesis output length overflow"))?;
         for record in 0..5 { if record != 2 || self.initial_dictionary_len != self.dictionary_len { length = length.checked_add(self.frame_len(source, record)?).ok_or_else(|| fault("genesis output length overflow"))?; } }
         Ok(Some(length))
     }
 
     fn payload_byte(&self, source: MemberGenesisEnvelopeSource<'_>, record: usize, mut position: usize) -> Result<u8, ValueError> {
         if record == 4 {
-            return Ok(crate::os_spr::format::write_commit_payload(1, 0, self.records_len, self.record_count, self.chain_hash.finalize().as_bytes())[position]);
+            return Ok(semio_framework_os_spr::format::write_commit_payload(1, 0, self.records_len, self.record_count, self.chain_hash.finalize().as_bytes())[position]);
         }
         let fields = self.fields(source)?;
         if record == 0 || record == 2 {
@@ -146,8 +146,8 @@ impl MemberGenesisEnvelopeEncoder {
         let position = self.output_position;
         let byte = if position < pack_prefix { varint(source.initial_pack.len(), position) }
         else if position < spr_start { source.initial_pack[position - pack_prefix] }
-        else if position < spr_start + crate::os_spr::format::HEADER_SIZE {
-            let header = crate::os_spr::format::build_header_bytes(crate::os_spr::REQUIRED_HASH_CHAIN, crate::os_spr::OPTIONAL_CANONICAL);
+        else if position < spr_start + semio_framework_os_spr::format::HEADER_SIZE {
+            let header = semio_framework_os_spr::format::build_header_bytes(semio_framework_os_spr::REQUIRED_HASH_CHAIN, semio_framework_os_spr::OPTIONAL_CANONICAL);
             if position == spr_start { self.chain_hash.update(semio_framework_hash::hash(&header).as_bytes()); }
             header[position - spr_start]
         } else {
@@ -159,8 +159,8 @@ impl MemberGenesisEnvelopeEncoder {
             if self.frame_position == 0 { self.crc = protocol::codec::Crc32cCursor::new(); self.frame_hash = semio_framework_hash::Hasher::new(); }
             let relative = self.frame_position;
             let byte = if relative < prefix { varint(body, relative) }
-            else if relative == prefix { [crate::os_spr::REC_STR_DICT, crate::os_spr::REC_DOC, crate::os_spr::REC_STR_DICT, crate::os_spr::REC_COMPOSITION, crate::os_spr::REC_COMMIT][self.record] }
-            else if relative == prefix + 1 { if self.record == 3 { 0 } else { crate::os_spr::wire::FRAME_FLAG_CRITICAL } }
+            else if relative == prefix { [semio_framework_os_spr::REC_STR_DICT, semio_framework_os_spr::REC_DOC, semio_framework_os_spr::REC_STR_DICT, semio_framework_os_spr::REC_COMPOSITION, semio_framework_os_spr::REC_COMMIT][self.record] }
+            else if relative == prefix + 1 { if self.record == 3 { 0 } else { semio_framework_os_spr::wire::FRAME_FLAG_CRITICAL } }
             else if relative < prefix + body { self.payload_byte(source, self.record, relative - prefix - 2)? }
             else if relative < prefix + body + 4 { self.crc.finish().to_le_bytes()[relative - prefix - body] }
             else { u32::try_from(length).map_err(|_| fault("genesis frame exceeds canonical back length"))?.to_le_bytes()[relative - prefix - body - 4] };
@@ -209,7 +209,7 @@ impl MemberGenesisEnvelopeEncoder {
                 let text = fields[field];
                 let cost = text.len().min(38).max(1);
                 if remaining < cost { return Ok(progress); }
-                let parsed = crate::os_spr::scalar::split_prefix_uuid(text);
+                let parsed = semio_framework_os_spr::scalar::split_prefix_uuid(text);
                 let (prefix_len, uuid) = parsed.map_or((text.len(), None), |(prefix, uuid)| (prefix.len(), Some(uuid)));
                 self.ids[field] = IdPlan { prefix_len, uuid, ready: true, dictionary: 0 };
                 remaining -= cost;

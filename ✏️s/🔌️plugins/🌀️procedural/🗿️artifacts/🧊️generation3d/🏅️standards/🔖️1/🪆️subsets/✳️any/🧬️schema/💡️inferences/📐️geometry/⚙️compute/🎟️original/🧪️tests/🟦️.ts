@@ -4,6 +4,7 @@ import {Vector3,Vector4,PlaneGeometry,LineCurve3} from "three";
 import {NURBSCurve} from "three/examples/jsm/curves/NURBSCurve.js";
 import fixture from "./🧫️.json";
 import schema from "./🧬️.json";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 test("original geometry reads agree with independent Three mesh and rational curve geometry",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
@@ -24,7 +25,7 @@ test("original geometry reads agree with independent Three mesh and rational cur
 });
 
 test("generic clone implementations price actual composite type parameters while cold declarations stay unconstrained",async()=>{
- const root="🧰️framework/🔨️modules/🌱️value/✨️derive/🧪️tests/🧫️fixtures/🧬️generic-owner";
+ const root=frameworkSourcePath("🔨️modules/🌱️value/✨️derive/🧪️tests/🧫️fixtures/🧬️generic-owner");
  const law=await Bun.file(`${root}/🔣️.json`).json();const contract=await Bun.file(`${root}/🧬️.json`).json();expect(new Ajv({strict:true}).validate(contract,law)).toBe(true);expect(JSON.parse(JSON.stringify(law.entry))).toEqual(["key Ä",[1,2,3]]);
- const production=await Bun.file("🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/📥️input/↔️translation/🦀️.rs").text();expect(production).toContain("RetainedCloneOwner<HalfedgeMesh>");expect(production).toContain("self.cursor.advance_demands");expect(production).toContain("self.cursor.close_step(grant)");expect(production).toContain("source.close_step(grant)");expect(production).not.toContain("original.clone()");expect(production).not.toContain("translate_job_owned");
+ const production=await Bun.file(frameworkSourcePath("🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/📥️input/↔️translation/🦀️.rs")).text();expect(production).toContain("RetainedCloneOwner<HalfedgeMesh>");expect(production).toContain("self.cursor.advance_demands");expect(production).toContain("self.cursor.close_step(grant)");expect(production).toContain("source.close_step(grant)");expect(production).not.toContain("original.clone()");expect(production).not.toContain("translate_job_owned");
 });

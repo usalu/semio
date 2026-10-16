@@ -1,5 +1,26 @@
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_child::ChildContentBorrowedOwners;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_child::ChildMemberRegistry;
+use semio_framework_plugin_child::ChildMemberRetirement;
+use semio_framework::Fault;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_value::RetirementDemand;
+use store::SpaceMember;
+use semio_framework_value::ValueError;
+use semio_framework_plugin_child::original_content_step_owners;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework::FaultFrom;
+use store::MemberFactory;
 /// 📐️ Quotes original child custody, disjoint borrowed retainers, or a separate terminal frame.
-pub(crate) fn original_child_root_retirement_demands<M: SpaceMember>(registry: &ArtifactFixedRegistry<ChildContentRetirement>, children: &ChildMemberRegistry<M>, retiring: Option<&ArtifactFixedRegistry<ChildMemberRetirement<M>>>, cursor: usize, body: usize, closing: bool) -> Result<Option<RetirementDemand>, ValueError> {
+#[doc(hidden)]
+pub fn original_child_root_retirement_demands<M: SpaceMember>(registry: &ArtifactFixedRegistry<ChildContentRetirement>, children: &ChildMemberRegistry<M>, retiring: Option<&ArtifactFixedRegistry<ChildMemberRetirement<M>>>, cursor: usize, body: usize, closing: bool) -> Result<Option<RetirementDemand>, ValueError> {
     let Some((_, generation)) = registry.next_id_from(cursor) else {
         let bytes = registry.empty_backing_byte_demand().unwrap_or(0);
         return Ok((closing && bytes != 0).then_some(RetirementDemand { copy_bytes: size_of::<ArtifactFixedRegistry<ChildContentRetirement>>(), release_bytes: bytes, depth: 1, ..Default::default() }));
@@ -14,7 +35,8 @@ pub(crate) fn original_child_root_retirement_demands<M: SpaceMember>(registry: &
 }
 
 /// 🌳️ Advances one paid original child unit, retaining registry custody after child completion.
-pub(crate) fn advance_original_child_root_retirement<M: SpaceMember>(registry: &mut ArtifactFixedRegistry<ChildContentRetirement>, children: &mut ChildMemberRegistry<M>, retiring: Option<&mut ArtifactFixedRegistry<ChildMemberRetirement<M>>>, current: &ChildContentView, member: Option<&ChildContentView>, review: Option<&ChildContentView>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneStep, Fault> {
+#[doc(hidden)]
+pub fn advance_original_child_root_retirement<M: SpaceMember>(registry: &mut ArtifactFixedRegistry<ChildContentRetirement>, children: &mut ChildMemberRegistry<M>, retiring: Option<&mut ArtifactFixedRegistry<ChildMemberRetirement<M>>>, current: &ChildContentView, member: Option<&ChildContentView>, review: Option<&ChildContentView>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneStep, Fault> {
     let Some(demand) = original_child_root_retirement_demands(registry, children, retiring.as_deref(), *cursor, grant.maximum_copy_bytes, closing).map_err(|error| Fault::from(error.into_message()))? else { return Ok(RetainedCloneStep::Complete(Default::default())); };
     if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
     let Some((index, generation)) = registry.next_id_from(*cursor) else {

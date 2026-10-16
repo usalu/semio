@@ -6,13 +6,14 @@
  * @see ../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json */
 import {test,expect} from "bun:test";
 import {existsSync,readdirSync,readFileSync} from "node:fs";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
+import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 type Json = null | boolean | number | string | Json[] | {[key: string]: Json};
 const TRANSPORT = "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport";
 const LEAVES = new URL("../../", import.meta.url);
 const FIXTURES = new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url);
-const VALUE = new URL("../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json", import.meta.url);
+const VALUE = frameworkSourceUrl("🔨️modules/🌱️value/🧬️schema/🔣️.json");
 const read = (url: URL): Json => JSON.parse(readFileSync(url, "utf8"));
 const folders = (root: URL) => readdirSync(root, {withFileTypes: true}).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
 const leaves = folders(LEAVES).filter((leaf) => existsSync(new URL(`${leaf}/🧬️schema/🔣️.json`, LEAVES))).map((leaf) => ({leaf, schema: read(new URL(`${leaf}/🧬️schema/🔣️.json`, LEAVES)) as {[key: string]: Json}}));

@@ -11,7 +11,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framewor
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
 import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 //#region 💡️InferencePortCheck
 /** 💡️ One rendered phase of the host-owned inference port, restated independently of production. */
 type OraclePreview = { schema: "semio.hub.gis-map-inference-preview/v1"; jobId: string; proposalHash: string; regionId: string; ring: readonly [readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number]] };
@@ -186,7 +186,7 @@ const OWNED_SCHEMA_MODULES = {
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MODULES, exportId: string) {
-  const { semioSchemaAjvV1 } = await import("../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts");
+  const { semioSchemaAjvV1 } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧬️schema/🔮️oracles/✅️validator/🟦️.ts");
   const doc = JSON.parse(readFileSync(join(repoRoot, OWNED_SCHEMA_MODULES[scope]), "utf8")) as { $id: string };
   const compiled = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
@@ -579,7 +579,7 @@ class InferenceBridgeCheckScript extends BundleScript {
     const {proveMcpInferenceBridgeFixture}=await import("../../💡️inference/🌉️mcp/🧪️tests/🔬️oracle/🟦️.ts");
     const report=proveMcpInferenceBridgeFixture(this.repoRoot);
     console.log(`gis-mcp-inference-bridge: ${JSON.stringify(report)}`);
-    if(mode==="--process")await runVitest(this.root,["../../💡️inference/🌉️mcp/🧪️tests/🔬️process/🟦️.ts"],"../../💡️inference/🌉️mcp/🧪️tests/🎚️config/🟦️.ts");
+    if(mode==="--process")await runVitest(this.root,["../../../../../../🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧵️gis-inference-bridge/🟦️.ts"],"../../../../../../🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/🧵️gis-inference-bridge/🟦️.ts");
   }
 }
 

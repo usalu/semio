@@ -4,19 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import ts from "typescript";
-import {
-  policyBaseCloneDiffBreaches,
-  policyDiffDerivedInverseBreaches,
-  policyDiffOnlyFileBreaches,
-  policyInverseSumLawUntestedBreaches,
-  policyInverseSumLawUntestedLeafBreaches,
-  policyLeafBetweenBreaches,
-  policyLeafCentralApplyBreaches,
-  policyLeafMutableBaseBreaches,
-  policyOutcomeApplyToBreaches,
-  policyRestoreInverseBreaches,
-  policyWholeStateDiffBreaches,
-} from "../../📜️script.ts";
+import { policyBaseCloneDiffBreaches, policyDiffDerivedInverseBreaches, policyDiffOnlyFileBreaches, policyInverseSumLawUntestedBreaches, policyInverseSumLawUntestedLeafBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyWholeStateDiffBreaches } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts";
 
 type Rule = "R8" | "R9" | "R10" | "R11" | "R12" | "R13" | "R14" | "R15" | "R16";
 type Case = { id: string; description: string; segments: string[]; lines: string[]; breaches: { line: number; rule: Rule }[]; oracle: Rule[] };

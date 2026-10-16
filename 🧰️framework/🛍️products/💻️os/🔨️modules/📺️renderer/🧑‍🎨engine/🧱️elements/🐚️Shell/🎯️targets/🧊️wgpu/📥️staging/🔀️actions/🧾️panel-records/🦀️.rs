@@ -9,7 +9,7 @@ use super::*;
 /// 📝️ The value one staged-arg dispatch stages: a segmented button's `option`, a colour part's colour, a vector axis
 /// spliced into the tuple at `index` (the tuple already staged, else the `tuple` the row painted), else the editor's
 /// own `value`.
-pub(crate) fn staged_arg_value(args: &Value, current: Option<&Value>) -> Value {
+pub fn staged_arg_value(args: &Value, current: Option<&Value>) -> Value {
     if let Some(option) = args.get("option") {
         return option.clone();
     }

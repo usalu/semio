@@ -12,7 +12,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// the guest, and handed to the actor ([`ArtifactActorMsg::Reseed`]), which then dials at once. A transient failure is asked
     /// again after [`SYNC_RESEED_RETRY_MS`] while the document stays open; closing the document drops the reseed. Answers
     /// whether the guest's document changed.
-    pub(crate) async fn advance_sync_reseed(&mut self) -> bool {
+    pub async fn advance_sync_reseed(&mut self) -> bool {
         let Some(mut reseed) = self.sync.sync_reseed.take() else { return false };
         let Some(owner) = self.sync.sync_channel.as_ref().map(shell_sync_channel_owner) else { return false };
         match reseed.pending.as_ref().and_then(ShellDetached::take) {
@@ -66,7 +66,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// (browser parity), so its membership stays projected. Home is never folded: its projection's
     /// only writer is the sealed page lane, which the same events wake through `home.wake` below.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn dispatch_fold_directory_events(&mut self, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) {
+    pub fn dispatch_fold_directory_events(&mut self, events: &[semio_framework_os_kernel::os_directory::DirectoryEvent]) {
         let Some(session) = self.docs.session.clone().filter(|session| session_is_space_index(session, &self.plugins.plugins)) else { return };
         let Some(program) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
         let events_json = semio_framework_pack_json::to_json_string(&events.to_vec());
@@ -86,7 +86,7 @@ impl<'ctx> SessionCtx<'ctx> {
     }
 
     //#endregion 🔖️DirectoryAndIdentity
-    pub(crate) async fn spawn_plugin(&mut self, plugin_id: &str, mut view_state: ViewModel) -> Result<(), String> {
+    pub async fn spawn_plugin(&mut self, plugin_id: &str, mut view_state: ViewModel) -> Result<(), String> {
         let workflows = self.prefs.build_space_workflows(&self.plugins);
         let Some(workflow) = workflows.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
             return Ok(());

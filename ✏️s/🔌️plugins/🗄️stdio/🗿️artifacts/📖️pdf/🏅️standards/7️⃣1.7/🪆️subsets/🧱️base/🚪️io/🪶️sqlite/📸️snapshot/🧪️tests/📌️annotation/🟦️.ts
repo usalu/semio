@@ -9,7 +9,7 @@ import { writePdfAppearance,readPdfAppearance,writePdfBorder,readPdfBorder } fro
 import { pdfAnnotationNumberColumns } from "../../📌️annotation/🔢️number/🟦️.ts";
 import { writePdfAnnotationKind,readPdfAnnotationKind } from "../../📌️annotation/🏷️kind/🟦️.ts";
 import { writePdfAnnotation,readPdfAnnotation } from "../../📌️annotation/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("Native annotation JSON admits complete canonical IEEE scalars and bigint indices",async()=>{
   const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/📌️annotation/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text());const value=parsePdfAnnotation(pdfAnnotationFromNativeJson(fixture.annotation));expect(value.rect[2]).toEqual({bits:0x3ff0000000000000n});expect(value.border!.width).toEqual({bits:0x3ff0000000000000n});expect(value.markup!.opacity).toEqual({bits:0x3ff0000000000000n});expect(value.markup!.popup).toBe(4294967295n);expect(value.markup!.inReplyTo).toBe(4294967296n);const popup=parsePdfAnnotationKind(pdfAnnotationKindFromNativeJson(fixture.popup));if(popup.kind!=="popup")throw new Error("Fixture popup");expect(popup.parent).toBe(4294967295n);

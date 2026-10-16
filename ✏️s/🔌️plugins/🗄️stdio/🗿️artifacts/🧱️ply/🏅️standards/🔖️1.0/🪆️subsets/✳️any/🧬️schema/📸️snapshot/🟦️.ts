@@ -1,4 +1,4 @@
-import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ PlySnapshot schema — complete per PLY's generic element/property system. */
 
 export type PlyScalarType = 'char' | 'uChar' | 'short' | 'uShort' | 'int' | 'uInt' | 'float' | 'double';

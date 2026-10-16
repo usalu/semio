@@ -30,6 +30,10 @@
 //!
 //! See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-runtime.md`.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as store;
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -51,7 +55,7 @@ use semio_framework_value_derive::ToValue;
 /// 🆔️ Monotonic `TraceId` source, one per host — every dispatched operation gets a fresh id from
 /// here, never reused, so a trace correlates exactly one operation end to end.
 #[derive(Default)]
-pub struct TraceIdAllocator(AtomicU64);
+pub struct TraceIdAllocator(pub AtomicU64);
 
 impl TraceIdAllocator {
     pub async fn new() -> Self {

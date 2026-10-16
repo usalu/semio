@@ -1,11 +1,9 @@
 //! 🔀️ The post-turn relay of the plugin host: guest relay pool, instance slots and leases, cold relay jobs, the mounted registry and the plugin instance handle.
 
-use super::*;
-
 //#region 🔀️PostTurnRelay
 /// ⛽️ Every cold relay turn stays inside the user-visible interactive slice. The guest job owns its
 /// persistent state; the host grants one `step-job` call per shared-pool closure.
-pub(super) const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: (semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000) as u32 };
+pub const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: (semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000) as u32 };
 
 /// 🔁️ One retained-waker future polled once per finite shared-pool turn.
 type GuestRelayFailureHandler = Box<dyn FnOnce(GuestRelayPoolFailure) + Send + 'static>;
@@ -37,7 +35,7 @@ impl GuestRelayPoolFuture {
         task.schedule();
     }
 
-    pub(super) fn schedule(self: &Arc<Self>) {
+    pub(crate) fn schedule(self: &Arc<Self>) {
         if self.complete.load(std::sync::atomic::Ordering::Acquire) {
             return;
         }
@@ -65,7 +63,7 @@ impl GuestRelayPoolFuture {
         }
     }
 
-    pub(super) fn fail(&self, failure: GuestRelayPoolFailure) {
+    pub(crate) fn fail(&self, failure: GuestRelayPoolFailure) {
         if self.complete.swap(true, std::sync::atomic::Ordering::AcqRel) {
             return;
         }
@@ -127,7 +125,7 @@ enum GuestRelayRequestKind {
 }
 
 impl GuestRelayRequest {
-    pub(super) fn kind(&self) -> GuestRelayRequestKind {
+    pub(crate) fn kind(&self) -> GuestRelayRequestKind {
         match self {
             Self::Start { .. } => GuestRelayRequestKind::Start,
             Self::Step => GuestRelayRequestKind::Step,
@@ -136,7 +134,7 @@ impl GuestRelayRequest {
     }
 }
 
-pub(super) enum GuestRelayCompletion {
+pub(crate) enum GuestRelayCompletion {
     Started(Result<(), TurnFault>),
     Stepped(Result<GuestRelayStepCompletion, TurnFault>),
     Cancelled,
@@ -166,7 +164,7 @@ struct GuestRelayOwnedBytes {
 }
 
 impl GuestRelayOwnedBytes {
-    pub(super) fn new(source: Vec<u8>) -> Self {
+    pub(crate) fn new(source: Vec<u8>) -> Self {
         Self { source }
     }
 
@@ -181,11 +179,11 @@ struct GuestRelayCompletionSender {
 }
 
 impl GuestRelayCompletionSender {
-    pub(super) fn new(slot: Arc<GuestRelayCompletionSlot>) -> Self {
+    pub(crate) fn new(slot: Arc<GuestRelayCompletionSlot>) -> Self {
         Self { slot }
     }
 
-    pub(super) fn send(&self, completion: GuestRelayCompletion) {
+    pub(crate) fn send(&self, completion: GuestRelayCompletion) {
         let mut value = self.slot.value.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if value.is_none() {
             *value = Some(completion);
@@ -237,7 +235,7 @@ impl GuestRelayDriveSignal {
         GuestRelayPoolFuture::spawn_inner(self.pool.clone(), Lane::UserVisible, future, failure.unwrap_or_else(|| Box::new(|_| {})));
     }
 
-    pub(super) fn resume(&self) {
+    pub(crate) fn resume(&self) {
         let handed = {
             let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             match std::mem::replace(&mut *state, GuestRelayDriveState::Idle) {
@@ -278,19 +276,19 @@ struct GuestRelayCompletionSlot {
 }
 
 impl GuestRelayCompletionSlot {
-    pub(super) fn new(pool: WorkerPool) -> Self {
+    pub(crate) fn new(pool: WorkerPool) -> Self {
         Self { value: Mutex::new(None), wake: AtomicBool::new(false), signal: Arc::new(GuestRelayDriveSignal { state: Mutex::new(GuestRelayDriveState::Idle), owner: Mutex::new(None), pool }) }
     }
 
     /// 🎟️ Retains the request this slot answers; it owes its first poll to the owner.
-    pub(super) fn admit(&self, request: GuestRelayInlineRequest) {
+    pub(crate) fn admit(&self, request: GuestRelayInlineRequest) {
         *self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayDriveState::Owed(request);
     }
 
     /// 🏃️ Gives an owed request its first poll on the calling thread. A panic reaches the request's
     /// own recovery exactly as the pool-hosted future's did, so the instance is restored or
     /// quarantined and the owner still receives one completion.
-    pub(super) fn drive(&self) {
+    pub(crate) fn drive(&self) {
         let mut request = {
             let mut state = self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             match std::mem::replace(&mut *state, GuestRelayDriveState::Idle) {
@@ -377,17 +375,17 @@ enum GuestInstanceSlot {
 }
 
 impl GuestInstanceSlot {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fn is_available(&self) -> bool {
         matches!(self, Self::Available(_))
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fn is_quarantined(&self) -> bool {
         matches!(self, Self::Quarantined { .. })
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fn is_cleanup_pending(&self) -> bool {
         matches!(self, Self::CleanupPending { .. })
     }
@@ -463,11 +461,11 @@ impl GuestInstanceLease {
         }
     }
 
-    pub(super) fn guest(&mut self) -> &mut GuestInstance {
+    pub(crate) fn guest(&mut self) -> &mut GuestInstance {
         self.guest.as_mut().expect("guest instance lease owns its instance")
     }
 
-    pub(super) fn quarantine(&mut self, detail: Vec<u8>) {
+    pub(crate) fn quarantine(&mut self, detail: Vec<u8>) {
         self.disposition = GuestInstanceLeaseDisposition::Quarantined(detail);
     }
 
@@ -475,7 +473,7 @@ impl GuestInstanceLease {
         self.disposition = GuestInstanceLeaseDisposition::CleanupPending(detail);
     }
 
-    pub(super) fn available(&mut self) {
+    pub(crate) fn available(&mut self) {
         self.disposition = GuestInstanceLeaseDisposition::Available;
     }
 
@@ -650,7 +648,7 @@ async fn run_guest_relay_request(attempt: GuestRelayAttempt, cancel: semio_frame
     };
     drop(guest);
     drop(permit);
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     wait_for_scripted_guest_relay_release(&runtime, &completion).await;
     let _ = cleanup_pending;
     sender.send(completion);
@@ -668,7 +666,7 @@ fn recover_guest_relay_failure(attempt: GuestRelayAttempt, request: GuestRelayRe
         sender.send(GuestRelayCompletion::TerminalFault(GuestRelayOwnedBytes::new(detail)));
         return;
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     if let GuestRuntimes::Mock(mock) = runtime.as_ref() {
         let barrier = match request {
             GuestRelayRequestKind::Start => mock.take_relay_start_failure_release(),
@@ -720,7 +718,7 @@ struct GuestRelayPublication {
 }
 
 impl GuestRelayPublication {
-    pub(super) fn new(kind: GuestRelayPublicationKind, source: Vec<u8>) -> Self {
+    pub(crate) fn new(kind: GuestRelayPublicationKind, source: Vec<u8>) -> Self {
         let oversized = source.len() > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES;
         let kind = if oversized { GuestRelayPublicationKind::Fault } else { kind };
         let stream = match kind {
@@ -736,12 +734,12 @@ impl GuestRelayPublication {
         !matches!(self.kind, GuestRelayPublicationKind::Preview)
     }
 
-    pub(super) fn invalid(detail: &'static str) -> semio_framework_value::ValueError {
+    pub(crate) fn invalid(detail: &'static str) -> semio_framework_value::ValueError {
         semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, detail)
     }
 
     /// ✍️ Pays one frontier of the publication (bind, append, retire the source, seal) and lends the sealed pages once.
-    pub(super) fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    pub(crate) fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
             return Ok(None);
         }
@@ -791,7 +789,7 @@ impl GuestRelayPublication {
     }
 
     /// 🤝️ Resolves a descriptor against the same sealed pages this publication lent.
-    pub(super) fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+    pub(crate) fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         let payload = self.writer.as_ref().and_then(semio_framework_job::RetainedPayloadBuilder::published).filter(|_| self.delivered).ok_or_else(|| Self::invalid("guest relay descriptor requires its delivered payload"))?;
         match self.kind {
             GuestRelayPublicationKind::Preview => descriptor.preview(payload),
@@ -801,7 +799,7 @@ impl GuestRelayPublication {
     }
 
     /// ♻️ Retires a delivered non-terminal publication's pages inside the next running step; true once nothing is left.
-    pub(super) fn retire(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub(crate) fn retire(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if let Some(writer) = self.writer.as_mut() {
             if !writer.terminal_is_empty() {
                 let step = writer.close_step_granted(context.retained_grant()).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,context))?;
@@ -813,7 +811,7 @@ impl GuestRelayPublication {
         Ok(self.terminal_is_empty())
     }
 
-    pub(super) fn begin_close(&mut self) {}
+    pub(crate) fn begin_close(&mut self) {}
 
     fn original_source_demand(&self)->semio_framework_value::RetirementDemand{
         if !self.source.is_empty(){semio_framework_value::RetirementDemand{copy_bytes:1+size_of::<usize>(),depth:1,..Default::default()}}
@@ -832,12 +830,12 @@ impl GuestRelayPublication {
         }).map_err(|error|match error{RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error)=>error})
     }
 
-    pub(super) fn retirement_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+    pub(crate) fn retirement_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::RetainedPayloadBuilder>>(),depth:1,..Default::default()})}else{let mut demand=writer.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Host publication writer depth overflow"))?;Ok(demand)};}
         Ok(self.original_source_demand())
     }
 
-    pub(super) fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+    pub(crate) fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep as S;
         let demand=self.retirement_demands()?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(S::Pending{progress:Default::default()});}
@@ -848,7 +846,7 @@ impl GuestRelayPublication {
         self.close_original_source(grant).map(|step|match step{semio_framework_value::RetainedCloneStep::Progress(progress)=>S::Pending{progress},semio_framework_value::RetainedCloneStep::Complete(progress)=>S::Complete{progress}})
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.writer.is_none() && self.source.is_empty() && self.source.capacity() == 0
     }
 }
@@ -891,7 +889,7 @@ impl GuestColdRelayJob {
         let mut demand=publication.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original Host relay publication depth overflow"))?;Ok(demand)
     }
 
-    pub(super) fn submit(&mut self, request: GuestRelayRequest) {
+    pub(crate) fn submit(&mut self, request: GuestRelayRequest) {
         let request_kind = request.kind();
         let slot = Arc::new(GuestRelayCompletionSlot::new(self.pool.clone()));
         let attempt = GuestRelayAttempt {
@@ -1072,7 +1070,7 @@ impl Drop for GuestColdRelayJob {
 }
 
 impl GuestColdRelayJob {
-    pub(super) fn new(runtime: Arc<GuestRuntimes>, instance: Arc<Mutex<GuestInstanceSlot>>, instance_gate: Arc<semio_framework_async::Semaphore>, pool: WorkerPool, cancel: semio_framework_async::CancelToken, job: u64, start: (String, Vec<u8>)) -> Self {
+    pub(crate) fn new(runtime: Arc<GuestRuntimes>, instance: Arc<Mutex<GuestInstanceSlot>>, instance_gate: Arc<semio_framework_async::Semaphore>, pool: WorkerPool, cancel: semio_framework_async::CancelToken, job: u64, start: (String, Vec<u8>)) -> Self {
         Self {
             runtime,
             instance,
@@ -1106,11 +1104,11 @@ struct GuestRelayLifecycleProbeControl {
 }
 
 impl GuestRelayLifecycleProbeControl {
-    pub(super) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { awake: AtomicBool::new(false), release_permits: std::sync::atomic::AtomicUsize::new(0), waker: Mutex::new(None), close_admissions: std::sync::atomic::AtomicUsize::new(0), releases: std::sync::atomic::AtomicUsize::new(0) }
     }
 
-    pub(super) fn wake(&self) {
+    pub(crate) fn wake(&self) {
         self.awake.store(true, std::sync::atomic::Ordering::Release);
         self.wake_registered();
     }
@@ -1210,18 +1208,18 @@ struct GuestRelayRefusedSource<J: semio_framework_job::InteractiveJob> {
 }
 
 impl<J: semio_framework_job::InteractiveJob> GuestRelayRefusedSource<J> {
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.job.is_none() && self.params.is_none()
     }
 
-    pub(super) fn retirement_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub(crate) fn retirement_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(job) = self.job.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: job.next_close_copy_byte_demand()?, capacity_bytes: job.next_close_capacity_byte_demand(maximum_copy_bytes)?, release_bytes: job.next_close_release_byte_demand()?, depth: job.next_close_depth_demand()? });
         }
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(self.params.is_some()), ..Default::default() })
     }
 
-    pub(super) fn begin_close(&mut self) {
+    pub(crate) fn begin_close(&mut self) {
         if !self.closing {
             self.closing = true;
             if let Some(job) = self.job.as_mut() {
@@ -1230,7 +1228,7 @@ impl<J: semio_framework_job::InteractiveJob> GuestRelayRefusedSource<J> {
         }
     }
 
-    pub(super) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as S;
         let grant=cx.retained_grant();
         self.begin_close();
@@ -1285,18 +1283,22 @@ enum GuestRelayMountedOwner {
     Empty,
 }
 
-/// 🧾️ Preserves the exact original embedding policy and native wake effect before another child runs.
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct GuestRelayWakeReceipt{pub epoch:u64,pub slot:usize,pub generation:u64,pub grant:semio_framework_value::retained_clone::RetainedCloneGrant,pub progress:semio_framework_value::retained_clone::RetainedCloneProgress}
-/// 📥️ The original embedding debits or retains a borrowed full receipt before admitting its successor.
-pub trait GuestRelayWakeReceiptReceiver:Send+Sync{fn checkout(&self,slot:usize,generation:u64)->Result<Option<GuestRelayWakeTurnGrant>,semio_framework_value::ValueError>;fn collect(&self,receipt:&GuestRelayWakeReceipt)->Result<bool,semio_framework_value::ValueError>;}
 /// 🚦️ Required first-party issuer and receipt receiver belong to the actual Host embedding.
 #[derive(Clone)]
 pub struct GuestRelayWakeAuthority{pub drive_policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub issuer:semio_framework_job_worker::OriginalWorkerWakeIssuer,pub receiver:Arc<GuestRelayWakeDriver>}
-#[path="../🔔️wake/🦀️.rs"]
-mod original_wake_receipts;
-pub use original_wake_receipts::{GuestRelayOriginalRoot,GuestRelayRootPolicy,GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver,GuestRelayWakeContextTurn,GuestRelayWakeReceiptLedger,GuestRelayWakeTurnGrant,GuestRelayWakeTurnReceipt};
-#[cfg(test)]
+use semio_framework_plugin_host_wake::{GuestRelayWakeDriver, GuestRelayWakeReceiptLedger, GuestRelayWakeTurnGrant};
+use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicBool;
+use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntimes};
+use semio_framework_plugin_host_wake::GuestRelayWakeReceipt;
+use semio_framework_plugin_guest_contract::{JobBudget, JobStep, PluginHostError, TurnFault};
+use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
+use semio_framework_actor::ActorId as RuntimeActorId;
+use semio_framework_value_derive::ToValue;
+use semio_framework_plugin_host_engine::plugin_host_worker_pool;
+use semio_framework_plugin_host_guest_runtime::GuestRuntime as _;
+use semio_framework_plugin_host_wake::GuestRelayWakeReceiptReceiver as _;
+#[cfg(any(test, feature = "testkit"))]
 #[global_allocator]
 static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 struct GuestRelayWakeCustody{original:std::mem::ManuallyDrop<Option<Box<dyn semio_framework_job_worker::RetainedWorkerWake>>>,receipt:Option<GuestRelayWakeReceipt>,registered:bool,refusal:Option<semio_framework_value::ValueRefusalKind>}
@@ -1347,7 +1349,7 @@ struct GuestRelayMountedOutput {
 }
 
 impl GuestRelayMountedOutput {
-    pub(super) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let storage = Box::<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]>::new_uninit();
         Self { storage: unsafe { storage.assume_init() }, length: 0 }
     }
@@ -1361,7 +1363,7 @@ impl GuestRelayMountedOutput {
         Ok(())
     }
 
-    pub(super) fn bytes(&self) -> &[u8] {
+    pub(crate) fn bytes(&self) -> &[u8] {
         unsafe { std::slice::from_raw_parts(self.storage.as_ptr().cast::<u8>(), self.length) }
     }
 
@@ -1400,20 +1402,20 @@ struct GuestRelayMountedRegistry {
     reaper_active: AtomicBool,
     reaper_failed: AtomicBool,
     reaper_timer_pending: AtomicBool,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     reaper_polls: std::sync::atomic::AtomicUsize,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     reaper_timers: std::sync::atomic::AtomicUsize,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     reaper_wake_waits: std::sync::atomic::AtomicUsize,
 }
 
 impl GuestRelayMountedRegistry {
-    pub(super) fn new(wake_authority:GuestRelayWakeAuthority) -> Self {
+    pub(crate) fn new(wake_authority:GuestRelayWakeAuthority) -> Self {
         Self::with_pool(plugin_host_worker_pool(),wake_authority)
     }
 
-    pub(super) fn with_pool(pool: WorkerPool,wake_authority:GuestRelayWakeAuthority) -> Self {
+    pub(crate) fn with_pool(pool: WorkerPool,wake_authority:GuestRelayWakeAuthority) -> Self {
         Self {
             wake_authority,
             slots: std::iter::repeat_with(|| Mutex::new(GuestRelayMountedSlot::Empty)).take(GUEST_RELAY_MOUNTED_SLOTS).collect(),
@@ -1424,11 +1426,11 @@ impl GuestRelayMountedRegistry {
             reaper_active: AtomicBool::new(false),
             reaper_failed: AtomicBool::new(false),
             reaper_timer_pending: AtomicBool::new(false),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             reaper_polls: std::sync::atomic::AtomicUsize::new(0),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             reaper_timers: std::sync::atomic::AtomicUsize::new(0),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             reaper_wake_waits: std::sync::atomic::AtomicUsize::new(0),
         }
     }
@@ -1471,7 +1473,7 @@ impl GuestRelayMountedRegistry {
         assert!(progress.fits(grant),"original mounted wake close exceeded supplied authority");wake.receipt=Some(GuestRelayWakeReceipt{epoch,slot:index,generation,grant,progress});let collected=self.collect_original_wake_receipt(wake);if !collected||progress==Default::default(){GuestRelayMountedReap::Blocked{wake_registered:false}}else{GuestRelayMountedReap::Progress}
     }
 
-    pub(super) fn reserve(&self) -> Option<(usize, u64)> {
+    pub(crate) fn reserve(&self) -> Option<(usize, u64)> {
         if self.reaper_failed.load(std::sync::atomic::Ordering::Acquire) {
             return None;
         }
@@ -1515,7 +1517,7 @@ impl GuestRelayMountedRegistry {
             GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { wake:GuestRelayWakeCustody::new(), generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome_stage: GuestRelayOutcomeStage::Idle, outcome_kind: GuestRelayOutcomeKind::Continues, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
     }
 
-    pub(super) fn detach(self: &Arc<Self>, index: usize, generation: u64) {
+    pub(crate) fn detach(self: &Arc<Self>, index: usize, generation: u64) {
         let detached = {
             let mut slot = self.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let GuestRelayMountedSlot::Mounted(session) = &mut *slot else { return };
@@ -1604,7 +1606,7 @@ impl GuestRelayMountedRegistry {
         if self.reaper_timer_pending.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return;
         }
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         self.reaper_timers.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let registry = Arc::clone(self);
         let wake = waker.clone();
@@ -1620,7 +1622,7 @@ impl GuestRelayMountedRegistry {
 
     fn park_blocked_reaper(self: &Arc<Self>, waker: &std::task::Waker, wake_registered: bool) {
         if wake_registered {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             self.reaper_wake_waits.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         } else {
             self.schedule_reaper_timer(waker);
@@ -1660,7 +1662,7 @@ impl GuestRelayMountedRegistry {
         match(result,returned){(Ok(Some(step)),Ok(_))=>Ok(step),(Err(mut failure),Err(receipt))=>{failure.context_refusal=Some(receipt);Err(failure)},(Err(failure),Ok(_))=>Err(failure),(Ok(_),Err(receipt))=>Err(receipt.into()),(Ok(None),Ok(_))=>unreachable!()}
     }
 
-    pub(super) fn pump(self: &Arc<Self>, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
+    pub(crate) fn pump(self: &Arc<Self>, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
         let mut slot = self.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let GuestRelayMountedSlot::Mounted(session) = &mut *slot else {
             return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay slot is not mounted".into())));
@@ -1894,7 +1896,7 @@ impl std::future::Future for GuestRelayMountedReaper {
     type Output = ();
 
     fn poll(self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<()> {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         {
             self.registry.reaper_polls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         }
@@ -2178,7 +2180,7 @@ pub fn exercise_relay_lifecycle_trace(trace_json: &str,wake_authority:GuestRelay
     let trace: GuestRelayLifecycleTrace = serde_json::from_str(trace_json).map_err(|error| format!("invalid relay lifecycle trace: {error}"))?;
     let projection = match (trace.id.as_str(), trace.machine.as_str(), trace.initial.as_str()) {
         ("replay-first-fault-wins", "replay", "CaptureKind") => {
-            let actual = shard::exercise_replay_lifecycle_trace(&trace.events)?;
+            let actual = semio_framework_plugin_host_shard::exercise_replay_lifecycle_trace(&trace.events)?;
             GuestRelayLifecycleProjection { state: actual.state.to_string(), first_reason: actual.first_reason, cancel_admissions: 0, release_opportunities: actual.release_opportunities, caller_output: None }
         }
         ("relay-abandoned-blocked-wake", "relay", "Running") => exercise_abandoned_relay_lifecycle_trace(&trace,wake_authority.clone())?,
@@ -2202,8 +2204,8 @@ pub fn exercise_relay_lifecycle_trace(trace_json: &str,wake_authority:GuestRelay
 pub struct PluginInstanceHandle {
     pub actor: RuntimeActorId,
     original_input:semio_framework_actor::RetainedTurnInput,
-    pub(super) runtime: Arc<GuestRuntimes>,
-    pub(super) instance: Arc<Mutex<GuestInstanceSlot>>,
+    pub runtime: Arc<GuestRuntimes>,
+    pub instance: Arc<Mutex<GuestInstanceSlot>>,
     instance_gate: Arc<semio_framework_async::Semaphore>,
     relay_registry: Arc<GuestRelayMountedRegistry>,
     next_job_id: std::sync::atomic::AtomicU64,
@@ -2362,8 +2364,8 @@ impl std::fmt::Debug for PluginInstanceHandle {
     }
 }
 
-#[cfg(test)]
-pub(super) fn test_relay_wake_authority()->GuestRelayWakeAuthority{
+#[cfg(any(test, feature = "testkit"))]
+pub fn test_relay_wake_authority()->GuestRelayWakeAuthority{
     GuestRelayWakeAuthority{drive_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap(),policy:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64},issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::new(GuestRelayWakeReceiptLedger::new())}
 }
 
@@ -2371,3 +2373,20 @@ pub(super) fn test_relay_wake_authority()->GuestRelayWakeAuthority{
 #[path = "../🧪️tests/🔬️guest-cold-relay/🦀️.rs"]
 mod guest_cold_relay_tests;
 //#endregion 🔀️PostTurnRelay
+
+//#region 🔧️SharedWasmtimeEngine
+#[cfg(any(test, feature = "testkit"))]
+async fn wait_for_scripted_guest_relay_release(runtime: &GuestRuntimes, completion: &GuestRelayCompletion) {
+    let GuestRuntimes::Mock(mock) = runtime else {
+        return;
+    };
+    let barrier = match completion {
+        GuestRelayCompletion::Started(Err(_)) => mock.take_relay_start_failure_release(),
+        GuestRelayCompletion::Stepped(Err(_)) => mock.take_relay_step_failure_release(),
+        _ => None,
+    };
+    if let Some(barrier) = barrier {
+        barrier.wait().await;
+    }
+}
+//#endregion 🔧️SharedWasmtimeEngine

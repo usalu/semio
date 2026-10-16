@@ -6,10 +6,10 @@ use super::*;
 
 //#region 📌️HubCheckIn
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) const HUB_CHECK_IN_POLL_MS: u64 = 250;
+pub const HUB_CHECK_IN_POLL_MS: u64 = 250;
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn hub_check_in_local_status(
+pub fn hub_check_in_local_status(
     request_id: &str,
     phase: semio_framework_os_kernel::os_directory::DocumentCheckInPhaseV1,
     refusal: Option<semio_framework_os_kernel::os_directory::DocumentCheckInRefusalV1>,

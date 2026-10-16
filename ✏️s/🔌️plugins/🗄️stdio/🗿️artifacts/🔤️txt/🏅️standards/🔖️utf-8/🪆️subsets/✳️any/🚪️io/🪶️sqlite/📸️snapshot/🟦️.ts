@@ -1,7 +1,7 @@
 /** 📄️ Text-document semantic entities mirror the adjacent handcrafted SQLite schema and Rust facet. */
 import type { TxtSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { ArtifactSqliteProjection, artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteInteger, artifactSqliteValueBudget, artifactSqliteValueByteLengthControlled, artifactSqliteOrderedRowsControlled, artifactSqliteTables, artifactSqliteText, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { ArtifactSqliteProjection, artifactSqliteBoolean, artifactSqliteCheckpoint, artifactSqliteInteger, artifactSqliteValueBudget, artifactSqliteValueByteLengthControlled, artifactSqliteOrderedRowsControlled, artifactSqliteTables, artifactSqliteText, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 🏛️ Handcrafted SQL kept byte-equal to the adjacent schema asset. */
 export const TXT_SQLITE_SCHEMA = `CREATE TABLE text_document (

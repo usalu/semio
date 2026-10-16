@@ -30,7 +30,7 @@
 //! exercise is pinned directly instead, on both sides of the wire:
 //! `🌊️flow/📔️registry/🧪️tests/📔️registry/🦀️.rs`'s
 //! `contributed_operators_are_addressed_by_their_contributing_plugin_id` (guest half) and
-//! `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts` (host half).
+//! `🧑‍🎨engine/🧪️tests/🪝️extension-invocation/🟦️.ts` (host half).
 //!
 //! @see ../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🦀️.rs — the same linked installation the headless geometry lane uses, which needs no host half.
 

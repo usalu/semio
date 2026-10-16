@@ -1,6 +1,7 @@
 fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
 use super::*;
-use crate::{GuestRuntime, MockGuestRuntime, PackageHash, PackageId, PackageRef};
+use semio_framework_plugin_host_guest_runtime::{GuestRuntime, MockGuestRuntime, PackageRef};
+use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_plugin_guest_contract::JobStep;
 use semio_framework::kernel::{Budget, Effect, JobPlacement};
 use semio_framework_actor::{ActorId, Envelope, JobOperation, JobReplayRequest, JobTurn, Payload, ShardKind, ShardTable};
@@ -18,21 +19,21 @@ async fn shard_stack_authority_matches_the_neutral_fixture() {
     let refusals = registry("shard-replay-refusals");
     let deferred = registry("shard-deferred-owner-ring");
     assert_eq!(fixture["schemaVersion"], 1);
-    assert_eq!(seeds["capacity"].as_u64(), Some(super::super::JOB_REPLAY_SEED_SLOT_CAPACITY as u64));
-    assert_eq!(refusals["capacity"].as_u64(), Some(super::super::JOB_REPLAY_REFUSAL_SLOT_CAPACITY as u64));
+    assert_eq!(seeds["capacity"].as_u64(), Some(semio_framework_plugin_host_shard::JOB_REPLAY_SEED_SLOT_CAPACITY as u64));
+    assert_eq!(refusals["capacity"].as_u64(), Some(semio_framework_plugin_host_shard::JOB_REPLAY_REFUSAL_SLOT_CAPACITY as u64));
     assert_eq!(deferred["capacity"].as_u64(), Some(SHARD_DEFERRED_ITEMS as u64));
     assert!([seeds, refusals, deferred].iter().all(|row| row["storage"] == "heap"));
     let (_, shard_side) = ThreadTransport::new_pair().await;
-    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side))),crate::shard::test_identity_issuer()).await;
-    assert_eq!(shard.replay_seeds.len(), super::super::JOB_REPLAY_SEED_SLOT_CAPACITY);
-    assert_eq!(shard.replay_seed_refusals.len(), super::super::JOB_REPLAY_REFUSAL_SLOT_CAPACITY);
+    let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side))),semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    assert_eq!(shard.replay_seeds.len(), semio_framework_plugin_host_shard::JOB_REPLAY_SEED_SLOT_CAPACITY);
+    assert_eq!(shard.replay_seed_refusals.len(), semio_framework_plugin_host_shard::JOB_REPLAY_REFUSAL_SLOT_CAPACITY);
     assert_eq!(FixedOwnerRing::<u8, SHARD_DEFERRED_ITEMS>::new(SHARD_DEFERRED_BYTES).slots.len(), SHARD_DEFERRED_ITEMS);
     assert!(std::mem::size_of::<ShardLoop>() <= maximum);
     assert!(std::mem::size_of::<ShardExecutorState>() <= maximum);
     assert!(std::mem::size_of::<ShardExecutor>() <= maximum);
 }
 
-async fn encode_frame(frame: super::super::ShardFrame) -> Vec<u8> {
+async fn encode_frame(frame: semio_framework_plugin_host_shard::ShardFrame) -> Vec<u8> {
     let mut bytes = Vec::new();
     frame.pack_encode(&mut bytes).await.expect("declared original frame authority");
     bytes
@@ -46,7 +47,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
         let mock = Arc::new(MockGuestRuntime::new().await);
         let runtime = Arc::new(GuestRuntimes::Mock(Arc::clone(&mock)));
         let pool = test_pool();
-        let executor = ShardExecutor::new(Arc::clone(&pool), runtime, Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
+        let executor = ShardExecutor::new(Arc::clone(&pool), runtime, Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
         let actor = ActorId(717);
         let package = PackageRef { package: PackageId("registration-owner".into()), hash: PackageHash([0; 32]) };
         let compiled = mock.compile(&package, &[]).await.unwrap();
@@ -55,7 +56,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
             let RegistrationAdmission::Refused(owner) = executor.register(ActorId(718), instance).await else { panic!("mismatched guest identity must return its exact owner") };
             assert_eq!(owner.actor, ActorId(718));
             assert_eq!(owner.instance.actor, actor);
-            assert_eq!(owner.reason, super::super::ShardRegistrationReason::WrongActor);
+            assert_eq!(owner.reason, semio_framework_plugin_host_shard::ShardRegistrationReason::WrongActor);
             {
                 let state = executor.state.lock().unwrap();
                 let shard = state.shard.as_ref().unwrap();
@@ -69,7 +70,7 @@ async fn registration_acknowledgement_and_terminal_refusal_preserve_exact_owners
             let RegistrationAdmission::Refused(owner) = executor.register(actor, instance).await else { panic!("closed registration must return its owner") };
             assert_eq!(owner.actor, actor);
             assert_eq!(owner.instance.actor, actor);
-            assert_eq!(owner.reason, super::super::ShardRegistrationReason::Stopped);
+            assert_eq!(owner.reason, semio_framework_plugin_host_shard::ShardRegistrationReason::Stopped);
             mock.drop_instance(owner.instance).await;
         } else {
             executor.scheduled.store(true, Ordering::Release);
@@ -118,7 +119,7 @@ async fn terminal_registration_reply_wakes_outside_the_state_lock() {
         }
     }
     let mock = Arc::new(MockGuestRuntime::new().await);
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     executor.scheduled.store(true, Ordering::Release);
     let shard = executor.state.lock().unwrap().shard.take().unwrap();
     let actor = ActorId(718);
@@ -156,7 +157,7 @@ async fn admitted_registration_reply_wakes_outside_the_state_lock() {
         }
     }
     let mock = Arc::new(MockGuestRuntime::new().await);
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::clone(&mock))), Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     executor.scheduled.store(true, Ordering::Release);
     let shard = executor.state.lock().unwrap().shard.take().unwrap();
     let actor = ActorId(718);
@@ -205,7 +206,7 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
 
     let pool = test_pool();
     let outcomes = OutcomeSink::new();
-    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
 
     let envelope = Envelope {
         to: actor,
@@ -215,10 +216,10 @@ async fn shard_executor_drives_a_turn_for_a_registered_actor_via_the_worker_pool
         deadline_ms: None,
         coalesce: None,
         cancel_of: None,
-        payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
+        payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework_plugin_host_shard::fixture_instance_close_event()).unwrap() },
     };
     let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
-    let bytes = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }).await;
+    let bytes = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }).await;
     executor.send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
 
     match wait_for_one(&outcomes) {
@@ -271,7 +272,7 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
     entered_rx.recv_timeout(Duration::from_secs(2)).expect("pool blocker entered");
 
     let outcomes = OutcomeSink::new();
-    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock)), vec![(background, background_instance), (interactive, interactive_instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock)), vec![(background, background_instance), (interactive, interactive_instance)], outcomes.clone(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     let envelope = |actor, lane, seq| Envelope {
         to: actor,
         from: semio_framework_actor::Origin::Kernel,
@@ -280,16 +281,16 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
         deadline_ms: None,
         coalesce: None,
         cancel_of: None,
-        payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).expect("event") },
+        payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework_plugin_host_shard::fixture_instance_close_event()).expect("event") },
     };
     let background_lane = lane(0);
     let interactive_lane = lane(1);
-    let background_frame = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(),         actor: background,
+    let background_frame = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(),         actor: background,
         budget: semio_framework_actor::lane_defaults::budget_for(background_lane),
         envelopes: vec![envelope(background, background_lane, frames[0]["sequence"].as_u64().expect("background sequence"))],
     })
     .await;
-    let interactive_frame = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(),         actor: interactive,
+    let interactive_frame = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(),         actor: interactive,
         budget: semio_framework_actor::lane_defaults::budget_for(interactive_lane),
         envelopes: vec![envelope(interactive, interactive_lane, frames[1]["sequence"].as_u64().expect("interactive sequence"))],
     })
@@ -309,7 +310,7 @@ async fn fifo_ingress_selects_interactive_before_earlier_background_without_unbo
 
 #[semio_framework_async_macros::async_test]
 async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_and_host_default_workers() {
-    let _replay_authority = super::super::replay_test_authority();
+    let _replay_authority = semio_framework_plugin_host_shard::replay_test_authority();
     let host_default = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
     for worker_count in [1, 2, 4, host_default] {
         let mock = Arc::new(MockGuestRuntime::new().await);
@@ -327,7 +328,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
 
         let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, worker_count)));
         let outcomes = OutcomeSink::new();
-        let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),crate::shard::test_identity_issuer()).await;
+        let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
         let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         let event = Envelope {
             to: actor,
@@ -340,7 +341,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::Wake).expect("wake") },
         };
         let submit_started = std::time::Instant::now();
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(submit_started.elapsed() < Duration::from_millis(8), "one mounted replay ingress opportunity exceeded 8ms");
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
 
@@ -358,7 +359,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
         let turn = JobTurn { job, operation, step_sequence: 0 };
         mock.script_job_step(actor, JobStep::Running { progress: Some(vec![11, 13]) }).await;
         let step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
         let original = wait_for_one(&outcomes);
         assert!(matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::PreviewReady { preview } if *preview == [11, 13])));
 
@@ -372,12 +373,12 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             cancel_of: None,
             payload: Payload::JobReplay { turn, request, worker_count: u16::try_from(worker_count).expect("worker count"), worker_slot: 0 },
         };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Resumed { actor: reported, operation: observed } if reported == actor.0 && observed == operation));
         mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
         mock.script_turn(actor, MockGuestRuntime::idle_turn(original_retained_turn()).await).await;
         let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
         let replayed = outcomes.wait_for(2, Duration::from_secs(2));
         assert!(
                 replayed.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))),
@@ -385,7 +386,7 @@ async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_an
             );
         assert!(replayed.iter().any(|outcome| matches!(outcome, ShardOutcome::Turn { actor: reported, .. } if *reported == actor.0)), "replay step did not emit the actor turn: {replayed:?}");
 
-        executor.send_frame(encode_frame(super::super::ShardFrame::Unregister { actor }).await, semio_framework_actor::Lane::Maintenance).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Unregister { actor }).await, semio_framework_actor::Lane::Maintenance).await;
         let close_deadline = std::time::Instant::now() + Duration::from_secs(2);
         let mut terminal = false;
         while std::time::Instant::now() < close_deadline {
@@ -417,7 +418,7 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
     let outcomes = OutcomeSink::new();
     let mut executors = Vec::new();
     for _ in 0..SHARDS {
-        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone(),crate::shard::test_identity_issuer()).await);
+        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone(),semio_framework_plugin_host_shard::test_identity_issuer()).await);
     }
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("grant-routing-property".to_string()), hash: PackageHash([55u8; 32]) };
@@ -439,9 +440,9 @@ async fn every_actors_grant_lands_on_the_shard_it_was_registered_on_across_k_sha
             deadline_ms: None,
             coalesce: None,
             cancel_of: None,
-            payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
+            payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework_plugin_host_shard::fixture_instance_close_event()).unwrap() },
         };
-        let bytes = encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget: grant_budget, envelopes: vec![envelope] }).await;
+        let bytes = encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget: grant_budget, envelopes: vec![envelope] }).await;
         executors[shard_id.0 as usize].send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
     }
 
@@ -467,7 +468,7 @@ async fn suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_regi
     let outcomes = OutcomeSink::new();
     let mut executors = Vec::new();
     for _ in 0..SHARDS {
-        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone(),crate::shard::test_identity_issuer()).await);
+        executors.push(ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(mock.clone())), Vec::new(), outcomes.clone(),semio_framework_plugin_host_shard::test_identity_issuer()).await);
     }
     let mut shards = ShardTable::new(ShardKind::Native, SHARDS, 0).await;
     let package = PackageRef { package: PackageId("suspend-resume-property".to_string()), hash: PackageHash([77u8; 32]) };
@@ -492,7 +493,7 @@ async fn suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_regi
             cancel_of: None,
             payload: Payload::Suspend { operation, applied_progress: i as u64 },
         };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Envelope(suspend)).await, semio_framework_actor::Lane::Background).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Envelope(suspend)).await, semio_framework_actor::Lane::Background).await;
         let state = match wait_for_one(&outcomes) {
             ShardOutcome::Checkpoint { actor: reported, operation: reported_operation, checkpoint } => {
                 assert_eq!(reported, actor.0);
@@ -504,13 +505,13 @@ async fn suspend_then_resume_round_trip_lands_on_a_shard_where_the_actor_is_regi
         };
 
         let retire = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Cancel { seq: 2 } };
-        assert!(matches!(executor.send_frame(encode_frame(super::super::ShardFrame::Envelope(retire)).await, semio_framework_actor::Lane::Background).await, FrameIngress::Admitted));
+        assert!(matches!(executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Envelope(retire)).await, semio_framework_actor::Lane::Background).await, FrameIngress::Admitted));
         assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Cancelled { actor: retired } if retired == actor.0));
         let fresh_instance = mock.instantiate(&compiled, actor, &[], &instantiate_budget).await.expect("mock instantiate (fresh)");
         assert!(matches!(executor.register(actor, fresh_instance).await, RegistrationAdmission::Admitted(_)));
         let resume =
             Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Resume { operation, checkpoint: state } };
-        executor.send_frame(encode_frame(super::super::ShardFrame::Envelope(resume)).await, semio_framework_actor::Lane::Background).await;
+        executor.send_frame(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Envelope(resume)).await, semio_framework_actor::Lane::Background).await;
         match wait_for_one(&outcomes) {
             ShardOutcome::Resumed { actor: reported, operation: reported_operation } => {
                 assert_eq!(reported, actor.0);
@@ -542,7 +543,7 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
         initial.push((actor, instance));
         actors.push(actor);
     }
-    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), initial, outcomes.clone(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), initial, outcomes.clone(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
 
     let mut handles = Vec::new();
@@ -557,9 +558,9 @@ async fn concurrent_send_frame_bursts_never_drop_an_outcome() {
                 deadline_ms: None,
                 coalesce: None,
                 cancel_of: None,
-                payload: Payload::Event { bytes: serde_json::to_vec(&super::super::fixture_instance_close_event()).unwrap() },
+                payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework_plugin_host_shard::fixture_instance_close_event()).unwrap() },
             };
-            let bytes = semio_framework_async::block_on(encode_frame(super::super::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }));
+            let bytes = semio_framework_async::block_on(encode_frame(semio_framework_plugin_host_shard::ShardFrame::Grant { retained: original_retained_turn(), actor, budget, envelopes: vec![envelope] }));
             semio_framework_async::block_on(executor.send_frame(bytes, semio_framework_actor::Lane::Interactive));
         }));
     }
@@ -595,7 +596,7 @@ fn retry_trigger_is_one_shot_until_the_generation_owner_releases_it() {
 #[semio_framework_async_macros::async_test]
 async fn terminal_ingress_returns_the_exact_late_frame_before_transport_or_epoch_mutation() {
     let pool = test_pool();
-    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(pool.clone(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     pool.shutdown();
     let raw = vec![4, 3, 2, 1];
     let owner = match executor.send_frame(raw.clone(), semio_framework_actor::Lane::Maintenance).await {
@@ -610,7 +611,7 @@ async fn terminal_ingress_returns_the_exact_late_frame_before_transport_or_epoch
 
 #[semio_framework_async_macros::async_test]
 async fn over_capacity_ingress_hands_back_bytes_plus_one_exactly() {
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     let raw = vec![7; SHARD_FRAME_MAX_BYTES + 1];
     let owner = match executor.send_frame(raw, semio_framework_actor::Lane::Maintenance).await {
         FrameIngress::Rejected(owner) => owner,
@@ -624,7 +625,7 @@ async fn over_capacity_ingress_hands_back_bytes_plus_one_exactly() {
 
 #[semio_framework_async_macros::async_test]
 async fn occupied_terminal_overflow_rejects_plus_one_and_plus_two_before_mutation() {
-    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),crate::shard::test_identity_issuer()).await;
+    let executor = ShardExecutor::new(test_pool(), Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await))), Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await;
     executor.terminal_overflow_occupied.store(true, Ordering::Release);
     let first = vec![0xf1, 1];
     let second = vec![0xf2, 2];

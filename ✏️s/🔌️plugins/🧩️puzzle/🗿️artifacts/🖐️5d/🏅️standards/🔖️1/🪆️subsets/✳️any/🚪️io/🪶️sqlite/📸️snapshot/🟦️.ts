@@ -1,9 +1,9 @@
 /** 🧩️ Handwritten Puzzle5d relational projection and complete owned reconstruction. */
 import * as m from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase,SqliteRow,SqliteValue } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {parseBinary64,binary64Value,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import { ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase,SqliteRow,SqliteValue } from "@semio-tech/framework/io/sqlite-snapshot";
+import {parseBinary64,binary64Value,type Binary64} from "@semio-tech/framework/value/ieee754";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import {PUZZLE5D_SQLITE_SCHEMA} from "./🗄️schema/🟦️.ts";
 type Cells=readonly SqliteValue[];
 const fail=(why:string):never=>{throw new Error("Puzzle5d SQLite "+why)};

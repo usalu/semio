@@ -1,45 +1,49 @@
 //! 👥️ Peer presence roots and the peer roster publication.
-use crate::app_views::PeerPresence;
-use crate::app_views::PEER_PRESENCE_SLOTS;
-use crate::app_views::PeerPresenceEntry;
-use crate::app_views::PeerPresenceRoot;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+use semio_framework_plugin_decl_views::PeerPresence;
+use semio_framework_plugin_decl_views::PEER_PRESENCE_SLOTS;
+use semio_framework_plugin_decl_views::PeerPresenceEntry;
+use semio_framework_plugin_decl_views::PeerPresenceRoot;
 use semio_framework::kernel::FixedCommandPage;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use std::mem::ManuallyDrop;
-use crate::app_contract::ArtifactApp;
+use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault;
-use crate::child_view::child_content_arc_bytes;
+use semio_framework_plugin_decl_views::child_view::child_content_arc_bytes;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(test)]
-use crate::app_views::NoConfigMutation;
+use semio_framework_plugin_decl_views::NoConfigMutation;
 #[cfg(test)]
-use crate::app_views::NoPresence;
+use semio_framework_plugin_decl_views::NoPresence;
 #[cfg(test)]
-use crate::reserved_jobs::ConfigurationDecodeRetirement;
+use semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement;
 
-pub(crate) struct PeerPresenceRootRetirement {
-    root: ManuallyDrop<Option<std::sync::Arc<PeerPresenceRoot>>>,
-    owned: ManuallyDrop<Option<PeerPresenceRoot>>,
-    entry: ManuallyDrop<Option<semio_framework_value::retirement::shared::SharedControlledRetirement<PeerPresenceEntry>>>,
-    cursor: usize,
+#[doc(hidden)]
+pub struct PeerPresenceRootRetirement {
+    pub root: ManuallyDrop<Option<std::sync::Arc<PeerPresenceRoot>>>,
+    pub owned: ManuallyDrop<Option<PeerPresenceRoot>>,
+    pub entry: ManuallyDrop<Option<semio_framework_value::retirement::shared::SharedControlledRetirement<PeerPresenceEntry>>>,
+    pub cursor: usize,
 }
 
 impl PeerPresenceRootRetirement {
-    pub(crate) fn new(root: std::sync::Arc<PeerPresenceRoot>) -> Self {
+    pub fn new(root: std::sync::Arc<PeerPresenceRoot>) -> Self {
         Self { root: ManuallyDrop::new(Some(root)), owned: ManuallyDrop::new(None), entry: ManuallyDrop::new(None), cursor: 0 }
     }
 
-    fn owned(root: PeerPresenceRoot) -> Self {
+    pub fn owned(root: PeerPresenceRoot) -> Self {
         Self { root: ManuallyDrop::new(None), owned: ManuallyDrop::new(Some(root)), entry: ManuallyDrop::new(None), cursor: 0 }
     }
 
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(entry) = self.entry.as_ref() {
             return Ok(RetirementDemand { copy_bytes: entry.next_copy_byte_demand()?, capacity_bytes: entry.next_capacity_byte_demand(body)?, release_bytes: entry.next_release_byte_demand()?, depth: entry.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer entry retirement depth overflow"))? });
         }
@@ -52,7 +56,7 @@ impl PeerPresenceRootRetirement {
         Ok(Default::default())
     }
 
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(empty)); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(PluginLifecycleStep::Progress(empty)); }
@@ -94,7 +98,7 @@ impl PeerPresenceRootRetirement {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.owned.is_none() && self.entry.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.owned.is_none() && self.entry.is_none() }
 }
 
 impl Drop for PeerPresenceRootRetirement {
@@ -181,7 +185,7 @@ mod peer_root_retirement_laws {
         let mut decoder_events = 0;
         let mut admit_decode = |_| { decoder_events += 1; true };
         let mut decode = semio_framework_value::NativeDecodeControl::new(0, &mut admit_decode);
-        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut decode, grant);
+        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut decode, grant);
         let (value, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(original.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
@@ -193,7 +197,7 @@ mod peer_root_retirement_laws {
         let mut encode_events = 0;
         let mut admit_encode = |_| { encode_events += 1; true };
         let mut encode = semio_framework_value::NativeEncodeControl::new(0, &mut admit_encode);
-        let mut original = crate::io::control::NativeSnapshotEncodeOwner::new(&mut encode, grant);
+        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut encode, grant);
         let (bytes, heap) = observe(|| value.encode_presence_native(&mut original).unwrap());
         assert_eq!(bytes, Vec::<u8>::new());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -203,14 +207,14 @@ mod peer_root_retirement_laws {
         assert!(encode_events > 0);
         let mut reject = |_| false;
         let mut native = semio_framework_value::NativeDecodeControl::new(0, &mut reject);
-        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let mut reject = |_| false;
         let mut native = semio_framework_value::NativeEncodeControl::new(0, &mut reject);
-        let mut original = crate::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
+        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
         let (result, heap) = observe(|| value.encode_presence_native(&mut original));
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
@@ -218,7 +222,7 @@ mod peer_root_retirement_laws {
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
             let mut accept = |_| true;
             let mut native = semio_framework_value::NativeDecodeControl::new(0, &mut accept);
-            let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, denied);
+            let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, denied);
             let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
             assert!(result.is_err());
             assert_eq!(original.progress(), RetainedCloneProgress::default());
@@ -347,13 +351,13 @@ mod peer_root_retirement_laws {
 const PEER_ROSTER_WIRE_BYTES: usize = 4_096;
 
 pub struct PresenceRosterAdmission {
-    pub(crate) seq: u64,
-    pub(crate) generation: u64,
-    pub(crate) cancel: semio_framework_job::CancelToken,
+    pub seq: u64,
+    pub generation: u64,
+    pub cancel: semio_framework_job::CancelToken,
 }
 
 impl PresenceRosterAdmission {
-    pub(crate) fn sequence(&self) -> u64 {
+    pub fn sequence(&self) -> u64 {
         self.seq
     }
 
@@ -368,14 +372,14 @@ pub struct PresenceRosterOutcome {
 }
 
 pub(crate) struct PeerRosterFault {
-    original: ManuallyDrop<Option<Fault>>,
+    pub original: ManuallyDrop<Option<Fault>>,
 }
 
 impl PeerRosterFault {
-    fn new(original: Option<Fault>) -> Self { Self { original: ManuallyDrop::new(original) } }
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.original.is_none() }
-    pub(crate) fn take(&mut self) -> Option<Fault> { self.original.take() }
-    fn take_original(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Fault>, RetainedCloneProgress), ValueError> {
+    pub fn new(original: Option<Fault>) -> Self { Self { original: ManuallyDrop::new(original) } }
+    pub fn terminal_is_empty(&self) -> bool { self.original.is_none() }
+    pub fn take(&mut self) -> Option<Fault> { self.original.take() }
+    pub fn take_original(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Fault>, RetainedCloneProgress), ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok((None, empty)); }
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "peer fault outcome needs original work admission")); }
@@ -390,22 +394,25 @@ impl Drop for PeerRosterFault {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "original peer fault remains retained until admitted outcome transfer"); }
 }
 
-pub(crate) struct PeerRosterCandidate<P> {
-    pub(crate) seq: u64,
-    pub(crate) generation: u64,
-    pub(crate) cancel: semio_framework_job::CancelToken,
-    pub(crate) own_color: Option<u8>,
-    pub(crate) now_ms: i64,
-    pub(crate) root: std::sync::Arc<PeerPresenceRoot>,
-    pub(crate) typed: store::PresencePeersCommit<P>,
+#[doc(hidden)]
+pub struct PeerRosterCandidate<P> {
+    pub seq: u64,
+    pub generation: u64,
+    pub cancel: semio_framework_job::CancelToken,
+    pub own_color: Option<u8>,
+    pub now_ms: i64,
+    pub root: std::sync::Arc<PeerPresenceRoot>,
+    pub typed: store::PresencePeersCommit<P>,
 }
 
-pub(crate) struct ValidatedPeerRosterCommit {
-    pub(crate) generation: u64,
+#[doc(hidden)]
+pub struct ValidatedPeerRosterCommit {
+    pub generation: u64,
 }
 
+#[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum PeerRosterPublicationStage {
+pub enum PeerRosterPublicationStage {
     DecodeMetadata,
     PruneTyped,
     DecodeTyped,
@@ -425,34 +432,35 @@ enum PeerRosterTurn {
 /// 📦️ Fixed slots retaining each peer identity and its encoded presence.
 type PeerPresencePacks = [Option<(String, Vec<u8>)>; PEER_PRESENCE_SLOTS];
 
-pub(crate) struct PeerRosterPublication<A: ArtifactApp> {
-    pub(crate) seq: u64,
-    pub(crate) generation: u64,
-    own_color: Option<u8>,
-    now_ms: i64,
-    pub(crate) cancel: semio_framework_job::CancelToken,
-    raw: protocol::PresenceCommandCursor,
-    candidate: ManuallyDrop<Option<PeerPresenceRoot>>,
-    retirement: ManuallyDrop<Option<PeerPresenceRootRetirement>>,
-    packs: ManuallyDrop<PeerPresencePacks>,
+#[doc(hidden)]
+pub struct PeerRosterPublication<A: ArtifactApp> {
+    pub seq: u64,
+    pub generation: u64,
+    pub own_color: Option<u8>,
+    pub now_ms: i64,
+    pub cancel: semio_framework_job::CancelToken,
+    pub raw: protocol::PresenceCommandCursor,
+    pub candidate: ManuallyDrop<Option<PeerPresenceRoot>>,
+    pub retirement: ManuallyDrop<Option<PeerPresenceRootRetirement>>,
+    pub packs: ManuallyDrop<PeerPresencePacks>,
     packs_len: usize,
     packs_shell_released: bool,
     pack_close: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pending_commit: ManuallyDrop<Option<store::PresencePeersCommit<A::Presence>>>,
     pending_commit_retirement: ManuallyDrop<Option<store::PresenceStoreRetirement<A::Presence>>>,
     pending_actor: ManuallyDrop<Option<String>>,
-    pending_presence: ManuallyDrop<Option<A::Presence>>,
+    pub pending_presence: ManuallyDrop<Option<A::Presence>>,
     pending_pack: ManuallyDrop<Option<(String, Vec<u8>)>>,
-    typed: ManuallyDrop<Option<store::PresencePeersPublication<A::Presence>>>,
+    pub typed: ManuallyDrop<Option<store::PresencePeersPublication<A::Presence>>>,
     rejected_original: ManuallyDrop<Option<store::PresencePeerAdmissionRejected<A::Presence>>>,
-    rejected: ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    pub(crate) stage: PeerRosterPublicationStage,
-    faulted: bool,
-    pub(crate) fault: PeerRosterFault,
+    pub rejected: ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    pub stage: PeerRosterPublicationStage,
+    pub faulted: bool,
+    pub fault: PeerRosterFault,
 }
 
 impl<A: ArtifactApp> PeerRosterPublication<A> {
-    pub(crate) fn new(admission: PresenceRosterAdmission, now_ms: i64, raw: protocol::PresenceCommandCursor) -> Self {
+    pub fn new(admission: PresenceRosterAdmission, now_ms: i64, raw: protocol::PresenceCommandCursor) -> Self {
         Self {
             seq: admission.seq,
             generation: admission.generation,
@@ -481,17 +489,17 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
     }
 
     /// 🧯️ Retains the first fault and routes every later turn through bounded cleanup.
-    pub(crate) fn fail(&mut self, fault: Fault) -> PluginLifecycleStep {
+    pub fn fail(&mut self, fault: Fault) -> PluginLifecycleStep {
         self.faulted = true;
         assert!(self.fault.terminal_is_empty(), "peer failure preserves its original outcome owner");
         *self.fault.original = Some(fault);
         PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })
     }
 
-    pub(crate) fn is_faulted(&self) -> bool {
+    pub fn is_faulted(&self) -> bool {
         self.faulted
     }
-    pub(crate) fn rejected(admission: PresenceRosterAdmission, raw: FixedCommandPage, fault: Fault) -> Self {
+    pub fn rejected(admission: PresenceRosterAdmission, raw: FixedCommandPage, fault: Fault) -> Self {
         let seq = admission.seq;
         let mut publication = Self::new(admission, 0, protocol::PresenceCommandCursor::retain_rejected(raw, seq));
         publication.fail(fault);
@@ -499,7 +507,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
     }
 
     #[expect(clippy::result_large_err, reason = "Refusal returns the original fixed-capacity input so its caller can retry or retire that exact owner without an extra allocation.")]
-    pub(crate) fn push_page(&mut self, page_index: u32, page: FixedCommandPage) -> Result<(), (Fault, FixedCommandPage)> {
+    pub fn push_page(&mut self, page_index: u32, page: FixedCommandPage) -> Result<(), (Fault, FixedCommandPage)> {
         self.raw.push_page(page_index, page).map_err(|(error, page)| (error.into_fault(), page))
     }
 
@@ -515,7 +523,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
 
     /// 🎟️ Advances exactly one stage of the mounted roster under the caller's unchanged grant; the original decode owner
     /// accumulates every actual receipt of the turn, so the answer reports what the store and the decoder really spent.
-    pub(crate) fn step(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub fn step(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         let empty = RetainedCloneProgress::default();
         if self.faulted { return Ok(PluginLifecycleStep::Blocked { reason: "original peer fault awaits admitted outcome transfer" }); }
         if grant.maximum_items == 0 {
@@ -529,7 +537,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(PluginLifecycleStep::Progress(empty)); }
         let mut admit = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
         let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut admit);
-        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let turn = self.step_stage(presence_store, &mut original);
         let progress = original.progress();
         match turn {
@@ -541,7 +549,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         }
     }
 
-    fn step_stage(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, original: &mut crate::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<PeerRosterTurn, Fault> {
+    fn step_stage(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, original: &mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<PeerRosterTurn, Fault> {
         let refused = |error: ValueError| plugin_sdk_fault(error.to_string());
         match self.stage {
             PeerRosterPublicationStage::DecodeMetadata => {
@@ -656,7 +664,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
 
     /// 🎁️ Hands the finished roster to its atomic publication: the metadata Arc is born here from the already-detached candidate,
     /// the caller books its birth on the capacity axis, and the typed commit was taken by the last granted turn.
-    pub(crate) fn take_candidate(&mut self) -> Result<PeerRosterCandidate<A::Presence>, Fault> {
+    pub fn take_candidate(&mut self) -> Result<PeerRosterCandidate<A::Presence>, Fault> {
         if self.faulted || self.stage != PeerRosterPublicationStage::Ready || !self.raw.terminal_is_empty() || !self.packs_shell_released || self.pending_commit.is_none() {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-not-ready"), "peer roster candidate was requested before every retained stage completed"));
         }
@@ -668,7 +676,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         Ok(PeerRosterCandidate { seq: self.seq, generation: self.generation, cancel: self.cancel.clone(), own_color: self.own_color, now_ms: self.now_ms, root, typed })
     }
 
-    pub(crate) fn retain_rejected_candidate(&mut self, candidate: PeerRosterCandidate<A::Presence>) {
+    pub fn retain_rejected_candidate(&mut self, candidate: PeerRosterCandidate<A::Presence>) {
         assert!(self.terminal_is_empty(), "returned peer candidate must rejoin its exact empty publication owner");
         *self.retirement = Some(PeerPresenceRootRetirement::new(candidate.root));
         *self.pending_commit = Some(candidate.typed);
@@ -676,7 +684,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
     }
 
     /// 📏️ Quotes the exact next [`Self::step`] turn of the current stage.
-    pub(crate) fn step_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn step_demands(&self) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         Ok(match self.stage {
             PeerRosterPublicationStage::DecodeMetadata => {
@@ -702,7 +710,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
     }
 
     /// 📏️ Quotes the exact next [`Self::close_step`] turn, one retained owner at a time in the same order.
-    pub(crate) fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer roster close depth overflow"))?; Ok(demand) };
         if self.terminal_is_empty() { return Ok(Default::default()); }
@@ -723,7 +731,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
     }
 
     /// 🎟️ Releases one retained roster owner under the caller's unchanged grant; a refusal keeps every owner in place.
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         self.close_value_step(grant).map_err(plugin_retirement_fault)
     }
 
@@ -779,9 +787,9 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         Ok(PluginLifecycleStep::Complete(empty))
     }
 
-    pub(crate) fn take_original_fault(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Fault>, RetainedCloneProgress), ValueError> { self.fault.take_original(grant) }
+    pub fn take_original_fault(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Fault>, RetainedCloneProgress), ValueError> { self.fault.take_original(grant) }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.pending_commit.is_none() && self.pending_commit_retirement.is_none() && self.pending_actor.is_none() && self.pending_presence.is_none() && self.pending_pack.is_none() && self.raw.terminal_is_empty() && self.packs_shell_released && self.pack_close.is_none() && self.candidate.is_none() && self.retirement.is_none() && self.typed.is_none() && self.rejected.is_none()
     }
 }

@@ -1,10 +1,10 @@
-import {artifactSqliteValueControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {artifactSqliteValueControl} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 /** 🌍️ Borrowed RFC7946 semantic admission preserves the shared JSON syntax snapshot. */
 import { jsonNumberMeaning } from "../../../../🧱️base/🧬️schema/📸️snapshot/🔢️number/🟦️.ts";
 import type { JsonSnapshot, JsonValue } from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import { artifactSqliteCheckpoint, artifactSqliteInteger, artifactSqliteText, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
+import { artifactSqliteCheckpoint, artifactSqliteInteger, artifactSqliteText, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 export interface GeoJsonSqliteDiagnostic { readonly code: string; readonly severity: "error" | "warning"; readonly message: string }
 class GeoJsonError extends Error { constructor(path: string, message: string) { super(`GeoJSON ${path || "/"}: ${message}`); } }
 function fail(path: string, message: string): never { throw new GeoJsonError(path, message); }

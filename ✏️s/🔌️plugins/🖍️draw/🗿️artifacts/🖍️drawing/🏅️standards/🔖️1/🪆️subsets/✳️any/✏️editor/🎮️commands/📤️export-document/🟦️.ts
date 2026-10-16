@@ -1,12 +1,12 @@
 /** 📤️ Exports the authoritative immutable document scene through yielded raster and PNG owners. */
 import type {DrawingArtifact} from "../../../🧬️schema/🟦️.ts";
 import {DocumentRasterJob,type DocumentSceneLimits,type DocumentAlgorithmLimits,type DocumentRasterProgress} from "../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
-import {PngEncodeJob,type PngEncodeProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
-import {binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
-import {loadBuiltinUnicodeSource} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts";
-import {loadBuiltinFontSources,FONT_CATALOG_DEFAULT_FAMILY,type FontByteSource,type FontByteProvider} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";
+import {PngEncodeJob,type PngEncodeProgress} from "@semio-tech/framework/pixels/png/encode";
+import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
+import {binary64Value} from "@semio-tech/framework/value/ieee754";
+import type {PixelImage} from "@semio-tech/framework/pixels/editing";
+import {loadBuiltinUnicodeSource} from "@semio-tech/framework/2d/text/font/shape/unicode";
+import {loadBuiltinFontSources,FONT_CATALOG_DEFAULT_FAMILY,type FontByteSource,type FontByteProvider} from "@semio-tech/framework/2d/text/font/catalog";
 export type DrawingPngOptions={width?:number|null;height?:number|null;transparent?:boolean|null};
 export type DrawingPngLimits={maxPixels:number;maxSourceBytes:number;maxWork:number;maxEncodedBytes:number};
 export const DRAWING_PNG_LIMITS:DrawingPngLimits={maxPixels:67108864,maxSourceBytes:268439552,maxWork:1e9,maxEncodedBytes:67108864};

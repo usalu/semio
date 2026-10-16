@@ -17,50 +17,13 @@ import {
   UI_INSPECTOR_MIXED_PLACEHOLDER,
 } from "../🛂️manifest/🟦️.ts";
 import type { WindowLayout, WindowLayoutWindowNode } from "../🛂️manifest/🗺️window-layout/🟦️.ts";
+import type { DockSkeleton, PersistedAnchor } from "../🖱️ui/🔨️modules/🐳️dock-skeleton/🟦️.ts";
+import type { StoragePort } from "../🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts";
 
 //#region 🆔️ElementId
 /** 🆔️ Element id of the app shell's navbar/footer — singular, shell-owned chrome. */
 export const UI_NAVBAR_ELEMENT_ID = "ui.navbar";
 export const UI_FOOTER_ELEMENT_ID = "ui.footer";
-
-/** 🆔️ Normalizes arbitrary input into a single camelCase element-id segment — byte-for-byte mirror of
- * `element_id_segment` in `framework/core/rs/lib.rs` (core/js stays DOM-free, so the DOM-facing
- * `elementIdSelector`/alias helpers live in `framework/ui/js/react` instead). */
-function elementIdSegment(raw: string): string {
-  let segment = "";
-  let capitalizeNext = false;
-  for (const ch of raw) {
-    if (ch === "-" || ch === "_" || ch === " " || ch === ".") {
-      capitalizeNext = true;
-      continue;
-    }
-    if (!/[a-zA-Z0-9]/.test(ch)) continue;
-    if (segment.length === 0) {
-      segment += ch.toLowerCase();
-    } else if (capitalizeNext) {
-      segment += ch.toUpperCase();
-      capitalizeNext = false;
-    } else {
-      segment += ch;
-    }
-  }
-  return segment;
-}
-
-/** 🆔️ Element id of a window kind's body — `framework.window.{camelCased kind id}`. */
-export function windowElementId(kindId: string): string {
-  return `framework.window.${elementIdSegment(kindId)}`;
-}
-
-/** 🆔️ Element id of a panel tab's uncollapsed panel body; `tabId` is already dotted, appended verbatim. */
-export function panelTabElementId(tabId: string): string {
-  return `framework.panelTab.${tabId}`;
-}
-
-/** 🆔️ Alias id of the first draggable tree row inside a panel tab, stamped via `data-element-alias`. */
-export function panelTabFirstDraggableElementId(tabId: string): string {
-  return `framework.panelTab.${tabId}.firstDraggable`;
-}
 //#endregion 🆔️ElementId
 
 //#region 🧭️UiPresence
@@ -230,12 +193,6 @@ export abstract class Store<TSnapshot> {
   }
 }
 
-export interface StoragePort {
-  get(key: string): string | null;
-  set(key: string, value: string): void;
-  remove(key: string): void;
-}
-
 /** 🎚️ The single persisted local-only OS shell configuration document. The three device-local shell
  * projections share this schema and storage key, so persistence has one authority rather than independent key-value
  * stores that can drift across shell instances. Saved named layouts are not among them: they are the user's
@@ -305,23 +262,7 @@ export class OsShellConfig extends Store<OsShellConfigSnapshot> {
   }
 }
 
-/** 🧭️ The eight anchor ids, mirroring `Anchor` in `framework/ui/js/react/index.tsx` (kept inline/private here to stay dependency-free of that package) — shared by every persisted anchor-keyed shape below so they can't drift apart from one another. */
-type PersistedAnchor = "top-left" | "top-middle" | "top-right" | "right-middle" | "bottom-right" | "bottom-middle" | "bottom-left" | "left-middle";
-
 //#region DockLayoutStore
-/** 🐳️ One tab (leaf or branch) in a persisted dock panel-arrangement tree; leaves carry `trees`, branches carry `children`. */
-export interface DockTabSkeleton {
-  id: string;
-  children?: readonly DockTabSkeleton[];
-  trees?: readonly string[];
-}
-
-/** 🐳️ The full persisted dock arrangement, one tab tree per anchor — anchor ids mirror `Anchor` in `framework/ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
-export interface DockSkeleton {
-  version: 3;
-  anchors: Record<PersistedAnchor, readonly DockTabSkeleton[]>;
-}
-
 function validDockSkeleton(value: unknown): value is DockSkeleton {
   return Boolean(value) && typeof value === "object" && (value as DockSkeleton).version === 3 && Boolean((value as DockSkeleton).anchors) && typeof (value as DockSkeleton).anchors === "object";
 }
@@ -531,61 +472,6 @@ export class WindowPaneStateStore extends Store<WindowPaneUiState | null> {
   }
 }
 //#endregion WindowPaneStateStore
-
-export function createBrowserStoragePort(): StoragePort {
-  return {
-    get: (key) => {
-      try {
-        return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
-      } catch {
-        return null;
-      }
-    },
-    set: (key, value) => {
-      try {
-        if (typeof localStorage !== "undefined") localStorage.setItem(key, value);
-      } catch {
-        /* ignore */
-      }
-    },
-    remove: (key) => {
-      try {
-        if (typeof localStorage !== "undefined") localStorage.removeItem(key);
-      } catch {
-        /* ignore */
-      }
-    },
-  };
-}
-
-/** 🧠️ In-memory {@link StoragePort} — used by ephemeral branded shells so nothing survives a window refresh. */
-export function createMemoryStoragePort(): StoragePort {
-  const map = new Map<string, string>();
-  return {
-    get: (key) => map.get(key) ?? null,
-    set: (key, value) => {
-      map.set(key, value);
-    },
-    remove: (key) => {
-      map.delete(key);
-    },
-  };
-}
-
-
-
-/** 🐚️ Namespaces a {@link StoragePort} under `semio.shell.<namespace>.` so several {@link FrameworkOsShell}
- * instances sharing one browser storage origin (e.g. several demonstrator panes) don't read/write each
- * other's `semio.os.dock`/`ui.chrome.*` keys. Not needed for a single page-owning shell — that shell's
- * default (unprefixed) storage is the intended shared surface. */
-export function createScopedStoragePort(base: StoragePort, namespace: string): StoragePort {
-  const prefix = `semio.shell.${namespace}.`;
-  return {
-    get: (key) => base.get(`${prefix}${key}`),
-    set: (key, value) => base.set(`${prefix}${key}`, value),
-    remove: (key) => base.remove(`${prefix}${key}`),
-  };
-}
 
 export function uiInspectorAllEqual<T>(values: readonly T[]): boolean {
   if (values.length <= 1) return true;

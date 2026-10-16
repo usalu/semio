@@ -1,4 +1,9 @@
-import { fetchPackageDescriptor, resolvePluginLoadOrder, type PluginCatalog, type PluginCatalogTarget, type PluginDependency, type PluginPackageDescriptor, type PlaygroundBoot, type PackageReceiptSource } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { fetchPackageDescriptor, type PluginPackageDescriptor } from "../../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
+import { resolvePluginLoadOrder } from "../../../../../../../../🔨️modules/🎠️kernel/🕸️plugin-graph/🟦️.ts";
+import { type PluginCatalog, type PluginCatalogTarget } from "../../../../../../../../🔨️modules/🎠️kernel/📚️plugin-catalog/🟦️.ts";
+import { type PluginDependency } from "../../../../../../../../🔨️modules/🎠️kernel/🗂️plugin-registry/🟦️.ts";
+import { type PlaygroundBoot } from "../../../../../../../../🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts";
+import { type PackageReceiptSource } from "../../../../../../../../🔨️modules/🎠️kernel/📇️descriptor/📦️package/🟦️.ts";
 import schema from "../../../🧬️schema/🧩️plugin-modules/🔣️.json";
 
 export { admitWgpuPluginModules, type WgpuPluginModule } from "./🛂️admission/🟦️.ts";

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import ts from "typescript";
-import { inspectRustCompileReferences } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences } from "@semio-tech/framework/compiler/syntax/rust";
 
 /** 🔎️ Checks closed source cases independently of the native syntax parser. */
 export function testGeneration3dIoAuthorityFixture(): number {

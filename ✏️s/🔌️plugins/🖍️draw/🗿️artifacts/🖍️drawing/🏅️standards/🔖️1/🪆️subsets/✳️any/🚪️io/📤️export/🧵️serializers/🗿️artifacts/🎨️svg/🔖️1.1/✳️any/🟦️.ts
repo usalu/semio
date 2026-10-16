@@ -1,7 +1,7 @@
 import {drawingImageDataUri} from "../../../../../../🖼️image/🟦️.ts";
 import type {DrawingImageAsset} from "../../../../../../../🧬️schema/🟦️.ts";
 /** 🎨️ SVG scene serializer twin preserving paint, text and affine geometry. */
-import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathSegment, type FillStyle, type StrokeStyle } from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts";
+import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathSegment, type FillStyle, type StrokeStyle } from "@semio-tech/framework/2d";
 
 import {PreparedFill} from "../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🟦️.ts";
 

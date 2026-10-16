@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { WORKSPACE_ROOT, toolJobRustBlock } from "../../../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { toolJobRustBlock } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 
 /** 📏️ One Rust statement sequence as a whitespace-tolerant pattern: `rustfmt` freely spreads a
  * `match` arm or a `;`-separated pair across lines, so anchoring these linkage clauses on one exact
@@ -79,14 +80,14 @@ test("original graph intent uses indexed immutable fields without eager iterator
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent");
  const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  for(const row of rows.cases){const value=row;const output={widgetId:value.widgetId,value:value.value,...(value.surfaceId===undefined?{}:{surfaceId:value.surfaceId})};expect(JSON.parse(JSON.stringify(output))).toEqual(value);expect([...Buffer.from(JSON.stringify(output))]).toEqual([...new TextEncoder().encode(JSON.stringify(value))]);}
- const source=readFileSync(join(base,"🦀️.rs"),"utf8");const section=source.split("//#region 🔏️CanonicalIntent")[1].split("//#endregion 🔏️CanonicalIntent")[0];
+ const source=readFileSync(join(base,"🦀️.rs"),"utf8");const [,region]=source.split("//#region 🔏️CanonicalIntent");if(region===undefined)throw Error("Actual 🔏️CanonicalIntent region required");const [section]=region.split("//#endregion 🔏️CanonicalIntent");if(section===undefined)throw Error("Actual 🔏️CanonicalIntent source required");
  expect(section.includes("fn canonical_json_node")).toBe(true);expect(section.includes("fn canonical_json_key")).toBe(true);expect(section.includes("Object::new")).toBe(false);expect(section.includes("canonical_json_borrowed_root")).toBe(false);
 });
 
 test("original Edit metadata uses its exact indexed domain and preserves canonical JSON order",()=>{
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");const fixture=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔏️canonical-edit-sealer.json"),"utf8"));const expected=JSON.parse(fixture.expectedJson);
  expect(JSON.parse(JSON.stringify(expected))).toEqual(expected);expect([...Buffer.from(fixture.expectedJson)]).toEqual([...new TextEncoder().encode(fixture.expectedJson)]);expect(expected.sequenceNumber).toBeUndefined();expect(expected.forwards).toEqual(fixture.edit.forwards);expect(expected.inverse).toEqual(fixture.edit.inverse);
- const source=readFileSync(join(base,"🦀️.rs"),"utf8");const section=source.split("//#region 🧬️TypedCanonicalSource")[1].split("//#endregion 🧬️TypedCanonicalSource")[0];
+ const source=readFileSync(join(base,"🦀️.rs"),"utf8");const [,region]=source.split("//#region 🧬️TypedCanonicalSource");if(region===undefined)throw Error("Actual 🧬️TypedCanonicalSource region required");const [section]=region.split("//#endregion 🧬️TypedCanonicalSource");if(section===undefined)throw Error("Actual 🧬️TypedCanonicalSource source required");
  expect(section.includes("fn canonical_json_node")).toBe(true);expect(section.includes("fn canonical_json_key")).toBe(true);expect(section.includes("fn borrowed_value")).toBe(false);expect(section.includes("ArtifactCanonicalJsonObject::new")).toBe(false);
 });
 test("canonical preparation refusal preserves its original physical authority",()=>{

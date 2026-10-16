@@ -3,9 +3,9 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { EventId, GuardId, NodeId, ROOT, init, macrostep, NullInspector, type Command, type GuardFn, type Machine, type MachineDefinition, type MachineSpec, type NodeDef, type Snapshot, type StatechartEvent, type TransitionDef } from "@semio-tech/machine";
-import type { Vec3 } from "@semio-tech/framework-3d-js";
-import { emptyMeshTransfer, solidRef } from "@semio-tech/framework-3d-js";
+import { EventId, GuardId, NodeId, ROOT, init, macrostep, NullInspector, type Command, type GuardFn, type Machine, type MachineDefinition, type MachineSpec, type NodeDef, type Snapshot, type StatechartEvent, type TransitionDef } from "@semio-tech/framework/machine";
+import type { Vec3 } from "@semio-tech/framework/3d";
+import { emptyMeshTransfer, solidRef } from "@semio-tech/framework/3d";
 import {
   Model,
   defaultModelDefinitionId,

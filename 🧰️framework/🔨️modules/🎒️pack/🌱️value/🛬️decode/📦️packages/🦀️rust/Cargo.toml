@@ -28,6 +28,7 @@ semio-framework-pack-format-catalog = { path = "../../../../📐️format/🗂�
 semio-framework-pack-format-retained = { path = "../../../../📐️format/🎮️retained/📦️packages/🦀️rust" }
 semio-framework-pack-record-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+semio-framework-replication-wire-core = { path = "../../../../../📡️replication/🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

@@ -8,6 +8,7 @@ import { applyPatch } from "fast-json-patch";
 import { applyGeneration2dMainWindowConfigMutation, type Generation2dMainWindowConfig } from "../../🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🟦️.ts";
 import { applyGeneration2dEditPreviewWindowConfigMutation } from "../../🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts";
 import { applyGeneration2dGeneratePreviewWindowConfigMutation } from "../../🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts";
+import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 type Kind = "generation2d-main" | "generation2d-preview" | "generation2d-generate-preview";
 type Config = Generation2dMainWindowConfig;
@@ -28,7 +29,7 @@ const workspace = process.cwd();
 const editor = join(workspace, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
 const fixture = readJson(join(editor, "🧪️tests/🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")) as Fixture;
-const viewportSchema = readJson(join(workspace, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json"));
+const viewportSchema = readJson(frameworkSourcePath("🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json"));
 const ownerSchemas = new Map<Kind, any>([
   ["generation2d-main", readJson(join(editor, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🔣️.json"))],
   ["generation2d-preview", readJson(join(editor, "🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🔣️.json"))],

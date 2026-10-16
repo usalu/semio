@@ -1,10 +1,10 @@
-import {base64StandardEncodeControlled} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
-import {PngEncodeJob} from "../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts";
+import {base64StandardEncodeControlled} from "@semio-tech/framework/io/base64";
+import {PngEncodeJob} from "@semio-tech/framework/pixels/png/encode";
 /** 🖼️ Physical encoded image admission publishes ordered semantic RGBA sample tuples. */
-import {ImageDecodeJob,type ImageDecodeInput,type ImageDecodeProgress} from "../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🟦️.ts";
+import {ImageDecodeJob,type ImageDecodeInput,type ImageDecodeProgress} from "@semio-tech/framework/pixels/image/decode";
 import type {DrawingImageAsset} from "../../🧬️schema/🟦️.ts";
 export interface DrawingImageAdmissionProgress{decoding:ImageDecodeProgress|undefined;samples:number;totalSamples:number;work:number;done:boolean}
-import type {RetainedCloneGrant,RetainedCloneProgress} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
+import type {RetainedCloneGrant,RetainedCloneProgress} from "@semio-tech/framework/value/retained-clone/contract";
 export class DrawingImageAdmissionJob{
  private readonly original:string;private decoder:ImageDecodeJob;private decoding:ImageDecodeProgress|undefined;private image:ReturnType<ImageDecodeJob["result"]>|undefined;private asset:DrawingImageAsset|undefined;private samples=0;private work=0;private phase=0;private cancelled=false;private failure:unknown;
  constructor(input:ImageDecodeInput){this.original=input.data;this.decoder=new ImageDecodeJob(input);}

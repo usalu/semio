@@ -84,7 +84,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type ParityNode = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityNode;
   type DeployedRegistryEntryV1 = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").DeployedRegistryEntryV1;
   type PluginBuildTargetV1 = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").PluginBuildTargetV1;
-  type PluginSourceEvent = import("../../../../../../🔨️modules/🎠️kernel/🟦️.ts").PluginSourceEvent;
+  type PluginSourceEvent = import("../../../../../../🔨️modules/🎠️kernel/🔌️plugin-source/🟦️.ts").PluginSourceEvent;
   type SpawnDaemonHandle = import("../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts").SpawnDaemonHandle;
 
   const { describe, expect, it, beforeEach, afterEach } = vitest;
@@ -1280,7 +1280,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       for (const row of fixture.artifactPaths) expect(pluginWasmArtifactPath(repoRoot, row.packageName, row.profile, "/target")).toBe(join("/target", row.expectedRelativePath));
       const manifest = toml.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
       expect(manifest.profile).toBeUndefined();
-      const {renderCargoProfileConfigurationV1}=await import("../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts");
+      const {renderCargoProfileConfigurationV1}=await import("../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts");
       for(const mode of ["prototype","release"] as const){const rendered=renderCargoProfileConfigurationV1({version:1,mode,target:"wasm32-wasip2",producer:"wasm-component",operation:"build"},"Cargo.toml","repository"),parsed=toml.parse(rendered.selectors.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(parsed.profile[mode]!["opt-level"]).toBe(mode==="release"?"s":1);expect(rendered.plan.profile).toBe(mode);}
     });
   });

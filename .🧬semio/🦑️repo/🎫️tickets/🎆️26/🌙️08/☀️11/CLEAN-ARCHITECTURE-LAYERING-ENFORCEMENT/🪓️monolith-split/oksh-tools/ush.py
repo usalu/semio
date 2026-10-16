@@ -21,6 +21,18 @@ extra_touched = []
 union.touched = lambda: sorted(set(_orig_touched() + [os.path.relpath(p, R) for p in OVERLAY] + extra_touched))
 
 def git_touched():
+    orig = set(json.load(open(O.SCR + '/orig-paths.json')))
+    files = []
+    for top in (O.ROOT + '/' + union.M_REL + '/🏪️store', O.ROOT + '/' + union.M_REL + '/🚪️io'):
+        for dp, dn, fn in os.walk(top):
+            for f in fn:
+                if f.endswith(('.rs', '.json', '.sql', '.txt', '.md', '.toml')):
+                    rel = os.path.relpath(os.path.join(dp, f), O.ROOT)
+                    op = os.path.join(O.SCR, 'orig', rel)
+                    if rel not in orig or not os.path.exists(op) or open(op, 'rb').read() != open(os.path.join(O.ROOT, rel), 'rb').read(): files.append(rel)
+    return files
+
+def git_touched_status():
     import subprocess
     out = subprocess.run(['git', '-c', 'core.fsmonitor=false', '-c', 'core.quotepath=false', 'status', '--short', '--untracked-files=all', '--', O.K_REL, union.M_REL], capture_output=True, text=True, cwd=R).stdout
     files = []

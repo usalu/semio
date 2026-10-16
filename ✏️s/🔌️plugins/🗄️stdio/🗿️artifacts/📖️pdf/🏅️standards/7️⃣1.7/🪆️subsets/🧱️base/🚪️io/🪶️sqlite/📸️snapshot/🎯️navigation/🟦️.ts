@@ -4,8 +4,8 @@ import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type PdfCell,ty
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfDestination,readPdfDestination,writePdfFileSpecification,readPdfFileSpecification } from "./📍️destination/🟦️.ts";
 import { pdfResourceNumberColumns } from "../🖼️resource/🔢️number/🟦️.ts";
-import { artifactSqliteInteger,artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { Ieee754Column } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { Ieee754Column } from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 export { writePdfDestination,readPdfDestination,writePdfFileSpecification,readPdfFileSpecification };
 
 /** 🔢️ Exact native IEEE column contracts for navigation and bookmark entities. */

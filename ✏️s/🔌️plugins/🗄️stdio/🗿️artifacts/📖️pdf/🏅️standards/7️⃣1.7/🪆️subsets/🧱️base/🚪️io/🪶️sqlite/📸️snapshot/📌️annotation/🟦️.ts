@@ -5,7 +5,7 @@ import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfAnnotationKind,readPdfAnnotationKind,pdfWideCells,readPdfWide } from "./🏷️kind/🟦️.ts";
 import { writePdfAppearance,readPdfAppearance,writePdfBorder,readPdfBorder } from "./🎭️appearance/🟦️.ts";
 import { writePdfDate,readPdfDate } from "../📇️metadata/📆️date/🟦️.ts";
-import { artifactSqliteInteger } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 /** 📝️ Project every markup field with full unsigned 64-bit index coordinates. */
 export async function writePdfMarkup(out:PdfProjection,value:PdfMarkupAnnotation):Promise<bigint>{return out.insert("pdf_annotation_markup",[value.title??null,...pdfWideCells(value.popup),value.opacity??null,value.richContents??null,value.creationDate==null?null:await writePdfDate(out,value.creationDate),...pdfWideCells(value.inReplyTo),value.subject??null,value.replyType??null,value.intent??null]);}

@@ -1,8 +1,8 @@
 /** 📝️ Explicit CommonMark domain and ownership tables. */
 import type {MdSnapshot,MdBlock,MdInline} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 /** 🏛️ The same individually authored CommonMark SQL declaration as the native owner. */
 export const MD_SQLITE_SCHEMA=String.raw`CREATE TABLE md_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE md_block (id INTEGER PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('heading','paragraph','list','codeBlock','blockQuote','thematicBreak','htmlBlock')));

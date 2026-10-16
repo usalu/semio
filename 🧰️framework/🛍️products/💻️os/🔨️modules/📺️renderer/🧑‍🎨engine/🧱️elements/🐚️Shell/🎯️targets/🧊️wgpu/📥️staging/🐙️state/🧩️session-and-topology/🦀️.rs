@@ -24,13 +24,13 @@ impl ShellState {
     /// every hop is one `fetch` the page makes on this shell's behalf — so the transport is a unit
     /// value and only the cancellation root has to be minted.
     pub fn new(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String, locale: Locale, terminology: Terminology) -> Self {
-        crate::interpreter::install_ui_engine_locale(locale);
+        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(locale);
         let host_capability = resolve_plugin_host_config(&plugin_filter);
         let space_mode = host_capability.is_some();
         #[cfg(not(target_arch = "wasm32"))]
         let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = {
             const DIRECTORY_COMPUTE_CAPACITY: u32 = 4;
-            let pool = crate::renderer_worker_pool();
+            let pool = semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
             let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(ScopeOwner::Service("directory_client"), None);
             let compute = std::sync::Arc::new(ComputePool::with_pool(DIRECTORY_COMPUTE_CAPACITY, pool));
@@ -41,7 +41,7 @@ impl ShellState {
         let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = (shell_directory_transport(), CancelToken::root_now());
         #[cfg(not(target_arch = "wasm32"))]
         let document_host = {
-            let host = ArtifactHost::new(std::sync::Arc::new(crate::renderer_worker_pool()));
+            let host = ArtifactHost::new(std::sync::Arc::new(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool()));
             if let Some(credential) = claimed_local_hub_credential("native") {
                 host.set_local_hub_credential(credential);
             }
@@ -49,8 +49,8 @@ impl ShellState {
         };
         #[cfg(target_arch = "wasm32")]
         let document_host = {
-            let host = ArtifactHost::new(std::sync::Arc::new(crate::renderer_worker_pool()));
-            host.set_document_socket_dialer(std::sync::Arc::new(crate::socket_door::browser::DoorDocumentSocketDialer));
+            let host = ArtifactHost::new(std::sync::Arc::new(semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool()));
+            host.set_document_socket_dialer(std::sync::Arc::new(semio_framework_os_renderer_wgpu_doors::socket_door::browser::DoorDocumentSocketDialer));
             host
         };
         let mut state = Self {
@@ -124,7 +124,7 @@ impl ShellState {
                 local_folder_bindings: None,
                 local_folder_reattach_tried: None,
                 local_folder_direct_reattach: local_folders::LOCAL_FOLDER_DIRECT_REATTACH,
-                #[cfg(any(target_arch = "wasm32", test))]
+                #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
                 host_route_folder: None,
             },
             prefs: PrefsState {
@@ -156,7 +156,7 @@ impl ShellState {
                 #[cfg(not(target_arch = "wasm32"))]
                 identity_bootstrap_task: None,
                 directory_client: None,
-                agent_bridge: crate::agent_bridge_door::AgentBridgeTransport::new(),
+                agent_bridge: semio_framework_os_renderer_wgpu_agent_elements::agent_bridge_door::AgentBridgeTransport::new(),
                 agent_bridge_offer_scope: AgentBridgeOfferScopeOwnerV1::default(),
                 #[cfg(not(target_arch = "wasm32"))]
                 inference_port: None,
@@ -167,7 +167,7 @@ impl ShellState {
                 directory_transport,
                 directory_cancel,
                 directory_commands: ShellDirectoryCommandQueueV1::default(),
-                hub_workspace: crate::hub_connection::HubWorkspaceState::new(crate::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), semio_framework_ui_locale::Locale::En)),
+                hub_workspace: semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::HubWorkspaceState::new(semio_framework_os_renderer_wgpu_hub_contracts::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), semio_framework_ui_locale::Locale::En)),
                 hub_sign_in_task: None,
                 hub_spaces_task: None,
                 hub_workspace_open: false,
@@ -205,7 +205,7 @@ impl ShellState {
                 panel_documents: HashMap::new(),
                 spawned_ui: None,
                 spawned_session: None,
-                app_document_identities: crate::media_slots::DocumentIdentityRegistry::default(),
+                app_document_identities: semio_framework_os_renderer_wgpu_media_slots::DocumentIdentityRegistry::default(),
                 closing_documents: ShellDocumentRetirementRegistry::default(),
                 window_actions_documents: HashMap::new(),
                 window_search_documents: HashMap::new(),

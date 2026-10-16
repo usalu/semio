@@ -31,7 +31,7 @@ import { DEFAULT_SHARD_BUDGET, getShardClient } from "../🛰️runtime-singleto
  * `actorId` ("shard worker: actor … already has a turn in flight", `🟦️.ts`'s
  * `inFlightTurnActors` guard: "two turn requests for the SAME actorId overlapping is a caller bug —
  * the scheduler's job to prevent, not this worker's"). The OLD adapter's `withSerializedPluginWasmHandle`
- * (deleted alongside `PluginWorkerClient`, `🎠️kernel/🟦️.ts`'s own doc comment names it)
+ * (deleted alongside `PluginWorkerClient`, `🎠️kernel`'s own doc comment names it)
  * queued concurrent per-call requests transparently — this is that same guarantee's replacement.
  *
  * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): the ORIGINAL implementation

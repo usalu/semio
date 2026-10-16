@@ -6,5 +6,9 @@
   "waitPublished": true,
   "waitCompleted": true,
   "waitEntered": false,
-  "safetyExpired": false
+  "safetyExpired": false,
+  "parentArguments": [
+    "original",
+    "productsPhase"
+  ]
 }

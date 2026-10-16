@@ -17,7 +17,7 @@ import {
   faultDisplayMessage
 } from "@semio-tech/framework-os";
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals } from "@semio-tech/framework-replication";
-import { type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { type PluginWasmHandle as KernelPluginWasmHandle } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
 import { type PluginManifest, type PluginOperationCompletion, type PluginWasmHandle } from "../🧷️handle-contract/🟦️.ts";
 import { wireEffectToFriendly } from "../🪟️retained-ui-patch/🟦️.ts";
 import { TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN } from "../📬️typed-result/🟦️.ts";

@@ -3,7 +3,7 @@ import {join} from "node:path";
 
 /** 🧮️ Checks closed wire grammar and copied UTF-8 independently of native allocation widths. */
 export async function proveWireValueMaterializationFixture(repoRoot:string):Promise<void>{
-    const assert=(await import("node:assert/strict")).default,equal=(await import("fast-deep-equal")).default;
+    const assert:typeof import("node:assert/strict")=(await import("node:assert/strict")).default;const equal=(await import("fast-deep-equal")).default;
     const {Database}=await import("bun:sqlite"),root=join(repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value");
     const fixture=JSON.parse(readFileSync(join(root,"🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json"),"utf8"));
     assert.deepEqual(fixture.bridge,{fieldId:1,rootTag:"11",exact:true});
@@ -13,11 +13,11 @@ export async function proveWireValueMaterializationFixture(repoRoot:string):Prom
         const grammar=(hex:string,limits:{maxFileLen:number;maxSegmentLen:number;maxSymbols:number;maxDepth:number;maxItems:number})=>{
             const bytes=Buffer.from(hex,"hex"),symbols:string[]=[];let offset=0,owned=0n,sqlOwned=0n;
             const refuse=(outcome:"limit"|"malformed"|"truncated"):never=>{throw outcome==="truncated"?{outcome,offset}:{outcome};};
-            const copied=(text:string)=>{owned+=BigInt(Buffer.byteLength(text,"utf8"));sqlOwned+=BigInt(utf8.get(text)!.bytes);return text;};
-            const byte=()=>{if(offset>=bytes.length)return refuse("truncated");return bytes[offset++];};
+            const copied=(text:string)=>{owned+=BigInt(Buffer.byteLength(text,"utf8"));const row=utf8.get(text);if(!row)throw Error("SQLite UTF-8 observation required");sqlOwned+=BigInt(row.bytes);return text;};
+            const byte=()=>{const next=bytes[offset];if(next===undefined)return refuse("truncated");offset++;return next;};
             const integer=()=>{let value=0n;for(let index=0;index<10;index++){const next=byte();if(index===9&&(next&0xfe)!==0)return refuse("malformed");value|=BigInt(next&0x7f)<<BigInt(index*7);if((next&0x80)===0)return value;}return refuse("malformed");};
             const text=()=>{const length=integer();if(length>BigInt(limits.maxSegmentLen))return refuse("limit");if(length>BigInt(bytes.length-offset))return refuse("truncated");const start=offset;offset+=Number(length);let value:string;try{value=new TextDecoder("utf-8",{fatal:true}).decode(bytes.subarray(start,offset));}catch{return refuse("malformed");}return copied(value);};
-            const string=(tag:number):string=>{if(tag===7)return text();if(tag!==6)return refuse("malformed");const index=integer();if(index>=BigInt(symbols.length))return refuse("malformed");return copied(symbols[Number(index)]);};
+            const string=(tag:number):string=>{if(tag===7)return text();if(tag!==6)return refuse("malformed");const index=integer();if(index>=BigInt(symbols.length))return refuse("malformed");const found=symbols[Number(index)];if(found===undefined)return refuse("malformed");return copied(found);};
             const value=(depth:number):unknown=>{
                 if(depth>limits.maxDepth)return refuse("limit");const tag=byte();if(tag===0x12)return null;if(tag===1||tag===2)return tag===2;if(tag===3){const raw=integer();return Number((raw>>1n)^-(raw&1n));}if(tag===4)return Number(integer());
                 if(tag===5){if(bytes.length-offset<8)return refuse("truncated");const number=new DataView(bytes.buffer,bytes.byteOffset+offset,8).getFloat64(0,true);offset+=8;return number;}

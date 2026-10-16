@@ -96,13 +96,13 @@ test("Deflate long literal schema admits interior cancellation in both relationa
  }
 });
 
-import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {NativeDecodeControl as BudgetDecodeControl} from "@semio-tech/framework/value/decode";
+import {SqliteAllocationControl as BudgetAllocationControl} from "@semio-tech/framework/io/sqlite-snapshot";
 
 
 import completeSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
-import{independentSqliteExtent as completeIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import{independentSqliteExtent as completeIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("DEFLATE complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(completeSemanticContract["schemaBytes"]).toEqual(690);expect(completeSemanticContract["tableWidths"]).toEqual({"deflate_document":6,"deflate_payload_byte":4});expect(completeSemanticContract["cases"]).toEqual([{"id":"full","rows":1025,"valueBytes":32813},{"id":"metadataRetainingEmpty","rows":1,"valueBytes":45}]);
  for(const item of completeSemanticContract.cases){const source=parseDeflateSnapshot({schema:"stdio.deflate",compressionMethod:8,windowBits:7,compressionLevelHint:"maximum",payload:Array.from({length:controlFixture.workItems},(_,index)=>controlFixture.bytePattern[index%controlFixture.bytePattern.length]!)});if(item.id==="metadataRetainingEmpty"){source.payload=[];}const database=await deflateSnapshotToSqliteDatabase(source),bytes=await exportSqliteDatabase(database);expect(completeIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:completeSemanticContract.schemaBytes,tableWidths:completeSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:completeSemanticContract.schemaBytes,maxTables:2,maxColumns:6};expect(await deflateSnapshotToSqliteDatabase(source,limits)).toEqual(database);expect(await deflateSnapshotFromSqliteDatabase(await importSqliteDatabase(bytes),limits)).toEqual(source);

@@ -8,7 +8,7 @@ use super::*;
 impl<'ctx> OverlaysViewCtx<'ctx> {
     /// 🔐️ Paints the `/hub` workspace as the centered overlay React mounts outside `defaultDock`.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's paint context is forwarded unchanged")]
-    pub(crate) fn render_hub_workspace_step(
+    pub fn render_hub_workspace_step(
         &mut self,
         cursor: &mut ShellChromeChildCursor,
         overlay: &mut DrawList,
@@ -25,7 +25,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         }
-        let surface = crate::hub_connection::FRAMEWORK_HUB_PANEL_ID;
+        let surface = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID;
         match cursor.phase {
             0 => {
                 overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
@@ -57,13 +57,13 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 };
                 let content = Rect::new(rect.x + theme.padding_standard, rect.y + theme.padding_standard, (rect.w - theme.padding_standard * 2.0).max(1.0), (rect.h - theme.padding_standard * 2.0).max(1.0));
                 let controller = self.docs.document_controller_id(&self.plugins);
-                crate::interpreter::set_ui_document_flow(surface, ui_contract::UiFlow::DEFAULT);
+                semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(surface, ui_contract::UiFlow::DEFAULT);
                 let complete = {
                     let scroll_offsets = &mut self.input.scroll_offsets;
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
-                    let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface };
+                    let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface };
                     let viewport_height_for_widgets = overlay.screen_height();
                     let mut ctx = framework_widget_context(overlay, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
@@ -93,13 +93,13 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
 
     /// 🛂️ Paints the Space Administration sheet — packet W15e, the chrome half of the lane W1e made
     /// transport-complete on both targets and nothing ever rendered.
-    pub(crate) fn render_space_administration_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
-        use crate::space_administration::SpaceAdministrationPaintOp as Op;
+    pub fn render_space_administration_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+                use semio_framework_os_renderer_wgpu_hub_workspace::space_administration::SpaceAdministrationPaintOp as Op;
         let Some(plan) = self.directory.space_administration_plan(&self.prefs) else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         };
-        let ops = crate::space_administration::space_administration_paint_ops(&plan, width, height, theme, self.prefs.active_locale());
+        let ops = semio_framework_os_renderer_wgpu_hub_workspace::space_administration::space_administration_paint_ops(&plan, width, height, theme, self.prefs.active_locale());
         let Some(op) = ops.get(cursor.scalar) else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
@@ -136,7 +136,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// ✅️ Paints the agent approvals modal — opened purely by a non-empty queue, listing every
     /// parked request's capability/change-summary/requested-by/risk with the three decision buttons
     /// that emit an `Approval` frame back over the bridge. Packet W1j.
-    pub(crate) fn render_agent_approvals_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+    pub fn render_agent_approvals_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         self.chrome.chrome_build.agent_approvals.observe(&self.chrome.chrome_build.agent.pending_approvals);
         if !self.chrome.chrome_build.agent_approvals.is_open(&self.chrome.chrome_build.agent.pending_approvals) {
             close_chrome_overlay_glass_content(cursor, overlay);
@@ -181,8 +181,8 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
 
     /// ✅️ This frame's flat paint program for the approvals modal — rebuilt per opportunity (it is
     /// pure and small) so the retained step only has to carry an index, not a nested cursor.
-    pub(crate) fn agent_approvals_paint_ops(&self, width: f32, height: f32, theme: &Theme) -> Vec<AgentApprovalPaintOp> {
-        use crate::agent_approvals as approvals;
+    pub fn agent_approvals_paint_ops(&self, width: f32, height: f32, theme: &Theme) -> Vec<AgentApprovalPaintOp> {
+                use semio_framework_os_renderer_wgpu_agent_elements::agent_approvals as approvals;
         let locale = self.prefs.active_locale();
         let pad = theme.padding_standard;
         let line_h = theme.font_size_small * 1.6;
@@ -222,7 +222,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                 ops.push(AgentApprovalPaintOp::Text { value: approval_line.text, x: row.x, y: row.y + theme.font_size_small + index as f32 * line_h, max_w: row.w.max(1.0), size: theme.font_size_small, color });
             }
             for (decision, rect) in approvals::approval_decision_rects(row, theme) {
-                let label_color = if matches!(decision, crate::agent_bridge::ApprovalDecision::Deny) { theme.error } else { theme.text };
+                let label_color = if matches!(decision, semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::ApprovalDecision::Deny) { theme.error } else { theme.text };
                 ops.push(AgentApprovalPaintOp::Fill { rect, color: theme.button });
                 ops.push(AgentApprovalPaintOp::Text {
                     value: approvals::approvals_decision_label(decision, locale),
@@ -240,7 +240,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         ops
     }
 
-    pub(crate) fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+    pub fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         let Some(request) = self.chrome.chrome_build.dialog_stack.last() else {
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
@@ -287,8 +287,8 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     ///
     /// 🌫️ `Theme::veil` is the token-derived twin of React's `ui-veil` utility: the dialog level's
     /// own surface fill at `levels::VEIL_ALPHA` (`--veil-alpha`), not a theme-agnostic black.
-    #[cfg(test)]
-    pub(crate) fn render_chrome_dialog(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn render_chrome_dialog(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let Some(request) = self.chrome.chrome_build.dialog_stack.last() else {
             return;
         };
@@ -349,7 +349,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     ///
     /// 🧯️ The veil registers FIRST so the three card controls, registered after it, win
     /// `InputState::hit_at`'s reverse-order resolution over the sheet they sit on.
-    pub(crate) fn render_chrome_tour_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+    pub fn render_chrome_tour_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         if cursor.flag {
             close_chrome_overlay_glass_content(cursor, overlay);
             self.chrome.error = Some("Shell tour text exceeded the retained glyph boundary".to_string());
@@ -521,8 +521,8 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     //#endregion SilhouetteContent
     /// 💬️ Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
     /// `ui_wgpu::wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
-    #[cfg(test)]
-    pub(crate) fn render_chrome_tooltip(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn render_chrome_tooltip(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let hovered_id = input.hovered_id.clone();
         let title = hovered_id.as_ref().and_then(|id| self.chrome.chrome_build.tooltip_titles.get(id).cloned());
         let now = chrome_now_ms();
@@ -575,7 +575,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
 /// each choice followed by its wrapped consequence, then Cancel on the start edge and the submit on
 /// the end edge. Action groups wrap within the dialog. A gated submit or choice
 /// paints dimmed and registers no event; a destructive choice paints in the error colour.
-pub(crate) fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height: f32, theme: &Theme, atlas: &mut FontAtlas) -> Vec<ChromeDialogPaintOp> {
+pub fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32, height: f32, theme: &Theme, atlas: &mut FontAtlas) -> Vec<ChromeDialogPaintOp> {
     let (pad, gap, small, body) = (theme.padding_standard, theme.gap_standard, theme.font_size_small, theme.font_size_body);
     let (line_small, line_body, control_h) = (small * 1.6, body * 1.6, theme.control_height);
     let dialog_w = (width - pad * 4.0).min(420.0).max(1.0);
@@ -772,8 +772,8 @@ pub(crate) fn chrome_dialog_paint_ops(request: &ChromeDialogRequest, width: f32,
     ops
 }
 
-#[cfg(test)]
-pub(crate) fn intersect_content_rect(left: Rect, right: Rect) -> Option<Rect> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn intersect_content_rect(left: Rect, right: Rect) -> Option<Rect> {
     let x = left.x.max(right.x);
     let y = left.y.max(right.y);
     let x2 = (left.x + left.w).min(right.x + right.w);
@@ -783,8 +783,8 @@ pub(crate) fn intersect_content_rect(left: Rect, right: Rect) -> Option<Rect> {
 
 /// 📏️ Shared width pass for a menu level — also used to size a submenu BEFORE deciding which side of
 /// its parent row it opens on (see `render_context_menu_level`'s flip-left check).
-#[cfg(test)]
-pub(crate) fn context_menu_level_width(items: &[ContextMenuItem], theme: &Theme) -> f32 {
+#[cfg(any(test, feature = "testkit"))]
+pub fn context_menu_level_width(items: &[ContextMenuItem], theme: &Theme) -> f32 {
     let mut w = 180.0;
     for item in items.iter().filter(|item| !item.separator || !item.label.is_empty()) {
         let label_w = item.painted_label().chars().count() as f32 * theme.font_size_body * 0.55;
@@ -799,8 +799,8 @@ pub(crate) fn context_menu_level_width(items: &[ContextMenuItem], theme: &Theme)
 ///
 /// 🏷️ A separator carrying a `label` is a non-interactive header row — kept in place (never
 /// dropped) and rendered as a labeled row instead of a bare rule.
-#[cfg(test)]
-pub(crate) fn render_context_menu_level(
+#[cfg(any(test, feature = "testkit"))]
+pub fn render_context_menu_level(
     overlay: &mut DrawList,
     atlas: &mut FontAtlas,
     icons: &IconAtlas,

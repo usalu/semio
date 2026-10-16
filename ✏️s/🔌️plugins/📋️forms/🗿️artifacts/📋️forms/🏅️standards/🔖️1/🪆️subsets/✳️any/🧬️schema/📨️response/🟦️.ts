@@ -1,4 +1,4 @@
-import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import type { DslValue } from "../🧬️mutations/🟦️.ts";
 import type { FormExpr } from "../🧬️mutations/🟦️.ts";
 import type { FormsDefinition } from "../📝️definition/🟦️.ts";

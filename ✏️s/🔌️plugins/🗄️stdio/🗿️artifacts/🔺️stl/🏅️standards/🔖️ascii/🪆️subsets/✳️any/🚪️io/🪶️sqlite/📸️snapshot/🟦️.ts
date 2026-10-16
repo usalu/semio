@@ -1,9 +1,9 @@
-import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🔺️ Handcrafted STL solid/facet/vertex relations with intrinsic numeric coordinates. */
 import type { StlSnapshot, StlTriangle } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase, SqliteRow } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase, SqliteRow } from "@semio-tech/framework/io/sqlite-snapshot";
 
 /** 🏛️ Handcrafted SQL kept byte-equal to the adjacent schema asset. */
 export const STL_SQLITE_SCHEMA = "CREATE TABLE stl_solid (\n  id INTEGER PRIMARY KEY,\n  schema TEXT NOT NULL,\n  name TEXT NOT NULL\n);\nCREATE TABLE stl_facet (\n  id INTEGER PRIMARY KEY,\n  solid_id INTEGER NOT NULL REFERENCES stl_solid(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),\n  normal_x REAL,\n  normal_y REAL,\n  normal_z REAL,\n  normal_x_ieee754_bits INTEGER NOT NULL,\n  normal_x_numeric_class TEXT NOT NULL CHECK(normal_x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_y_ieee754_bits INTEGER NOT NULL,\n  normal_y_numeric_class TEXT NOT NULL CHECK(normal_y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  normal_z_ieee754_bits INTEGER NOT NULL,\n  normal_z_numeric_class TEXT NOT NULL CHECK(normal_z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n);\nCREATE TABLE stl_vertex (\n  id INTEGER PRIMARY KEY,\n  facet_id INTEGER NOT NULL REFERENCES stl_facet(id),\n  ordinal INTEGER NOT NULL CHECK (ordinal BETWEEN 0 AND 2),\n  x REAL,\n  y REAL,\n  z REAL,\n  x_ieee754_bits INTEGER NOT NULL,\n  x_numeric_class TEXT NOT NULL CHECK(x_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  y_ieee754_bits INTEGER NOT NULL,\n  y_numeric_class TEXT NOT NULL CHECK(y_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan')),\n  z_ieee754_bits INTEGER NOT NULL,\n  z_numeric_class TEXT NOT NULL CHECK(z_numeric_class IN ('finite','positiveInfinity','negativeInfinity','nan'))\n);\n";
@@ -84,7 +84,7 @@ export async function stlSnapshotFromSqliteDatabase(database: SqliteDatabase, op
   return { schema: artifactSqliteText(solid, 1), solidName: artifactSqliteText(solid, 2), triangles };
 }
 /** 🛂️ Validate the exact owned dialect and document at the semantic I/O boundary. */
-export async function stlSnapshotValidateSqliteSubset(snapshot:StlSnapshot,dialect:import("../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
+export async function stlSnapshotValidateSqliteSubset(snapshot:StlSnapshot,dialect:import("@semio-tech/framework/schema/artifact-reference").ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<void>{
   await artifactSqliteCheckpoint(options,"projectSnapshot",0,0);
   if(dialect.artifactKind!=="s.stdio.stl"||dialect.standard!=="ascii"||dialect.subset!=="*")throw new Error("geometry owned SQLite dialect differs");
   const expected=await stlSnapshotToSqliteDatabase(snapshot,options),candidate=await stlSnapshotFromSqliteDatabase(database,options),actual=await stlSnapshotToSqliteDatabase(candidate,options);

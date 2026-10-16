@@ -1,43 +1,55 @@
 //! 🤝️ Retains one private member root until its shared visibility owner decides.
 
-use super::*;
+use std::sync::Arc;
+use pack::snapshot::ArtifactPack;
+use crate::lifted_store::ArtifactStore;
+use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
+use semio_framework_os_store_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreDisplacedRetirements, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement};
+use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, CursorRevisionRecord};
+use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase;
+use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
+use semio_framework_os_spr::{Edit, Mutation, OpBinary, OpText};
+use semio_framework_value::{ErasedSnapshotRetirement, FromValue, ToValue, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 
-pub(super) struct MemberGroupPreparation {
-    visibility: Arc<crate::os_vcs::ArtifactGroupVisibility>,
-    pub(super) history: Option<ArtifactStoreHistoryCommitReservation>,
-    pub(super) displaced: Option<ArtifactStoreDisplacedOwnerReservation>,
-    pub(super) applied: crate::os_vcs::HistoryPageStack<String>,
-    pub(super) cursor: crate::os_vcs::HistoryPageStack<String>,
-    pub(super) revision: Option<CursorRevisionAccumulator>,
-    pub(super) checkpoint: Option<String>,
-    phase: u8,
-    ordinal: usize,
-    operation: usize,
+pub struct MemberGroupPreparation {
+    pub visibility: Arc<semio_framework_os_vcs::ArtifactGroupVisibility>,
+    pub history: Option<ArtifactStoreHistoryCommitReservation>,
+    pub displaced: Option<ArtifactStoreDisplacedOwnerReservation>,
+    pub applied: semio_framework_os_vcs::HistoryPageStack<String>,
+    pub cursor: semio_framework_os_vcs::HistoryPageStack<String>,
+    pub revision: Option<CursorRevisionAccumulator>,
+    pub checkpoint: Option<String>,
+    pub phase: u8,
+    pub ordinal: usize,
+    pub operation: usize,
     operation_indexed: bool,
-    demand: usize,
-    completed: u32,
+    pub demand: usize,
+    pub completed: u32,
 }
 
 impl MemberGroupPreparation {
-    pub(super) fn new(visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, history: Option<ArtifactStoreHistoryCommitReservation>, displaced: Option<ArtifactStoreDisplacedOwnerReservation>) -> Self {
-        Self { visibility: Arc::clone(visibility), history, displaced, applied: crate::os_vcs::HistoryPageStack::empty(), cursor: crate::os_vcs::HistoryPageStack::empty(), revision: None, checkpoint: None, phase: 0, ordinal: 0, operation: 0, operation_indexed: false, demand: 1, completed: 0 }
+    pub fn new(visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, history: Option<ArtifactStoreHistoryCommitReservation>, displaced: Option<ArtifactStoreDisplacedOwnerReservation>) -> Self {
+        Self { visibility: Arc::clone(visibility), history, displaced, applied: semio_framework_os_vcs::HistoryPageStack::empty(), cursor: semio_framework_os_vcs::HistoryPageStack::empty(), revision: None, checkpoint: None, phase: 0, ordinal: 0, operation: 0, operation_indexed: false, demand: 1, completed: 0 }
     }
 
     pub(super) fn next_byte_demand(&self) -> usize { self.demand }
-    pub(super) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         if self.history.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if self.displaced.is_some() {
             let capacity_bytes = if self.applied.capacity() != 0 || self.cursor.capacity() != 0 { size_of::<ArtifactStoreStringVectorRetirement>() } else if self.revision.is_some() { size_of::<ArtifactStoreRevisionAccumulatorRetirement>() } else if self.checkpoint.is_some() { size_of::<ArtifactStoreStringRetirement>() } else { 0 };
             return Ok(RetirementDemand { capacity_bytes, depth: 1, ..Default::default() });
         }
-        let release_bytes = if Arc::strong_count(&self.visibility) == 1 { std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<crate::os_vcs::ArtifactGroupVisibility>()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "group visibility frame layout overflow"))?.0.pad_to_align().size() } else { 0 };
+        let release_bytes = if Arc::strong_count(&self.visibility) == 1 { std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<semio_framework_os_vcs::ArtifactGroupVisibility>()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "group visibility frame layout overflow"))?.0.pad_to_align().size() } else { 0 };
         Ok(RetirementDemand { release_bytes, depth: 1, ..Default::default() })
     }
 
-    pub(super) fn visibility(&self) -> Arc<crate::os_vcs::ArtifactGroupVisibility> { Arc::clone(&self.visibility) }
+    pub fn visibility(&self) -> Arc<semio_framework_os_vcs::ArtifactGroupVisibility> { Arc::clone(&self.visibility) }
 
-    pub(super) fn completed_items(&self) -> u32 { self.completed }
+    pub fn completed_items(&self) -> u32 { self.completed }
 }
 
 fn retain_group_owner(retirements: &mut ArtifactStoreDisplacedRetirements, reservation: &mut ArtifactStoreDisplacedOwnerReservation, owner: Box<dyn ErasedSnapshotRetirement>) {
@@ -46,10 +58,10 @@ fn retain_group_owner(retirements: &mut ArtifactStoreDisplacedRetirements, reser
 
 impl<P, Mu> ArtifactStore<P, Mu>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mu: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub(super) fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    pub fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         let group = publication.group_preparation.as_mut().ok_or("member group lacks its retained preparation")?;
         if !Arc::ptr_eq(&group.visibility, visibility) || !visibility.pending() { return Err("member group visibility authority does not match its pending decision".into()); }
         if self.cursor.generation != publication.expected_generation || self.cursor.content_revision != publication.expected_revision { return Err("member group became stale before its common decision".into()); }
@@ -65,7 +77,7 @@ where
             if grant.maximum_capacity_bytes<group.demand{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
             ownership.retained_capacity_bytes=group.demand;group.history=Some(self.reserve_edit_history_slot().map_err(|error|error.to_string())?);
         }else{
-            if group.revision.is_none(){group.revision=Some(CursorRevisionAccumulator{identity_digest:self.cursor.revision_accumulator.identity_digest,applied:crate::os_vcs::HistoryPageStack::empty(),redo:crate::os_vcs::HistoryPageStack::empty(),applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()});}
+            if group.revision.is_none(){group.revision=Some(CursorRevisionAccumulator{identity_digest:self.cursor.revision_accumulator.identity_digest,applied:semio_framework_os_vcs::HistoryPageStack::empty(),redo:semio_framework_os_vcs::HistoryPageStack::empty(),applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()});}
             if group.ordinal<self.log.applied_edit_ids.len(){
                 let source=&self.log.applied_edit_ids[group.ordinal];
                 ownership.copied_bytes=if group.phase<2{source.len()}else{size_of::<CursorRevisionRecord>()};
@@ -131,9 +143,9 @@ where
                         if let Some((index,flag))=stage.unit_flags.last(){let key=(CursorRevisionAccumulator::hash_record(b"edit-id",&[stage.edit.as_ref().unwrap().id.as_bytes()]),*index);let revision=group.revision.as_mut().unwrap();reserve_index!(revision.unit_flags,&key);revision.unit_flags.insert_reserved(key,*flag,grant.retained_grant()).map_err(|(error,_,_)|error.to_string())?;publication.stage.as_mut().unwrap().unit_flags.pop();}else{group.phase=11;}
                     },
                     _=>{
-                        let capacity=size_of::<durable_group::StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();group.demand=capacity;
+                        let capacity=size_of::<semio_framework_os_store_durable_group_wire::lifted_durable_group::StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();group.demand=capacity;
                         if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-                        let ownership=durable_group::stage_prebuilt_batch_root(&mut self.parts(),publication,grant)?;let group=publication.group_preparation.as_mut().unwrap();group.phase=12;group.completed=group.completed.saturating_add(1);
+                        let ownership=semio_framework_os_store_engine_stage::lifted_durable_group::stage_prebuilt_batch_root(&mut self.parts(),publication,grant)?;let group=publication.group_preparation.as_mut().unwrap();group.phase=12;group.completed=group.completed.saturating_add(1);
                         return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),ownership));
                     }
                 }
@@ -143,19 +155,19 @@ where
         Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.progress(),ownership))
     }
 
-    pub(super) fn adopt_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    pub fn adopt_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         if publication.published { return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),Default::default())); }
         let group = publication.group_preparation.as_ref().ok_or("member group lacks its retained adoption")?;
         if !Arc::ptr_eq(&group.visibility, visibility) || !visibility.committed() || group.phase != 12 { return Err("member adoption requires its exact committed common decision".into()); }
         if !grant.permits_one() { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         let checkpoint=publication.progress();
-        durable_group::adopt_staged_store_member(&mut self.parts(),visibility).map_err(|error|error.to_string())?;
+        semio_framework_os_store_engine_stage::lifted_durable_group::adopt_staged_store_member(&mut self.parts(),visibility).map_err(|error|error.to_string())?;
         *self.wire.durable_group_root=None;publication.group_preparation=None;publication.retained_checkpoint=checkpoint;
         publication.receipt=Some(LaneItemReceipt{generation_before:publication.expected_generation,generation_after:self.cursor.generation});publication.expected_generation=self.cursor.generation;publication.expected_revision=self.cursor.content_revision;publication.published=true;publication.phase=ArtifactStoreOneItemPublicationPhase::AwaitingAck;
         Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 
-    pub(super) fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         let error = |message: &'static str| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -163,7 +175,7 @@ where
         let Some(group) = publication.group_preparation.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if group.visibility.committed() || group.visibility.pending() { return Err(error("member abort requires its exact aborted common decision")); }
         if self.wire.durable_group_root.is_some() {
-            durable_group::abort_staged_store_member(&mut self.parts(), &group.visibility).map_err(|_| error("member abort lost its exact staged root"))?;
+            semio_framework_os_store_engine_stage::lifted_durable_group::abort_staged_store_member(&mut self.parts(), &group.visibility).map_err(|_| error("member abort lost its exact staged root"))?;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(history) = group.history.take() {
@@ -174,11 +186,11 @@ where
         }
         if let Some(reservation) = group.displaced.as_mut() {
             if group.applied.capacity() != 0 {
-                let original = std::mem::replace(&mut group.applied, crate::os_vcs::HistoryPageStack::empty());
+                let original = std::mem::replace(&mut group.applied, semio_framework_os_vcs::HistoryPageStack::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) { Ok((owner, receipt)) => { retain_group_owner(&mut self.owners.displaced_retirements, reservation, owner); return Ok(RetainedCloneStep::Progress(receipt)); }, Err((error, original)) => { group.applied = original; return Err(error); } }
             }
             if group.cursor.capacity() != 0 {
-                let original = std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty());
+                let original = std::mem::replace(&mut group.cursor, semio_framework_os_vcs::HistoryPageStack::empty());
                 match admit_artifact_retirement(original, grant, ArtifactStoreStringVectorRetirement::new) { Ok((owner, receipt)) => { retain_group_owner(&mut self.owners.displaced_retirements, reservation, owner); return Ok(RetainedCloneStep::Progress(receipt)); }, Err((error, original)) => { group.cursor = original; return Err(error); } }
             }
             if let Some(original) = group.revision.take() { match admit_artifact_retirement(original, grant, ArtifactStoreRevisionAccumulatorRetirement::new) { Ok((owner, receipt)) => { retain_group_owner(&mut self.owners.displaced_retirements, reservation, owner); return Ok(RetainedCloneStep::Progress(receipt)); }, Err((error, original)) => { group.revision = Some(original); return Err(error); } } }

@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox, type TreePresentation, type TreeWindowRowExtent } from "@semio-tech/framework";
+import { type TreePresentation, type TreeWindowRowExtent } from "@semio-tech/framework";
 import { retainTreeFocus } from "./🎯️focus/🟦️.ts";
 
 /** 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
@@ -17,6 +17,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 import { STYLING_DOM, STYLING_METRICS, domSizePx, uiSpacingLen, uiSpacingPx } from "@semio-tech/ui-styling";
+import { ephemeralBox } from "../../../🫧️transient/🟦️.ts";
 export { uiSpacingLen };
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls

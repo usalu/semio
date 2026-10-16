@@ -8,7 +8,7 @@ use super::*;
 /// 🚦️ The remote half of the pill vocabulary — React's
 /// `SyncPillState["remote"]` (`🛠️ShellHelpers/🟦️.tsx`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ShellSyncRemote {
+pub enum ShellSyncRemote {
     Connected,
     Connecting,
     Backoff,
@@ -19,7 +19,7 @@ pub(crate) enum ShellSyncRemote {
 /// `Recovering` arm for the native bootstrap-progress readout React has no twin for (it is produced
 /// only by `ShellState::sync_pill`'s native branch and is documented as a declared divergence).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ShellSyncPill {
+pub enum ShellSyncPill {
     Persisted,
     Pending(usize),
     Remote(ShellSyncRemote),
@@ -47,13 +47,13 @@ pub struct ShellHubProjectionV1 {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct ShellHubSummaryV1 {
+pub struct ShellHubSummaryV1 {
     pub state: HubConnectionState,
     pub peer_count: usize,
     pub document_count: usize,
 }
 
-pub(crate) fn shell_hub_connection_summary_v1(projection: &ShellHubProjectionV1) -> ShellHubSummaryV1 {
+pub fn shell_hub_connection_summary_v1(projection: &ShellHubProjectionV1) -> ShellHubSummaryV1 {
     let document_count = projection.documents.len();
     let statuses = projection
         .documents
@@ -65,7 +65,7 @@ pub(crate) fn shell_hub_connection_summary_v1(projection: &ShellHubProjectionV1)
             ShellHubRemoteV1::Backoff { .. } => HubDocumentRemote::Backoff,
         })
         .collect::<Vec<_>>();
-    let state = crate::hub_connection::hub_connection_summary(&statuses, projection.session, projection.link).state;
+    let state = semio_framework_os_renderer_wgpu_hub_workspace::hub_connection::hub_connection_summary(&statuses, projection.session, projection.link).state;
     let peer_count = match state {
         HubConnectionState::Live { peer_count } => peer_count,
         _ => 0,
@@ -73,7 +73,7 @@ pub(crate) fn shell_hub_connection_summary_v1(projection: &ShellHubProjectionV1)
     ShellHubSummaryV1 { state, peer_count, document_count }
 }
 
-pub(crate) fn shell_hub_document_key(document_key: &ArtifactDocumentKey) -> String {
+pub fn shell_hub_document_key(document_key: &ArtifactDocumentKey) -> String {
     match document_key {
         ArtifactDocumentKey::Local { document_id } => format!("local:{document_id}"),
         ArtifactDocumentKey::Hub { space_id, document_id } => format!("hub:{space_id}/{document_id}"),
@@ -82,7 +82,7 @@ pub(crate) fn shell_hub_document_key(document_key: &ArtifactDocumentKey) -> Stri
 
 /// 📶️ The footer hub badge's text for one fold state, en + de, term for term with React's
 /// `HubConnectionIndicator` (`ui.sync.*`).
-pub(crate) fn shell_hub_connection_text(state: HubConnectionState, is_de: bool) -> String {
+pub fn shell_hub_connection_text(state: HubConnectionState, is_de: bool) -> String {
     match state {
         HubConnectionState::Local => shell_chrome_string("hub.local", is_de).to_string(),
         HubConnectionState::SignedOut => shell_chrome_string("hub.signedOut", is_de).to_string(),
@@ -96,11 +96,11 @@ pub(crate) fn shell_hub_connection_text(state: HubConnectionState, is_de: bool) 
 //#region 📌️HubCheckIn
 /// ⏳️ How long a requested Check In waits for the document's edits to be acknowledged.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) const HUB_CHECK_IN_QUIESCENCE_MS: u64 = 15_000;
+pub const HUB_CHECK_IN_QUIESCENCE_MS: u64 = 15_000;
 
 /// ⏱️ The whole Check In, from request to a terminal status.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) const HUB_CHECK_IN_DEADLINE_MS: u64 = 180_000;
+pub const HUB_CHECK_IN_DEADLINE_MS: u64 = 180_000;
 
 /// 📌️ One native hub Check In owner (see `ShellState::hub_check_in`).
 #[cfg(not(target_arch = "wasm32"))]
@@ -121,7 +121,7 @@ pub struct ShellHubCheckInV1 {
 
 /// 📌️ One sentence for a hub Check In status (the React twin is `checkinStatusText`).
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn hub_check_in_status_text(status: &semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1, is_de: bool) -> String {
+pub fn hub_check_in_status_text(status: &semio_framework_os_kernel::os_directory::DocumentCheckInStatusV1, is_de: bool) -> String {
     use semio_framework_os_kernel::os_directory::{DocumentCheckInPhaseV1 as Phase, DocumentCheckInRefusalV1 as Refusal};
     let key = match (status.phase, status.refusal) {
         (Phase::Ready, _) => "checkIn.ready",

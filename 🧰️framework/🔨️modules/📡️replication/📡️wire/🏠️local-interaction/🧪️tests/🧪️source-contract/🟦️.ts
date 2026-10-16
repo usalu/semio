@@ -5,7 +5,8 @@ import { applyEdits, modify, parse } from "jsonc-parser";
 import { sumBy } from "lodash";
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
-import leb from "@webassemblyjs/leb128/lib/leb.js";
+import{unsignedLebOracleV1}from"../../../../../🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
+const leb=unsignedLebOracleV1();
 
 //#region 🧬️Contract
 const schema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
@@ -53,7 +54,7 @@ for (const [domain, patch] of Object.entries<any>(privateReplacement.restore.dom
 const emptySparse = fixture.cases.find((row: any) => row.id === "sparse-empty-preserves-three-maps");
 assert(emptySparse && emptySparse.restore.kind === "domains"); assert.deepEqual(emptySparse.restore.domains, {}); assert.deepEqual(emptySparse.expected, emptySparse.before);
 const large = fixture.cases.find((row: any) => row.id === "semantic-unicode-over-page");
-assert(Buffer.byteLength(Object.keys(large.expected.selection)[0]) > 4096);
+const [largeKey]=Object.keys(large.expected.selection);assert.notEqual(largeKey,undefined);if(largeKey===undefined)throw Error("Large semantic key required");assert(Buffer.byteLength(largeKey) > 4096);
 for (const mutate of [
   (value: any) => { value.extra = true; },
   (value: any) => { value.cases[0].restore.selectionJson = "{}"; },
@@ -206,7 +207,7 @@ const updateFixture: RetainedUpdateFixture = await Bun.file(new URL("../../🌳�
 
 const cancelSource = fixture.cases.find((row: any) => row.id === updateFixture.cancelSourceCase);
 assert.equal(rootKeyBytes(cancelSource.before), updateFixture.cancelOwnedKeyBytes);
-assert.equal(Buffer.byteLength(Object.keys(cancelSource.restore.domains)[0]), updateFixture.cancelDomainKeyBytes);
+const [cancelDomain]=Object.keys(cancelSource.restore.domains);if(cancelDomain===undefined)throw Error("Cancellation domain key required");assert.equal(Buffer.byteLength(cancelDomain), updateFixture.cancelDomainKeyBytes);
 for (const name of updateFixture.cases) {
   const row = fixture.cases.find((row: any) => row.id === name);
   const oracle = produce(row.before, (draft: any) => {
@@ -280,13 +281,13 @@ const transportFixtureSchema = await Bun.file(new URL("../../📡️transport/�
 const validateTransport = ajv.addSchema(transportFixtureSchema).compile({ $ref: `${transportFixtureSchema.$id}#/$defs/Transport` });
 
 const wire = await import("../../📡️transport/🟦️.ts");
-function oracleUnsigned(value: string): Buffer { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return Buffer.from(leb.encodeUIntBuffer(bytes)); }
+function oracleUnsigned(value: string): Buffer { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return Buffer.from(leb.encodeUnsignedBuffer(bytes)); }
 for (const row of transport.unsigned) {
   const encoded = Buffer.from(wire.encodeLocalInteractionUnsigned(row.decimal));
   assert.equal(encoded.toString("hex"), row.hex);
   assert.deepEqual(encoded, oracleUnsigned(row.decimal));
   assert.equal(wire.decodeLocalInteractionUnsigned(encoded), row.decimal);
-  assert.equal(leb.decodeUInt64(encoded, 0).value.toString(), row.decimal);
+  assert.equal(leb.decodeUnsigned64(encoded, 0).decimal, row.decimal);
 }
 for (const hex of transport.malformedUnsigned) assert.throws(() => wire.decodeLocalInteractionUnsigned(Buffer.from(hex, "hex")));
 const queryToken = { requestId: "13", queryGeneration: "41", identity: fixture.cases[0].current, ordinal: "2" };

@@ -2,7 +2,7 @@
 import {expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 type Case=typeof fixture.cases[number];
 type Bitmap={width:number;height:number;palette:readonly unknown[];pixels:string};
 function gridPrefix(text:string):number[]{

@@ -1,4 +1,4 @@
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 /** 🧬️ StlSnapshot schema — complete per the ASCII STL spec
  * (https://en.wikipedia.org/wiki/STL_(file_format)): `solid`/`endsolid` header/trailer name plus
  * an ordered, self-contained (non-index-shared) triangle list. */

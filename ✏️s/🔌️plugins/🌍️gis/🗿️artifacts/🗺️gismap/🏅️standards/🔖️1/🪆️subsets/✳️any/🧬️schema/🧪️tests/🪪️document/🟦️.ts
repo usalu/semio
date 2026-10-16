@@ -1,17 +1,17 @@
 /** 🧪️ Map document facets preserve every durable handle and dynamic feature value. */
-import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
+import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
 import {test} from "bun:test";
-import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import {applyGisMapFeaturePatch,parseGisMapFeature,parseGisMapFeaturePatch,type GisMapValue} from "../../📍️feature/🟦️.ts";
 import {readFileSync,readdirSync} from "node:fs";
 import {applyPatch,type Operation} from "fast-json-patch";
 import assert from "node:assert/strict";
-import { testSchemaRecordOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🧪️tests/🔬️unit/🟦️.ts";
+import { testSchemaRecordOracle } from "@semio-tech/framework/schema/record/testing/unit";
 import { join } from "node:path";
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
-import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
+import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
+import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
-import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json" with { type: "json" };
+import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import featureSchema from "../../📍️feature/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };

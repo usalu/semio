@@ -2,7 +2,8 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
-import { WORKSPACE_ROOT, toolJobRustBlock } from "../../../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { toolJobRustBlock } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 import { canonicalErrorProgressSelfTests } from "../🔬️canonical-error-progress/🟦️.ts";
 
 /** 🔢️ An edit's revision value: its members in declaration order without `sequenceNumber` (design §22.28) — where an edit sits in its history is not part of what it is. */
@@ -100,7 +101,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
     [store.replace("authority.validate_prepared(candidate)", "authority.prepared_edit_digest(&candidate.edit)"), source],
     [store.replace("fn seal_prepared_owned<", "pub fn seal_prepared_owned<"), source],
     [store, source.replace("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])", "serde_json::to_vec(edit.as_ref())")],
-  ];
+  ] as const;
   for (const [candidateStore, candidateSealer] of sourceHostiles) if (exact(candidateStore, candidateSealer)) throw new Error("canonical Store sealer accepted hostile authority/serialization source");
   const mapDescriptor = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
   const validateMap = new Ajv({ strict: true, allErrors: true }).addSchema(contract).compile({ ...schema, $ref: "#/$defs/CanonicalBorrowedMapEdit" });
@@ -148,7 +149,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
     [source, borrowed.replace("values.values.next()", "values.values.nth(0)")],
     [source, borrowed.replace("pub(super) struct ArtifactCanonicalEditEncoder", "pub struct ArtifactCanonicalEditEncoder")],
     [source, borrowed.replace("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top", "maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH")],
-  ];
+  ] as const;
   for (const [parent, child] of mapSourceHostiles) if (borrowedExact(parent, child)) throw new Error("borrowed map accepted hostile lifetime/source substitution");
   const readerFixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/📖️canonical-reader.json"), "utf8"));
   if (readerFixture.expectedByteLength !== mapExpected.length || createHash("sha256").update(mapExpected).digest("hex") !== readerFixture.expectedJsonSha256) throw new Error("typed canonical reader Node byte oracle mismatch");

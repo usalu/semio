@@ -1,0 +1,12 @@
+const R = "/Users/ueli/Documents/semio";
+const H = `${R}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel`;
+const f = "\u{1F7E6}️.ts";
+const child = (emoji: string, slug: string) => `${H}/${emoji}️${slug}/${f}`;
+const args = await import(child("\u{1F9ED}", "arguments"));
+const run = await import(child("\u{1F3AA}", "run"));
+const server = Bun.serve({ port: 0, fetch: () => new Response('<!doctype html><title>static</title><div data-slot="window"></div><canvas></canvas><p>static smoke page</p>', { headers: { "content-type": "text/html" } }) });
+const out = `${process.env.TMPDIR ?? "/tmp"}met-smoke-run`;
+args.configure(["--universal", "--only", "9", "--locales", "en", "--serve", `http://127.0.0.1:${server.port}/`, "--out", out], out, new AbortController().signal, undefined);
+const summary = await run.runProbe();
+console.log(JSON.stringify(summary));
+server.stop(true);

@@ -1,6 +1,6 @@
 /** 🔺️ Playbook sparse document delta references OS Store child identities. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseDslValue } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import { parseDslValue } from "@semio-tech/framework/value/schema";
 
 export interface PlaybookDiff {
   /** @state artifact */

@@ -4,7 +4,7 @@ import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type SqliteRow,
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfColorSpace,readPdfColorSpace,writePdfFunction,readPdfFunction,writePdfReals,readPdfReals } from "../../🌈️color/🟦️.ts";
 import { writePdfOperations,readPdfOperations } from "../../🖋️content/🟦️.ts";
-import { artifactSqliteInteger } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 function optionalBoolean(row:SqliteRow,column:number):boolean|null{return row.values[column]===null?null:pdfBoolean(row,column);}
 function optionalInteger(row:SqliteRow,column:number):number|null{return row.values[column]===null?null:pdfNumber(row,column);}

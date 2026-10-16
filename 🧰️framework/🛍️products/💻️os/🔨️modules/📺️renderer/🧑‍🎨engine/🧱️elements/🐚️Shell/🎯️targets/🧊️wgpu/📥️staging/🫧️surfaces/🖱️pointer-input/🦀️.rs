@@ -7,7 +7,7 @@ use super::*;
 //#region ShellInput
 //#region 🫥️HostWindowBlur
 /// 🧯️ Frames a closed World3d window waits at most for its capture-lost cancel to drain before it retires regardless.
-pub(crate) const WORLD3D_CLOSE_CANCEL_SIGHTINGS: u8 = 8;
+pub const WORLD3D_CLOSE_CANCEL_SIGHTINGS: u8 = 8;
 
 //#endregion 🫥️HostWindowBlur
 impl SurfaceState {

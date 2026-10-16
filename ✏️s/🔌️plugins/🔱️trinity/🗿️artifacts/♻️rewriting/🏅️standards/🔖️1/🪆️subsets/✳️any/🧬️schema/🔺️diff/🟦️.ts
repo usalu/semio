@@ -1,5 +1,5 @@
 /** 🔺️ Typed document replacement and shared map algebra preserve the complete rule domain. */
-import {parseMapDelta,type MapDelta} from "./../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts";
+import {parseMapDelta,type MapDelta} from "@semio-tech/framework/replication/mutation/map/schema";
 import {parseLayoutPoint,parsePropertyValue,type Lhs,type Rhs,type LayoutPoint,type PropertyValue} from "../🟦️.ts";
 import {parseJackDiff,type JackDiff} from "./../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
 export type{MapDelta,LayoutPoint,PropertyValue,Lhs,Rhs,JackDiff};

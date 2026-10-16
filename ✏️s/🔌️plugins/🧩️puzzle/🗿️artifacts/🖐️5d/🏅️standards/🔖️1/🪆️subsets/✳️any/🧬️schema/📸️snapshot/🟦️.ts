@@ -1,5 +1,5 @@
 /** 🧩️ Exact persisted Puzzle5d fields shared by its artifact facade and SQLite provider. */
-import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
 
 export interface ArtifactDialect { artifactKind: string; standard: string; subset: string }
 export interface ArtifactRef { artifactId: string; dialect: ArtifactDialect }

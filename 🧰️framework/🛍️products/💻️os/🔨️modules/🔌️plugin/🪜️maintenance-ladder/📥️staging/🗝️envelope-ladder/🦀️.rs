@@ -42,14 +42,7 @@ fn completed_step<P, Mutation>(record: &mut dyn store::os_store::owned_schema_de
     Ok(step)
 }
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
-    /// 📏️ Quotes the next returned field-decoder turn: the cursor owner's step, else one registry hand-off.
-    pub(crate) fn envelope_field_decoder_returns_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
-        let cursor = if closing { self.close.close_envelope_field_decoder_cursor } else { self.maintenance.maintenance_envelope_field_decoder_cursor };
-        let Some((_, id)) = self.ingest.envelope_field_decoder_retirements.next_id_from(cursor) else { return Ok(handoff_demand()) };
-        self.ingest.envelope_field_decoder_retirements.get(id).map_or(Ok(handoff_demand()), |retirement| erased_demand(retirement, body))
-    }
-
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     /// 🎟️ One granted returned field-decoder turn; `Complete` means no returned decoder is left to hand off.
     pub(crate) fn drive_envelope_field_decoder_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
@@ -104,13 +97,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.ingest.envelope_field_decoder_retirements.insert_admitted(id, retirement);
         *cursor = ticket.index();
         Ok(PluginLifecycleStep::Progress(item))
-    }
-
-    /// 📏️ Quotes the next completed-record turn: the cursor owner's step, else one registry hand-off.
-    pub(crate) fn envelope_completed_record_returns_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
-        let cursor = if closing { self.close.close_envelope_completed_record_cursor } else { self.maintenance.maintenance_envelope_completed_record_cursor };
-        let Some((_, id)) = self.ingest.envelope_completed_record_retirements.next_id_from(cursor) else { return Ok(handoff_demand()) };
-        self.ingest.envelope_completed_record_retirements.get(id).map_or(Ok(handoff_demand()), |record| completed_demand(record.as_ref(), body))
     }
 
     /// 🎟️ One granted completed-record turn; `Complete` means no completed record is left to hand off.
@@ -179,13 +165,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(PluginLifecycleStep::Progress(item))
     }
 
-    /// 📏️ Quotes the next worker-job turn of the cursor's live envelope decode.
-    pub(crate) fn envelope_decode_jobs_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
-        let cursor = if closing { self.close.close_envelope_decode_cursor } else { self.maintenance.maintenance_envelope_decode_cursor };
-        let Some((_, operation_id)) = self.ingest.envelope_decode_jobs.next_id_from(cursor) else { return Ok(RetirementDemand::default()) };
-        self.ingest.envelope_decode_jobs.get(operation_id).map_or(Ok(handoff_demand()), |active| active.drive_demands(body))
-    }
-
     /// 🎟️ One granted turn of the cursor's live envelope decode; a terminal decode leaves its fixed slot in the same turn.
     pub(crate) fn drive_envelope_decode_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
@@ -226,11 +205,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(step)
     }
 
-    /// 📏️ Quotes the most demanding candidate of the next envelope close turn.
-    pub(crate) fn envelope_decode_close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        Ok(widest(widest(self.envelope_completed_record_returns_demands(true, body)?, self.envelope_field_decoder_returns_demands(true, body)?), self.envelope_decode_jobs_demands(true, body)?))
-    }
-
     /// 🎟️ Advances exactly one envelope owner under the caller's unchanged grant: completed records first, then returned field decoders, then the next live decode.
     pub(crate) fn envelope_decode_close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
@@ -248,5 +222,33 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
         }
         Ok(blocked.unwrap_or(PluginLifecycleStep::Progress(empty)))
+    }
+}
+
+impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+    /// 📏️ Quotes the next returned field-decoder turn: the cursor owner's step, else one registry hand-off.
+    pub(crate) fn envelope_field_decoder_returns_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
+        let cursor = if closing { self.close.close_envelope_field_decoder_cursor } else { self.maintenance.maintenance_envelope_field_decoder_cursor };
+        let Some((_, id)) = self.ingest.envelope_field_decoder_retirements.next_id_from(cursor) else { return Ok(handoff_demand()) };
+        self.ingest.envelope_field_decoder_retirements.get(id).map_or(Ok(handoff_demand()), |retirement| erased_demand(retirement, body))
+    }
+
+    /// 📏️ Quotes the next completed-record turn: the cursor owner's step, else one registry hand-off.
+    pub(crate) fn envelope_completed_record_returns_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
+        let cursor = if closing { self.close.close_envelope_completed_record_cursor } else { self.maintenance.maintenance_envelope_completed_record_cursor };
+        let Some((_, id)) = self.ingest.envelope_completed_record_retirements.next_id_from(cursor) else { return Ok(handoff_demand()) };
+        self.ingest.envelope_completed_record_retirements.get(id).map_or(Ok(handoff_demand()), |record| completed_demand(record.as_ref(), body))
+    }
+
+    /// 📏️ Quotes the next worker-job turn of the cursor's live envelope decode.
+    pub(crate) fn envelope_decode_jobs_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
+        let cursor = if closing { self.close.close_envelope_decode_cursor } else { self.maintenance.maintenance_envelope_decode_cursor };
+        let Some((_, operation_id)) = self.ingest.envelope_decode_jobs.next_id_from(cursor) else { return Ok(RetirementDemand::default()) };
+        self.ingest.envelope_decode_jobs.get(operation_id).map_or(Ok(handoff_demand()), |active| active.drive_demands(body))
+    }
+
+    /// 📏️ Quotes the most demanding candidate of the next envelope close turn.
+    pub(crate) fn envelope_decode_close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(widest(widest(self.envelope_completed_record_returns_demands(true, body)?, self.envelope_field_decoder_returns_demands(true, body)?), self.envelope_decode_jobs_demands(true, body)?))
     }
 }

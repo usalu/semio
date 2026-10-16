@@ -41,7 +41,8 @@ import {
   WindowBodySkeleton,
   type WindowLayoutNode
 } from "@semio-tech/ui-react";
-import { InterpretedUiNode, TreeWindowContext } from "../../🗣️Interpreter/🟦️.tsx";
+import { InterpretedUiNode } from "../../🗣️Interpreter/🟦️.tsx";
+import { TreeWindowContext } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import { MediaTransportOwnerContext, type MediaTransportOwner } from "../../🎬️MediaTransportHost/🟦️.tsx";
 import { resolveBootExampleId, ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
 import { World3dWindowViewStoreContext } from "../../🌐️World3dHost/🟦️.tsx";

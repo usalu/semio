@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellInput
 impl<'ctx> PanelsViewCtx<'ctx> {
-    pub(crate) fn render_tree_drag_overlay_node(&self, overlay: &mut DrawList, input: &InputState<ActionDescriptor>, theme: &Theme) {
+    pub fn render_tree_drag_overlay_node(&self, overlay: &mut DrawList, input: &InputState<ActionDescriptor>, theme: &Theme) {
         let Some(drag) = &self.input.tree_drag else {
             return;
         };

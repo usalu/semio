@@ -370,7 +370,7 @@ export {
 } from "../📤️SegmentedDownload/🟦️.ts";
 //#region 📥️ChunkedImport
 /** 📏️ UTF-8 bytes ONE import chunk may carry, and the slicing that produces them — both now owned by
- * the effect contract itself (`🎠️kernel/🟦️.ts`, beside `Effect.requestFileOpen`, with the Rust twin
+ * the effect contract itself (`🎠️kernel`, beside `Effect.requestFileOpen`, with the Rust twin
  * `kernel::import_payload_chunks` and the shared fixture `🧫️fixtures/📤️file-open-import/🔣️.json`).
  *
  * 🧊️ They used to live here, where only the React shell could reach them — so the wgpu shell dispatched
@@ -382,9 +382,9 @@ export {
  * 📏️ It is also the host half of `PUZZLE3D_IMPORT_CHUNK_BYTES`
  * (`✏️s/🔌️plugins/🧩️puzzle/…/🎮️commands/📥️import-snapshot/🦀️.rs`), held equal to it by the engine
  * contract's own law. */
-export { IMPORT_CHUNK_BYTES, importChunkArguments, importPayloadChunks } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+export { IMPORT_CHUNK_BYTES, importChunkArguments, importPayloadChunks } from "../../../../../../../🔨️modules/🎠️kernel/🗄️file-open-import/🟦️.ts";
 //#endregion 📥️ChunkedImport
-export type { ImportChunk } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+export type { ImportChunk } from "../../../../../../../🔨️modules/🎠️kernel/🗄️file-open-import/🟦️.ts";
 // 📌️ The panel carriage moved to its own cycle-free module (`📌️panel/🟦️.ts`) so a law can drive
 // it — importing this file from a test hits the `ShellHelpers → Shell → ShellHost` cycle. Re-exported
 // here so every existing call site keeps one import.

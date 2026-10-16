@@ -1,0 +1,27 @@
+const T = (emoji, slug, doc, ranges) => ({ emoji, folder: emoji + "️" + slug, doc, ranges });
+export default {
+  source: "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/rtt-tools/orig/typedwire.tsx",
+  isTsx: true,
+  mode: "closure",
+  fnName: "registerTests1",
+  ext: ".tsx",
+  testsDir: "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests",
+  helperFolder: "🪛️typedwire-helpers",
+  supportName: "createTypedWireSupport",
+  helper: { emoji: "🪛", doc: "Shared schema readers, fixtures and cursor drivers of the UiDocumentStore typed-wire suites." },
+  paramTypes: { vitest: { name: "TypedWireVitest" }, dependencies: { name: "TypedWireDependencies" }, source: { name: "TypedWireSource" } },
+  registrar: { folder: "🧪️typedwire", emoji: "🧪", name: "registerTypedWireTests", doc: "Registers every UiDocumentStore typed-wire topic suite into the in-source vitest run of the store module." },
+  splits: { 45: { replicate: [] } },
+  topics: [
+    T("🔢", "scalar-source-oracles", "Resident scalar source oracles: the OwnedResidentScalarCloseModel law over the neutral declaration.", [[47, 229]]),
+    T("📄", "paged-payload", "Owned paged payload schema, brands, admission, copy, fault, cancel and continuation laws.", [[282, 406]]),
+    T("🧠", "resident-pool-and-metadata", "Owned resident pool, metadata, scope, payload, page, reader, builder, copied range, evidence and binding laws.", [[410, 1167]]),
+    T("🏢", "instance-maintenance-and-close", "Owned instance maintenance, close accounting and surface child laws.", [[1171, 1236]]),
+    T("🧩", "node-fields-and-validation", "Native component normalisation, typed node fields, node index, operation, validation, hash and read lease laws.", [[1239, 1543]]),
+    T("🎬", "owned-scene-binding", "Owned scene preparation, typed scene, scene binding and owned surface scene laws.", [[1546, 2036]]),
+    T("📥", "native-child-and-wire-operation", "Owned native child, wire operation and owned instance binding laws.", [[2039, 2183]]),
+    T("🧾", "owned-intake-and-surface", "Owned root source, intake, instance tokens, surface mint and surface publication laws.", [[2185, 2634]]),
+    T("🏅", "owned-wire-and-byte-pages", "OwnedWire and SurfaceBytePages suites.", [[2639, 2828]]),
+    T("🔏", "retained-and-store", "Retained UI patch preparation and atomic publication, store transactions, per-node subscriptions and emitIntent.", [[2831, 3211]]),
+  ],
+};

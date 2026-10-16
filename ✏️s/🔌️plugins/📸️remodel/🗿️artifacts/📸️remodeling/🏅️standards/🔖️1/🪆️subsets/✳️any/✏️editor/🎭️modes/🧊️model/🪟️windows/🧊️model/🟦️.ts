@@ -5,7 +5,7 @@
  * shapes). The viewer's read-only twin (`👁️viewer/…/🧊️model/🟦️.ts`) mirrors this same
  * scene shape minus `layers`/mutation-facing fields — never imports from here. */
 
-import type { Viewport3dOrbit } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
+import type { Viewport3dOrbit } from "@semio-tech/framework/ui/viewport/3d/schema";
 
 /** 👁️ Which point-cloud/mesh layers are visible — mirrors Rust `RemodelingLayerVisibility`. */
 export interface RemodelingLayerVisibility {

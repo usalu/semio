@@ -7,7 +7,7 @@
  *    against the fixture's declared rules rather than against the wgpu shell's source. Two
  *    implementations that disagree mean the oracle is under-specified.
  * 2. Chromium exercises retained pointer and wheel delivery against the declared owners.
- *    The mounted React host lifetime is exercised in `🔬️engine-contract/🟦️.ts`, including
+ *    The mounted React host lifetime is exercised in `🚧️hidden-tab-surfaces/🟦️.ts`, including
  *    session retention through refreshes and exactly one release when the host unmounts.
  *
  * Rust law: `🧱️elements/🐚️Shell/🧪️tests/🧲️engine-surface-retention/🦀️.rs`.

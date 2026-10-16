@@ -5,7 +5,7 @@ import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgProjectDocument,dwgReconstructDocument,type DwgDocumentState } from "../../📄️document/🟦️.ts";
 import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 import { dwgDocumentFixture as input } from "../🧰️support/📄️document/🟦️.ts";
 async function project(value:DwgDocumentState,options={}){const p=await DwgProjection.create(DWG_SQLITE_SCHEMA,options);await dwgProjectDocument(p,value);return p.finish();}

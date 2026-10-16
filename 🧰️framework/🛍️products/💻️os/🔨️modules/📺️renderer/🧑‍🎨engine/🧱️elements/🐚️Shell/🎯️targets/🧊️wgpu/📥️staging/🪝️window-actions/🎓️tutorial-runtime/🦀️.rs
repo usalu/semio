@@ -18,7 +18,7 @@ fn tutorial_camera_window_ids(def: &semio_framework::onboarding::TutorialDefinit
     ids
 }
 
-pub(super) fn tutorial_camera_pose_close(a: &semio_framework::onboarding::TutorialCameraState, b: &semio_framework::onboarding::TutorialCameraState, epsilon: f64) -> bool {
+pub fn tutorial_camera_pose_close(a: &semio_framework::onboarding::TutorialCameraState, b: &semio_framework::onboarding::TutorialCameraState, epsilon: f64) -> bool {
     use semio_framework::onboarding::TutorialCameraState::*;
     match (a, b) {
         (Orbit { position: p0, target: t0, .. }, Orbit { position: p1, target: t1, .. }) => {
@@ -42,7 +42,7 @@ fn tutorial_converge_pose(tween: &TutorialCameraConverge, elapsed_ms: f64) -> se
 //#endregion 🎥️CameraConversion
 //#region 🧮️UiSnapshot
 /// 🧮️ `ShellState` → `TutorialUiSnapshot` (Design Decision 4).
-pub(super) fn tutorial_capture_ui_snapshot(state: &WindowActionsCtx<'_>) -> semio_framework::onboarding::TutorialUiSnapshot {
+pub fn tutorial_capture_ui_snapshot(state: &WindowActionsCtx<'_>) -> semio_framework::onboarding::TutorialUiSnapshot {
     let mut active_panel_tab_by_group: HashMap<String, String> = HashMap::new();
     for anchor in PanelAnchor::ALL {
         if let Some(tab) = state.dock.panel_anchor_snapshot(anchor).active_tab {
@@ -65,7 +65,7 @@ pub(super) fn tutorial_capture_ui_snapshot(state: &WindowActionsCtx<'_>) -> semi
 }
 
 /// 🧮️ `TutorialUiSnapshot` → `ShellState`, applied as a snap (single field writes — Design Decision 5).
-pub(crate) fn tutorial_apply_ui_snapshot(state: &mut WindowActionsCtx<'_>, snapshot: &semio_framework::onboarding::TutorialUiSnapshot) {
+pub fn tutorial_apply_ui_snapshot(state: &mut WindowActionsCtx<'_>, snapshot: &semio_framework::onboarding::TutorialUiSnapshot) {
     if let Some(session) = state.docs.session.as_mut() {
         session.view_state.active_mode_id = snapshot.active_mode_id.clone();
         session.view_state.active_tool_id = snapshot.active_tool_id.clone();
@@ -111,7 +111,7 @@ pub(crate) fn tutorial_apply_ui_snapshot(state: &mut WindowActionsCtx<'_>, snaps
 /// 🩹️ Applies one `TutorialUiChange` live — composed from `tutorial_capture_ui_snapshot` +
 /// `apply_tutorial_ui_change` (core) + `tutorial_apply_ui_snapshot` rather than duplicating the change's
 /// own per-field switch a second time.
-pub(super) fn tutorial_apply_ui_change_to_shell(state: &mut WindowActionsCtx<'_>, change: &semio_framework::onboarding::TutorialUiChange) {
+pub fn tutorial_apply_ui_change_to_shell(state: &mut WindowActionsCtx<'_>, change: &semio_framework::onboarding::TutorialUiChange) {
     let mut snapshot = tutorial_capture_ui_snapshot(state);
     semio_framework::onboarding::apply_tutorial_ui_change(&mut snapshot, change);
     tutorial_apply_ui_snapshot(state, &snapshot);
@@ -131,7 +131,7 @@ fn tutorial_gesture_endpoints(gesture: &semio_framework::onboarding::Introductio
 /// 👻️ Paints a simple ghost-cursor dot at the active `TutorialGestureCue`'s interpolated position (linear
 /// by playhead progress within the cue) — the minimal demonstration painter neither this shell nor its
 /// introduction mechanism had before (verified: no `demonstration`/ghost-cursor renderer existed here).
-pub(crate) fn render_tutorial_gesture_overlay_node(chrome: &ChromeState, surfaces: &SurfaceState, dock: &ShellDockState, tutorial: &TutorialState, overlay: &mut DrawList, theme: &Theme) {
+pub fn render_tutorial_gesture_overlay_node(chrome: &ChromeState, surfaces: &SurfaceState, dock: &ShellDockState, tutorial: &TutorialState, overlay: &mut DrawList, theme: &Theme) {
     let Some(runtime) = tutorial.tutorial.as_ref() else {
         return;
     };
@@ -218,7 +218,7 @@ fn tutorial_pending_op_for_edit(entry: &semio_framework::onboarding::TutorialDoc
 //#region 🎬️PureHelpers
 /// ⏱️ Pure playhead-advance math (per-tick real-time `dt` scaled by the UI-only `rate` — Design
 /// Decision 6): factored out of `tutorial_tick` for unit testing.
-pub(super) fn tutorial_advance_playhead(playhead_ms: f64, dt_ms: f64, rate: f32) -> f64 {
+pub fn tutorial_advance_playhead(playhead_ms: f64, dt_ms: f64, rate: f32) -> f64 {
     playhead_ms + dt_ms * rate as f64
 }
 

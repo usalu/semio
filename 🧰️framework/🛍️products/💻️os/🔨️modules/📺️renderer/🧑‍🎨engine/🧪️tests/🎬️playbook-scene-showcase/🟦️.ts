@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { createElement } from "react";
 import { render } from "@semio-tech/ui-react/test";
 import { buildVirtualFileSystemSceneRows } from "@semio-tech/ui-react";
-import { VirtualFileSystemHost } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { VirtualFileSystemHost } from "../../🧱️elements/🗣️Interpreter/🗄️virtual-file-system/🟦️.tsx";
 import { describe, expect, it, vi } from "vitest";
 
 type WindowFixture = { readonly windowId: string; readonly bodyKey: string; readonly surfaceKind: "block-list" | "table" | "diff-view" | "event-feed" | "text-editor" | "virtual-file-system" };

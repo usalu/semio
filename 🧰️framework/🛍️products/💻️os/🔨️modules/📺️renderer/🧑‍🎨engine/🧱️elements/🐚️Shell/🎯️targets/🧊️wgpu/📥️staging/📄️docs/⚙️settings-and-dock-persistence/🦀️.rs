@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellLifecycle
 impl DocumentState {
-    pub(crate) fn retain_document_for_close(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
+    pub fn retain_document_for_close(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
         self.closing_documents.try_admit(document)
     }
 
@@ -20,7 +20,7 @@ impl DocumentState {
     /// forever — a booted shell with an empty `UI_ENGINE` tree and a black canvas
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`). Moving the one
     /// owner instead of aliasing it needs no credit at all, which is why it cannot run out.
-    pub(crate) fn take_window_document(&mut self, window_id: &str) -> Option<UiDocumentLease> {
+    pub fn take_window_document(&mut self, window_id: &str) -> Option<UiDocumentLease> {
         if window_id == "spawned" {
             self.spawned_ui.take()
         } else {
@@ -28,7 +28,7 @@ impl DocumentState {
         }
     }
 
-    pub(crate) fn restore_window_document(&mut self, window_id: &str, document: UiDocumentLease) {
+    pub fn restore_window_document(&mut self, window_id: &str, document: UiDocumentLease) {
         if window_id == "spawned" {
             self.spawned_ui = Some(document);
         } else {
@@ -47,7 +47,7 @@ impl DocumentState {
     /// shell stops painting entirely (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, measured on 6118 as
     /// `headroom collections=0`). A refresh therefore returns the previous refresh's arenas before it
     /// asks the guest for the next document.
-    pub(crate) fn drain_retained_document_arenas(&mut self) {
+    pub fn drain_retained_document_arenas(&mut self) {
         for _ in 0..SHELL_DOCUMENT_RETIREMENT_STEPS {
             let consumed = self.close_document_one();
             if !consumed && self.closing_documents.terminal_is_empty() {
@@ -69,7 +69,7 @@ impl DocumentState {
     /// refused `Capacity` on every surface and the shell kept the stale documents forever
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-dock-layout-world3d-2026-09-12.md` §6.2).
     /// One root at a time is the whole fix: the peak is the live surface count, never twice it.
-    pub(crate) fn retire_one_surface_document(&mut self, document: Option<UiDocumentLease>) -> Result<(), String> {
+    pub fn retire_one_surface_document(&mut self, document: Option<UiDocumentLease>) -> Result<(), String> {
         let Some(document) = document else { return Ok(()) };
         if self.retain_document_for_close(document).is_err() {
             return Err("shell: document retirement registry refused the exact prior owner".to_string());
@@ -79,10 +79,10 @@ impl DocumentState {
     }
 
     /// 🧹 Retires every window (or panel) document whose surface the active layout no longer names.
-    pub(crate) fn retire_documents_outside(&mut self, retained: &[String], windows: bool, chrome: &mut ChromeState) -> Result<(), String> {
+    pub fn retire_documents_outside(&mut self, retained: &[String], windows: bool, chrome: &mut ChromeState) -> Result<(), String> {
         let stale: Vec<String> = if windows { self.window_ui.keys().filter(|id| !retained.contains(id)).cloned().collect() } else { self.panel_documents.keys().filter(|id| !retained.contains(id)).cloned().collect() };
         for id in stale {
-            if !crate::interpreter::request_ui_document_close(&id) {
+            if !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(&id) {
                 return Err(format!("shell: retained UI close registry refused surface '{id}'"));
             }
             chrome.chrome_build.clear_content_focus(&id);
@@ -92,7 +92,7 @@ impl DocumentState {
         Ok(())
     }
 
-    pub(crate) fn close_document_one(&mut self) -> bool {
+    pub fn close_document_one(&mut self) -> bool {
         if self.closing_documents.terminal_is_empty() {
             return !ui_contract::close_ui_document_page_one();
         }
@@ -108,9 +108,9 @@ impl DocumentState {
     /// ⚖️ React's `framework.settings.mergePolicy` row (`📌️ChromePanels/🟦️.tsx:467-486`) — the one
     /// General-leaf control with no wgpu twin (audit W14 §B2). Option VALUES are React's
     /// `MERGE_POLICY_OPTIONS` verbatim, which are `protocol::MergePolicy`'s own variant names.
-    pub(crate) fn build_settings_general_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
+    pub fn build_settings_general_ui(&self, chrome: &ChromeState, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
-        let locks = crate::boot_locks();
+        let locks = semio_framework_os_renderer_wgpu_host_base::boot_locks();
         let mut sections = Vec::new();
         if let Some(session) = self.session.as_ref() {
             let app_label = session.app.label.resolve(prefs.active_terminology(), prefs.active_locale()).to_string();
@@ -183,7 +183,7 @@ impl DocumentState {
                 id: Some("framework.settings.resetDock".into()),
                 icon_id: IconName::RotateCcw,
                 label: Label::data(shell_chrome_string("settings.resetDock", is_de)),
-                action: ActionDescriptor { controller_id: "framework".into(), action: "runOsCommand".into(), args: crate::action_args_json!({ "value": "os.resetDock" }) },
+                action: ActionDescriptor { controller_id: "framework".into(), action: "runOsCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": "os.resetDock" }) },
                 style: None,
                 presence: UiPresence::default(),
                 menu: None,
@@ -214,7 +214,7 @@ impl DocumentState {
     ///
     /// 🖱️ React's rows are drag SOURCES (`COMPOSE_WINDOW_TEMPLATE_MIME`) with no click handler. The
     /// retained Tree carries that same payload into the dock's tab/split/root-split drop resolver.
-    pub(crate) fn build_display_windows_ui(&self, prefs: &PrefsState) -> UiNode {
+    pub fn build_display_windows_ui(&self, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         let Some(session) = self.session.as_ref() else {
             return display_panel_body("framework.display.windows.panel", vec![display_unavailable_section("framework.display.windows.empty", is_de)]);
@@ -253,7 +253,7 @@ impl DocumentState {
         display_panel_body("framework.display.windows.panel", sections)
     }
 
-    pub(crate) fn active_terminologies(&self) -> Vec<String> {
+    pub fn active_terminologies(&self) -> Vec<String> {
         let mut ids = vec!["native".to_string()];
         if let Some(session) = self.session.as_ref() {
             for id in &session.app.terminologies {
@@ -269,7 +269,7 @@ impl DocumentState {
     /// 🛠️ One `tool.<id>` leaf per tool the ACTIVE MODE declares, in declared order — React's
     /// `buildToolTabs` over `resolveModeTools(app, activeModeId)`. Label and icon come off the tool's
     /// own manifest entry through the live terminology and locale.
-    pub(crate) fn tool_panel_tabs(&self, prefs: &PrefsState) -> Vec<DockTabNode> {
+    pub fn tool_panel_tabs(&self, prefs: &PrefsState) -> Vec<DockTabNode> {
         let Some(session) = self.session.as_ref() else { return Vec::new() };
         let terminology = prefs.active_terminology();
         let locale = prefs.active_locale();
@@ -283,19 +283,19 @@ impl DocumentState {
 
     /// 🎛️ One leaf per command category, the wgpu twin of React's `buildCommandCategoryTabs` — the
     /// bottom-middle Command branch's children, whose bodies `build_command_panel_ui` paints.
-    pub(crate) fn command_category_tabs(&self, chrome: &ChromeState, plugins: &PluginState) -> Vec<DockTabNode> {
+    pub fn command_category_tabs(&self, chrome: &ChromeState, plugins: &PluginState) -> Vec<DockTabNode> {
         let resolved: Vec<_> = self.resolved_commands(chrome, plugins).into_iter().filter(|entry| entry.definition.in_palette).collect();
         command_categories(&resolved).into_iter().enumerate().map(|(order, (id, label))| DockTabNode::leaf(format!("{FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX}{id}"), label, "wrench", order as i32)).collect()
     }
 
     /// 🗄️ The app id whose per-app dock layer wins over the shared `os` one — React's `new DockLayoutStore(storage, session?.app.id)`.
-    pub(crate) fn dock_store_app_id(&self) -> Option<String> {
+    pub fn dock_store_app_id(&self) -> Option<String> {
         self.session.as_ref().map(|session| session.app.id.clone())
     }
 
     /// 🔌️ Drops a resident plugin — React's `uninstallPlugin`. The session's OWN program is never
     /// dropped (React's `canUninstall`), because a shell may not unload the program it is running.
-    pub(crate) fn uninstall_plugin(&mut self, plugin_id: &str, plugins: &mut PluginState, directory: &mut DirectoryState) -> bool {
+    pub fn uninstall_plugin(&mut self, plugin_id: &str, plugins: &mut PluginState, directory: &mut DirectoryState) -> bool {
         if self.session.as_ref().is_some_and(|session| session.plugin_id == plugin_id) {
             return false;
         }
@@ -311,7 +311,7 @@ impl DocumentState {
     /// reply happened to carry"). Best-effort and native-only, the same posture — and the same
     /// backend limit — [`ShellState::refresh_history_snapshot`] already takes.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) async fn seed_open_conflicts(&mut self, chrome: &mut ChromeState, plugins: &PluginState, prefs: &mut PrefsState) {
+    pub async fn seed_open_conflicts(&mut self, chrome: &mut ChromeState, plugins: &PluginState, prefs: &mut PrefsState) {
         if prefs.conflicts_seeded {
             return;
         }
@@ -328,7 +328,7 @@ impl DocumentState {
     /// ⚔️ Accept/discard one conflict and adopt the roster the guest answers with — React's
     /// `dispatchResolveConflict`, whose reply carries the surviving conflicts so the row leaves
     /// without a second read.
-    pub(crate) async fn resolve_open_conflict(&mut self, conflict_id: &str, accept: bool, chrome: &mut ChromeState, plugins: &PluginState, prefs: &mut PrefsState) {
+    pub async fn resolve_open_conflict(&mut self, conflict_id: &str, accept: bool, chrome: &mut ChromeState, plugins: &PluginState, prefs: &mut PrefsState) {
         #[cfg(not(target_arch = "wasm32"))]
         {
             if let Some((plugin, instance_id)) = self.session.as_ref().and_then(|session| plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().map(|plugin| (plugin, session.instance_id))) {
@@ -356,7 +356,7 @@ impl DocumentState {
 /// row the Conflicts leaf paints — the kind's own tag, and the WORST message's code and text
 /// (`conflict.messages[0]`, React's own pick), never prose-parsed.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn conflict_rows(conflicts: &[protocol::Conflict]) -> Vec<ShellConflictRow> {
+pub fn conflict_rows(conflicts: &[protocol::Conflict]) -> Vec<ShellConflictRow> {
     conflicts
         .iter()
         .filter(|conflict| conflict.status == protocol::ConflictStatus::Open)

@@ -25,7 +25,7 @@ import {
   faultDisplayMessage,
   viewContextWireValue
 } from "@semio-tech/framework-os";
-import { type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
 import { hopTrace } from "../../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
 import type { ViewModel } from "../🧷️handle-contract/🟦️.ts";
 import { leftoverShellInvocationFrames, type WireVariant } from "../🪝️wire-codec/🟦️.ts";

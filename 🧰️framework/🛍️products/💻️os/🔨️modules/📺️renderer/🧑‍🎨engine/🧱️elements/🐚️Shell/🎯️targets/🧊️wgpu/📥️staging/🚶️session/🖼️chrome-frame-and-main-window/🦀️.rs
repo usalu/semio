@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellChrome
 impl<'ctx> SessionCtx<'ctx> {
-    pub(crate) fn body_rect(&self, theme: &Theme) -> Rect {
+    pub fn body_rect(&self, theme: &Theme) -> Rect {
         let top = theme.navbar_height + self.tutorial.tutorial_bar_reserve(theme);
         Rect::new(0.0, top, self.chrome.screen_w, self.chrome.screen_h - top - theme.footer_height - self.subfooter_height(theme))
     }

@@ -1,4 +1,7 @@
-use super::*;
+
+use semio_framework::kernel::Effect;
+use crate::conversion::wit_effect_to_kernel;
+use crate::wit_effects;
 
 #[semio_framework_async_macros::async_test]
 async fn service_operation_preserves_its_exact_owner_action_and_payload() {

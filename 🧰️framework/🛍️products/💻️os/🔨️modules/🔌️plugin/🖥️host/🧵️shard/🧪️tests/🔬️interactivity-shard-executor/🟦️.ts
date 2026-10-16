@@ -1,4 +1,4 @@
-import { interactivityShardExecutorFailures } from "../../../../../../../../../📜️script.ts";
+import { interactivityShardExecutorFailures } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity shard executor policy assertions. */
 export function interactivityShardExecutorSelfTests(): void {

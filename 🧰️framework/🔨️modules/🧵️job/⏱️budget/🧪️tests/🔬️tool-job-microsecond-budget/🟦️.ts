@@ -2,7 +2,8 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { microsecondsFromMilliseconds } from "../../🟨️.js";
-import { WORKSPACE_ROOT, toolJobMicrosecondWorkerExact } from "../../../../../../📜️script.ts";
+import { WORKSPACE_ROOT } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { toolJobMicrosecondWorkerExact } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
 
 /** 🧪️ Executes tool job microsecond budget policy assertions. */
 export function toolJobMicrosecondBudgetSelfTests(): number {

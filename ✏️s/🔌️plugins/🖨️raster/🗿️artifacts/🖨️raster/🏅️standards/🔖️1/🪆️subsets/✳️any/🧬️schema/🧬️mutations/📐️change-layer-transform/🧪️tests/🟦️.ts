@@ -1,7 +1,7 @@
 /** 📐️ Complete layer-transform mutation contracts with independent JSON patch application. */
 import {expect,test} from "bun:test";
 
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 
 import patch from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json";
@@ -38,7 +38,7 @@ test("layer patches distinguish complete transforms from partial translations",(
   }
 });
 
-import {compose} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/📐️frames/🟦️.ts";
+import {compose} from "@semio-tech/framework/pixels/compositing/frames";
 
 import {Matrix3} from "three";
 

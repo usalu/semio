@@ -425,7 +425,7 @@ mod typed_command_full_operation_tests {
                     if pending.phase() == target {
                         break;
                     }
-                    app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+                    app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                 }
                 let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else {
                     panic!("exact pending presence owner");
@@ -440,7 +440,7 @@ mod typed_command_full_operation_tests {
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
                 assert!(mounted.acknowledge_result_page(page.token).unwrap());
             }
-            app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+            app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
             assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
             let cancelled = mounted.result_page.as_ref().unwrap();
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
@@ -647,7 +647,7 @@ mod typed_command_full_operation_tests {
                         if pending.phase() == target {
                             break;
                         }
-                        app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+                        app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                     }
                     let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else {
                         panic!("exact document pending owner");
@@ -671,7 +671,7 @@ mod typed_command_full_operation_tests {
                         assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
                     }
                 }
-                app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+                app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                 let final_page = if delayed_ack {
                     let presented = mounted.take_result_page().unwrap();
                     let mut deliveries = 1;
@@ -1013,7 +1013,7 @@ mod typed_command_full_operation_tests {
             if app.stores.presence_store.generation_now() == 1 {
                 break;
             }
-            app.advance_typed_operation_publication_one(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
+            app.typed_ctx().advance_typed_operation_publication_one(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
         }
         assert_eq!(app.stores.presence_store.generation_now(), 1);
         let stuck = app.tools.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
@@ -1092,7 +1092,7 @@ mod typed_command_full_operation_tests {
         app.tools.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
         assert!(app.tools.tool_operations.get(1).unwrap().publication.is_some());
         let quoted = app.mounted_policy.close;
-        let released = app.retire_typed_operation_unit(1, quoted).unwrap();
+        let released = app.typed_ctx().retire_typed_operation_unit(1, quoted).unwrap();
         assert!(matches!(released, PluginLifecycleStep::Progress(progress) if progress.fits(quoted) && progress != Default::default()), "one bounded retirement unit releases the retiring operation's publication: {released:?}");
         assert!(app.tools.tool_operations.get(1).unwrap().publication.is_none());
         assert_eq!(app.tools.tool_operations.get(2).unwrap().stage, MountedTypedCommandFullOperationStage::AwaitingAck);
@@ -1107,7 +1107,7 @@ mod typed_command_full_operation_tests {
                 break;
             }
             let quoted = app.mounted_policy.close;
-            app.retire_typed_operation_unit(1, quoted).unwrap();
+            app.typed_ctx().retire_typed_operation_unit(1, quoted).unwrap();
         }
         assert!(app.tools.tool_operations.get(1).unwrap().terminal_is_empty());
         assert_eq!(app.tools.tool_cancellations.active_operation_count(), 2);

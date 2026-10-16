@@ -52,7 +52,7 @@ export const MESSAGE_ENDPOINT_VARIANT_FIELDS: ReadonlyArray<{ readonly kind: str
 
 /** 📤️ TypeScript mirror of Rust `Effect::SendMessage { target: MessageEndpoint, payload: Vec<u8> }`
  * (`🎠️kernel/🦀️.rs`) — field-for-field, camelCase-tagged like every other `Effect` variant.
- * Declared fresh here (not imported from `🎠️kernel/🟦️.ts`, which stubs `target: unknown` and
+ * Declared fresh here (not imported from `🎠️kernel`, which stubs `target: unknown` and
  * is outside this packet's owned/leased paths) so this module can type `target` precisely without
  * editing a file it does not own. */
 export type EffectSendMessage = { readonly sendMessage: { readonly target: MessageEndpoint; readonly payload: readonly number[] } };

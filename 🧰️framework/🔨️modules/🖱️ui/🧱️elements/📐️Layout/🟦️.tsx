@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { panelTabFirstDraggableElementId } from "@semio-tech/framework";
+import { panelTabFirstDraggableElementId } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { type UiStatus } from "@semio-tech/ui-styling";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";

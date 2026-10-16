@@ -1,4 +1,4 @@
-import {binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "@semio-tech/framework/value/ieee754";
 // 🧱️ Example `wall-roof-facade-strip` — the TypeScript twin of `🦀️.rs`'s builder.
 
 import type { Wfc2dSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";

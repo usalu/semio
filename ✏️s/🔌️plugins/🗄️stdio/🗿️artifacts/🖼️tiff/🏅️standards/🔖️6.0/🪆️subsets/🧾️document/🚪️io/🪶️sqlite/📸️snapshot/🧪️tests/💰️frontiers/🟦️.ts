@@ -2,7 +2,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import fixture from "../../../../../🧪️tests/🧫️fixtures/📸️snapshot/💰️frontiers/🔣️.json";
-import {exportSqliteDatabase,SqliteOperation} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {exportSqliteDatabase,SqliteOperation} from "@semio-tech/framework/io/sqlite-snapshot";
 import { tiffSnapshotToSqliteDatabase, tiffSnapshotToSqliteFile, tiffSnapshotFromSqliteFile } from "../../🟦️.ts";
 const small={schema:"stdio.tiff" as const,ifds:[]};
 const corpus={...small,ifds:[{entries:[{tag:65535,values:{kind:"long" as const,value:Array.from({length:fixture.domainValueCount},(_,i)=>i)}}],blocks:[]}]};

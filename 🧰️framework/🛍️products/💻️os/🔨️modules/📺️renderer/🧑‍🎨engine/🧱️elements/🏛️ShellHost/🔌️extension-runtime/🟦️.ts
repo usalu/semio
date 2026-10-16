@@ -58,7 +58,7 @@ export function pluginInstallConcurrency(): number {
  * 🪞️ Mirrors the guest-side switch `RUNTIME_DIAGNOSTICS_ENV`
  * (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`) key for key, so one name arms both sides of the wire; the
  * two cannot share a declaration across the language boundary, so
- * `🧪️tests/🔬️engine-contract/🟦️.ts` pins the string instead
+ * `🧪️tests/🛡️runtime-admission/🟦️.ts` pins the string instead
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export const RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 

@@ -1,4 +1,4 @@
-import { interactivityDbIoB1B6Failures } from "../../../../../../../../📜️script.ts";
+import { interactivityDbIoB1B6Failures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity db io b1b6 policy assertions. */
 export function interactivityDbIoB1B6SelfTests(): void {

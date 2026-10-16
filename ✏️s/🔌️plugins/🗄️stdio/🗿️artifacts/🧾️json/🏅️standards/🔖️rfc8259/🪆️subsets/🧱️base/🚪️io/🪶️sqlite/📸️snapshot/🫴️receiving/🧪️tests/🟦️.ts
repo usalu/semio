@@ -8,13 +8,13 @@ import inputs from "./🧫️fixtures/🏛️inputs.json";
 import snapshots from "./🧫️fixtures/📸️snapshots.json";
 import malformed from "./🧫️fixtures/⚠️malformed.json";
 import grants from "./🧫️fixtures/🎟️grants.json";
-import relational from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🏛️relational/🔣️.json";
+import { sqliteSnapshotRelationalSchema as relational } from "@semio-tech/framework/io/sqlite-snapshot/schema/relational";
 import {parseJsonSnapshot} from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import snapshotSchema from "../../../../../🧬️schema/📸️snapshot/🔣️.json";
-import grantSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/framework/value/retained-clone/wire/schema";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import {jsonSnapshotFromSqliteDatabase,jsonSnapshotToSqliteDatabase} from "../../🟦️.ts";
-import type {SqliteDatabase,SqliteValue} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import type {SqliteDatabase,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
 const scalar=(value:unknown):SqliteValue=>value!==null&&typeof value==="object"?BigInt((value as{integer:string}).integer):value as SqliteValue;
 const database=(value:typeof inputs[number]):SqliteDatabase=>({tables:value.tables.map(table=>({...table,rows:table.rows.map(row=>({rowid:BigInt(row.rowid),values:row.values.map(scalar)}))}))});
 function oracle(original:SqliteDatabase):Database{const db=new Database(":memory:",{safeIntegers:true});try{for(const table of original.tables)db.run(table.sql);for(const table of original.tables)for(const row of table.rows)db.run("INSERT INTO "+table.name+" VALUES("+row.values.map(()=>"?").join(",")+")",row.values as(string|number|bigint|null)[]);return db;}catch(error){db.close();throw error;}}

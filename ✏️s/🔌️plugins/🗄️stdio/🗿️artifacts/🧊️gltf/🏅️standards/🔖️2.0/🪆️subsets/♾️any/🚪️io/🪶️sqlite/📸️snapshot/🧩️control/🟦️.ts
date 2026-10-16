@@ -1,10 +1,10 @@
 /** 🧩️ Literal-table bookkeeping for explicitly authored GLTF typed projections. */
-import type {SqliteDatabase,SqliteRow,SqliteValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {ArtifactSqliteOptions} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {sqliteValueByteLength} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteValueBudget} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,ieee754CellByteLength,readBinary64,ieee754IsNull,type Ieee754Cell,type Ieee754Column} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {SqliteDatabase,SqliteRow,SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
+import type {ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type {Binary64} from "@semio-tech/framework/value/ieee754";
+import {sqliteValueByteLength} from "@semio-tech/framework/io/sqlite-snapshot";
+import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteValueBudget} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,ieee754CellByteLength,readBinary64,ieee754IsNull,type Ieee754Cell,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 import {GLTF_SQLITE_SCHEMA} from "../🗄️.ts";
 import type {GltfJson} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {projectJson,reconstructJson} from "../🧩️extras/🟦️.ts";

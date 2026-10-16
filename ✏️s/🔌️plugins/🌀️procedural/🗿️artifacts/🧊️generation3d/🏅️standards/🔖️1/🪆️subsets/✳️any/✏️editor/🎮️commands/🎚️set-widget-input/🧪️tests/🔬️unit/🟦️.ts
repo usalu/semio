@@ -5,7 +5,7 @@ import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import mutationSchema from "../../../../../🧬️schema/🧬️mutations/🎛️change-widget-input/🧬️schema/🔣️.json";
 import { editCollectionValue, editInputValue, editWidgetFacet, editMeshSource, editMeshTexture } from "../../🟦️.ts";
-import meshSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🧬️schema/🥽️polygon/🔣️.json";
+import { meshEnginePolygonSchema as meshSchema } from "@semio-tech/framework/mesh-engine/schema/polygon";
 import {PNG} from "pngjs";
 import {BoxGeometry,EdgesGeometry,Vector3} from "three";
 import {JSDOM} from "jsdom";

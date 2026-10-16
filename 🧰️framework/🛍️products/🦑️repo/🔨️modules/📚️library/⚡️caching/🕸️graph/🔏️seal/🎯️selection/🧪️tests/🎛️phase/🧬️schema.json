@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "effects",
+          "reason"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "actual",
+              "copied",
+              "cancelled"
+            ]
+          },
+          "effects": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "reason": {
+            "enum": [
+              null,
+              "Live Original resource control issuance required",
+              "Actual fixture phase stopped"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

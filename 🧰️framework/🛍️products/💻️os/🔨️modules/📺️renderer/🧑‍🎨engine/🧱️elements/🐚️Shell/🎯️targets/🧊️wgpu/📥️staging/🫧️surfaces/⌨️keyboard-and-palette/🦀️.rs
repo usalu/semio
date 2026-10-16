@@ -18,15 +18,15 @@ impl SettleState {
 impl SurfaceState {
     /// ⏳️ Every live World3d surface whose own published status says its producer is working, with
     /// that status — the one input both halves of a pump step read.
-    pub(super) fn live_compute_surfaces(&self) -> impl Iterator<Item = (String, World3dComputeStatus)> + '_ {
+    pub fn live_compute_surfaces(&self) -> impl Iterator<Item = (String, World3dComputeStatus)> + '_ {
         self.world3d_status.iter().filter(|(surface_id, _)| self.world3d_states.contains_key(surface_id.as_str())).filter_map(|(surface_id, json)| {
             let status = world3d_compute_status(Some(json.as_str()));
             status.computing.then(|| (surface_id.clone(), status))
         })
     }
 
-    pub(crate) fn sync_world3d_catalogue_drop_preview(&mut self, x: f32, y: f32, drag_data: &HashMap<String, String>) {
-        let Some((object_kind, mesh_url)) = crate::engine_canvas::puzzle3d_catalogue_drag_payload(drag_data) else {
+    pub fn sync_world3d_catalogue_drop_preview(&mut self, x: f32, y: f32, drag_data: &HashMap<String, String>) {
+        let Some((object_kind, mesh_url)) = semio_framework_os_renderer_wgpu_engine_graph::node_graph::puzzle3d_catalogue_drag_payload(drag_data) else {
             self.clear_world3d_catalogue_drop_previews();
             return;
         };
@@ -40,14 +40,14 @@ impl SurfaceState {
         }
     }
 
-    pub(super) fn clear_world3d_catalogue_drop_previews(&mut self) {
+    pub fn clear_world3d_catalogue_drop_previews(&mut self) {
         for state in self.world3d_states.values_mut() {
             world3d_clear_catalogue_drop_preview(&mut state.gumball);
         }
     }
 
-    pub(super) fn world3d_catalogue_drop_action(&self, x: f32, y: f32, drag_data: &HashMap<String, String>) -> Option<ActionDescriptor> {
-        let (object_kind, _mesh_url) = crate::engine_canvas::puzzle3d_catalogue_drag_payload(drag_data)?;
+    pub fn world3d_catalogue_drop_action(&self, x: f32, y: f32, drag_data: &HashMap<String, String>) -> Option<ActionDescriptor> {
+        let (object_kind, _mesh_url) = semio_framework_os_renderer_wgpu_engine_graph::node_graph::puzzle3d_catalogue_drag_payload(drag_data)?;
         for state in self.world3d_states.values() {
             if !state.bounds.contains(x, y) {
                 continue;
@@ -55,7 +55,7 @@ impl SurfaceState {
             let Some(origin) = world3d_catalogue_drop_origin(&state.session, &state.camera, &state.scene, x, y) else {
                 return None;
             };
-            return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "addObjectKind".into(), args: crate::action_args_json!({ "objectKind": object_kind, "origin": origin }) });
+            return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "addObjectKind".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "objectKind": object_kind, "origin": origin }) });
         }
         None
     }

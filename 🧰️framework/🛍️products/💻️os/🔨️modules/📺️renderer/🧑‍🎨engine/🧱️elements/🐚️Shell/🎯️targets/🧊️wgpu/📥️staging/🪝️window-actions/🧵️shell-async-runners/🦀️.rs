@@ -11,7 +11,7 @@ use super::*;
 /// before the document's actor exists, so every mutation the guest authors names the document and its
 /// baseline is the hub's (a door artifact's genesis, a checked-in document's check-in). A document bound to
 /// no hub keeps the guest's own document.
-pub(crate) async fn seed_hub_document(plugin: ProgramBridgeEntry, instance_id: u32, seed: Option<ShellHubDocumentSeed>) -> Result<Option<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1>, crate::program_bridge::ProgramFault> {
+pub async fn seed_hub_document(plugin: ProgramBridgeEntry, instance_id: u32, seed: Option<ShellHubDocumentSeed>) -> Result<Option<semio_framework_os_kernel::os_directory::CanonicalCheckpointPairV1>, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault> {
     let Some(seed) = seed else { return Ok(None) };
     let pair = seed.client.document_canonical_checkpoint_pair(&seed.ctx, &seed.scope, &seed.checkpoint).await.map_err(|error| format!("canonical checkpoint pair: {error}"))?;
     plugin.load_app_document_pack(instance_id, &pair.pack_bytes, &pair.spr_bytes).await?;

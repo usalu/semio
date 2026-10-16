@@ -5,7 +5,7 @@ import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectValues,dwgReconstructValues } from "../../🏷️xrecord/🟦️.ts";
 import { dwgProjectColor,dwgReconstructColor } from "../../🎨️color/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/🏷️xrecord/🔣️.json";
 import encodingFixture from "../🧫️fixtures/📏️encoding.json";

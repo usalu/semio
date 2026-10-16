@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧰️schema/🟦️.ts";
 
 const GIS_SCHEMA_MODULE = "🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json";
 
@@ -11,7 +10,7 @@ export async function proveGisControlledProposal(repoRoot: string): Promise<void
   
   
   const points = [[fixture.snapshot.positions[0].data.lon, fixture.snapshot.positions[0].data.lat], ...fixture.snapshot.routes[0].data.points];
-  const x = points.map((point: number[]) => point[0]), y = points.map((point: number[]) => point[1]);
+  const x = points.map((point: readonly [number,number]) => point[0]), y = points.map((point: readonly [number,number]) => point[1]);
   const [west, east, south, north] = [Math.min(...x), Math.max(...x), Math.min(...y), Math.max(...y)];
   const bounds = { lonMin: west, lonMax: east, latMin: south, latMax: north };
   if (JSON.stringify(bounds) !== JSON.stringify(fixture.expected.bounds)) throw new Error("GIS independent bounds mismatch");

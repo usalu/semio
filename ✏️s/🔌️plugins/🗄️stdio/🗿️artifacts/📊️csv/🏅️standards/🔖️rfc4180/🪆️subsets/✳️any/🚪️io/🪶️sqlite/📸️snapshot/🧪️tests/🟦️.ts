@@ -1,5 +1,5 @@
-import { semioSchemaAjvV1 as originalGrantAjv } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import originalGrantSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json";
+import { semioSchemaAjvV1 as originalGrantAjv } from "@semio-tech/framework/schema/oracles/validator";
+import { retainedCloneWireSchema as originalGrantSchema } from "@semio-tech/framework/value/retained-clone/wire/schema";
 const admitOriginalGrant=originalGrantAjv({strict:true}).compile(originalGrantSchema);
 import {existsSync as hasTrialSchema} from "node:fs";
 test("current whole trial declarations remain absent",()=>{expect(hasTrialSchema(new URL("../🫴️receiving/🛂️validation/🧬️schema/🔣️.json",import.meta.url))).toBe(false);});
@@ -134,8 +134,8 @@ test("csv one literal Unicode field remains exact through independent SQLite sto
 
 import backingFixture from "./🧫️fixtures/💰️backing/🔣️.json";
 
-import {NativeDecodeControl as BackingDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {SqliteAllocationControl as BackingAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {NativeDecodeControl as BackingDecodeControl} from "@semio-tech/framework/value/decode";
+import {SqliteAllocationControl as BackingAllocationControl} from "@semio-tech/framework/io/sqlite-snapshot";
 test("csv authored relation indexes and literal octet admission have independent authorities",async()=>{
  expect(backingFixture["owner"]).toEqual("csv");expect(backingFixture["policy"]["zeroOwnershipBytes"]).toEqual(0);expect(backingFixture["policy"]["refusalKind"]).toEqual("ownershipLimit");expect(backingFixture["policy"]["retirementRefund"]).toEqual(false);expect(backingFixture["policy"]["byteAuthority"]).toEqual("literalUTF8Bytes");expect(backingFixture["policy"]["indexAuthority"]).toEqual("authoredEntityRelations");
  const snapshot={schema:backingFixture.schema,hasHeader:false,records:backingFixture.records.map(record=>({fields:backingFixture.fields.filter(field=>field.recordId===record.id).sort((a,b)=>a.ordinal-b.ordinal).map(field=>({value:field.value,quoted:field.quoted}))}))};
@@ -150,8 +150,8 @@ test("csv authored relation indexes and literal octet admission have independent
  const exact=new BackingAllocationControl({maxAllocationBytes:bytes.length});{const copied=await exact.stage(maximum=>new BackingDecodeControl(maximum,()=>true),control=>control.copyBytes(bytes));expect(Buffer.from(copied)).toEqual(bytes);}expect(exact.remainingBytes()).toBe(0);await expect(exact.stage(maximum=>new BackingDecodeControl(maximum,()=>true),control=>control.copyBytes(Uint8Array.of(1)))).rejects.toMatchObject({kind:backingFixture.policy.refusalKind});expect(exact.remainingBytes()).toBe(0);
 });
 
-import {NativeDecodeControl as BudgetDecodeControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {SqliteAllocationControl as BudgetAllocationControl} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {NativeDecodeControl as BudgetDecodeControl} from "@semio-tech/framework/value/decode";
+import {SqliteAllocationControl as BudgetAllocationControl} from "@semio-tech/framework/io/sqlite-snapshot";
 
 import logicalOwnerFixture from "./🧫️fixtures/🧠️logical-owner/🔣️.json";
 
@@ -176,7 +176,7 @@ test("Csv complete logical owner preserves authored metadata and empty records i
  console.log("[DEBUG] Csv complete logical owners retained literal schema, header flag, quote flags and zero-field record occurrences through independent SQLite");
 });
 
-import {readClosedRecordPack,type ClosedValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🔮️pack/🟦️.ts";
+import {readClosedRecordPack,type ClosedValue} from "@semio-tech/framework/pack/value/testing/preflight/pack";
 import {readFileSync as readLogicalAsset} from "node:fs";
 import {createRequire as requireIndependentTable} from "node:module";
 const independentTable:{csvParseRows:(text:string)=>string[][]}=requireIndependentTable(import.meta.url)("d3-dsv");

@@ -171,7 +171,7 @@ describe("cross-platform bootstrap", () => {
       const clone = join(root, "clone");
       git(["init", "-q", clone], root);
       writeFileSync(join(clone, "AGENTS.md"), "# agents\n");
-      const { SetupScript, REPO_LOCAL_GIT_CONFIG } = await import(join(repoRoot, "📜️script.ts"));
+      const { SetupScript, REPO_LOCAL_GIT_CONFIG } = await import(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts"));
       expect(REPO_LOCAL_GIT_CONFIG).toEqual(fixture.repoLocalGitConfig);
       const { createScriptProcessEnvelope, withScriptProcessEnvelope } = await import(join(repoRoot, "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts"));
       await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "cross-platform-bootstrap-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), async (invocation: unknown) => { await new SetupScript(clone, clone, invocation).run(["git"]); });

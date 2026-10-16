@@ -1,6 +1,6 @@
 import {parseDrawingFontFamily,type DrawingFontFamily} from "./📝️text/🔤️family/🟦️.ts";
-import { binary64, type Binary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
+import { parseBinary64 } from "@semio-tech/framework/value/ieee754";
 import {parseFillRule,type FillRule} from "./🎨️fill/🌀️rule/🟦️.ts";
 /** 🧬️ Drawing artifact schema — every field with its state class. */
 

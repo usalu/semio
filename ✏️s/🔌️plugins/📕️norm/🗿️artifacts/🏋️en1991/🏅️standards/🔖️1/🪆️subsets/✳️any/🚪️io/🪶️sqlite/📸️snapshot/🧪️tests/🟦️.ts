@@ -9,8 +9,8 @@ import controls from"./🧫️fixtures/🎛️control.json";
 import words from"./🧫️fixtures/🔢️binary64.json";
 import choices from"./🧫️fixtures/🛂️choices.json";
 import { EN1991_SQLITE_SCHEMA, en1991SnapshotToSqliteDatabase, en1991SnapshotFromSqliteDatabase, type En1991SqliteSnapshot } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
+import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 
 function ownedFixture():En1991SqliteSnapshot{
  const f=fixture;return{...f,annex:"En",fireMode:"parametric",fireCurve:"hydrocarbon",structureKind:"bridge",
@@ -56,8 +56,8 @@ import NormSemanticAjv from "ajv/dist/2020.js";
 import normSemanticContract from "./🧫️fixtures/🎛️semantic.json";
 
 import {en1991SnapshotToSqliteDatabase as normSemanticProject,en1991SnapshotFromSqliteDatabase as normSemanticRestore} from "../🟦️.ts";
-import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {independentSqliteExtent as normIndependentExtent} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts";
+import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
+import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("EN1991 complete independent cells preserve copied limits and required empty metadata",async()=>{
  expect(normSemanticContract["schemaBytes"]).toEqual(10368);expect(normSemanticContract["tableWidths"]).toEqual({"en1991_accidental_case":4,"en1991_document":152,"en1991_explosion":12,"en1991_floor":17,"en1991_impact":12,"en1991_roof":25,"en1991_self_weight":11,"en1991_wind_face":29});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":17,"valueBytes":2930},{"id":"emptyCollections","rows":1,"valueBytes":1140}]);
  for(const item of normSemanticContract.cases){const source=ownedFixture();if(item.id==="emptyCollections"){source.floors=[];source.selfWeightElements=[];source.roofs=[];source.windFaces=[];source.accidentalCases=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:8,maxColumns:152};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);

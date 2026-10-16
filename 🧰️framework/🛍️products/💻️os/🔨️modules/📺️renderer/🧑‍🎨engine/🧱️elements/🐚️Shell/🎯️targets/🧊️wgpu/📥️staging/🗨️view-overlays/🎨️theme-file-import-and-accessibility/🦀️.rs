@@ -5,18 +5,10 @@
 use super::*;
 
 //#region ♿️ChromeAccessibleNames
-/// ♿️ Records the consequence text a reader hears with one chrome control (`aria-describedby`).
-pub(crate) fn note_chrome_control_description(control_id: &str, description: Option<&str>) {
-    with_chrome_control_names(|names| {
-        if let Some(presentation) = names.get_mut(control_id) {
-            presentation.description = description.map(str::to_string);
-        }
-    });
-}
 
 /// 🎛️ Records a dialog control's role, pressed state and value (a slider's range and spoken value, a spin
 /// button's text) beside its painted name.
-pub(crate) fn note_chrome_control_semantics(control_id: &str, semantics: &ChromeDialogSemantics) {
+pub fn note_chrome_control_semantics(control_id: &str, semantics: &ChromeDialogSemantics) {
     with_chrome_control_names(|names| {
         if let Some(presentation) = names.get_mut(control_id) {
             presentation.role = semantics.role.or(presentation.role);
@@ -27,17 +19,8 @@ pub(crate) fn note_chrome_control_semantics(control_id: &str, semantics: &Chrome
     });
 }
 
-/// 🚫️ Records that a painted chrome control is disabled (`aria-disabled`) — a band control a session refusal blocks.
-pub(crate) fn note_chrome_control_disabled(control_id: &str, disabled: bool) {
-    with_chrome_control_names(|names| {
-        if let Some(presentation) = names.get_mut(control_id) {
-            presentation.disabled = disabled;
-        }
-    });
-}
-
 /// 🔊️ One non-interactive chrome status node: named, politely live, never focusable nor actionable.
-pub(crate) fn chrome_status_accessibility_node(node_id: u64, key: &str, label: String) -> ui_contract::AccessibilityProjectionNode {
+pub fn chrome_status_accessibility_node(node_id: u64, key: &str, label: String) -> ui_contract::AccessibilityProjectionNode {
     ui_contract::AccessibilityProjectionNode {
         value_step: None,
         invalid: false,

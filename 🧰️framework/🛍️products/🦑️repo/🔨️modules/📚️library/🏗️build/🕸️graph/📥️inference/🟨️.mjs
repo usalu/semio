@@ -2085,9 +2085,14 @@ export function createMetadata(...args){return invokeCurrentImplementation("meta
  * @typedef {[string, { projects: Record<string, GeneratedProject> }][]} GeneratedNodes
  */
 
+/**
+ * 🎛️ Receives the OS invocation or preserves an explicitly supplied Original and its mandatory issued phase.
+ * @typedef {{workspaceRoot:string} & ({invocation?:undefined,phaseControl?:undefined}|{invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts").ResourceLeaseControl})} BuildInferenceContextV1
+ */
+
 export default {
   name: "@repo/emoji-project-json",
-  createNodesV2: /** @type {[string, (files: readonly string[], options: unknown, context: { workspaceRoot: string }) => Promise<GeneratedNodes>]} */ ([`**/{${PROJECT_BASENAME},Cargo.toml,bun.lock,*.patch}`, (...args) => invokeCurrentImplementation("nodes", args)]),
+  createNodesV2: /** @type {[string, (files: readonly string[], options: unknown, context: BuildInferenceContextV1) => Promise<GeneratedNodes>]} */ ([`**/{${PROJECT_BASENAME},Cargo.toml,bun.lock,*.patch}`, (...args) => invokeCurrentImplementation("nodes", args)]),
   createDependencies,
   createMetadata,
 };

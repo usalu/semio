@@ -1,4 +1,4 @@
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 import {parseStlTriangle,parseStlCoordinateTuple,parseStlVertices}from"../🟦️.ts";
 /** 🔺️ StlDiff — handcrafted sparse diff. `solidName` plus an index-keyed `triangles` triple. */
 

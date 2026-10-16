@@ -1,9 +1,9 @@
 /** 🎞️ Native animation timelines and explicitly typed keyframe components. */
 import type {SemioAnimationSnapshot,AnimTimeline,AnimChannel,AnimKeyframe,AnimValue,AnimTargetProperty,AnimInterpolation} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_ANIMATION_SQLITE_SCHEMA=`CREATE TABLE semio_animation_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL);
 CREATE TABLE semio_animation_timeline (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_animation_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), name TEXT);
 CREATE TABLE semio_animation_channel (id INTEGER PRIMARY KEY, timeline_id INTEGER NOT NULL REFERENCES semio_animation_timeline(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0), target_node TEXT NOT NULL, target_property TEXT NOT NULL CHECK (target_property IN ('translation','rotation','scale','weights','custom')), custom_property_name TEXT, interpolation TEXT NOT NULL CHECK (interpolation IN ('linear','step','cubic_spline')));

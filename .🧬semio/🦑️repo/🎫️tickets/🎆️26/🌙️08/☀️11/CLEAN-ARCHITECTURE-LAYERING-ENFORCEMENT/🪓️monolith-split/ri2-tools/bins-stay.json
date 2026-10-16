@@ -1,0 +1,152 @@
+[
+ [
+  "windows-1",
+  "🔬️wgpu-panel-anchor-model",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "windows-1",
+  "🪟️wgpu-window-pane-chrome",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "windows-2",
+  "🎬️wgpu-window-actions-search-panes",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "windows-2",
+  "📏️wgpu-window-measures",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "windows-2",
+  "🧲️engine-surface-retention",
+  "'no facade entry for engine_canvas::engine_surface_law_guard'"
+ ],
+ [
+  "windows-2",
+  "🛟️panel-window-reservation",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "chrome-3",
+  "🔬️wgpu-shell-chrome-parity",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ],
+ [
+  "chrome-4",
+  "🎨️wgpu-theme-editor-and-accessibility",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "chrome-5",
+  "🧭️wgpu-navbar-footer-parity",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "chrome-5",
+  "🖥️wgpu-display-conflicts-marketplace",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "chrome-5",
+  "⚙️settings-general-layout",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "chrome-5",
+  "🗄️browser-prefs-persistence",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ],
+ [
+  "chrome-6",
+  "🌓️appearance-tour-and-footer-pills",
+  "'unknown root path crate::RENDERER_SOURCE'"
+ ],
+ [
+  "chrome-6",
+  "🚪️wgpu-host-door-remainder",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ],
+ [
+  "chrome-6",
+  "💓️chrome-maintenance-pressure",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ],
+ [
+  "input-1",
+  "🔬️wgpu-shell-input",
+  "'no facade entry for scenes::camera_fixture_lease'"
+ ],
+ [
+  "input-2",
+  "⌨️wgpu-shell-shortcuts-palette",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "input-2",
+  "🎯️presented-input-authority",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "input-3",
+  "🎓️tour-overlay-and-chord-glyphs",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ],
+ [
+  "input-3",
+  "🎡️wgpu-wheel-and-escape-routing",
+  "'unknown root path crate::RENDERER_SOURCE'"
+ ],
+ [
+  "input-3",
+  "🪟️window-lifecycle-template-drag",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "docs-1",
+  "🧪️wgpu-time-travel",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "docs-2",
+  "🔗️hub-projection-workspace",
+  "'no facade entry for engine_canvas::engine_surface_law_guard'"
+ ],
+ [
+  "docs-2",
+  "🔀️wgpu-document-relay",
+  "'unknown root path crate::RENDERER_SOURCE'"
+ ],
+ [
+  "docs-3",
+  "📤️wgpu-file-open-import",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ],
+ [
+  "docs-3",
+  "⏯️wgpu-tool-run-panel",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "docs-3",
+  "📤️export-batch",
+  "'unknown root path crate::fixture_original_turn'"
+ ],
+ [
+  "docs-3",
+  "👕️board-presence",
+  "'no facade entry for engine_canvas::engine_surface_law_guard'"
+ ],
+ [
+  "docs-3",
+  "⬇️wgpu-media-export-encoding",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ],
+ [
+  "docs-3",
+  "🔄️sync-owner-lifetime",
+  "'shell::SHELL_SOURCE has no owning Shell crate'"
+ ]
+]

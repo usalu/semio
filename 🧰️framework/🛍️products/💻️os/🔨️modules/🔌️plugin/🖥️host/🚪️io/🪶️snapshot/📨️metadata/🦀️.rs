@@ -1,6 +1,7 @@
 //! 📨️ Authored scalar metadata parses original borrowed JSON with no replacement heap owner.
 use super::*;
 use semio_framework_value::NativeEncodeControl;
+use semio_framework_plugin_guest_contract::sqlite_wire;
 #[derive(Clone,Copy)]
 pub(super) enum MetadataKind { Retirement,Close(RetainedCloneGrant) }
 pub(super) struct Metadata { pub retirement:sqlite_wire::SnapshotRetirement,pub progress:RetainedCloneProgress,pub refusal:u32 }

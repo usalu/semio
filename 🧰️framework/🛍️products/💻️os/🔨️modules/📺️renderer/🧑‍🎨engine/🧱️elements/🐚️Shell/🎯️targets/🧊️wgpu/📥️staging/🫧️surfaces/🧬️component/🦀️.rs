@@ -16,7 +16,7 @@ pub struct SurfaceState {
     /// 🧯️ Closed World3d owners whose `cancel(CaptureLost)` waits for one drive of their world authority before they retire,
     /// with the sightings so far ([`ShellState::world3d_close_cancel_settled`]).
     pub world3d_close_cancels: BTreeMap<String, u8>,
-    pub component_world3d_retirement: Option<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>,
+    pub component_world3d_retirement: Option<semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceCloseOwner<World3dState>>,
     pub world3d_retirement_epoch: u64,
     pub world3d_retirement_sequence: u64,
     pub world3d_retirement_fault: Option<infinite_world::world::WorldDynamicFault>,

@@ -222,10 +222,20 @@
   ],
   "consumers": [
     {
-      "path": "📜️script.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts",
       "owners": [
-        "🧹️normalization/🎮️command-contract/🟦️.ts",
-        "🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts",
+        "🧹️normalization/🎮️command-contract/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📚️examples/🟦️.ts",
+      "owners": [
+        "🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts",
+      "owners": [
         "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts",
         "🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts"
       ]

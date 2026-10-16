@@ -4,8 +4,8 @@ import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInline
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type PdfCell, type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary, readPdfDictionary, writePdfObject, readPdfObject, writePdfFilters, readPdfFilters } from "../🧩️cos/🟦️.ts";
 import { writePdfColorSpace, readPdfColorSpace, pdfColorNumberColumns } from "../🌈️color/🟦️.ts";
-import { artifactSqliteInteger, artifactSqliteText } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { Ieee754Column } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { artifactSqliteInteger, artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { Ieee754Column } from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 
 enum O { LineWidth, LineCap, LineJoin, MiterLimit, DashPhase, RenderingIntent, Flatness, ExtGState, X1, Y1, X2, Y2, X3, Y3, Width, Height, CharSpacing, WordSpacing, HorizontalScale, Leading, FontName, FontSize, TextRenderingMode, TextRise, Tx, Ty, TextKind, TextValue, TextCodeCount, GlyphWx, GlyphWy, BboxLlx, BboxLly, BboxUrx, BboxUry, ColorSpaceName, PatternName, Gray, Red, Green, Blue, Cyan, Magenta, Yellow, Black, ShadingName, XobjectName, MarkedTag, PropertyKind, PropertyName, PropertyDictionary, InlineImage, UnknownOperator }
 const width = O.UnknownOperator + 1;

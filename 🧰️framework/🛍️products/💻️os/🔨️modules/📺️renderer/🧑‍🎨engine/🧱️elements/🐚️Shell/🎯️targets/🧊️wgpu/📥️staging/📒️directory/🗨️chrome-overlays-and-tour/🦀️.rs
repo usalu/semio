@@ -12,7 +12,7 @@ impl DirectoryState {
     /// This is the ONLY way a bridge socket is ever dialled: `discover_agent_bridge_config()` answers
     /// `None` on both targets, deliberately, exactly as React's does, so a shell nobody supervises
     /// stays `Disabled` instead of guessing a url.
-    pub fn set_agent_bridge_config(&mut self, config: Option<crate::agent_bridge::AgentBridgeConfig>, chrome: &mut ChromeState) -> bool {
+    pub fn set_agent_bridge_config(&mut self, config: Option<semio_framework_os_renderer_wgpu_agent_elements::agent_bridge::AgentBridgeConfig>, chrome: &mut ChromeState) -> bool {
         self.agent_bridge.set_config(config, &mut chrome.chrome_build.agent)
     }
 }

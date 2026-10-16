@@ -1,4 +1,4 @@
-import { interactivityDbIoDirectWriterFailures } from "../../../../../../../📜️script.ts";
+import { interactivityDbIoDirectWriterFailures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
 
 /** 🧪️ Executes interactivity db io direct writer policy assertions. */
 export function interactivityDbIoDirectWriterSelfTests(): void {

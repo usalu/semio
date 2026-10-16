@@ -4,13 +4,13 @@
 
 use super::*;
 
-pub(crate) fn optional_dsl_value_as_json(value: Option<DslValue>) -> Option<Value> {
+pub fn optional_dsl_value_as_json(value: Option<DslValue>) -> Option<Value> {
     value.map(|entry| dsl_value_as_json(&entry))
 }
 
 //#region ShellTypes
 //#region 🔖️NativeSyncChannel
-pub(crate) fn route_document_backbone_effects(actor_uri: &str, cmd_tx: &ArtifactMailboxSender, effects: Vec<semio_framework::kernel::Effect>) -> Result<Vec<semio_framework::kernel::Effect>, String> {
+pub fn route_document_backbone_effects(actor_uri: &str, cmd_tx: &ArtifactMailboxSender, effects: Vec<semio_framework::kernel::Effect>) -> Result<Vec<semio_framework::kernel::Effect>, String> {
     let mut remaining = Vec::new();
     for effect in effects {
         match effect {
@@ -35,7 +35,7 @@ pub(crate) fn route_document_backbone_effects(actor_uri: &str, cmd_tx: &Artifact
 //#endregion 🔖️NativeSyncChannel
 //#endregion ShellTypes
 
-pub(crate) fn scope_action_to_window(action: &mut ActionDescriptor, window_id: &str) {
+pub fn scope_action_to_window(action: &mut ActionDescriptor, window_id: &str) {
     let mut args = match action.args.take() {
         Some(semio_framework_value::DslValue::Object(entries)) => entries,
         _ => Vec::new(),
@@ -50,9 +50,9 @@ pub(crate) fn scope_action_to_window(action: &mut ActionDescriptor, window_id: &
 /// builds link the kernel's `ArtifactHost`; its native actor owns the folder event log and the hub
 /// WebSocket, while its browser actor has no filesystem and dials its hub through the page's socket door.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct ShellDocumentTransports {
-    pub(crate) folder: bool,
-    pub(crate) hub: bool,
+pub struct ShellDocumentTransports {
+    pub folder: bool,
+    pub hub: bool,
 }
 
 /// 📇️ ticket §C6 — maps an `os.directory.<verb>` action id + its relayed JSON args onto a
@@ -60,7 +60,7 @@ pub(crate) struct ShellDocumentTransports {
 /// (`📓️w2-c-report.md`) — same action ids, same field names, same `share-link` → `create-invite`
 /// sugar (contract §C1 has no directory-schema command kind of its own for it). `None` for an
 /// unrecognized verb, defensive against a foreign/future caller.
-pub(crate) fn directory_command_from_action(action_id: &str, args: Option<&Value>) -> Option<DirectoryCommand> {
+pub fn directory_command_from_action(action_id: &str, args: Option<&Value>) -> Option<DirectoryCommand> {
     let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or("").to_string();
     let str_field_or = |key: &str, default: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or(default).to_string();
     let space_kind = |raw: &str| match raw {
@@ -84,7 +84,7 @@ pub(crate) fn directory_command_from_action(action_id: &str, args: Option<&Value
     }
 }
 
-pub(crate) fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<OpenArtifactRelayTarget, &'static str> {
+pub fn open_artifact_relay_target(action_id: &str, args: Option<&Value>) -> Result<OpenArtifactRelayTarget, &'static str> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let args = args.and_then(Value::as_object).ok_or("opening.invalid-args")?;
@@ -133,23 +133,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// 🪐️ ticket §C4/§6 — the space's own artifact-index document: its id is always the literal `"index"`
 /// (one per hub space). Which plugin app edits it, and the document schema it is opened with, are named
 /// by that plugin's own `os.space-index` topic contribution ([`program_space_index`]), never by this shell.
-pub(crate) const SPACE_INDEX_DOCUMENT_ID: &str = "index";
+pub const SPACE_INDEX_DOCUMENT_ID: &str = "index";
 
 /// 🪐️ The app of `role` that serves the space index `program` names.
-pub(crate) fn find_space_index_app(program: &ProgramBridgeEntry, role: semio_framework::manifest::AppRole) -> Option<&AppDefinition> {
+pub fn find_space_index_app(program: &ProgramBridgeEntry, role: semio_framework::manifest::AppRole) -> Option<&AppDefinition> {
     let index = program_space_index(program)?;
     find_dialect_app(program, &index.dialect, role)
 }
 
 /// 🌐️ The three parts a `remote://host:port/space/document` sync-card uri names.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct RemoteBackboneUri {
-    pub(crate) host_port: String,
-    pub(crate) space_id: String,
-    pub(crate) document_id: String,
+pub struct RemoteBackboneUri {
+    pub host_port: String,
+    pub space_id: String,
+    pub document_id: String,
 }
 
-pub(crate) fn bind_wgpu_document_socket_surface(host: &ArtifactHost, document_id: &str, artifact_schema: &str, bindings: &[PersistenceBinding], program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<(), String> {
+pub fn bind_wgpu_document_socket_surface(host: &ArtifactHost, document_id: &str, artifact_schema: &str, bindings: &[PersistenceBinding], program: &ProgramBridgeEntry, app: &AppDefinition, window_kind_id: &str) -> Result<(), String> {
     let mut hub_spaces = bindings.iter().filter_map(|binding| match binding {
         PersistenceBinding::Hub { space_id, .. } => Some(space_id.as_str()),
         PersistenceBinding::Folder { .. } => None,
@@ -177,7 +177,7 @@ pub(crate) fn bind_wgpu_document_socket_surface(host: &ArtifactHost, document_id
 /// 🌱️ The one kind an `os.create-space-artifact` replay may create — ShellHost's `spaceArtifactCreationRequestFromAction`
 /// over this shell's creation catalog: exactly `{kindChoice, name}`, the choice a canonical (decode ∘ encode)
 /// `ArtifactKindChoice` equal to one kind the ready catalog of `space_id` offers. Answers `(kindId, name)`.
-pub(crate) async fn space_artifact_creation_replay_choice(args: Option<&Value>, catalog: Option<&SpaceArtifactCreationCatalogV1>, space_id: &str) -> Result<(String, String), ReplayRefusalReasonV1> {
+pub async fn space_artifact_creation_replay_choice(args: Option<&Value>, catalog: Option<&SpaceArtifactCreationCatalogV1>, space_id: &str) -> Result<(String, String), ReplayRefusalReasonV1> {
     let invalid = ReplayRefusalReasonV1::InvalidRequest;
     let args = args.and_then(Value::as_object).filter(|args| args.len() == 2).ok_or(invalid)?;
     let (Some(choice), Some(name)) = (args.get("kindChoice").and_then(Value::as_str), args.get("name").and_then(Value::as_str)) else { return Err(invalid) };
@@ -206,12 +206,12 @@ pub(crate) async fn space_artifact_creation_replay_choice(args: Option<&Value>, 
 /// 📌️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — auto check-in policy
 /// constants, byte-identical to the React shell's `AUTO_CHECKIN_IDLE_MS`/`AUTO_CHECKIN_EDIT_THRESHOLD`
 /// (`ShellHelpers/🟦️.tsx`).
-pub(crate) const AUTO_CHECKIN_IDLE_MS: i64 = 20_000;
+pub const AUTO_CHECKIN_IDLE_MS: i64 = 20_000;
 
-pub(crate) const AUTO_CHECKIN_EDIT_THRESHOLD: u32 = 200;
+pub const AUTO_CHECKIN_EDIT_THRESHOLD: u32 = 200;
 
 /// 🧾️ The folded rows oldest-first — by `seq`, the command-log order every walk over the ledger reads.
-pub(crate) fn history_rows_oldest_first(entries: &BTreeMap<String, semio_framework::kernel::HistoryEntry>) -> Vec<&semio_framework::kernel::HistoryEntry> {
+pub fn history_rows_oldest_first(entries: &BTreeMap<String, semio_framework::kernel::HistoryEntry>) -> Vec<&semio_framework::kernel::HistoryEntry> {
     let mut rows: Vec<&semio_framework::kernel::HistoryEntry> = entries.values().collect();
     rows.sort_by_key(|entry| entry.seq);
     rows
@@ -220,7 +220,7 @@ pub(crate) fn history_rows_oldest_first(entries: &BTreeMap<String, semio_framewo
 /// 👁️✏️ ticket §C5 item 5 — "viewers never checkpoint", the wgpu twin of the React shell's
 /// `canCheckIn` (`ShellHelpers/🟦️.tsx`): the one predicate gating both the `#s-checkin`
 /// affordance's presence and the auto check-in poll's arming.
-pub(crate) fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
+pub fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
     role == semio_framework::manifest::AppRole::Editor
 }
 
@@ -232,7 +232,7 @@ pub(crate) fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
 /// since the last uncommitted-count change — and never again while `pending` is already set (mirrors
 /// `AutoCheckinScheduler::notify`'s own storm guard: a fire that's already pending never re-fires
 /// until the caller observes the count return to 0 and clears `pending`).
-pub(crate) fn auto_checkin_should_fire(uncommitted_count: u32, pending: bool, last_edit_at_ms: Option<i64>, now_ms: i64, idle_ms: i64, threshold: u32) -> bool {
+pub fn auto_checkin_should_fire(uncommitted_count: u32, pending: bool, last_edit_at_ms: Option<i64>, now_ms: i64, idle_ms: i64, threshold: u32) -> bool {
     if uncommitted_count == 0 || pending {
         return false;
     }
@@ -250,15 +250,15 @@ pub(crate) fn auto_checkin_should_fire(uncommitted_count: u32, pending: bool, la
 /// it (`checkpoint_dispatched`) — a checkpoint id present from the very first snapshot (nothing
 /// "landed", the session just mounted with a pre-existing one) or one made by a REMOTE peer must never
 /// trigger a redundant `TouchArtifact` of our own.
-pub(crate) fn checkpoint_landed(previous_checkpoint_id: Option<&str>, next_checkpoint_id: Option<&str>, checkpoint_dispatched: bool) -> bool {
+pub fn checkpoint_landed(previous_checkpoint_id: Option<&str>, next_checkpoint_id: Option<&str>, checkpoint_dispatched: bool) -> bool {
     checkpoint_dispatched && next_checkpoint_id.is_some() && next_checkpoint_id != previous_checkpoint_id
 }
 //#endregion 🔖️CheckInPure
 
 //#region ShellTypes
-pub(crate) const SHELL_DISPATCH_ORIGIN_GESTURE: &str = "gesture";
+pub const SHELL_DISPATCH_ORIGIN_GESTURE: &str = "gesture";
 
-pub(crate) fn custom_ui_driver_id(label: &str) -> Option<String> {
+pub fn custom_ui_driver_id(label: &str) -> Option<String> {
     let mut slug = String::new();
     let mut separator = false;
     for character in label.trim().to_lowercase().chars() {
@@ -278,7 +278,7 @@ pub(crate) fn custom_ui_driver_id(label: &str) -> Option<String> {
 
 //#region ShellTypes
 //#region 🔖️NativeSyncChannel
-pub(crate) fn shell_sync_owner_matches(active: &ShellSyncOwner, completion: &ShellSyncOwner) -> bool {
+pub fn shell_sync_owner_matches(active: &ShellSyncOwner, completion: &ShellSyncOwner) -> bool {
     active == completion
 }
 //#endregion 🔖️NativeSyncChannel

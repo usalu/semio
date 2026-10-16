@@ -7,14 +7,14 @@ use super::*;
 //#region ShellChrome
 impl SurfaceState {
     /// 🧵️ Reports whether the frame has retained chrome I/O or preview work to resume.
-    pub(crate) fn chrome_maintenance_pending(&self, chrome: &ChromeState) -> bool {
+    pub fn chrome_maintenance_pending(&self, chrome: &ChromeState) -> bool {
         !self.retired_world3d_states.is_empty() || chrome.chrome_present.maintenance.pending()
     }
 
     /// 🪦 Advances exactly one retired scene owner under the ordinary frame maintenance budget.
-    pub(crate) fn world3d_retirement_fault(&self)->Option<infinite_world::world::WorldDynamicFault> {self.world3d_retirement_fault}
+    pub fn world3d_retirement_fault(&self)->Option<infinite_world::world::WorldDynamicFault> {self.world3d_retirement_fault}
 
-    pub(crate) fn advance_world3d_retirement_step(&mut self) -> bool {
+    pub fn advance_world3d_retirement_step(&mut self) -> bool {
         let Some((_, state)) = self.retired_world3d_states.front_mut() else { return false };
         if world3d_dynamic_retirement_terminal_is_empty(state) {
             self.retired_world3d_states.pop_front();
@@ -51,7 +51,7 @@ impl SurfaceState {
         !self.retired_world3d_states.is_empty()
     }
 
-    pub(crate) fn close_component_world_step(&mut self, target: &crate::element_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
+    pub fn close_component_world_step(&mut self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueRefusalKind};
         use infinite_world::world::{WorldDynamicFault,WorldTerrainMeshPublicationStep};
         if !matches!(target.kind, ui_wgpu::wgpu::SurfaceKind::World3d | ui_wgpu::wgpu::SurfaceKind::IconRender) {
@@ -85,7 +85,7 @@ impl TutorialState {
     /// 🎬️ Extra vertical space the tutorial control bar reserves below the navbar while a tutorial is
     /// active — `0.0` otherwise, so `body_rect`/the canvas layout are byte-identical to before this
     /// region existed whenever no tutorial is running.
-    pub(super) fn tutorial_bar_reserve(&self, theme: &Theme) -> f32 {
+    pub fn tutorial_bar_reserve(&self, theme: &Theme) -> f32 {
         if self.tutorial.is_some() {
             tutorial_bar_height(theme)
         } else {

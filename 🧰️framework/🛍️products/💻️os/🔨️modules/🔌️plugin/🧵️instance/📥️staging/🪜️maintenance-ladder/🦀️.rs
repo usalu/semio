@@ -28,12 +28,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         for position in 0..MAINTENANCE_POSITIONS{
             if cx.should_yield(){return Ok(PluginLifecycleStep::Progress(empty))}
             let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(empty))}
-            let Some(unit)=self.maintenance_unit_at(position,cursor)else{cx.consume_fuel(1);continue};
-            let Some(demand)=self.maintenance_unit_demand(unit,grant.maximum_copy_bytes)?else{cx.consume_fuel(1);continue};
+            let Some(unit)=self.ladder_ref().maintenance_unit_at(position,cursor)else{cx.consume_fuel(1);continue};
+            let Some(demand)=self.ladder_ref().maintenance_unit_demand(unit,grant.maximum_copy_bytes)?else{cx.consume_fuel(1);continue};
             if !semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}
             let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
                 if let MaintenanceUnit::Stage(stage)=unit{self.maintenance.maintenance_stage=(stage+1)%MAINTENANCE_STAGES}LAST_MAINTENANCE_STAGE.store(unit.trace(),std::sync::atomic::Ordering::Relaxed);
-                let step=self.maintenance_unit_step(unit,same,actual)?;Ok((step,true))
+                let step=self.ladder_ctx().maintenance_unit_step(unit,same,actual)?;Ok((step,true))
             })?;
             match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)if progress!=empty=>return Ok(PluginLifecycleStep::Progress(progress)),step@PluginLifecycleStep::AwaitingInput{..}=>awaiting=awaiting.or(Some(step)),step@PluginLifecycleStep::Blocked{..}=>blocked=blocked.or(Some(step)),PluginLifecycleStep::Progress(_)|PluginLifecycleStep::Complete(_)=>{}}
         }

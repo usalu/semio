@@ -6,7 +6,7 @@ use super::*;
 use replication::{PresenceDomain, PresenceInteraction, PresenceViewKind};
 use serde_json::Value;
 
-pub(crate) fn fixture() -> serde_json::Value {
+pub fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📏️window-measures/🔣️.json")).expect("window measures fixture parses")
 }
 
@@ -35,7 +35,7 @@ fn flatten(node: &ui_contract::BuiltNode, next: &mut u64, records: &mut Vec<ui_c
     id
 }
 
-pub(crate) fn section_document(section: &serde_json::Value, generation: u64, refresh_section: semio_framework::UiRefreshSection) -> UiDocumentLease {
+pub fn section_document(section: &serde_json::Value, generation: u64, refresh_section: semio_framework::UiRefreshSection) -> UiDocumentLease {
     let body_key = refresh_section.body_key();
     let carrier = semio_framework_plugin::app::paged_text_carrier(body_key, &serde_json::to_string(section).expect("section serializes")).expect("real producer builds the carrier");
     let mut records = Vec::new();
@@ -45,20 +45,20 @@ pub(crate) fn section_document(section: &serde_json::Value, generation: u64, ref
 }
 
 /// 📃️ The reserved measures surface exactly as the guest publishes it for `section`.
-pub(crate) fn measures_section_document(section: &serde_json::Value, generation: u64) -> UiDocumentLease {
+pub fn measures_section_document(section: &serde_json::Value, generation: u64) -> UiDocumentLease {
     section_document(section, generation, semio_framework::UiRefreshSection::Measures)
 }
 
-pub(crate) fn engagements_fixture() -> serde_json::Value {
+pub fn engagements_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎬️window-engagements/🔣️.json")).expect("window engagements fixture parses")
 }
 
-pub(crate) fn engagements_section_document(section: &serde_json::Value, generation: u64) -> UiDocumentLease {
+pub fn engagements_section_document(section: &serde_json::Value, generation: u64) -> UiDocumentLease {
     section_document(section, generation, semio_framework::UiRefreshSection::Engagements)
 }
 
 /// 🔢️ A fixture value with every number as `f64`, so an `f32` screen coordinate compares to its JSON integer.
-pub(crate) fn numeric(value: &Value) -> Value {
+pub fn numeric(value: &Value) -> Value {
     match value {
         Value::Number(number) => serde_json::Number::from_f64(number.as_f64().expect("finite number")).map_or(Value::Null, Value::Number),
         Value::Array(items) => Value::Array(items.iter().map(numeric).collect()),
@@ -89,7 +89,7 @@ fn window_view(value: &Value) -> PresenceWindowView {
 }
 
 /// 👥️ One fixture roster row as the wire's `PresencePeer` — shared with the shell's board-presence law.
-pub(crate) fn peer(value: &Value) -> PresencePeer {
+pub fn peer(value: &Value) -> PresencePeer {
     let strings = |value: &Value| value.as_array().expect("id array").iter().map(|id| id.as_str().expect("id").to_string()).collect::<Vec<_>>();
     PresencePeer {
         actor: value["actor"].as_str().expect("actor").to_string(),

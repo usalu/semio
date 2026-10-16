@@ -31,9 +31,11 @@ import { initialShellState, shellReducer, type ShellAction, type ShellState } fr
 import { builtNodeToSnapshot, UiDocumentStore } from "../../../../📃️UiDocumentStore/🟦️.tsx";
 import { checkinSubmitMessageV1, checkpointGateV1, checkpointOnCloseKeyV1, presenceEphemeralPeerFieldsV1, EMPTY_SHELL_HISTORY_PROJECTION_V1, FRAMEWORK_CHECKIN_CONTROLLER_ID, HISTORY_REFUSAL_LABEL_KEYS, historyPatchShouldApplyV1, historyRefusalCodeV1, historyRefusalNoticeV1, historyRefusalOfOutputV1, operationProgressPartsV1, programHistoryProjectionsWithLoadV1, shellHistoryProjectionWithLoadV1, panelActionRoutesThroughHostV1, panelTabDefinitionToNode, shellHistoryCursorDomV1, shellHistoryProjectionAfterPatchV1, shellLabel, syncShellLabelLocale, useCheckpointOnCloseV1, type ShellHistoryProjectionV1 } from "../../../🟦️.tsx";
 import { HISTORY_ROW_KEY_PREFIX, HistoryReprojectionStatus, historyReprojectionControlV1, revealHistoryPanelV1, scheduleTimeTravelFocusV1, TIME_TRAVEL_CHORD_IDS, TIME_TRAVEL_CONTROL_IDS, TIME_TRAVEL_ROW_ACTION_REFUSALS, TIME_TRAVEL_ROW_ACTION_VERBS, TimeTravelBand, timeTravelRowActionRefusalsV1, timeTravelBandControlsV1, timeTravelBandTextV1, timeTravelControlActionV1, timeTravelFocusElementV1, timeTravelFocusIsHeldV1, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelTransitionV1, TimeTravelWindowIndicator, useTimeTravelRevealV1, type TimeTravelFocusTargetV1 } from "../../🟦️.tsx";
-import { RowActionRefusalsContext, TREE_ROW_TONE_CLASSES, UiPresenceOverlayContext } from "../../../../🗣️Interpreter/🟦️.tsx";
+import { RowActionRefusalsContext, UiPresenceOverlayContext } from "../../../../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
+import { TREE_ROW_TONE_CLASSES } from "../../../../🗣️Interpreter/🌳️tree-walk/🟦️.ts";
 import { TIME_TRAVEL_CODE_LABELS, TIME_TRAVEL_LABELS } from "../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
-import { HISTORY_NOTICE_LABELS, historyReprojectionStatus } from "../../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { HISTORY_NOTICE_LABELS } from "../../../../../../../../../../🔨️modules/🎠️kernel/🏷️notice-labels/🟦️.ts";
+import { historyReprojectionStatus } from "../../../../../../../../../../🔨️modules/🎠️kernel/🕰️history/🟦️.ts";
 import { documentLoadCancelledV1, HISTORY_SILENT_REFUSALS_V1, historyFaultNoticeV1, historyLaneNoticeV1, historyOutputNoticeV1, historySilentRefusalOfFaultV1, historySilentRefusalOfOutputV1, IMPORT_ABORT_ACTION_ID, importOpenedFilesV1 } from "../../../🟦️.tsx";
 import { readModuleTreeSource } from "../../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 

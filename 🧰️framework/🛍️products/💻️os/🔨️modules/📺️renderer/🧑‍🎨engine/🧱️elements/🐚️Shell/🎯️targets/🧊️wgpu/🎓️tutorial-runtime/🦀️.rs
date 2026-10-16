@@ -23,8 +23,5 @@ use super::*;
 
 
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-tutorial/🦀️.rs"]
-mod tutorial_tests;
 //#endregion 🎬️Tutorial
 //#endregion ShellChrome

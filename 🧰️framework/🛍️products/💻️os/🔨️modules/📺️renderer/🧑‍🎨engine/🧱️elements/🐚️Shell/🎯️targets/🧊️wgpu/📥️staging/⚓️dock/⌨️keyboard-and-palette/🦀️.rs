@@ -8,7 +8,7 @@ use super::*;
 impl ShellDockState {
     /// 🪟️ The body key one live window instance renders — the address a scoped refresh names a window
     /// by, resolved through the dock plan and the app's own window kinds.
-    pub(super) fn window_body_key(&self, window_id: &str, docs: &DocumentState) -> Option<String> {
+    pub fn window_body_key(&self, window_id: &str, docs: &DocumentState) -> Option<String> {
         let session = docs.session.as_ref()?;
         let kind_id = self.dock.window_instances().into_iter().find(|(id, _)| id == window_id).map(|(_, kind_id)| kind_id)?;
         session.app.window_kinds.iter().find(|kind| kind.id == kind_id).map(|kind| kind.body_key.clone())
@@ -21,7 +21,7 @@ impl ShellDockState {
     /// (`panelAnchorForGroup`), and the reason a panel-tab control id no longer has to spell its
     /// anchor out. `None` for anything that is not a dock tab, which is what makes it safe as the
     /// guard of `handle_shell_hit`'s panel-tab arm.
-    pub(crate) fn panel_tab_anchor(&self, tab_id: &str) -> Option<PanelAnchor> {
+    pub fn panel_tab_anchor(&self, tab_id: &str) -> Option<PanelAnchor> {
         PanelAnchor::ALL.into_iter().find(|anchor| self.dock_tabs.tabs(*anchor).iter().any(|node| dock_tab_node_carries(node, tab_id)))
     }
 
@@ -29,7 +29,7 @@ impl ShellDockState {
     /// accessibility publication (every focusable, enabled, visible control, in reading order) followed by the
     /// dock's windows. The keyboard, a platform assistive technology and the browser mirror therefore reach
     /// exactly the same controls (ticket 26/09/23 slice WG10).
-    pub(crate) fn keyboard_ring(&self, chrome: &ChromeState) -> Vec<ShellKeyboardStop> {
+    pub fn keyboard_ring(&self, chrome: &ChromeState) -> Vec<ShellKeyboardStop> {
         let mut ring: Vec<ShellKeyboardStop> = chrome.presented_chrome_accessibility.iter().filter(|node| node.focusable && !node.disabled && !node.hidden).map(|node| ShellKeyboardStop::Chrome(node.key.clone())).collect();
         let mut order = Vec::new();
         dock_window_order(&self.dock.root, &mut Vec::new(), &mut order);
@@ -39,7 +39,7 @@ impl ShellDockState {
 
     //#region ⌨️ShellShortcutDispatch
     /// 🪟️ The dock stack path holding `window_id`, read off the same order walk Tab cycling uses.
-    pub(crate) fn dock_stack_path_for(&self, window_id: &str) -> Option<crate::dock::DockPath> {
+    pub fn dock_stack_path_for(&self, window_id: &str) -> Option<semio_framework_os_renderer_wgpu_dock::DockPath> {
         let mut order = Vec::new();
         dock_window_order(&self.dock.root, &mut Vec::new(), &mut order);
         order.into_iter().find(|(_, id)| id == window_id).map(|(path, _)| path)
@@ -48,7 +48,7 @@ impl ShellDockState {
     /// 🧭️ Toggles one named panel anchor — the wgpu twin of React's per-anchor `SET_PANEL_VISIBLE`
     /// toggle that `ui.shell.panelAnchor.*` binds. An anchor carrying no tab is a witnessed no-op
     /// (`false`) rather than an empty box appearing over the canvas.
-    pub(super) fn toggle_panel_anchor(&mut self, anchor: PanelAnchor) -> bool {
+    pub fn toggle_panel_anchor(&mut self, anchor: PanelAnchor) -> bool {
         if self.dock_tabs.tabs(anchor).is_empty() {
             return false;
         }
@@ -84,7 +84,7 @@ impl ShellDockState {
     /// 🪟️ `mod+shift+enter` — the same maximize toggle the window's own focus control performs. React
     /// gates it on `canMaximize` (more than one window in the mode); a single-window mode has nothing to
     /// maximize away from, so this refuses there too.
-    pub(crate) fn focus_active_window(&mut self, windows: &WindowState) -> bool {
+    pub fn focus_active_window(&mut self, windows: &WindowState) -> bool {
         let Some(window_id) = windows.active_window_id.clone() else {
             return false;
         };
@@ -104,7 +104,7 @@ impl ShellDockState {
     /// 🪟️ `mod+shift+n` — "Open in New Window" is a second INSTANCE of the active window's kind split to
     /// the right of its stack, never an OS window: the exact shape of React's `onWindowOpenInNewWindow`
     /// (`🏛️ShellHost/🟦️.tsx`), down to the `{kindId}-{n}` instance id and the right-hand split.
-    pub(super) fn open_active_window_in_new_window(&mut self, settle: &mut SettleState, docs: &DocumentState, windows: &mut WindowState) -> bool {
+    pub fn open_active_window_in_new_window(&mut self, settle: &mut SettleState, docs: &DocumentState, windows: &mut WindowState) -> bool {
         let Some(window_id) = windows.active_window_id.clone() else {
             return false;
         };
@@ -125,7 +125,7 @@ impl ShellDockState {
         let Some(path) = self.dock_stack_path_for(&window_id) else {
             return false;
         };
-        if !self.dock.split_stack_with_instance(&path, &instance_id, &window_kind_id, crate::dock::DockSide::Right) {
+        if !self.dock.split_stack_with_instance(&path, &instance_id, &window_kind_id, semio_framework_os_renderer_wgpu_dock::DockSide::Right) {
             return false;
         }
         windows.active_window_id = Some(instance_id.clone());
@@ -144,14 +144,14 @@ impl ShellDockState {
 /// private to the `dock` module and this region (`shell::ShellInput`) must not edit `dock` to expose
 /// a public equivalent (region-claims.json `must_not_touch`). `DockNode`'s variants/fields are
 /// public, so this is a plain read of already-public state, not a layering violation.
-pub(crate) fn dock_window_order(node: &crate::dock::DockNode, path: &mut Vec<usize>, out: &mut Vec<(Vec<usize>, String)>) {
+pub fn dock_window_order(node: &semio_framework_os_renderer_wgpu_dock::DockNode, path: &mut Vec<usize>, out: &mut Vec<(Vec<usize>, String)>) {
     match node {
-        crate::dock::DockNode::Stack { windows, .. } => {
+        semio_framework_os_renderer_wgpu_dock::DockNode::Stack { windows, .. } => {
             for tab in windows {
                 out.push((path.clone(), tab.window_id.clone()));
             }
         }
-        crate::dock::DockNode::Row(children) | crate::dock::DockNode::Column(children) => {
+        semio_framework_os_renderer_wgpu_dock::DockNode::Row(children) | semio_framework_os_renderer_wgpu_dock::DockNode::Column(children) => {
             for (index, (child, _)) in children.iter().enumerate() {
                 path.push(index);
                 dock_window_order(child, path, out);

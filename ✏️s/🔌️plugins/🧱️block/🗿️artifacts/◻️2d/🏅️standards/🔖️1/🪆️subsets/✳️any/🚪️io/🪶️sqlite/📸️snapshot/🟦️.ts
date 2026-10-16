@@ -1,7 +1,7 @@
 /** ◻️ Direct complete Block2d semantic projection and reconstruction. */
 import type {Block2dSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {sqliteOperation,type SqliteDatabase,type SqliteDatabaseOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {ArtifactSqliteProjection} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+import {sqliteOperation,type SqliteDatabase,type SqliteDatabaseOptions} from "@semio-tech/framework/io/sqlite-snapshot";
+import {ArtifactSqliteProjection} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import * as p from "../../../../../../../../../🧬️schema/🧱️shared/🪶️sqlite/🟦️.ts";
 import {BLOCK2D_SQLITE_SCHEMA as SQL} from "./🗄️schema/🟦️.ts";
 

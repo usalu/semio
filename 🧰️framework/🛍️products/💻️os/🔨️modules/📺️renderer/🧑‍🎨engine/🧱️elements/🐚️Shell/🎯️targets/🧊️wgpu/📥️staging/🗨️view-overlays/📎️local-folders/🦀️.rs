@@ -3,11 +3,10 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
-use super::local_folders::*;
 
 //#region 🔖️Reconnect
 /// 🆔️ The band's own nodes — React's ids (`#s-folder-reconnect-message`, `#s-folder-reconnect`, `#s-folder-forget`).
-pub(crate) const FOLDER_RECONNECT_STATUS_ID: &str = "s-folder-reconnect-message";
+pub const FOLDER_RECONNECT_STATUS_ID: &str = "s-folder-reconnect-message";
 
 //#endregion 🔖️Reconnect
 impl<'ctx> OverlaysViewCtx<'ctx> {
@@ -15,7 +14,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
     /// then per button its fill, caption and hit. Each button dispatches its verb on the shell's sync controller, so a
     /// click, the keyboard ring and an assistive technology reconnect or forget the same way; none registers under a modal
     /// dialog.
-    pub(super) fn render_folder_reconnect_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
+    pub fn render_folder_reconnect_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
         let Some(offer) = self.docs.folder_reconnect_band_offer(&self.history, &self.sync) else { return true };
         let plan = self.prefs.folder_reconnect_band_plan_for(&offer, theme, &self.chrome, &self.history);
         let band = plan.band;
@@ -59,7 +58,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                     _ => {
                         if !self.chrome.chrome_build.dialog_open() {
                             note_chrome_control_name(control_id, Some(label.as_str()));
-                            let event = ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: crate::action_args_json!({ "documentId": offer.document_id.clone() }) };
+                            let event = ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "documentId": offer.document_id.clone() }) };
                             input.register_hit(HitTarget { rect, event: Some(event), control_id: Some(control_id.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
                         }
                     }
@@ -72,7 +71,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
 
     /// 🔊️ The band's live node — React's polite `role=status` region: named by the message it paints and described by
     /// what it is about ("Folder of this document").
-    pub(crate) fn folder_reconnect_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+    pub fn folder_reconnect_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
         let offer = self.docs.folder_reconnect_band_offer(&self.history, &self.sync)?;
         let locale = self.prefs.active_locale();
         let mut node = chrome_status_accessibility_node(node_id, FOLDER_RECONNECT_STATUS_ID, local_folder_text(LocalFolderText::Message, local_folder_name(local_folder_path(&offer)), locale));

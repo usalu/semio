@@ -2,35 +2,34 @@
 //! Framing proves no semantic identity, typed snapshot, decompression or member publication.
 
 #[path = "🗂️dictionary/🦀️.rs"]
-pub(crate) mod dictionary;
+pub mod dictionary;
 
-#[path = "🏭️factory/🦀️.rs"]
-pub(crate) mod factory;
+
 
 use super::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest};
 use semio_framework_value::{ValueError, RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use crate::os_spr::format::retained::{RetainedSprDiagnostic, RetainedSprLimits, RetainedSprVerification, VerifiedSprSpan};
+use semio_framework_os_spr::format::retained::{RetainedSprDiagnostic, RetainedSprLimits, RetainedSprVerification, VerifiedSprSpan};
 use semio_framework_job::StepContext;
 use std::mem::ManuallyDrop;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum MemberHistoryInputStep {
+pub enum MemberHistoryInputStep {
     Pending(MemberOpenProgress),
     Ready,
     Rejected(MemberOpenDiagnostic),
 }
 
 /// 🧵️ Copy and verification have separate fuel charges; one pending byte survives a yield.
-pub(crate) struct MemberHistoryVerification {
-    request: ManuallyDrop<Option<MemberOpenRequest>>,
-    scanner: Option<RetainedSprVerification>,
-    span: Option<VerifiedSprSpan>,
-    limits: RetainedSprLimits,
-    total: usize,
-    copied: usize,
-    pending: Option<u8>,
-    diagnostic: Option<MemberOpenDiagnostic>,
+pub struct MemberHistoryVerification {
+    pub request: ManuallyDrop<Option<MemberOpenRequest>>,
+    pub scanner: Option<RetainedSprVerification>,
+    pub span: Option<VerifiedSprSpan>,
+    pub limits: RetainedSprLimits,
+    pub total: usize,
+    pub copied: usize,
+    pub pending: Option<u8>,
+    pub diagnostic: Option<MemberOpenDiagnostic>,
 }
 
 impl MemberHistoryVerification {
@@ -45,11 +44,11 @@ impl MemberHistoryVerification {
         self.request.as_ref().map_or(0, MemberOpenRequest::retained_input_bytes)
     }
 
-    fn reject(&mut self, diagnostic: MemberOpenDiagnostic) -> MemberOpenDiagnostic {
+    pub fn reject(&mut self, diagnostic: MemberOpenDiagnostic) -> MemberOpenDiagnostic {
         *self.diagnostic.get_or_insert(diagnostic)
     }
 
-    fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         if let Some(diagnostic) = self.diagnostic {
             return Err(diagnostic);
         }
@@ -57,7 +56,7 @@ impl MemberHistoryVerification {
         result.map_err(|diagnostic| self.reject(diagnostic))
     }
 
-    fn progress(&self) -> MemberHistoryInputStep {
+    pub fn progress(&self) -> MemberHistoryInputStep {
         MemberHistoryInputStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Header, completed: self.scanner.as_ref().map_or(0, RetainedSprVerification::consumed), total: self.total as u64 })
     }
 
@@ -143,19 +142,19 @@ impl MemberHistoryVerification {
 }
 
 /// 🔒️ Private-field, non-clone input owner; only the committed range is readable under authority.
-pub(crate) struct VerifiedMemberHistoryInput {
-    request: ManuallyDrop<Option<MemberOpenRequest>>,
-    span: Option<VerifiedSprSpan>,
-    diagnostic: Option<MemberOpenDiagnostic>,
+pub struct VerifiedMemberHistoryInput {
+    pub request: ManuallyDrop<Option<MemberOpenRequest>>,
+    pub span: Option<VerifiedSprSpan>,
+    pub diagnostic: Option<MemberOpenDiagnostic>,
 }
 
 impl VerifiedMemberHistoryInput {
-    pub(crate) fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         let source=self.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)?;let span=self.span.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
         if span.end()>source.identity.extent as u64{return Err(MemberOpenDiagnostic::Malformed)}
         Ok(source)
     }
-    pub(crate) fn original_history_source(&self,cx:&StepContext<'_>)->Result<super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_source(&self,cx:&StepContext<'_>)->Result<super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         if let Some(diagnostic)=self.diagnostic{return Err(diagnostic)}let source=self.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)?;let span=self.span.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
         if span.end()>source.identity.extent as u64{return Err(MemberOpenDiagnostic::Malformed)}Ok(source)
     }
@@ -180,7 +179,7 @@ impl VerifiedMemberHistoryInput {
         result
     }
 
-    fn copy(&self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
+    pub fn copy(&self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
         let request = self.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
         request.check_step_authority(cx)?;
         let end = usize::try_from(self.span.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.end()).map_err(|_| MemberOpenDiagnostic::Capacity)?;
@@ -202,7 +201,7 @@ fn diagnostic(error: RetainedSprDiagnostic) -> MemberOpenDiagnostic {
 }
 
 fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    crate::os_store::snapshot_read::retirement_owner_close(request, grant)
+    semio_framework_os_store_read::retirement_owner_close(request, grant)
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
@@ -227,9 +226,9 @@ impl ErasedSnapshotRetirement for MemberHistoryVerification {
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
 }
 impl MemberHistoryVerification {
-    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.scanner.is_some() || self.span.is_some() || self.pending.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        crate::os_store::snapshot_read::retirement_owner_demands(&self.request, body)
+        semio_framework_os_store_read::retirement_owner_demands(&self.request, body)
     }
 }
 
@@ -250,9 +249,9 @@ impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.depth) }
 }
 impl VerifiedMemberHistoryInput {
-    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.span.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        crate::os_store::snapshot_read::retirement_owner_demands(&self.request, body)
+        semio_framework_os_store_read::retirement_owner_demands(&self.request, body)
     }
 }
 
@@ -268,6 +267,4 @@ impl Drop for VerifiedMemberHistoryInput {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

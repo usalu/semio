@@ -1,19 +1,34 @@
 //! 🔁️ The framework-default retained store initializer: a ledger replay under the grant-based retained-clone contract.
 
+#[path = "../🌱️genesis/🏭️factory/🧬️schema/🦀️.rs"]
+pub mod original_store_genesis_factory;
+#[cfg(test)]
+#[path = "../📚️catalog/🧪️tests/🔬️unit/🦀️.rs"]
+pub mod tests;
+#[path = "../🤝️authority/🦀️.rs"]
+pub mod initialization_authority;
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-use super::{
-    ActorId, ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreInitializationAuthority, ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog,
-    ArtifactStoreInitializationRuntime, CursorRevisionAccumulator, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, MutationId, OpBinary, OpText, ReturnedSnapshotReadRetirement, ToValue, artifact_retirement_admit_owned, artifact_retirement_box_close_step,
-    artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, fold_operation, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,
-};
+use semio_framework_os_spr::{ActorId, Edit, Mutation, MutationId, OpBinary, OpText};
+use semio_framework_os_store_space_schema::ArtifactEnvelope;
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, FromValue, ToValue};
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use crate::initialization_authority::ArtifactStoreInitializationAuthority;
+use semio_framework_os_store_initialization_runtime::lifted_store::{ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog, ArtifactStoreInitializationRuntime};
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_framework_os_store_engine_owners::DocumentStoreOwners;
+use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_os_store_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands};
+use semio_framework_os_store_replay::fold_operation;
+use semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 use semio_framework_job::{Generation, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OperationId, StepContext};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, size_of_val, ManuallyDrop};
 use std::sync::Arc;
-use super::document_store_owners::DocumentStoreOwnerProducer;
+use semio_framework_os_store_engine_owners::producer::DocumentStoreOwnerProducer;
 use std::marker::PhantomData;
+pub use semio_framework_os_store_initialization_runtime::lifted_initialization_replay::{ArtifactStoreInitializationNext};
 
 /// 📏️ The widest id or encoded operation one replay turn admits, the page every retained store initializer shares.
 pub const ARTIFACT_STORE_REPLAY_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
@@ -21,92 +36,12 @@ pub const ARTIFACT_STORE_REPLAY_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_PA
 const INDEX_RETIRE_PAGE: usize = 64;
 const ITEM: RetainedCloneProgress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 };
 
-/// ▶️ What folding one forward of an applied edit onto the initialization runtime's current projection produced.
-pub enum ArtifactStoreInitializationNext<P> {
-    /// 🏁️ The edit has no forward at that index.
-    Exhausted,
-    /// 🪙️ The operation's encoded bytes exceed the copy bytes the caller granted; nothing changed.
-    Unfunded,
-    /// ⏭️ The forward folded with keep-and-record semantics: `next` is the projection it produced (`None` when it folded as a
-    /// no-op — withdrawn, faulted or refused) and `copy_bytes` the operation's encoded size.
-    Folded { next: Option<P>, copy_bytes: usize },
-}
 
-impl<P> ArtifactStoreInitializationRuntime<P> {
-    /// ▶️ Folds forward `index` of the applied `edit` onto the shared current projection through its effective input
-    /// (supersessions, [`admit_replacement`](super::admit_replacement) and keep-and-record [`fold_operation`](super::fold_operation)),
-    /// handing the produced projection to the caller instead of mutating a uniquely owned workspace: the genesis alias is never
-    /// cloned, the one `diff` and `apply` of the operation is the whole traversal of the turn. Refuses an operation whose encoding
-    /// fails or exceeds `maximum_bytes`; answers [`ArtifactStoreInitializationNext::Unfunded`] when it exceeds `granted_copy_bytes`.
-    pub fn fold_next_forward<M>(&mut self, edit: &Edit<M>, index: usize, schema: &str, maximum_bytes: usize, granted_copy_bytes: usize) -> Result<ArtifactStoreInitializationNext<P>, &'static str>
-    where
-        M: Mutation<P> + OpBinary,
-    {
-        let Some(effective) = self.effective_forward(edit, index, schema) else { return Ok(ArtifactStoreInitializationNext::Exhausted) };
-        let operation = effective.operation();
-        let copy_bytes = match operation.map(OpBinary::encode_op) {
-            None => 0,
-            Some(Ok(encoded)) if encoded.len() <= maximum_bytes => encoded.len(),
-            Some(_) => return Err("artifact store initialization forward encoding exceeds its page"),
-        };
-        if copy_bytes > granted_copy_bytes {
-            return Ok(ArtifactStoreInitializationNext::Unfunded);
-        }
-        if let Some(original) = edit.forwards.get(index).filter(|op| op.may_emit_foreign_steps()) {
-            let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
-            let source = self.current.as_deref().ok_or("artifact store initialization lost its current projection")?;
-            let presence = original.foreign_step_source(source, 0).map_err(|_| "artifact store original foreign source refused")?.is_some();
-            self.revision.unit_flags.insert((digest, index), presence);
-        }
-        let next = match operation {
-            None => None,
-            Some(operation) => fold_operation::<P, M>(self.current.as_deref().ok_or("artifact store initialization lost its current projection")?, operation, index as u32).0,
-        };
-        Ok(ArtifactStoreInitializationNext::Folded { next, copy_bytes })
-    }
 
-    /// 📏️ Quotes [`Self::adopt_next_funded`]: the returned-read frame that retires the displaced projection and the shared
-    /// backing of its successor.
-    pub fn adopt_next_demand() -> RetirementDemand
-    where
-        P: Send + Sync + 'static,
-    {
-        RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes() + semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>(), depth: 2, ..Default::default() }
-    }
 
-    /// 🎟️ Makes `next` the current projection under one funded turn: the displaced projection moves into a returned-read
-    /// retirement frame that [`Self::settle_current_retirement_step`] drains, and `next` takes its shared backing. Refusal
-    /// hands `next` back and leaves the runtime unchanged.
-    pub fn adopt_next_funded(&mut self, next: P, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, P)>
-    where
-        P: Send + Sync + 'static,
-    {
-        let demand = Self::adopt_next_demand();
-        if self.close_phase != 0 || self.close_active.is_some() || self.current.is_none() {
-            return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "initialization adoption requires a settled open current projection"), next));
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth < demand.depth || grant.maximum_capacity_bytes < demand.capacity_bytes {
-            return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "initialization adoption exceeds its admitted grant"), next));
-        }
-        let previous = self.current.take().expect("open initialization retains its current projection");
-        match ReturnedSnapshotReadRetirement::admit(previous, Arc::clone(factory), grant) {
-            Ok((owner, mut receipt)) => {
-                *self.close_active = Some(owner);
-                *self.current = Some(Arc::new(next));
-                receipt.retained_capacity_bytes += semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>();
-                Ok(receipt)
-            }
-            Err((error, previous, alias)) => {
-                *self.current = Some(previous);
-                drop(alias);
-                Err((error, next))
-            }
-        }
-    }
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Phase {
+pub enum Phase {
     ValidateEnvelope,
     ValidateEdit { index: usize },
     AdmitOwners,
@@ -137,7 +72,7 @@ enum Turn {
     Fault,
 }
 
-fn permits(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
+pub fn permits(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
     grant.maximum_items > 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
 }
 
@@ -169,30 +104,30 @@ where
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
     C:DocumentStoreOwnerProducer<P,M>,
 {
-    producer:PhantomData<fn()->C>,
-    operation: OperationId,
-    generation: Generation,
-    schema: &'static str,
-    envelope: ManuallyDrop<Option<ArtifactEnvelope<P, M>>>,
-    owners: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
-    catalog: ManuallyDrop<Option<ArtifactStoreInitializationOwnerCatalog>>,
-    runtime: ManuallyDrop<Option<ArtifactStoreInitializationRuntime<P>>>,
-    factory: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
-    candidate: ManuallyDrop<Option<ArtifactStore<P, M>>>,
-    staged: ManuallyDrop<Option<P>>,
-    active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    envelope_retirement: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    actor: ManuallyDrop<Option<ActorId>>,
-    actor_close: ManuallyDrop<Option<ControlledRetirement<ActorId>>>,
-    edit_index: ArtifactStoreInitializationEditIndex,
-    index_open: bool,
-    publication: RetainedJobPublication,
-    phase: Phase,
-    cancel_requested: bool,
-    fault: Option<String>,
+    pub producer:PhantomData<fn()->C>,
+    pub operation: OperationId,
+    pub generation: Generation,
+    pub schema: &'static str,
+    pub envelope: ManuallyDrop<Option<ArtifactEnvelope<P, M>>>,
+    pub owners: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
+    pub catalog: ManuallyDrop<Option<ArtifactStoreInitializationOwnerCatalog>>,
+    pub runtime: ManuallyDrop<Option<ArtifactStoreInitializationRuntime<P>>>,
+    pub factory: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,
+    pub candidate: ManuallyDrop<Option<ArtifactStore<P, M>>>,
+    pub staged: ManuallyDrop<Option<P>>,
+    pub active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    pub envelope_retirement: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    pub actor: ManuallyDrop<Option<ActorId>>,
+    pub actor_close: ManuallyDrop<Option<ControlledRetirement<ActorId>>>,
+    pub edit_index: ArtifactStoreInitializationEditIndex,
+    pub index_open: bool,
+    pub publication: RetainedJobPublication,
+    pub phase: Phase,
+    pub cancel_requested: bool,
+    pub fault: Option<String>,
     fault_detail: Option<String>,
-    folded: u64,
-    total: u64,
+    pub folded: u64,
+    pub total: u64,
     terminal_handoff: bool,
 }
 
@@ -237,7 +172,7 @@ where
         !matches!(self.phase, Phase::Complete | Phase::RetireCancelled | Phase::RetireFault | Phase::Cancelled | Phase::Fault)
     }
 
-    fn fail(&mut self, reason: impl Into<String>) {
+    pub fn fail(&mut self, reason: impl Into<String>) {
         self.fault.get_or_insert_with(|| reason.into());
         self.phase = Phase::RetireFault;
     }
@@ -255,13 +190,13 @@ where
         }
     }
 
-    fn refuse(&mut self, cx: &mut StepContext<'_>, error: ValueError) -> Turn {
+    pub fn refuse(&mut self, cx: &mut StepContext<'_>, error: ValueError) -> Turn {
         let _ = cx.consume_retained(error.retained_progress());
         self.fail(error.into_message());
         Turn::Yield
     }
 
-    fn tick(&mut self, cx: &mut StepContext<'_>) -> Turn {
+    pub fn tick(&mut self, cx: &mut StepContext<'_>) -> Turn {
         self.spend(cx, ITEM);
         Turn::Yield
     }
@@ -293,7 +228,7 @@ where
         }
     }
 
-    fn turn(&mut self, cx: &mut StepContext<'_>) -> Turn {
+    pub fn turn(&mut self, cx: &mut StepContext<'_>) -> Turn {
         if cx.operation() != self.operation || cx.generation() != self.generation || cx.is_cancelled() {
             self.cancel_requested = true;
         }
@@ -512,7 +447,7 @@ where
                 Phase::SeedHistory { edit, lane: 1, index: 0 }
             }),
             1 if index < entry.forwards.len() => {
-                let id = crate::os_spr::mutation_id_for_edit_operation::<P, M>(entry, index).expect("indexed operation exists");
+                let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, M>(entry, index).expect("indexed operation exists");
                 runtime.seed_edit_operation(&entry.id, id).map(|()| Phase::SeedHistory { edit, lane, index: index + 1 })
             }
             1 => Ok(Phase::SeedHistory { edit, lane: 2, index: 0 }),
@@ -529,7 +464,7 @@ where
         self.tick(cx)
     }
 
-    fn fold(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, position: usize, edit: usize, mutation: usize) -> Turn {
+    pub fn fold(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, position: usize, edit: usize, mutation: usize) -> Turn {
         let envelope = self.envelope.as_ref().expect("replay envelope remains retained while its forwards fold");
         let entry = envelope.vcs.edits.get(edit).expect("replay applied edit remains retained");
         let runtime = self.runtime.as_mut().expect("replay runtime remains retained while its forwards fold");
@@ -558,7 +493,7 @@ where
         }
     }
 
-    fn adopt(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, position: usize, edit: usize, mutation: usize) -> Turn {
+    pub fn adopt(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, position: usize, edit: usize, mutation: usize) -> Turn {
         if !permits(grant, ArtifactStoreInitializationRuntime::<P>::adopt_next_demand()) {
             return Turn::Yield;
         }
@@ -592,7 +527,7 @@ where
         Turn::Complete
     }
 
-    fn retire(&mut self, cx: &mut StepContext<'_>) -> Turn {
+    pub fn retire(&mut self, cx: &mut StepContext<'_>) -> Turn {
         match self.close_original(cx.retained_grant()) {
             Ok(step) => {
                 if cx.consume_retained(step.progress()).is_err() {
@@ -639,7 +574,7 @@ where
         self.close_core_is_terminal() && self.publication.terminal_is_empty()
     }
 
-    fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() {
             return nested(artifact_retirement_box_demands(active, body)?);
         }
@@ -905,6 +840,4 @@ where
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -7,7 +7,7 @@ use super::*;
 //#region ShellLifecycle
 impl<'ctx> SessionCtx<'ctx> {
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn poll_shell_io(&mut self) -> bool {
+    pub fn poll_shell_io(&mut self) -> bool {
         const MAX_COMPLETIONS_PER_FRAME: usize = 8;
         let mut changed = false;
         for _ in 0..MAX_COMPLETIONS_PER_FRAME {
@@ -62,7 +62,7 @@ impl<'ctx> SessionCtx<'ctx> {
 
     //#endregion 🏠️🧳️PluginHostConfig
 
-    pub(crate) fn default_host_panel_state(&self) -> Result<SpacePanelState, String> {
+    pub fn default_host_panel_state(&self) -> Result<SpacePanelState, String> {
         let active_panel_tab = self.plugins.host_catalogue_tab_id().ok_or_else(|| "host-panel.missing-configured-leaf".to_string())?;
         let state = SpacePanelState { active_panel_tab, spawned_apps: vec![], active_spawned_id: None };
         validate_panel_state(&state)?;
@@ -75,7 +75,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// never, so one unreadable body wedged the whole frame transaction and the shell presented
     /// nothing at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`).
     /// The surface's own fault card is the right consequence; a black canvas is not.
-    pub(crate) fn record_document_paint_fault(&mut self, surface_id: &str) {
+    pub fn record_document_paint_fault(&mut self, surface_id: &str) {
         if self.plugins.surface_faults.iter().any(|fault| fault.surface_id == surface_id) {
             return;
         }
@@ -85,7 +85,7 @@ impl<'ctx> SessionCtx<'ctx> {
 
     /// 🪟️ One retained body finished a paint: its paint fault (if any) clears, and its windowed tree containers are measured and
     /// reported ([`Self::observe_tree_windows`]).
-    pub(crate) fn note_retained_body_painted(&mut self, surface_id: &str) {
+    pub fn note_retained_body_painted(&mut self, surface_id: &str) {
         if self.plugins.surface_faults.iter().any(|fault| fault.surface_id == surface_id) {
             self.plugins.surface_faults.retain(|fault| fault.surface_id != surface_id);
             self.chrome.error = self.prefs.fault_status(&self.plugins);
@@ -98,8 +98,8 @@ impl<'ctx> SessionCtx<'ctx> {
     /// `handle_control_command`'s `playground.navbar.modes.*` arm does for a click. A mode the open
     /// app does not declare is ignored — a url is not a place to hard-fail a shell, the same rule
     /// `ChromeRole::from_boot_env` follows for `?role=`.
-    pub(super) fn apply_boot_mode(&mut self) {
-        let Some(mode_id) = crate::boot_app_mode() else { return };
+    pub fn apply_boot_mode(&mut self) {
+        let Some(mode_id) = semio_framework_os_renderer_wgpu_host_base::boot_app_mode() else { return };
         let Some(session) = self.docs.session.as_mut() else { return };
         if !session.app.modes.iter().any(|mode| mode.id == mode_id) {
             debug_log(&format!("[TRACE] wgpu-shell boot mode {mode_id:?} is not declared by app {} — keeping {}", session.app.id, session.app.default_mode_id));
@@ -117,7 +117,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🧭️ The dock's tab sources are the session's own panel tabs, so every chrome sync rebuilds it.
     /// The persisted override layer is keyed by app id, so a NEW app additionally reloads that app's
     /// layer — reloading on every sync would clobber the reveal `apply_host_panel_selection` just made.
-    pub(crate) fn sync_session_chrome(&mut self) {
+    pub fn sync_session_chrome(&mut self) {
         let Some(session) = &self.docs.session else {
             return;
         };
@@ -127,7 +127,7 @@ impl<'ctx> SessionCtx<'ctx> {
             .find(|entry| entry.plugin_id == session.plugin_id)
             .map(|entry| shell_offered_examples(&entry.manifest.examples, &session.app).into_iter().map(|example| example.id.clone()).collect())
             .unwrap_or_default();
-        let resolved = resolve_boot_example_id(self.plugins.active_example_id.as_deref().unwrap_or(""), &examples, crate::boot_app_example().as_deref());
+        let resolved = resolve_boot_example_id(self.plugins.active_example_id.as_deref().unwrap_or(""), &examples, semio_framework_os_renderer_wgpu_host_base::boot_app_example().as_deref());
         self.plugins.active_example_id = (!resolved.is_empty()).then_some(resolved);
         let app_id = self.docs.dock_store_app_id();
         if self.dock.dock_loaded_app_id != app_id {
@@ -141,7 +141,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🧭️ Where the tab lives NOW wins over its declared group — a tab dragged to another anchor
     /// must open where the user put it, which is exactly why `reveal_dock_tab` locates it in the live
     /// dock first and only falls back on `PanelGroup::anchor()` when the dock has no node for it yet.
-    pub(crate) fn apply_host_panel_selection(&mut self, action: &ActionDescriptor) -> Option<Result<(), String>> {
+    pub fn apply_host_panel_selection(&mut self, action: &ActionDescriptor) -> Option<Result<(), String>> {
         if self.plugins.host_config().is_none() || action.action != "setActivePanelTab" {
             return None;
         }
@@ -190,7 +190,7 @@ impl<'ctx> SessionCtx<'ctx> {
         Some(Ok(()))
     }
 
-    pub(crate) fn sync_dock(&mut self) {
+    pub fn sync_dock(&mut self) {
         if let Some(session) = &self.docs.session {
             let owner=(session.plugin_id.clone(),session.instance_id,session.app.id.clone());
             let incoming_layout = self.dock.layout_override.as_ref().or(session.app.default_layout.as_ref());
@@ -266,7 +266,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 🪟️ The host-owned fields every refresh restamps onto the session's view state — including the tree windows this shell's
     /// observer measured (`tree_windows`/`tree_viewport_rows`, [`tree_windows::TreeWindowScheduler::view_state_fields`]), the
     /// same pair React's `TreeWindowHostV1::viewStateFields` stamps (`🛠️ShellHelpers/🟦️.tsx`).
-    pub(crate) fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
+    pub fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
         let mut view_state = session.view_state.clone();
         view_state.locale = self.prefs.active_locale();
         view_state.terminology = self.prefs.active_terminology();
@@ -276,7 +276,7 @@ impl<'ctx> SessionCtx<'ctx> {
         }
         view_state.active_utility_by_window_id = self.windows.active_utility_by_window.clone();
         view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.surfaces.world3d_states.values());
-        view_state.tool_run_trace_cursor_by_window_id.extend(crate::engine_canvas::board2d_tool_run_trace_cursors());
+        view_state.tool_run_trace_cursor_by_window_id.extend(semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::board2d_tool_run_trace_cursors());
         if !spawned {
             view_state.focused_window_id = self.windows.active_window_id.clone();
         }
@@ -288,7 +288,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// 📯️ Releases each transfer journal exactly once only after its required retained body exists.
     /// Each refresh visits the cohort present at entry once, so a refused body retains its own token
     /// without blocking a later ready body. The retry ceiling retires both owners with one fault.
-    pub(crate) fn complete_window_topology_refresh(&mut self) {
+    pub fn complete_window_topology_refresh(&mut self) {
         let live: Vec<String> = self.dock.dock.window_instances().into_iter().map(|(window_id, _)| window_id).collect();
         let cohort = self.windows.window_topology_publications.len();
         for _ in 0..cohort {
@@ -346,7 +346,7 @@ impl<'ctx> SessionCtx<'ctx> {
     /// `submit_turn`, which wedged `boot_shell` itself and took every later pointer event with it
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-input-hit-runtime-2026-09-13.md`). "Once
     /// per app instance" is what the first line of this doc promises; the failure path now keeps it.
-    pub(super) async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, crate::program_bridge::ProgramFault>>) {
+    pub async fn refresh_app_catalogue(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, read_ahead: Option<Result<UiDocumentLease, semio_framework_os_renderer_wgpu_program_bridge::ProgramFault>>) {
         let body_key = semio_framework::UiRefreshSection::Catalogue.body_key();
         let fetched = match read_ahead {
             Some(fetched) => fetched,
@@ -380,15 +380,15 @@ impl<'ctx> SessionCtx<'ctx> {
 }
 
 /// 🪪️ Session equality follows the plugin's exact instance and declared app.
-pub(crate) fn same_session(left: &ActiveSession, right: &ActiveSession) -> bool {
+pub fn same_session(left: &ActiveSession, right: &ActiveSession) -> bool {
     left.plugin_id == right.plugin_id && left.instance_id == right.instance_id && left.app.id == right.app.id
 }
 
-pub(super) fn panel_identifier(value: &str) -> bool {
+pub fn panel_identifier(value: &str) -> bool {
     !value.is_empty() && value.chars().count() <= 256 && !value.chars().any(|character| character <= '\u{1f}' || character == '\u{7f}')
 }
 
-pub(super) fn validate_panel_state(state: &SpacePanelState) -> Result<(), String> {
+pub fn validate_panel_state(state: &SpacePanelState) -> Result<(), String> {
     if !panel_identifier(&state.active_panel_tab) {
         return Err("host-panel.invalid-active-tab".into());
     }
@@ -437,14 +437,14 @@ pub fn panel_json(state: &SpacePanelState) -> Result<String, String> {
 /// 👁️✏️ The boot-resolved surface role, as `AppRole`. The renderer keeps it as the UI crate's
 /// `ChromeRole` (that is the type its chrome reads); the boot app selection needs the manifest's
 /// own spelling, and the two are wire-identical by contract (`"viewer"`/`"editor"`).
-pub(super) fn boot_app_role() -> semio_framework::manifest::AppRole {
-    match crate::boot_app_role() {
+pub fn boot_app_role() -> semio_framework::manifest::AppRole {
+    match semio_framework_os_renderer_wgpu_host_base::boot_app_role() {
         ui_wgpu::wgpu::component::role_chrome::ChromeRole::Viewer => semio_framework::manifest::AppRole::Viewer,
         ui_wgpu::wgpu::component::role_chrome::ChromeRole::Editor => semio_framework::manifest::AppRole::Editor,
     }
 }
 
-pub(super) fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
+pub fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
     #[cfg(target_arch = "wasm32")]
     {
         use wasm_bindgen::JsCast;
@@ -458,7 +458,7 @@ pub(super) fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
     let _ = (phase, state, elapsed_ms);
 }
 
-pub(crate) fn app_owns_command(app: &semio_framework::AppDefinition, command_id: &str) -> bool {
+pub fn app_owns_command(app: &semio_framework::AppDefinition, command_id: &str) -> bool {
     app.commands.iter().any(|command| command.id == command_id)
 }
 
@@ -475,7 +475,7 @@ pub(crate) fn app_owns_command(app: &semio_framework::AppDefinition, command_id:
 /// generate-mode preview faulted `flow.extension-not-contributed {"extensionId":"brep"}` with
 /// `meshesHead="[]"` forever — measured verbatim on 6118
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-journey-probe-2026-09-13.md` §3).
-pub(crate) fn session_window_instances(session: &ActiveSession, dock: &DockState) -> Vec<semio_framework::ViewWindowInstance> {
+pub fn session_window_instances(session: &ActiveSession, dock: &DockState) -> Vec<semio_framework::ViewWindowInstance> {
     let mut instances: Vec<semio_framework::ViewWindowInstance> = session.app.window_kinds.iter().map(|kind| semio_framework::ViewWindowInstance { id: kind.id.clone(), window_kind_id: kind.id.clone() }).collect();
     for (id, window_kind_id) in dock.window_instances() {
         if instances.iter().any(|instance| instance.id == id) || !session.app.window_kinds.iter().any(|kind| kind.id == window_kind_id) {

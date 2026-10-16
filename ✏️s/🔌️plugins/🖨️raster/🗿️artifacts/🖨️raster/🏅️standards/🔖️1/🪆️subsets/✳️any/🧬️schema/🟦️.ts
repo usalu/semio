@@ -4,11 +4,11 @@ export interface SemioImageFrame { delayMs: number; rgba8: number[] }
 export interface SemioImageMetadataEntry { key: string; value: string }
 /** 🖼️ Decoded raster asset: the shape parsed below; its conformance to the stored Semio image schema is checked where plugins may meet. */
 export interface SemioImageSnapshot { schema: string; width: number; height: number; colorspace: SemioColorspace; bitDepth: number; frames: SemioImageFrame[]; icc: number[] | null; metadata: SemioImageMetadataEntry[] }
-import { parseIntrinsicValue, type IntrinsicValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
+import { parseIntrinsicValue, type IntrinsicValue } from "@semio-tech/framework/value/schema";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-import { type Binary64, type Binary32, binary64Value } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64, parseBinary32 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64, type Binary32, binary64Value } from "@semio-tech/framework/value/ieee754";
+import { parseBinary64, parseBinary32 } from "@semio-tech/framework/value/ieee754";
 
 export interface RasterArtifact {
   schema: string;

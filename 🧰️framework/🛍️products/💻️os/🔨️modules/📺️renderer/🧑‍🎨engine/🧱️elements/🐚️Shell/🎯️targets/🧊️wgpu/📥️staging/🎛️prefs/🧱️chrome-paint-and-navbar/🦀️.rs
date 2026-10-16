@@ -4,13 +4,13 @@
 
 use super::*;
 
-pub(crate) struct ChromeGroupItem<'a> {
-    pub(crate) control_id: &'a str,
-    pub(crate) icon_id: Option<&'a str>,
-    pub(crate) label: Option<&'a str>,
-    pub(crate) active: bool,
-    pub(crate) disabled: bool,
-    pub(crate) kind: HitKind,
+pub struct ChromeGroupItem<'a> {
+    pub control_id: &'a str,
+    pub icon_id: Option<&'a str>,
+    pub label: Option<&'a str>,
+    pub active: bool,
+    pub disabled: bool,
+    pub kind: HitKind,
 }
 
 /// 📐️ The box one retained chrome item (navbar/footer chip, dropdown row, surface control) occupies
@@ -26,7 +26,7 @@ pub(crate) struct ChromeGroupItem<'a> {
 /// `whitespace-nowrap truncate` and their box hugs the measured text
 /// (`🎛️chrome-control-presentation/🟦️.ts`), which is what measuring here restores. A multi-byte
 /// scalar also no longer inflates its chip by its UTF-8 length.
-pub(crate) fn retained_chrome_group_item_width(atlas: &mut FontAtlas, theme: &Theme, item: &ChromeGroupItem<'_>) -> Option<f32> {
+pub fn retained_chrome_group_item_width(atlas: &mut FontAtlas, theme: &Theme, item: &ChromeGroupItem<'_>) -> Option<f32> {
     let label = item.label.unwrap_or("");
     if label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
         return None;
@@ -36,3 +36,9 @@ pub(crate) fn retained_chrome_group_item_width(atlas: &mut FontAtlas, theme: &Th
     Some(theme.padding_standard * 2.0 + icon_w + label_w)
 }
 
+#[cfg(any(test, feature = "testkit"))]
+pub fn measure_chrome_group_item(atlas: &mut FontAtlas, theme: &Theme, item: &ChromeGroupItem<'_>) -> f32 {
+    let icon_w = item.icon_id.map(|_| CHROME_ICON_TINY + theme.gap_standard).unwrap_or(0.0);
+    let text_w = item.label.map(|label| atlas.measure_text(label, theme.font_size_small).0).unwrap_or(0.0);
+    theme.padding_standard * 2.0 + icon_w + text_w
+}

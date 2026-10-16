@@ -35,9 +35,9 @@ import { dwgProjectTableStyle,dwgReconstructTableStyle } from "./🖌️styles/�
 import { dwgProjectLayout,dwgReconstructLayout } from "./📃️layout/🟦️.ts";
 import { dwgProjectMLeader,dwgReconstructMLeader } from "./🖌️styles/↗️mleader/🟦️.ts";
 import { dwgProjectConstraints,dwgReconstructConstraints } from "./📏️constraints/🟦️.ts";
-import { artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type { SqliteDatabase } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type { ArtifactDialect } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
+import { artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type { SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
+import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
 
 export const DWG_SQLITE_SCHEMA=[DWG_DOCUMENT_SQL,DWG_HEADER_SQL,DWG_DRAWING_SQL,DWG_TABLES_SQL,DWG_ENTITIES_SQL,DWG_OBJECTS_SQL,DWG_ASSOCIATIVITY_SQL,DWG_EVALUATION_SQL,DWG_BLOCKS_SQL,DWG_ACTIONS_SQL,DWG_VISUAL_STYLE_SQL,DWG_MATERIAL_SQL,DWG_TABLE_STYLE_SQL,DWG_LAYOUT_SQL,DWG_MLEADER_SQL,DWG_CONSTRAINTS_SQL].join("\n");
 

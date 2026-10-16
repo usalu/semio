@@ -6,7 +6,7 @@ import { DwgReader } from "../../🫳️reader/🟦️.ts";
 import { dwgProjectRecord,dwgReconstructRecord } from "../../🗃️tables/📇️records/🟦️.ts";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/📇️records/🔣️.json";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import { dwgRecordFixtures as records } from "../🧰️support/📇️records/🟦️.ts";
 test("DWG all seven symbol-table record variants retain every typed scalar, tuple and optional reference",async()=>{
   const p=await DwgProjection.create(DWG_SQLITE_SCHEMA);await p.insert("dwg_document",["DWG.SQLite.semantic","AC1024",0n,0n]);await p.insert("dwg_drawing",[1n]);for(const[index,record]of records.entries()){const id=await p.insert("dwg_object",[1n,BigInt(index),0n,BigInt(index),0n,"","table_record",null,null,null,null,"table_record"]);await dwgProjectRecord(p,id,record);}

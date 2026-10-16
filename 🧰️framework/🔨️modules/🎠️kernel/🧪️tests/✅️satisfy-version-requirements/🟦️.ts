@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import semver from "semver";
 import { defineTestAdapter, type AdapterContext } from "../../../🧪️test/🔌️adapter/🟦️.ts";
-import { versionSatisfies } from "../../🟦️.ts";
+import { versionSatisfies } from "../../🕸️plugin-graph/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors

@@ -11,7 +11,7 @@ impl OpeningState {
     /// document's sync status to name an acknowledged head, submits it, then polls or cancels to a
     /// terminal status. Answers whether the footer's status changed.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) async fn pump_hub_check_in(&mut self, directory: &DirectoryState, sync: &mut SyncState) -> bool {
+    pub async fn pump_hub_check_in(&mut self, directory: &DirectoryState, sync: &mut SyncState) -> bool {
         use semio_framework_os_kernel::os_directory::{DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_SCHEMA_V1};
         let Some(operation) = sync.hub_check_in.clone() else { return false };
         if operation.status.as_ref().is_some_and(|status| status.phase.is_terminal()) {
@@ -76,7 +76,7 @@ impl OpeningState {
     /// resolution that already read the lease hands its `checkpoint` in, and a kind that resolves a codec then
     /// needs no second read. A document with no hub binding has no seed. Both targets walk this one body.
     #[allow(clippy::too_many_arguments)]
-    pub(super) async fn bind_document_execution_target(
+    pub async fn bind_document_execution_target(
         &mut self,
         document_id: &str,
         schema: &str,
@@ -121,7 +121,7 @@ impl OpeningState {
     /// 📇️ Default bindings for a document opened against the CURRENTLY mounted session's own
     /// dialect/role — `default_persistence_bindings`'s pure decision, fed the live identity/space/
     /// data-dir/surface this shell already holds.
-    pub(crate) fn default_bindings_for_current_session(&self, directory: &DirectoryState, docs: &DocumentState) -> (Vec<PersistenceBinding>, Option<String>) {
+    pub fn default_bindings_for_current_session(&self, directory: &DirectoryState, docs: &DocumentState) -> (Vec<PersistenceBinding>, Option<String>) {
         let space_id = self.open_space_id.clone();
         let data_dir = directory.identity_env.as_ref().and_then(|env| env.data_dir.as_deref());
         let surface = docs.session.as_ref().filter(|_| directory.identity.is_some() && space_id.is_some()).map(|session| semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role));

@@ -9,7 +9,7 @@ import { dwgProjectTableStyle,dwgReconstructTableStyle } from "../../🖌️styl
 import { dwgProjectMLeader,dwgReconstructMLeader } from "../../🖌️styles/↗️mleader/🟦️.ts";
 import fixture from "../🧫️fixtures/🎭️bodies/🔣️.json";
 import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 import { dwgMaterialFixture as material,dwgMlineFixture as mline,dwgVisualFixture as visual,dwgTableStyleFixture as table,dwgMLeaderFixture as leader } from "../🧰️support/🖌️styles/🟦️.ts";
 const nan={bits:0x7ff0000000000001n};
 async function project(){const p=await DwgProjection.create(DWG_SQLITE_SCHEMA);await p.insert("dwg_document",["DWG.SQLite.semantic","AC1024",0n,0n]);await p.insert("dwg_drawing",[1n]);for(const[index,kind]of["material","mline_style","visual_style"].entries())await p.insert("dwg_object",[1n,BigInt(index),0n,BigInt(index),0n,"","object",null,null,null,null,kind]);await dwgProjectMaterial(p,1n,material);await dwgProjectMline(p,2n,mline);await dwgProjectVisualStyle(p,3n,visual);return p.finish();}

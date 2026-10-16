@@ -1,3 +1,14 @@
+import{COMPONENT_RECEIPT_FILE,COMPONENT_RECEIPT_MAX_BYTES}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import{withRepositoryCacheStoreV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{withArtifactScratchV1,withArtifactDestinationTaskV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import{withJavascriptDependencyReadStorageV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
+import{withComponentModelV1}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts";
+import{readArtifactBytesV1,fileDigest}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import{captureOwnedCommandV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{acquireCompilerCapacityLeaseV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import{testBrowserHostPublicationPlanV1,testBrowserHostStageLimitsV1,readTestBrowserHostSelectedSourceV1}from"./📋️contract/🟦️.ts";
 import {buildModePolicy} from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
@@ -15,7 +26,7 @@ import { artifactFiles } from "../../../../../🧰️framework/🛍️products/�
 
 import { closeTestBrowserHostStagingV1, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1, writeTestBrowserGisMaterializationReceiptV1 } from "../🟦️.ts";
 
-import { stageRepositoryArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { stageRepositoryArtifacts,withRepositoryArtifactDestinationV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
@@ -57,7 +68,7 @@ const repoRoot = getWorkspaceRoot();
 import { ensureWasmTarget } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
 import {buildComponentClosureV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
-import {componentDeliverableV1,componentProfileV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+
 
 import { pluginFileDigest } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts";
 
@@ -113,82 +124,68 @@ async function materializeTestBrowserPluginV1(input: Readonly<{
   target: DeployedRegistryEntryV1;
   artifact: string;
   moduleRoot: string;
-  descriptorPath?: string;
+  invocation:ScriptInvocation;
+  control:CompilerAdmissionControl;
+  environment:Readonly<Record<string,string|undefined>>;
+  descriptorPath:string;
+  receiptPath?:string;
   selectedSource?: Readonly<{ componentSha256: string; descriptorSha256: string }>;
 }>): Promise<void> {
-  if ((input.descriptorPath === undefined) !== (input.selectedSource === undefined)) throw new Error("Selected browser plugin materialization identity is incomplete");
+  requireIssuedResourceControlInvocationV1(input.control,input.invocation);
   const outDir = join(input.moduleRoot, moduleDirectoryName(input.target.pluginId, registryModuleDirectories([input.target])));
   mkdirSync(outDir, { recursive: true, mode: 0o700 });
   const componentBase = input.target.wasmOut.replace(/\.wasm$/u, "");
   writeFileSync(join(outDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());
-  await transpilePluginComponentAsync(input.artifact, outDir, componentBase, { repoRoot, preview2VendorDir: join(input.moduleRoot, PREVIEW2_VENDOR_RELATIVE), optimize: false, wasmOptBin: join(repoRoot, "node_modules/binaryen/bin/wasm-opt") });
-  if (input.descriptorPath) {
-    copyFileSync(input.descriptorPath, join(outDir, "🛂️.descriptor.semio"));
-  } else {
-    const probe = runProbe("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(outDir, `${componentBase}.js`)], { cwd: repoRoot, budgetMs: 60_000 });
-    if (probe.status !== 0) throw new Error(`Test browser host descriptor failed for ${input.target.pluginId}: ${probe.stderr}`);
-    const base64 = probe.stdout.trim();
-    if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(base64)) throw new Error(`Invalid test browser host descriptor for ${input.target.pluginId}`);
-    const descriptor = finalizePluginDescriptor(Buffer.from(base64, "base64"), input.target.pluginId);
-    writeFileSync(join(outDir, "🛂️.descriptor.semio"), descriptor.pack);
-    writeFileSync(join(outDir, "🔣️.json"), descriptor.json);
-    if (input.target.pluginId === "space" && !exactSpaceCreateArtifactArgs(JSON.parse(descriptor.json))) throw new Error("Fresh Space host descriptor does not expose exact name/kindChoice creation args");
-  }
+  await transpilePluginComponentAsync(input.artifact, outDir, componentBase, { repoRoot, preview2VendorDir: join(input.moduleRoot, PREVIEW2_VENDOR_RELATIVE), optimize: false, control:input.control,signal:input.control.signal,environment:input.environment });
+  const pack=await readArtifactBytesV1(input.descriptorPath,DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,input.control.signal),descriptor=finalizePluginDescriptor(pack,input.target.pluginId);
+  writeFileSync(join(outDir,"🛂️.descriptor.semio"),pack,{flag:"wx",mode:0o600});writeFileSync(join(outDir,"🔣️.json"),descriptor.json,{flag:"wx",mode:0o600});
+  if(input.target.pluginId==="space"){if(!input.receiptPath)throw Error("Actual Space model receipt required");writeFileSync(join(outDir,COMPONENT_RECEIPT_FILE),await readArtifactBytesV1(input.receiptPath,COMPONENT_RECEIPT_MAX_BYTES,input.control.signal),{flag:"wx",mode:0o600});}
   writeFileSync(join(outDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, input.target.wasmOut));
   if (input.selectedSource) writeTestBrowserGisMaterializationReceiptV1(outDir, input.selectedSource);
 }
 
-/** 🧊️ Builds and atomically closes the exact test-only Space host over one retained selected GIS current. */
-export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1): Promise<TestBrowserHostRootsV1> {
-  if (!isAbsolute(input.artifactRoot)) throw new Error("Test browser host requires an absolute ticket artifact root");
-  const artifactRoot = realpathSync(input.artifactRoot);
-  if (!artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Test browser host requires a ticket-generated owner");
-  const component = ownedTestBrowserHostInput(artifactRoot, input.selectedGis.componentPath, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "Selected GIS component");
-  const descriptor = ownedTestBrowserHostInput(artifactRoot, input.selectedGis.descriptorPath, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "Selected GIS descriptor");
-  if (![input.selectedGis.generationId, input.selectedGis.currentSha256, input.selectedGis.componentSha256, input.selectedGis.descriptorSha256].every((value) => /^[0-9a-f]{64}$/u.test(value))) throw new Error("Selected GIS identity is invalid");
-  if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes differ from their retained current");
-  const entries = readGeneratedCatalogProjection(join(import.meta.dir,"../../🤖️generated")).entries;
-  const space = entries.find((entry) => entry.pluginId === "space" && entry.role === "plugin");
-  const gis = entries.find((entry) => entry.pluginId === "gis" && entry.role === "plugin");
-  if (!space || !gis || entries.filter((entry) => ["space", "gis"].includes(entry.pluginId)).length !== 2) throw new Error("Test browser host registry selection is not exact");
-  const mode=readNativeCallerAuthorityV1(input.invocation.capabilities).original.buildMode;
-  await buildComponentClosureV1(repoRoot,new Set([space.pluginId]),{facet:"browser",invocation:input.invocation,control:input.control,network:repositoryCargoNetworkV1(input.invocation,repoRoot)});
-  const deliverable=componentDeliverableV1(join(repoRoot,space.cratePath),space.packageName,componentProfileV1(buildModePolicy(mode).cargoProfile));
-  const builtSpace={artifact:deliverable.wasm};
-  // 🔒️ `buildPluginCargo` stages the iterate component under the crate's own `dist/components-iterate`; this
-  // ticket-owned copy is what makes the artifact eligible for `ownedTestBrowserHostInput`'s
-  // bounded-regular-file-inside-`artifactRoot` check below.
-  const stagedSpacePath = join(artifactRoot, "browser-host-wasi-target", basename(builtSpace.artifact));
-  mkdirSync(dirname(stagedSpacePath), { recursive: true, mode: 0o700 });
-  writeFileSync(stagedSpacePath, readFileSync(builtSpace.artifact), { mode: 0o600 });
-  const spaceComponent = ownedTestBrowserHostInput(artifactRoot, stagedSpacePath, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "Fresh Space component");
-  const spaceComponentSha256 = await pluginFileDigest(spaceComponent.path);
-  const stagingOwner = mkdtempSync(join(artifactRoot, ".browser-host-build-"));
-  try {
-    const stagingArtifactRoot = join(stagingOwner, "🗑️generated");
-    mkdirSync(stagingArtifactRoot, { mode: 0o700 });
-    const roots = prepareTestBrowserHostRootsV1(stagingArtifactRoot);
-    ensurePreview2ShimVendorAt(join(roots.moduleRoot, PREVIEW2_VENDOR_RELATIVE), repoRoot);
-    const shardRoot = join(roots.moduleRoot, MODULE_SHARD_DIRECTORY);
-    mkdirSync(shardRoot, { recursive: true, mode: 0o700 });
-    writeFileSync(join(shardRoot, SHARD_WORKER_FILE), shardWorkerSource());
-    await materializeTestBrowserPluginV1({ target: space, artifact: spaceComponent.path, moduleRoot: roots.moduleRoot });
-    await materializeTestBrowserPluginV1({ target: gis, artifact: component.path, descriptorPath: descriptor.path, moduleRoot: roots.moduleRoot, selectedSource: { componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 } });
-    if (lstatSync(spaceComponent.path).size !== spaceComponent.size || await pluginFileDigest(spaceComponent.path) !== spaceComponentSha256) throw new Error("Fresh Space component changed during browser staging");
-    if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes changed during browser staging");
-    writeFileSync(join(roots.browserHostRoot, "extensions", ".semio-artifact.json"), `${JSON.stringify({ owner: "test-browser-host:extensions", version: 1 })}\n`);
-    const closed = closeTestBrowserHostStagingV1(stagingArtifactRoot, { generationId: input.selectedGis.generationId, currentSha256: input.selectedGis.currentSha256, componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 }, { byteLength: spaceComponent.size, sha256: spaceComponentSha256 });
-    await stageRepositoryArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
-    const finalRoot = join(artifactRoot, "browser-host");
-    return resolveTestBrowserHostRootsV1({
-      SEMIO_TEST_ARTIFACT_DIR: artifactRoot,
-      [TEST_BROWSER_MODULE_ROOT_ENV]: join(finalRoot, "modules"),
-      [TEST_BROWSER_ACTIVATION_ROOT_ENV]: join(finalRoot, "activation"),
-      [TEST_BROWSER_HOST_RECEIPT_ENV]: join(finalRoot, "🔣️receipt.json"),
-    })!;
-  } finally {
-    rmSync(stagingOwner, { recursive: true, force: true });
-  }
+/** 🧊️ Keeps paid staging and the published host reader live through the actual browser consumer. */
+export async function withTestBrowserHostV1<T>(input:TestBrowserHostStageInputV1,body:(roots:TestBrowserHostRootsV1,control:CompilerAdmissionControl)=>Promise<T>):Promise<T>{
+  requireIssuedResourceControlInvocationV1(input.control,input.invocation);
+  const invocation=input.invocation,incoming=input.control,sourceRoot=input.artifactRoot,selected=Object.freeze({...input.selectedGis}),authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode;
+  if(authority.repositoryRoot!==repoRoot||typeof body!=="function"||!isAbsolute(sourceRoot))throw Error("Actual browser host owner and consumer required");
+  const sourcePlan=readTestBrowserHostSelectedSourceV1({generationId:selected.generationId,currentSha256:selected.currentSha256,componentSha256:selected.componentSha256,descriptorSha256:selected.descriptorSha256});
+  const component=ownedTestBrowserHostInput(sourceRoot,selected.componentPath,DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,"Selected GIS component"),descriptor=ownedTestBrowserHostInput(sourceRoot,selected.descriptorPath,DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,"Selected GIS descriptor");
+  const recheckSource=async(control:CompilerAdmissionControl)=>{requireIssuedResourceControlInvocationV1(control,invocation);if(await fileDigest(component.path,control.signal)!==selected.componentSha256||await fileDigest(descriptor.path,control.signal)!==selected.descriptorSha256)throw Error("Selected GIS bytes changed during browser staging");};
+  await recheckSource(incoming);
+  return withJavascriptDependencyReadStorageV1(repoRoot,invocation,incoming,".",(_dependencies,dependencyPhase)=>withRepositoryCacheStoreV1(repoRoot,"diagnostics",invocation,dependencyPhase,async(store,storePhase)=>{
+    const plan=testBrowserHostPublicationPlanV1(store.root,mode,sourcePlan),finalRoot=plan.directory;
+    await withArtifactScratchV1({workspace:repoRoot,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode,owner:"browser-host/staging"}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
+      const entries=readGeneratedCatalogProjection(join(import.meta.dir,"../../🤖️generated")).entries,space=entries.find(entry=>entry.pluginId==="space"&&entry.role==="plugin"),gis=entries.find(entry=>entry.pluginId==="gis"&&entry.role==="plugin");
+      if(!space||!gis||entries.filter(entry=>["space","gis"].includes(entry.pluginId)).length!==2)throw Error("Exact test browser host registry selection required");
+      await buildComponentClosureV1(repoRoot,new Set([space.pluginId]),{facet:"browser",invocation,control:sink.control,network:repositoryCargoNetworkV1(invocation,repoRoot)});
+      const stagedSpacePath=join(sink.directory,"space.wasm"),spaceDescriptor=join(sink.directory,"space.semio"),spaceReceipt=join(sink.directory,"space-receipt.json");
+      let hostComponent:Readonly<{byteLength:number;sha256:string}>|undefined;
+      await withComponentModelV1(repoRoot,invocation,{version:1,mode,pluginId:space.pluginId,cratePath:space.cratePath},sink.control,async model=>{
+        const json=await readArtifactBytesV1(model.descriptor,DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,model.control.signal);
+        if(!exactSpaceCreateArtifactArgs(JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(json))))throw Error("Fresh Space model descriptor must expose exact creation arguments");
+        const bytes=await readArtifactBytesV1(model.component,DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,model.control.signal),pack=await readArtifactBytesV1(model.descriptorPack,DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,model.control.signal);
+        writeFileSync(stagedSpacePath,bytes,{flag:"wx",mode:0o600});writeFileSync(spaceDescriptor,pack,{flag:"wx",mode:0o600});writeFileSync(spaceReceipt,await readArtifactBytesV1(model.receiptPath,COMPONENT_RECEIPT_MAX_BYTES,model.control.signal),{flag:"wx",mode:0o600});hostComponent=Object.freeze({byteLength:bytes.byteLength,sha256:await fileDigest(stagedSpacePath,model.control.signal)});await model.recheck();
+      });
+      if(!hostComponent)throw Error("Actual Space model copy required");
+      const stageRoot=join(sink.directory,"stage");mkdirSync(stageRoot);const roots=prepareTestBrowserHostRootsV1(stageRoot);
+      ensurePreview2ShimVendorAt(join(roots.moduleRoot,PREVIEW2_VENDOR_RELATIVE),repoRoot);const shard=join(roots.moduleRoot,MODULE_SHARD_DIRECTORY);mkdirSync(shard,{recursive:true});writeFileSync(join(shard,SHARD_WORKER_FILE),shardWorkerSource());
+      const capacity=await acquireCompilerCapacityLeaseV1({directory:join(repoRoot,".cache/b/l/m/data"),control:sink.control,environment:sink.environment,requestedParallelism:1});
+      try{
+        const environment=Object.freeze({...sink.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)});
+        await materializeTestBrowserPluginV1({target:space,artifact:stagedSpacePath,descriptorPath:spaceDescriptor,receiptPath:spaceReceipt,moduleRoot:roots.moduleRoot,invocation,control:sink.control,environment});
+        await materializeTestBrowserPluginV1({target:gis,artifact:component.path,descriptorPath:descriptor.path,moduleRoot:roots.moduleRoot,invocation,control:sink.control,environment,selectedSource:{componentSha256:selected.componentSha256,descriptorSha256:selected.descriptorSha256}});
+      }finally{capacity.release();}
+      await recheckSource(sink.control);writeFileSync(join(roots.browserHostRoot,"extensions",".semio-artifact.json"),JSON.stringify({owner:"test-browser-host:extensions",version:1})+"\n");
+      const closed=closeTestBrowserHostStagingV1(stageRoot,plan.selected,hostComponent);
+      await withRepositoryArtifactDestinationV1({workspace:repoRoot,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:finalRoot},destination=>stageRepositoryArtifacts(destination,plan.owner,artifactFiles(closed.browserHostRoot)));
+    }));
+    return withRepositoryArtifactV1({workspace:repoRoot,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,path:finalRoot,owner:plan.owner,maximumBytes:testBrowserHostStageLimitsV1.maximumBytes+testBrowserHostStageLimitsV1.maximumManifestBytes,maximumFiles:testBrowserHostStageLimitsV1.maximumFiles}},reader=>withRepositoryArtifactTaskV1(reader,invocation,async artifact=>{
+      const roots=resolveTestBrowserHostRootsV1({SEMIO_TEST_ARTIFACT_DIR:dirname(artifact.path),[TEST_BROWSER_MODULE_ROOT_ENV]:join(artifact.path,"modules"),[TEST_BROWSER_ACTIVATION_ROOT_ENV]:join(artifact.path,"activation"),[TEST_BROWSER_HOST_RECEIPT_ENV]:join(artifact.path,"🔣️receipt.json")});
+      if(!roots)throw Error("Actual published browser host roots required");
+      const result=await body(roots,artifact.control);await artifact.recheck();await recheckSource(artifact.control);return result;
+    }));
+  }));
 }
 
-export { exactSpaceCreateArtifactArgs, materializeTestBrowserPluginV1, ownedTestBrowserHostInput };
+export { exactSpaceCreateArtifactArgs };

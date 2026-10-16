@@ -14,7 +14,7 @@ export {withNxDaemonStartupV1} from "../../../../🕸️graph/🏁️startup/�
 export {withNxLoadedToolingUseV1} from "../../📥️use/🟦️.ts";
 export {withOriginalNxFixedCacheV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 export {requireNxGraphNativeDirectoryV1,withOriginalNxGraphNativeStorageV1,requireNxGraphDiagnosticDirectoryV1,nxGraphDaemonDisabledMarkerV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
-export {sourceClosureTaskEnvironments,sourceClosureReceiptHolds} from "../../../../../🏗️build/📥️inputs/🧮️digest/🟨️.mjs";
+export {sourceClosureTaskEnvironments,sourceClosureReceiptHolds} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/🟦️.ts";
 export {compactTaskPlans} from "../../../../🕸️graph/📤️export/🟨️.mjs";
 export {readNxGraphSourceProofV1} from "../../../../🕸️graph/🔏️seal/📥️membership/🌐️transport/🟦️.ts";
 

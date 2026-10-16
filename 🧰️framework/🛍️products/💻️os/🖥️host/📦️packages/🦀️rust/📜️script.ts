@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { unsignedLebOracleV1 } from "../../../../../🔨️modules/🎒️pack/📐️format/🧪️tests/🔮️oracles/🔢️leb/🟦️.ts";
 import {verifyProducedWasmPackageV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -251,7 +252,7 @@ class MemberOpenProtocolScript extends BundleScript {
 class MemberHistoryIdentitySourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("member-history-identity-source accepts no arguments");
-    const leb = await import("@webassemblyjs/leb128");
+    const leb = unsignedLebOracleV1();
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity");
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     
@@ -274,7 +275,7 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
       return { byte, uint, take, utf8, end: (): void => { if (offset !== bytes.length) fail("malformed"); } };
     };
     const dictionary = (entries: string[], limit: number, byteLimit = fixture.limits.dictionaryBytes): string[] => {
-      const encoded = Buffer.concat([Buffer.from([1, 0]), Buffer.from(leb.encodeU32(entries.length)), ...entries.flatMap(entry => [Buffer.from(leb.encodeU32(Buffer.byteLength(entry))), Buffer.from(entry)])]);
+      const encoded = Buffer.concat([Buffer.from([1, 0]), Buffer.from(leb.encodeUnsigned32(entries.length)), ...entries.flatMap(entry => [Buffer.from(leb.encodeUnsigned32(Buffer.byteLength(entry))), Buffer.from(entry)])]);
       const input = reader(encoded); if (input.byte() !== 1 || input.uint() !== 0) fail("malformed");
       const count = input.uint(); if (count > limit) fail("capacity"); const result: string[] = []; let bytes = 0;
       for (let index = 0; index < count; index++) { const length = input.uint(); bytes += length; if (bytes > byteLimit) fail("capacity"); result.push(input.utf8(length)); }
@@ -311,7 +312,7 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
         if (row.operation === "replace-composition") overlayHex = row.hex;
         if (row.operation === "replace-doc") docHex = row.hex;
         if (row.operation === "missing-composition") overlayHex = null;
-        if (row.operation === "raw-document-id") docHex = Buffer.concat([Buffer.from([1, 0]), Buffer.from(leb.encodeU32(Buffer.byteLength(expected.artifactId))), Buffer.from(expected.artifactId), Buffer.from([1, 1])]).toString("hex");
+        if (row.operation === "raw-document-id") docHex = Buffer.concat([Buffer.from([1, 0]), Buffer.from(leb.encodeUnsigned32(Buffer.byteLength(expected.artifactId))), Buffer.from(expected.artifactId), Buffer.from([1, 1])]).toString("hex");
         if (row.operation === "prefix-uuid-id") { entries[0] = "flow"; expected.artifactId = fixture.uuid.artifactId; expected.owner[2] = fixture.uuid.artifactId; docHex = fixture.uuid.docHex; overlayHex = fixture.uuid.compositionHex; }
         const dict = dictionary(entries, row.operation === "dictionary-limit" ? row.value : fixture.limits.dictionaryEntries, row.operation === "dictionary-byte-limit" ? row.value : fixture.limits.dictionaryBytes);
         let document: string[] | null = null;
@@ -334,7 +335,7 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
 class MemberHistoryInputScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-input-check accepts only --oracle-only");
-    const leb = await import("@webassemblyjs/leb128");
+    const leb = unsignedLebOracleV1();
     const { default: crc } = await import("crc-32/crc32c.js");
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history");
@@ -369,10 +370,10 @@ class MemberHistoryInputScript extends BundleScript {
     for (const row of fixture.inputs) {
       assert(!ids.has(row.id)); ids.add(row.id); let bytes = Buffer.from(history);
       if (row.operation === "torn") bytes = Buffer.concat([bytes, Buffer.from([10, 1, 2])]);
-      if (row.operation === "paged-tail") bytes = Buffer.concat([bytes, Buffer.from(leb.encodeU32(5000)), Buffer.alloc(4242)]);
+      if (row.operation === "paged-tail") bytes = Buffer.concat([bytes, Buffer.from(leb.encodeUnsigned32(5000)), Buffer.alloc(4242)]);
       if (row.operation === "header-only") bytes = bytes.subarray(0, 32);
-      if (row.operation === "bad-crc") bytes[80] ^= 1;
-      const input = Buffer.concat([Buffer.from(leb.encodeU32(1)), Buffer.from([170]), bytes]);
+      if (row.operation === "bad-crc") { const byte=bytes[80];assert.notEqual(byte,undefined);if(byte===undefined)throw Error("CRC fixture byte absent");bytes[80]=byte^1; }
+      const input = Buffer.concat([Buffer.from(leb.encodeUnsigned32(1)), Buffer.from([170]), bytes]);
       assert.equal(bytes.length, row.historyBytes); assert.equal(input.length + identityBytes, row.retiredBytes);
       assert.equal(retireBytes(input.length + identityBytes), row.retiredBytes);
       let span: ReturnType<typeof inspectRetainedSprNeutral> | null = null; let error: string | null = null;
@@ -436,7 +437,7 @@ class MemberHistoryInputScript extends BundleScript {
 class MemberHistoryIdScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-id-check accepts only --oracle-only");
-    const leb = await import("@webassemblyjs/leb128");
+    const leb = unsignedLebOracleV1();
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id");
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     const ids = new Set<string>(); let accepted = 0;
@@ -450,7 +451,7 @@ class MemberHistoryIdScript extends BundleScript {
           const byte = take(1)[0]!; if (index === 9 && byte > 1) fail("malformed"); value |= BigInt(byte & 127) << BigInt(index * 7);
           if (byte < 128) {
             if ((index && byte === 0) || value > BigInt(Number.MAX_SAFE_INTEGER)) fail("malformed");
-            if (value <= 0xffffffffn) assert(bytes.subarray(start, at).equals(Buffer.from(leb.encodeU32(Number(value)))));
+            if (value <= 0xffffffffn) assert(bytes.subarray(start, at).equals(Buffer.from(leb.encodeUnsigned32(Number(value)))));
             return Number(value);
           }
         }
@@ -525,7 +526,7 @@ function dictionaryUtf8Neutral() {
 class MemberHistoryRecordScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-record-check accepts only --oracle-only");
-    const leb = await import("@webassemblyjs/leb128");
+    const leb = unsignedLebOracleV1();
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧾️record");
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     let accepted = 0; const ids = new Set<string>();
@@ -553,7 +554,7 @@ class MemberHistoryRecordScript extends BundleScript {
                 value |= BigInt(byte & 127) << BigInt(digits.length * 7); digits.push(byte);
                 if (byte < 128) {
                   if (digits.length > 1 && byte === 0) fail("malformed");
-                  if (value <= 0xffffffffn) assert(Buffer.from(digits).equals(Buffer.from(leb.encodeU32(Number(value)))));
+                  if (value <= 0xffffffffn) assert(Buffer.from(digits).equals(Buffer.from(leb.encodeUnsigned32(Number(value)))));
                   if (stage === "base") { base = Number(value); stage = "count"; }
                   else if (stage === "count") { if (value > 8192n) fail("capacity"); remainingEntries = Number(value); pending = "begin"; events.push(["begin", base, remainingEntries]); stage = value ? "length" : "done"; }
                   else {
@@ -621,7 +622,7 @@ class MemberHistoryFoundationScript extends BundleScript {
 class MemberHistoryDictionaryScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-history-dictionary-check accepts only --oracle-only");
-    const leb = await import("@webassemblyjs/leb128");
+    const leb = unsignedLebOracleV1();
     const { default: crc } = await import("crc-32/crc32c.js");
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary");
@@ -629,7 +630,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
     
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
     const hash = (bytes: Buffer): Buffer => Buffer.from(blake3Hex(bytes), "hex");
-    const uint = (value: number): Buffer => Buffer.from(leb.encodeU32(value));
+    const uint = (value: number): Buffer => Buffer.from(leb.encodeUnsigned32(value));
     const fail: (reason: string) => never = reason => { throw new Error(reason); };
     const frame = (kind: number, payload: Buffer, critical = kind !== 65): Buffer => {
       const body = Buffer.concat([Buffer.from([kind, critical ? 2 : 0]), payload]); const prefix = uint(body.length); const tail = Buffer.alloc(8);
@@ -968,11 +969,14 @@ class MemberFactoryIdentityScript extends BundleScript {
       const before = run.state.units; assert(run.next().done); assert.equal(run.state.units, before);
       assert.equal(run.state.error, row.error); assert.equal(run.state.handoffs, row.handoffs); assert.equal(run.close(grant), row.retiredBytes);
     }
-    const leb = await import("@webassemblyjs/leb128");
-    const size = (value: number) => leb.encodeU32(value).length;
+    const leb = unsignedLebOracleV1();
+    const size = (value: number) => leb.encodeUnsigned32(value).length;
     const request = fixture.requestIdentity;
-    const selected = declarations.find(row => row.slice(0, 3).every((value, index) => value === request[index + 1]))!;
-    const expected = { document: request[0], schema: selected[3], parent: `${request[4]}!${request[5]}@${request[6]}/${request[7]}`, slot: request[8], child: request[9], kind: selected[0], standard: selected[1], subset: selected[2] };
+    const selected = declarations.find(row => row.slice(0, 3).every((value, index) => value === request[index + 1]));
+    if(!selected)throw Error("Selected declaration fixture missing");
+    const [kind,standard,subset,schema]=selected;
+    if(kind===undefined||standard===undefined||subset===undefined||schema===undefined)throw Error("Complete selected declaration fixture required");
+    const expected = { document: request[0], schema, parent: `${request[4]}!${request[5]}@${request[6]}/${request[7]}`, slot: request[8], child: request[9], kind,standard,subset };
     const seenSemantic = new Set<string>();
     for (const row of fixture.semantic) {
       assert(!seenSemantic.has(row.field)); seenSemantic.add(row.field);

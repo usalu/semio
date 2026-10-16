@@ -10,7 +10,7 @@ impl ShellDockState {
     /// 🚦️ Rewrites the live dock's sync leaf label from the CURRENT pill. The label is baked into the dock
     /// when it is (re)built, so without this the footer pill — and its accessible name — kept `Remote:
     /// detached` after the actor reported `Live` until something else rebuilt the dock (measured, run s12c).
-    pub(crate) fn relabel_sync_tab(&mut self, prefs: &PrefsState, sync: &SyncState) {
+    pub fn relabel_sync_tab(&mut self, prefs: &PrefsState, sync: &SyncState) {
         let label = shell_sync_pill_text(sync.sync_pill(), prefs.locale_id == "de");
         for anchor in PanelAnchor::ALL {
             if let Some(tab) = self.dock_tabs.tabs_mut(anchor).iter_mut().find(|tab| tab.id == FRAMEWORK_SYNC_PANEL_TAB_ID) {

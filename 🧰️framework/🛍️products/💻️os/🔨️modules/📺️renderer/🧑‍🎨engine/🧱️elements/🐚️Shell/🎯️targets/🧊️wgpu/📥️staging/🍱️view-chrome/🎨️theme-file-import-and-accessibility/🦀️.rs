@@ -6,33 +6,8 @@ use super::*;
 
 //#region ♿️ChromeAccessibleNames
 
-#[cfg(not(any(target_arch = "wasm32", test)))]
-pub(super) static CHROME_CONTROL_NAMES: crate::element_contracts::WorkerCell<BTreeMap<String, ChromeControlPresentation>> = crate::element_contracts::WorkerCell::new(Default::default);
-
-pub(crate) fn with_chrome_control_names<R>(f: impl FnOnce(&mut BTreeMap<String, ChromeControlPresentation>) -> R) -> R {
-    #[cfg(any(target_arch = "wasm32", test))]
-    {
-        CHROME_CONTROL_NAMES.with(|cell| f(&mut cell.borrow_mut()))
-    }
-    #[cfg(not(any(target_arch = "wasm32", test)))]
-    {
-        f(&mut CHROME_CONTROL_NAMES.borrow_mut())
-    }
-}
-
-/// ♿️ Records one chrome control's painted label. Called from the two painters every chrome chip goes
-/// through, so a new chip is announced without its author doing anything.
-pub(crate) fn note_chrome_control_name(control_id: &str, label: Option<&str>) {
-    let (Some(label), false) = (label, control_id.is_empty()) else { return };
-    with_chrome_control_names(|names| {
-        if names.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY || names.contains_key(control_id) {
-            names.insert(control_id.to_string(), ChromeControlPresentation { label: label.to_string(), description: None, role: None, pressed: None, selected: None, controls: None, value_text: None, value_range: None, disabled: false });
-        }
-    });
-}
-
 /// 🔘️ Captures the painted pressed state of chrome buttons beside their accepted-frame label.
-pub(crate) fn note_chrome_group_item(item: &ChromeGroupItem<'_>) {
+pub fn note_chrome_group_item(item: &ChromeGroupItem<'_>) {
     note_chrome_control_name(item.control_id, item.label);
     if item.kind == HitKind::PanelTab || item.control_id == "ui.fullscreen.toggle" || item.kind == HitKind::Toggle && item.control_id.starts_with("framework.utility.toggle.") {
         with_chrome_control_names(|names| {
@@ -45,8 +20,8 @@ pub(crate) fn note_chrome_group_item(item: &ChromeGroupItem<'_>) {
 }
 
 /// 🗣️ Localizes Dock actions while their title and pointer target belong to the same painted frame.
-pub(crate) fn note_dock_control_name(control_id: &str, name: crate::dock::DockControlName<'_>, german: bool) {
-    use crate::dock::DockControlName;
+pub fn note_dock_control_name(control_id: &str, name: semio_framework_os_renderer_wgpu_dock::DockControlName<'_>, german: bool) {
+        use semio_framework_os_renderer_wgpu_dock::DockControlName;
     let label = match name {
         DockControlName::Body(title) | DockControlName::Tab { title, .. } => title.to_string(),
         DockControlName::Focus => shell_chrome_string("common.focus", german).to_string(),

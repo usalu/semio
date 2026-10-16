@@ -12,7 +12,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// uses, then its hit registry above the body's. `true` once the overlay is off the walk's critical
     /// path — painted, absent, folded, or faulted after its opportunity ceiling.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    pub(crate) fn paint_window_measures_step(
+    pub fn paint_window_measures_step(
         &mut self,
         cursor: &mut ShellChromeChildCursor,
         draw: &mut DrawList,
@@ -34,7 +34,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         }
         let Some(document) = self.docs.window_measures_documents.remove(window_id) else { return true };
         let surface = window_measures_surface_id(window_id);
-        crate::interpreter::set_ui_document_flow(&surface, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::TopEnd));
+        semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::set_ui_document_flow(&surface, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::TopEnd));
         let rect = self.windows.window_measures_rect(window_id, window_rect, theme);
         if !cursor.flag && cursor.document.layout_is_accepted() && cursor.rect.is_some_and(|previous| previous != rect) {
             cursor.document.restart_viewport_after_host_reflow();
@@ -50,7 +50,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             let collapsed_sections = &mut self.input.collapsed_sections;
             let open_selects = &mut self.input.open_selects;
             let widget_maps = &mut self.input.widget_maps_staging;
-            let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface.as_str() };
+            let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: surface.as_str() };
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);

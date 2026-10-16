@@ -1,4 +1,4 @@
-import { parsePixelLayerSelectionV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎯️selection/🟦️.ts";
+import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selection";
 import type {RasterSelectionSpan} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 /** 🧬️ RasterConfig */
 export interface RasterCamera {

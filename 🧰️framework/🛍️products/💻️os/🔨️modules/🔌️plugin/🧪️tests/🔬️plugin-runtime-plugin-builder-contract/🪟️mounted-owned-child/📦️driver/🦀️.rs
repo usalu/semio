@@ -73,7 +73,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
 fn test_mounted_publication_original_turn<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>,mounted:&mut MountedTypedCommandFullOperation<A>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,closing:bool)->Result<(),semio_framework_job::OriginalTurnFailure>{
     let grant=if closing{app.mounted_policy.close}else{app.mounted_policy.maintenance};
     caller.turn(grant,|cx|{let mut task=std::task::Context::from_waker(std::task::Waker::noop());
-        if closing{let mut turn=std::pin::pin!(app.publish_mounted_owned_child_operation_unit(mounted,cx));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private close suspended inside its original caller")}}
-        else{let mut turn=std::pin::pin!(app.publish_mounted_typed_operation_run(mounted,cx,grant));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private publication suspended inside its original caller")}}
+        if closing{let mut turn=std::pin::pin!(app.typed_ctx().publish_mounted_owned_child_operation_unit(mounted,cx));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private close suspended inside its original caller")}}
+        else{let mut turn=std::pin::pin!(app.typed_ctx().publish_mounted_typed_operation_run(mounted,cx,grant));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private publication suspended inside its original caller")}}
     })
 }

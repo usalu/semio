@@ -405,7 +405,7 @@ fn a_registered_mesh_is_shared_by_id_across_sessions() {
 //#region 🧩️PagedBrushMeshUploads
 /// 🥽️ The language-neutral upload contract both ends implement: this decoder, and the renderer's pager
 /// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`),
-/// which is held to the same scene_snapshot by `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
+/// which is held to the same scene_snapshot by `🧪️tests/🥽️brush-mesh-upload/🟦️.ts` of the puzzle 3d artifact.
 const BRUSH_MESH_UPLOAD_FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🥽️brush-mesh-upload/🔣️.json");
 
 fn brush_mesh_upload_fixture() -> serde_json::Value {

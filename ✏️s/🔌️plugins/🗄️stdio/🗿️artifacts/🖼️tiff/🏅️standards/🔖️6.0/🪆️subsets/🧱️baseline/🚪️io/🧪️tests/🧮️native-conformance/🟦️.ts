@@ -1,6 +1,6 @@
 import Ajv from "ajv";
 import schema from "../../../../🧾️document/🚪️io/💾️binary/📸️snapshot/👁️observations/🔣️.json";
-import {NativeDecodeControl} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/framework/value/decode";
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

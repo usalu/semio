@@ -5,7 +5,7 @@ import cases from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/�
 import schema from "../../../🧬️schema/🔣️.json";
 import pathSchema from "../../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput} from "../../../🟦️.ts";
-import {areaOracle,canvasOracle,delta} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts";
+import {areaOracle,canvasOracle,delta} from "@semio-tech/framework/pixels/sampling/affine/testing/oracles";
 const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);const validate=ajv.compile(schema);
 function input(v:any):RasterSceneInput{return {...v,nodes:v.nodes.map((n:any)=>({...n,content:{kind:"pixels",image:{...n.content.image,pixels:new Uint8Array(n.content.image.pixels)}}}))};}
 function complete(v:RasterSceneInput,grant:number){const job=new RasterSceneJob(v);let work=0;for(let step=0;step<2000000;step++){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)return {image:job.result(),pixels:p.pixels};}throw Error("Scene did not complete");}

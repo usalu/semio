@@ -5,7 +5,7 @@ import type { PdfOp } from "../../../../../🧬️schema/📸️snapshot/🟦️
 import { PdfProjection, PdfReader } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { writePdfOperations, readPdfOperations, pdfContentNumberColumns } from "../../🖋️content/🟦️.ts";
-import { exportSqliteDatabase, importSqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 test("PDF content operators retain every named scalar, intrinsic image and ordered relationship", async () => {
   const fixture = JSON.parse(await Bun.file(new URL("../../🖋️content/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url)).text(), (key, value) => key === "bits" ? BigInt(value) : value);

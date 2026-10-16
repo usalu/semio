@@ -10,7 +10,7 @@ impl OpeningState {
     /// (picked-file imports, [`ShellState::import_task_nodes`]) with their progress and a Cancel each, above the actors. WGPU
     /// has no actor-registry metrics or dispatch bridge, so the actors read React's distinct `no-runtime` state and publish no
     /// actor verbs.
-    pub(crate) fn build_task_manager_ui(&self, prefs: &PrefsState) -> UiNode {
+    pub fn build_task_manager_ui(&self, prefs: &PrefsState) -> UiNode {
         let is_de = prefs.locale_id == "de";
         UiNode::Stack(UiStackNode {
             direction: "column".into(),

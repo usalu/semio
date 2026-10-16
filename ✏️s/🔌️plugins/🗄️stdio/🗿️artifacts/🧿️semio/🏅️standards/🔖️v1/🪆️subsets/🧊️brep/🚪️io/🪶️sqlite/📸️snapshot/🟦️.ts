@@ -1,9 +1,9 @@
 /** 🧊️ Handwritten BRep analytic/NURBS geometry and typed reciprocal topology. */
 import type {SemioBrepSnapshot,BrepCurve,BrepCurve2,BrepSurface,SemioPoint3,SemioPoint2} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Cell,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
-import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
+import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Cell,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
+import {type Binary64} from "@semio-tech/framework/value/ieee754";
+import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 export const SEMIO_BREP_SQLITE_SCHEMA=`CREATE TABLE semio_brep_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, next_label TEXT NOT NULL);
 CREATE TABLE semio_brep_vertex (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, x REAL, y REAL, z REAL, tolerance REAL, x_ieee754_bits INTEGER, x_numeric_class TEXT, y_ieee754_bits INTEGER, y_numeric_class TEXT, z_ieee754_bits INTEGER, z_numeric_class TEXT, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);
 CREATE TABLE semio_brep_edge (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, start_vertex_native_id TEXT NOT NULL, end_vertex_native_id TEXT NOT NULL, curve_id INTEGER NOT NULL REFERENCES semio_brep_curve3(id), tolerance REAL, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);

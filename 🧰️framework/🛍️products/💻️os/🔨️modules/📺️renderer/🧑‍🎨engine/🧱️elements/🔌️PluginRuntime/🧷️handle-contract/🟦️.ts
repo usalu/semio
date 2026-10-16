@@ -34,7 +34,7 @@ import {
   type WindowConfigPackEntry
 } from "@semio-tech/framework-os";
 import { type ArtifactPresencePeer, type LocalInteractionCapture } from "@semio-tech/framework-replication";
-import { type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { type PluginDispatchHintV1 } from "../../../../../../../../🔨️modules/🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts";
 import type { IconName } from "@semio-tech/ui-react";
 import { type ActorDocumentMessagePortV1, type ActorDocumentSourceV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 

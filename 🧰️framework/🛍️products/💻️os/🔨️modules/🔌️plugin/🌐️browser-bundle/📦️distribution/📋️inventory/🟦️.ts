@@ -1,5 +1,5 @@
 import {withArtifactDescriptorSlotV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📥️inspection/📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {createHash} from "node:crypto";
 import {opendirSync,lstatSync,type Dir} from "node:fs";
 import {lstat,open} from "node:fs/promises";

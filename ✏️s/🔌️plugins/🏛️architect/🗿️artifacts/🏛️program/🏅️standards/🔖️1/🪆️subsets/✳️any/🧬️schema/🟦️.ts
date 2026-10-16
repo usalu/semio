@@ -1,8 +1,8 @@
 /** 🧬️ ProgramSnapshot artifact schema — every field with its state class. */
 
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import { parseBinary64, type Binary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
+import { parseBinary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
 export { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { RegisterKey, RegisterRow } from "./🗄️registers/🗂️catalog/🟦️.ts";
 

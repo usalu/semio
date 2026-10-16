@@ -2,7 +2,7 @@ import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { DwgReader,dwgFullUnsigned,dwgOptionalUnsigned,dwgUnsigned } from "../../🫳️reader/🟦️.ts";
 import { DwgNumberRow } from "../../🔢️number/🟦️.ts";
-import { exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import { exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
 
 const sql="CREATE TABLE dwg_document (id INTEGER PRIMARY KEY,schema TEXT NOT NULL);CREATE TABLE dwg_named_reference (id INTEGER PRIMARY KEY,document_id INTEGER NOT NULL REFERENCES dwg_document(id),ordinal INTEGER NOT NULL,name TEXT NOT NULL,handle_high INTEGER,handle_low INTEGER)";
 const database:SqliteDatabase={tables:[{name:"dwg_document",sql:"CREATE TABLE dwg_document (id INTEGER PRIMARY KEY,schema TEXT NOT NULL)",rows:[{rowid:1n,values:[1n,"owned"]}]},{name:"dwg_named_reference",sql:"CREATE TABLE dwg_named_reference (id INTEGER PRIMARY KEY,document_id INTEGER NOT NULL REFERENCES dwg_document(id),ordinal INTEGER NOT NULL,name TEXT NOT NULL,handle_high INTEGER,handle_low INTEGER)",rows:[{rowid:2n,values:[2n,1n,1n,"second",4294967295n,4294967295n]},{rowid:7n,values:[7n,1n,0n,"first",null,null]}]}]};

@@ -1,8 +1,8 @@
 /** 🌀️ Owned Generation3d relational snapshot entry points. */
 import{projectProceduralSnapshot,reconstructProceduralSnapshot}from"../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🟦️.ts";
 import {type ProceduralSnapshot} from "../../../../../../../../../🫀️core/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts";
-import type{ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import type{SqliteDatabase}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import type{ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";
+import type{SqliteDatabase}from"@semio-tech/framework/io/sqlite-snapshot";
 export const GENERATION3D_SQLITE_SCHEMA=`CREATE TABLE generation_document (id INTEGER PRIMARY KEY, host_id INTEGER NOT NULL REFERENCES generation_host(id), selected_generation_id TEXT, preview_text TEXT);
 CREATE TABLE generation_host (id INTEGER PRIMARY KEY, schema_id TEXT NOT NULL, camera_x REAL, camera_y REAL, camera_zoom REAL, camera_x_bits INTEGER NOT NULL, camera_x_class TEXT NOT NULL, camera_y_bits INTEGER NOT NULL, camera_y_class TEXT NOT NULL, camera_zoom_bits INTEGER NOT NULL, camera_zoom_class TEXT NOT NULL);
 CREATE TABLE generation_widget (id INTEGER PRIMARY KEY, host_id INTEGER NOT NULL REFERENCES generation_host(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), authored_id TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN('neuron','input_slider','input_note','input_image','variable','output_preview','output_action','output_export','cluster')));

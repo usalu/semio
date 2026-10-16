@@ -3,7 +3,15 @@
 //! stream into the framework retained cursors (source → segment → catalog → value) and hands every
 //! value token to an artifact-owned [`RetainedTypedPackOwner`], one bounded unit of work per grant.
 
-use super::mounted_pack_rt as mounted;
+mod mounted {
+    pub use semio_framework_os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
+    pub use pack::{
+            MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
+            RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep,
+            RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress,
+        };
+    pub use pack::format::RetainedPackSourceFault;
+}
 
 /// 🧬️ The artifact-specific half of a mounted pack session: consumes catalog/value events
 /// straight into typed domain owners, never into a schema-erased record tree.
@@ -38,22 +46,22 @@ pub enum RetainedTypedPackCloseStep {
 /// byte and rejected before the owner or any cursor is allocated; every byte after it is handed
 /// unchanged to the canonical retained page source.
 pub struct RetainedTypedPackSession<O: RetainedTypedPackOwner> {
-    phase: RetainedTypedPackPhase,
-    header: Vec<u8>,
+    pub phase: RetainedTypedPackPhase,
+    pub header: Vec<u8>,
     header_len: usize,
-    expected_bytes: usize,
-    maximum_items: usize,
-    maximum_depth: u16,
+    pub expected_bytes: usize,
+    pub maximum_items: usize,
+    pub maximum_depth: u16,
     owner_factory: fn() -> Result<O, &'static str>,
     page: [u8; mounted::RETAINED_PACK_PAGE_BYTES],
     page_len: usize,
-    admitted: usize,
-    source: std::mem::ManuallyDrop<Option<mounted::RetainedPackSourceCursor>>,
-    anchor: std::mem::ManuallyDrop<Option<mounted::RetainedPackAnchorCursor>>,
+    pub admitted: usize,
+    pub source: std::mem::ManuallyDrop<Option<mounted::RetainedPackSourceCursor>>,
+    pub anchor: std::mem::ManuallyDrop<Option<mounted::RetainedPackAnchorCursor>>,
     segment: std::mem::ManuallyDrop<Option<mounted::RetainedPackSegmentCursor>>,
-    catalog: std::mem::ManuallyDrop<Option<mounted::RetainedPackCatalogCursor>>,
-    value: std::mem::ManuallyDrop<Option<mounted::RetainedValueCursor>>,
-    typed: std::mem::ManuallyDrop<Option<O>>,
+    pub catalog: std::mem::ManuallyDrop<Option<mounted::RetainedPackCatalogCursor>>,
+    pub value: std::mem::ManuallyDrop<Option<mounted::RetainedValueCursor>>,
+    pub typed: std::mem::ManuallyDrop<Option<O>>,
     catalog_value: std::mem::ManuallyDrop<Option<mounted::RetainedPackCatalog>>,
     document_byte: Option<(u64, u8)>,
     source_complete: bool,
@@ -67,7 +75,7 @@ pub struct RetainedTypedPackSession<O: RetainedTypedPackOwner> {
 impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
     /// 🚪️ Preflights exact credits only; nothing semantic exists until `header` has passed.
     pub fn new(header: Vec<u8>, expected_bytes: usize, maximum_items: usize, maximum_depth: u16, owner_factory: fn() -> Result<O, &'static str>) -> Result<Self, &'static str> {
-        if expected_bytes <= header.len() || expected_bytes > super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || maximum_items == 0 || maximum_depth == 0 {
+        if expected_bytes <= header.len() || expected_bytes > semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || maximum_items == 0 || maximum_depth == 0 {
             return Err("mounted-pack.exact-credits");
         }
         Ok(Self {
@@ -102,17 +110,17 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
         let canonical = self.expected_bytes - self.header.len();
         let pages = canonical.div_ceil(mounted::RETAINED_PACK_PAGE_BYTES);
         let maximum_symbols = self.maximum_items.min(u32::MAX as usize) as u32;
-        let decoded = super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64;
+        let decoded = semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64;
         let limits = || mounted::PackLimits { max_file_len: decoded, max_segment_len: decoded, max_symbols: maximum_symbols, max_depth: self.maximum_depth, max_items: self.maximum_items as u64, max_total_alloc: decoded };
-        let maximum_source_allocation_bytes = super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES.checked_mul(4).ok_or("mounted-pack.source-allocation-credits")?;
+        let maximum_source_allocation_bytes = semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES.checked_mul(4).ok_or("mounted-pack.source-allocation-credits")?;
         *self.source = Some(mounted::RetainedPackSourceCursor::try_new(pages, canonical, maximum_source_allocation_bytes).map_err(|fault| fault.reason)?);
         *self.anchor = Some(mounted::RetainedPackAnchorCursor::new());
-        *self.segment = Some(mounted::RetainedPackSegmentCursor::try_new(limits(), super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES).map_err(|_| "mounted-pack.segment-preflight")?);
+        *self.segment = Some(mounted::RetainedPackSegmentCursor::try_new(limits(), semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES).map_err(|_| "mounted-pack.segment-preflight")?);
         *self.catalog = Some(
-            mounted::RetainedPackCatalogCursor::try_new(limits(), maximum_symbols as usize, decoded as usize, decoded as usize, self.maximum_items, super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
+            mounted::RetainedPackCatalogCursor::try_new(limits(), maximum_symbols as usize, decoded as usize, decoded as usize, self.maximum_items, semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES)
                 .map_err(|_| "mounted-pack.catalog-preflight")?,
         );
-        *self.value = Some(mounted::RetainedValueCursor::try_new(limits(), super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES).map_err(|_| "mounted-pack.value-preflight")?);
+        *self.value = Some(mounted::RetainedValueCursor::try_new(limits(), semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES).map_err(|_| "mounted-pack.value-preflight")?);
         *self.typed = Some((self.owner_factory)()?);
         self.phase = RetainedTypedPackPhase::Ingress;
         Ok(())
@@ -292,14 +300,14 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             _ => None,
         };
         if let Some(requested) = requested {
-            self.retained_allocated_bytes().checked_add(requested).filter(|total| *total <= super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES).ok_or("mounted-pack.retained-allocation-credits")?;
+            self.retained_allocated_bytes().checked_add(requested).filter(|total| *total <= semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES).ok_or("mounted-pack.retained-allocation-credits")?;
         }
         Ok(requested)
     }
 
     /// 🧱️ Reserves at most `maximum_bytes` of the pending allocation.
     pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<mounted::RetainedPackSourceAllocationStep, mounted::RetainedPackSourceAllocationError> {
-        let remaining = super::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(self.retained_allocated_bytes());
+        let remaining = semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(self.retained_allocated_bytes());
         let fault = |reason: &'static str| mounted::RetainedPackSourceAllocationError { allocated_bytes: 0, fault: mounted::RetainedPackSourceFault::refusal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason) };
         match self.phase {
             RetainedTypedPackPhase::Ingress => self.source.as_mut().ok_or(fault("mounted-pack.source-owner"))?.reserve_page(maximum_bytes.min(remaining)),
@@ -369,7 +377,7 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             return Ok(one);
         }
         if let Some(value) = self.value.as_mut() {
-            if let Some(step) = retained(value.close_step(1, maximum_bytes).map_err(crate::os_pack::PackRefusal::into_value_error)?) {
+            if let Some(step) = retained(value.close_step(1, maximum_bytes).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?) {
                 return Ok(step);
             }
             drop(self.value.take());

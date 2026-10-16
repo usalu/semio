@@ -1,9 +1,11 @@
 //! 🏭️ Closed factory declarations stay paired with the retained input through semantic admission.
 //! Selection is not space or pin authorization; no typed document is hydrated here.
 
-use super::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
-use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress, VerifiedMemberHistoryInput};
-use crate::os_store::MemberFactory;
+use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
+use semio_framework_value::ErasedSnapshotRetirement;
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress};
+use semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput;
+use crate::lifted_store::MemberFactory;
 use semio_framework_job::StepContext;
 use semio_framework_value::{ValueError, RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
@@ -24,30 +26,30 @@ pub(crate) struct MemberFactorySelectionRejected {
     pub diagnostic: MemberOpenDiagnostic,
     pub input: VerifiedMemberHistoryInput,
 }
-pub(crate) enum MemberFactorySelectionStep {
+pub enum MemberFactorySelectionStep {
     Pending(MemberOpenProgress),
     Ready,
     Rejected(MemberOpenDiagnostic),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Phase {
+pub enum Phase {
     Validate,
     Unique,
     Match,
     Complete,
 }
 
-pub(crate) struct MemberFactorySelection<M: MemberFactory> {
-    input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
-    row: usize,
+pub struct MemberFactorySelection<M: MemberFactory> {
+    pub input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
+    pub row: usize,
     earlier: usize,
-    selected: Option<usize>,
-    phase: Phase,
-    completed: u64,
-    diagnostic: Option<MemberOpenDiagnostic>,
-    closing: bool,
-    factory: PhantomData<fn() -> M>,
+    pub selected: Option<usize>,
+    pub phase: Phase,
+    pub completed: u64,
+    pub diagnostic: Option<MemberOpenDiagnostic>,
+    pub closing: bool,
+    pub factory: PhantomData<fn() -> M>,
 }
 
 fn check_input(input: &Option<VerifiedMemberHistoryInput>, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
@@ -59,11 +61,11 @@ fn check_input(input: &Option<VerifiedMemberHistoryInput>, cx: &StepContext<'_>)
 }
 
 fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    crate::os_store::snapshot_read::retirement_owner_close(input, grant)
+    semio_framework_os_store_read::retirement_owner_close(input, grant)
 }
 
 impl<M: MemberFactory> MemberFactorySelection<M> {
-    pub(crate) fn begin(input: VerifiedMemberHistoryInput, cx: &StepContext<'_>) -> Result<Self, MemberFactorySelectionRejected> {
+    pub fn begin(input: VerifiedMemberHistoryInput, cx: &StepContext<'_>) -> Result<Self, MemberFactorySelectionRejected> {
         let authority = input.diagnostic.map_or(Ok(()), Err).and_then(|_| input.request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx));
         let diagnostic = authority.err().or_else(|| (M::OPEN_DECLARATIONS.len() > 64).then_some(MemberOpenDiagnostic::Capacity)).or_else(|| M::OPEN_DECLARATIONS.is_empty().then_some(MemberOpenDiagnostic::Identity));
         if let Some(diagnostic) = diagnostic {
@@ -72,7 +74,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
         Ok(Self { input: ManuallyDrop::new(Some(input)), row: 0, earlier: 0, selected: None, phase: Phase::Validate, completed: 0, diagnostic: None, closing: false, factory: PhantomData })
     }
 
-    fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         if let Some(error) = self.diagnostic {
             return Err(error);
         }
@@ -83,7 +85,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
         checked
     }
 
-    fn unit(&mut self) -> Result<(), MemberOpenDiagnostic> {
+    pub fn unit(&mut self) -> Result<(), MemberOpenDiagnostic> {
         let declarations = M::OPEN_DECLARATIONS;
         if self.row == declarations.len() {
             if self.selected.is_none() {
@@ -127,7 +129,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
         Ok(())
     }
 
-    pub(crate) fn step(&mut self, cx: &mut StepContext<'_>) -> MemberFactorySelectionStep {
+    pub fn step(&mut self, cx: &mut StepContext<'_>) -> MemberFactorySelectionStep {
         if let Err(error) = self.check(cx) {
             return MemberFactorySelectionStep::Rejected(error);
         }
@@ -155,7 +157,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
         }
     }
 
-    pub(crate) fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<SelectedMemberHistoryInput<M>>, MemberOpenDiagnostic> {
+    pub fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<SelectedMemberHistoryInput<M>>, MemberOpenDiagnostic> {
         self.check(cx)?;
         if self.phase != Phase::Complete || cx.should_yield() {
             return Ok(None);
@@ -182,7 +184,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> MemberFactorySelection<M> {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body) }
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for MemberFactorySelection<M> {
     fn drop(&mut self) {
@@ -190,16 +192,16 @@ impl<M: MemberFactory> Drop for MemberFactorySelection<M> {
     }
 }
 
-pub(crate) struct SelectedMemberHistoryInput<M: MemberFactory> {
-    input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
-    declaration: &'static MemberOpenDeclaration,
-    diagnostic: Option<MemberOpenDiagnostic>,
-    closing: bool,
-    factory: PhantomData<fn() -> M>,
+pub struct SelectedMemberHistoryInput<M: MemberFactory> {
+    pub input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
+    pub declaration: &'static MemberOpenDeclaration,
+    pub diagnostic: Option<MemberOpenDiagnostic>,
+    pub closing: bool,
+    pub factory: PhantomData<fn() -> M>,
 }
 
 impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
-    fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn check(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         if let Some(error) = self.diagnostic {
             return Err(error);
         }
@@ -210,7 +212,7 @@ impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
         checked
     }
 
-    pub(crate) fn begin_dictionary(&mut self, limits: MemberHistoryDictionaryLimits, cx: &mut StepContext<'_>) -> Result<Option<SelectedMemberHistoryDictionary<M>>, MemberOpenDiagnostic> {
+    pub fn begin_dictionary(&mut self, limits: MemberHistoryDictionaryLimits, cx: &mut StepContext<'_>) -> Result<Option<SelectedMemberHistoryDictionary<M>>, MemberOpenDiagnostic> {
         self.check(cx)?;
         if cx.should_yield() {
             return Ok(None);
@@ -244,8 +246,8 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
-    pub(crate) fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body) }
+    pub fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {
     fn drop(&mut self) {
@@ -253,17 +255,17 @@ impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {
     }
 }
 
-pub(crate) struct SelectedMemberHistoryDictionary<M: MemberFactory> {
-    owner: ManuallyDrop<Option<MemberHistoryDictionaryOwner>>,
-    declaration: &'static MemberOpenDeclaration,
-    factory: PhantomData<fn() -> M>,
+pub struct SelectedMemberHistoryDictionary<M: MemberFactory> {
+    pub owner: ManuallyDrop<Option<MemberHistoryDictionaryOwner>>,
+    pub declaration: &'static MemberOpenDeclaration,
+    pub factory: PhantomData<fn() -> M>,
 }
 
 impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
-    pub(crate) fn step(&mut self, cx: &mut StepContext<'_>) -> MemberHistoryDictionaryStep {
+    pub fn step(&mut self, cx: &mut StepContext<'_>) -> MemberHistoryDictionaryStep {
         self.owner.as_mut().map_or(MemberHistoryDictionaryStep::Rejected(MemberOpenDiagnostic::Stale), |owner| owner.step(cx))
     }
-    pub(crate) fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<SelectedVerifiedMemberHistory<M>>, MemberOpenDiagnostic> {
+    pub fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<SelectedVerifiedMemberHistory<M>>, MemberOpenDiagnostic> {
         let owner = self.owner.as_mut().ok_or(MemberOpenDiagnostic::Stale)?;
         let Some(input) = owner.take_ready(cx)? else {
             return Ok(None);
@@ -284,7 +286,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDiction
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.owner, body) }
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.owner, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryDictionary<M> {
     fn drop(&mut self) {
@@ -292,22 +294,22 @@ impl<M: MemberFactory> Drop for SelectedMemberHistoryDictionary<M> {
     }
 }
 
-pub(crate) struct SelectedVerifiedMemberHistory<M: MemberFactory> {
-    input: ManuallyDrop<Option<VerifiedMemberHistoryDictionary>>,
-    declaration: &'static MemberOpenDeclaration,
-    factory: PhantomData<fn() -> M>,
+pub struct SelectedVerifiedMemberHistory<M: MemberFactory> {
+    pub input: ManuallyDrop<Option<VerifiedMemberHistoryDictionary>>,
+    pub declaration: &'static MemberOpenDeclaration,
+    pub factory: PhantomData<fn() -> M>,
 }
 
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
-    pub(crate) fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<semio_framework_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.input.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)
     }
-    pub(crate) fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<super::super::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<semio_framework_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)
     }
-    pub(crate) fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
-    pub(crate) fn maximum_history_allocation_bytes(&self)->usize{self.declaration.maximum_history_allocation_bytes}
-    pub(crate) fn check_step_authority(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
+    pub fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
+    pub fn maximum_history_allocation_bytes(&self)->usize{self.declaration.maximum_history_allocation_bytes}
+    pub fn check_step_authority(&mut self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.check_step_authority(cx)
     }
 
@@ -315,15 +317,15 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
         self.input.as_ref().is_some_and(VerifiedMemberHistoryDictionary::initial_history_is_exact)
     }
 
-    pub(crate) fn verified_end(&self) -> u64 {
+    pub fn verified_end(&self) -> u64 {
         self.input.as_ref().map_or(0, VerifiedMemberHistoryDictionary::verified_end)
     }
 
-    pub(crate) fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
+    pub fn copy_verified_history_chunk(&mut self, offset: usize, output: &mut [u8], cx: &mut StepContext<'_>) -> Result<usize, MemberOpenDiagnostic> {
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.copy_verified_history_chunk(offset, output, cx)
     }
 
-    pub(crate) fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<crate::os_store::OwnerRef>, &'static str, crate::os_spr::ActorId), MemberOpenDiagnostic> {
+    pub fn clone_initial_identity(&mut self, cx: &StepContext<'_>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<semio_framework_os_store_envelope::owner::OwnerRef>, &'static str, semio_framework_os_spr::ActorId), MemberOpenDiagnostic> {
         let (expected, owner, schema, actor) = self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.clone_initial_identity(cx)?;
         if schema != self.declaration.schema {
             return Err(MemberOpenDiagnostic::Identity);
@@ -343,7 +345,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistor
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body) }
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
     fn drop(&mut self) {
@@ -351,6 +353,4 @@ impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🏭️factory/🦀️.rs"]
-mod tests;
+

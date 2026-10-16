@@ -304,7 +304,7 @@ diff --git a/dist/src/daemon/client/daemon-environment.js b/dist/src/daemon/clie
 +    'SEMIO_CARGO_TEST_POLICIES',
 +    'SEMIO_VITEST_POLICY',
 +    'SEMIO_NX_OUTPUT_LOG',
-+    'SEMIO_NX_PROFILE_INPUTS',
++    'SEMIO_BUILD_PROFILE_INPUTS',
 +    'SEMIO_NX_TASK_USE_OWNER_PID',
 +    'SEMIO_NX_SELECTED_GRAPH_RECEIPT',
 +    'SEMIO_NX_GRAPH_SEAL_REUSE',
@@ -1048,7 +1048,7 @@ diff --git a/dist/src/project-graph/nx-deps-cache.js b/dist/src/project-graph/nx
 +    if (environment.getDaemonClientEnvGeneration() !== context.generation) return false;
 +    if (/^[a-f0-9]{64}$/.test(context.membership ?? '')) {
 +        const whole = await publish(control => frozen.authorizers.writeNxGraphSeal(workspace, data, process.pid, context.startedAt, context.membership, process.env, control.signal)).catch(() => false);
-+        if (process.env.SEMIO_NX_PROFILE_INPUTS === '1') console.log(`[nx] Graph publisher sealed=${whole}`);
++        if (process.env.SEMIO_BUILD_PROFILE_INPUTS === '1') console.log(`[nx] Graph publisher sealed=${whole}`);
 +    }
 +    return sealed;
 +}
@@ -1206,7 +1206,7 @@ diff --git a/dist/src/hasher/native-task-hasher-impl.js b/dist/src/hasher/native
      }
      async hashTasks(tasks, taskGraph, perTaskEnvs, cwd, collectInputs) {
 +        if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined) { const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(this.workspaceRoot, __filename)) throw Error('Dependency resolution authority changed during graph construction'); }
-+        const started = Date.now(), measured = tasks.length >= 128 || process.env.SEMIO_NX_PROFILE_INPUTS === "1";
++        const started = Date.now(), measured = tasks.length >= 128 || process.env.SEMIO_BUILD_PROFILE_INPUTS === "1";
 +        if (measured) console.log(`[nx] Planning native task hashes tasks=${tasks.length}`);
          const plans = this.planner.getPlansReference(tasks.map((t) => t.id), taskGraph);
 -        const shouldCollectInputs = collectInputs ?? (0, task_io_service_1.getTaskIOService)().hasTaskInputSubscribers();
@@ -1216,7 +1216,7 @@ diff --git a/dist/src/hasher/native-task-hasher-impl.js b/dist/src/hasher/native
 +        const instructions = this.planner.getPlans(tasks.map((t) => t.id), taskGraph);
 +        const planned = Date.now();
 +        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || typeof frozen.authorizers.sourceClosureTaskEnvironments !== 'function') throw Error('Immutable sourceClosureTaskEnvironments authority required'); const { sourceClosureTaskEnvironments } = frozen.authorizers;
-+        const sourceEnvironments = sourceClosureTaskEnvironments(this.workspaceRoot, instructions, perTaskEnvs);
++        const sourceEnvironments = await sourceClosureTaskEnvironments(this.workspaceRoot, instructions, perTaskEnvs, process.env);
 +        const observed = Date.now();
 +        const hashes = this.hasher.hashPlans(plans, sourceEnvironments, cwd ?? process.cwd(), shouldCollectInputs); if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined) { frozen.authorizers.selectedNativeWorkspaceRootV1(this.workspaceRoot); for (const task of tasks) { const target = this.semioProjectGraph.nodes[task.target.project]?.data.targets?.[task.target.target]; if (target?.metadata?.semio?.rustUnit?.version !== 1) continue; const actual = new Set(hashes[task.id]?.inputs?.files ?? []); for (const input of target.inputs ?? []) if (typeof input === "string" && input.startsWith("{workspaceRoot}/") && !actual.has(input.slice("{workspaceRoot}/".length))) throw Error("Admitted compiler Source absent from actual Native hashing instructions: " + input); } }
 +        const hashed = Date.now(), result = tasks.map((t) => ({ ...hashes[t.id], semioRustUnit: frozen.authorizers.readNxRustCacheExpectationV1(this.semioProjectGraph.nodes[t.target.project]?.data.targets?.[t.target.target]?.metadata?.semio?.rustUnit), semioSourceInputs: { version: 1, values: Object.fromEntries(Object.entries(sourceEnvironments[t.id]).filter(([name]) => /^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/.test(name) && instructions[t.id].includes(`env:${name}`))) } }));
@@ -1278,7 +1278,7 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 +        new native_1.TaskDetails((0, db_connection_1.getDbConnection)({ directory: cache_directory_1.cacheDir })).recordTaskDetails([{ hash: task.hash, project: task.target.project, target: task.target.target, configuration: task.target.configuration }]);
 +    }
 +    async applyRemoteCacheResults(task, res, outputs) {
-+        const publish = async () => { if (!frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) return false; if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false; if (!await frozen.authorizers.requireOriginalNxRustCachePromotionV1(task.hashDetails?.semioRustUnit, outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output)), res.outputsPath)) return false; this.recordCacheTaskDetails(task); this.cache.applyRemoteCacheResults(task.hash, res, outputs); return true; };
++        const publish = async () => { if (!await frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs, process.env)) return false; if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false; if (!await frozen.authorizers.requireOriginalNxRustCachePromotionV1(task.hashDetails?.semioRustUnit, outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output)), res.outputsPath)) return false; this.recordCacheTaskDetails(task); this.cache.applyRemoteCacheResults(task.hash, res, outputs); return true; };
 +        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
 +        if (!frozen || typeof frozen.authorizers.withOriginalNxFixedCacheV1 !== 'function') throw Error('Immutable fixed cache custody required');
 +        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, res.outputsPath, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'exclusive', async () => publish());
@@ -1298,7 +1298,7 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 +        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
 +        if (!frozen || typeof frozen.authorizers.requireOriginalNxRustCachePromotionV1 !== 'function') throw Error('Immutable Rust cache promotion authority required');
 +        const verifySource = async () => {
-+            if (!frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) return false;
++            if (!await frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs, process.env)) return false;
 +            if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false;
 +            return true;
 +        };
@@ -1335,7 +1335,7 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
      async put(task, terminalOutput, outputs, code) {
 +        if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined) { const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) { console.log(`[nx] Selected graph source changed during ${task.id}; cache promotion withheld`); return; } }
 +        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || typeof frozen.authorizers.sourceClosureReceiptHolds !== 'function') throw Error('Immutable sourceClosureReceiptHolds authority required'); const { sourceClosureReceiptHolds } = frozen.authorizers;
-+        if (!sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld`); return; }
++        if (!await sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs, process.env)) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld`); return; }
          return tryAndRetry(async () => {
              /**
 -             * This is the directory with the cached artifacts
@@ -1927,7 +1927,7 @@ diff --git a/dist/src/project-graph/utils/retrieve-workspace-files.js b/dist/src
      const defaultGlobPatterns = getGlobPatternsOfPlugins(defaultWithCreateNodes);
 +    const profiledGlob = async (role, globs) => {
 +        const started = perf_hooks_1.performance.now(), files = await (0, workspace_context_1.multiGlobWithWorkspaceContext)(workspaceRoot, globs);
-+        if (process.env.SEMIO_NX_PROFILE_INPUTS === '1') console.log('[DEBUG] Nx configuration globs ' + JSON.stringify({ role, globs, milliseconds: perf_hooks_1.performance.now() - started, files: files.flat().length }));
++        if (process.env.SEMIO_BUILD_PROFILE_INPUTS === '1') console.log('[DEBUG] Nx configuration globs ' + JSON.stringify({ role, globs, milliseconds: perf_hooks_1.performance.now() - started, files: files.flat().length }));
 +        return files;
 +    };
      const [specifiedPluginFiles, defaultPluginFiles] = await Promise.all([
